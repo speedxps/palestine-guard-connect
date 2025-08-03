@@ -81,6 +81,11 @@ export default {
 				inter: ['Inter', 'sans-serif'],
 				arabic: ['Noto Sans Arabic', 'Inter', 'sans-serif']
 			},
+			boxShadow: {
+				elegant: '0 10px 30px -10px hsl(var(--primary) / 0.3)',
+				glow: '0 0 40px hsl(var(--primary-glow) / 0.2)',
+				card: '0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.06)',
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
