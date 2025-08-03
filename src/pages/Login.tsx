@@ -7,12 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import genericPoliceLogo from '@/assets/generic-police-logo.png';
+import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -148,6 +150,7 @@ const Login = () => {
             <div className="text-center space-y-2">
               <button
                 type="button"
+                onClick={() => setShowForgotPassword(true)}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 نسيت كلمة المرور؟
@@ -197,6 +200,12 @@ const Login = () => {
             </Button>
           </div>
         </div>
+        
+        {/* Forgot Password Modal */}
+        <ForgotPasswordModal 
+          isOpen={showForgotPassword} 
+          onClose={() => setShowForgotPassword(false)} 
+        />
       </div>
     </div>
   );

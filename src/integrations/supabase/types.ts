@@ -257,6 +257,39 @@ export type Database = {
           },
         ]
       }
+      password_resets: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          email: string
+          id: string
+          reason: string | null
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          reason?: string | null
+          requested_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          reason?: string | null
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patrol_tracking: {
         Row: {
           created_at: string

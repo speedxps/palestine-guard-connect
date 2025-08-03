@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserManagement } from '@/components/UserManagement';
+import { PasswordResetManagement } from '@/components/PasswordResetManagement';
 import { 
   FileText, 
   AlertTriangle, 
@@ -74,11 +75,21 @@ const Dashboard = () => {
       route: '#',
       description: 'إدارة المستخدمين والصلاحيات',
     });
+    menuItems.push({
+      id: 'password-resets',
+      titleAr: 'طلبات كلمة المرور',
+      titleEn: 'Password Requests',
+      icon: Users,
+      route: '#',
+      description: 'مراجعة طلبات إعادة تعيين كلمة المرور',
+    });
   }
 
   const handleNavigation = (route: string, itemId?: string) => {
     if (itemId === 'users') {
       setActiveTab('users');
+    } else if (itemId === 'password-resets') {
+      setActiveTab('password-resets');
     } else {
       navigate(route);
     }
@@ -109,6 +120,36 @@ const Dashboard = () => {
 
         <div className="px-4 pb-20">
           <UserManagement />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'password-resets') {
+    return (
+      <div className="mobile-container">
+        {/* Header */}
+        <div className="page-header">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTab('dashboard')}
+            >
+              ← العودة للوحة الرئيسية
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="px-4 pb-20">
+          <PasswordResetManagement />
         </div>
       </div>
     );
