@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -78,7 +78,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
-      return true;
+      if (data.session && data.user) {
+        // Manually set the session and user immediately
+        setSession(data.session);
+        
+        // Get user profile data
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .single();
+        
+        const userData: User = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: profile?.full_name || data.user.user_metadata?.full_name || data.user.email || '',
+          role: (profile?.role || data.user.user_metadata?.role || 'user') as UserRole,
+          avatar: data.user.user_metadata?.avatar
+        };
+        
+        setUser(userData);
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       return false;
