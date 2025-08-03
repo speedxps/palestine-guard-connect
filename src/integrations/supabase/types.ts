@@ -415,7 +415,7 @@ export type Database = {
       incident_status: "new" | "in_progress" | "resolved"
       notification_status: "unread" | "read"
       task_status: "pending" | "completed" | "in_progress"
-      user_role: "admin" | "officer"
+      user_role: "admin" | "officer" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -553,7 +553,7 @@ export const Constants = {
       incident_status: ["new", "in_progress", "resolved"],
       notification_status: ["unread", "read"],
       task_status: ["pending", "completed", "in_progress"],
-      user_role: ["admin", "officer"],
+      user_role: ["admin", "officer", "user"],
     },
   },
 } as const
