@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Edit, Trash2, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Shield, ShieldCheck } from 'lucide-react';
 import type { UserRole } from '@/contexts/AuthContext';
 
 interface Profile {
@@ -19,6 +19,13 @@ interface Profile {
   badge_number?: string;
   is_active: boolean;
   created_at: string;
+  cybercrime_access?: {
+    id: string;
+    user_id: string;
+    granted_by: string;
+    created_at: string;
+    is_active: boolean;
+  } | null;
 }
 
 export const UserManagement = () => {
@@ -47,11 +54,26 @@ export const UserManagement = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          cybercrime_access (
+            id,
+            user_id,
+            granted_by,
+            created_at,
+            is_active
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProfiles(data || []);
+      
+      const enrichedProfiles = data?.map((profile: any) => ({
+        ...profile,
+        cybercrime_access: profile.cybercrime_access?.[0] || null
+      })) || [];
+      
+      setProfiles(enrichedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
       toast({
@@ -207,6 +229,72 @@ export const UserManagement = () => {
     }
   };
 
+  const handleGrantCybercrimeAccess = async (profile: Profile) => {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) throw new Error('غير مسموح');
+
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', currentUser.user.id)
+        .single();
+
+      if (!adminProfile) throw new Error('لم يتم العثور على ملف المدير');
+
+      const { error } = await supabase
+        .from('cybercrime_access')
+        .insert({
+          user_id: profile.user_id,
+          granted_by: adminProfile.id,
+          is_active: true
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "تم منح الوصول",
+        description: `تم منح ${profile.full_name} الوصول إلى قسم الجرائم الإلكترونية`,
+      });
+
+      fetchProfiles();
+    } catch (error: any) {
+      console.error('Error granting cybercrime access:', error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في منح الوصول للجرائم الإلكترونية",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRevokeCybercrimeAccess = async (profile: Profile) => {
+    try {
+      if (!profile.cybercrime_access) return;
+
+      const { error } = await supabase
+        .from('cybercrime_access')
+        .update({ is_active: false })
+        .eq('user_id', profile.user_id);
+
+      if (error) throw error;
+
+      toast({
+        title: "تم إلغاء الوصول",
+        description: `تم إلغاء وصول ${profile.full_name} إلى قسم الجرائم الإلكترونية`,
+      });
+
+      fetchProfiles();
+    } catch (error: any) {
+      console.error('Error revoking cybercrime access:', error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في إلغاء الوصول للجرائم الإلكترونية",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getRoleText = (role: UserRole) => {
     const roleMap = {
       admin: 'مدير',
@@ -327,10 +415,36 @@ export const UserManagement = () => {
                   <span className={profile.is_active ? 'text-success' : 'text-destructive'}>
                     {profile.is_active ? 'نشط' : 'غير نشط'}
                   </span>
+                  <span className={profile.cybercrime_access?.is_active ? 'text-blue-600' : 'text-muted-foreground'}>
+                    {profile.cybercrime_access?.is_active ? 'له وصول للجرائم الإلكترونية' : 'لا يملك وصول للجرائم الإلكترونية'}
+                  </span>
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
+                {/* Cybercrime Access Button */}
+                {profile.cybercrime_access?.is_active ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleRevokeCybercrimeAccess(profile)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Shield className="h-4 w-4 mr-1" />
+                    إلغاء الوصول
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleGrantCybercrimeAccess(profile)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-1" />
+                    منح الوصول
+                  </Button>
+                )}
+
                 <Dialog open={editingProfile?.id === profile.id} onOpenChange={(open) => !open && setEditingProfile(null)}>
                   <DialogTrigger asChild>
                     <Button 
