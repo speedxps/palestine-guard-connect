@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserManagement } from '@/components/UserManagement';
 import { 
   FileText, 
   AlertTriangle, 
@@ -11,13 +12,15 @@ import {
   Home, 
   User,
   ChevronRight,
-  Bell
+  Bell,
+  Users
 } from 'lucide-react';
-import policeLogo from '@/assets/police-logo.png';
+import genericPoliceLogo from '@/assets/generic-police-logo.png';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = React.useState('dashboard');
 
   const stats = [
     { label: 'إجمالي البلاغات', value: '24', color: 'text-blue-400' },
@@ -61,9 +64,55 @@ const Dashboard = () => {
     },
   ];
 
-  const handleNavigation = (route: string) => {
-    navigate(route);
+  // Add user management option for admin users
+  if (user?.role === 'admin') {
+    menuItems.push({
+      id: 'users',
+      titleAr: 'إدارة المستخدمين',
+      titleEn: 'User Management',
+      icon: Users,
+      route: '#',
+      description: 'إدارة المستخدمين والصلاحيات',
+    });
+  }
+
+  const handleNavigation = (route: string, itemId?: string) => {
+    if (itemId === 'users') {
+      setActiveTab('users');
+    } else {
+      navigate(route);
+    }
   };
+
+  if (activeTab === 'users') {
+    return (
+      <div className="mobile-container">
+        {/* Header */}
+        <div className="page-header">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTab('dashboard')}
+            >
+              ← العودة للوحة الرئيسية
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="px-4 pb-20">
+          <UserManagement />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mobile-container">
@@ -72,7 +121,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <img 
-              src={policeLogo} 
+              src={genericPoliceLogo} 
               alt="Police Logo" 
               className="w-8 h-8"
             />
@@ -139,7 +188,7 @@ const Dashboard = () => {
                 className={`nav-item cursor-pointer ${
                   isEmergency ? 'border-emergency/30 bg-emergency-bg/30' : ''
                 }`}
-                onClick={() => handleNavigation(item.route)}
+                onClick={() => handleNavigation(item.route, item.id)}
               >
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${

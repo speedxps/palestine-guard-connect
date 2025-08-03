@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import policeLogo from '@/assets/police-logo.png';
+import genericPoliceLogo from '@/assets/generic-police-logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -48,18 +48,20 @@ const Login = () => {
   };
 
   const fillDemoAccount = (role: 'admin' | 'officer' | 'user') => {
+    // These are just placeholder demo accounts for UI demonstration
+    // Real authentication is now handled by Supabase
     switch (role) {
       case 'admin':
-        setEmail('admin@police.ps');
-        setPassword('123');
+        setEmail('admin@example.com');
+        setPassword('password123');
         break;
       case 'officer':
-        setEmail('officer1@police.ps');
-        setPassword('test123');
+        setEmail('officer@example.com');
+        setPassword('password123');
         break;
       case 'user':
-        setEmail('user1@police.ps');
-        setPassword('user123');
+        setEmail('user@example.com');
+        setPassword('password123');
         break;
     }
   };
@@ -71,8 +73,8 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="mx-auto w-24 h-24 mb-6 relative">
             <img 
-              src={policeLogo} 
-              alt="Palestinian Police Logo" 
+              src={genericPoliceLogo} 
+              alt="Police Department Logo" 
               className="w-full h-full object-contain drop-shadow-2xl"
             />
             <div className="absolute -inset-2 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
@@ -142,14 +144,23 @@ const Login = () => {
               {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
             </Button>
 
-            {/* Forgot Password Link */}
-            <div className="text-center">
+            {/* Auth Links */}
+            <div className="text-center space-y-2">
               <button
                 type="button"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 نسيت كلمة المرور؟
               </button>
+              <p className="text-sm text-muted-foreground">
+                لا تملك حساب؟{' '}
+                <Link 
+                  to="/signup" 
+                  className="text-primary hover:underline font-medium"
+                >
+                  إنشاء حساب جديد
+                </Link>
+              </p>
             </div>
           </form>
         </Card>

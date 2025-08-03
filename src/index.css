@@ -7,17 +7,17 @@
 
 @layer base {
   :root {
-    /* Palestinian Police Color System */
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* Light Theme Police Color System */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
 
-    /* Palestinian colors - deep blue primary */
+    /* Police blue primary */
     --primary: 220 91% 15%;
     --primary-foreground: 0 0% 98%;
     --primary-glow: 220 91% 25%;
@@ -25,11 +25,11 @@
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 240 4.8% 15%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 240 4.8% 15%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
 
     /* Emergency colors */
     --emergency: 0 84.2% 60.2%;
@@ -47,15 +47,15 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 220 91% 25%;
 
     --radius: 0.75rem;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-dark: linear-gradient(180deg, hsl(240 10% 3.9%), hsl(240 15% 8%));
+    --gradient-light: linear-gradient(180deg, hsl(0 0% 100%), hsl(240 4.8% 95.9%));
     --gradient-emergency: linear-gradient(135deg, hsl(var(--emergency)), hsl(0 84.2% 45%));
 
     /* Shadows */

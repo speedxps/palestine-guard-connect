@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'admin' | 'officer' | 'user';
 
@@ -12,6 +14,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -19,73 +22,82 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Demo accounts
-const demoUsers: Array<User & { password: string }> = [
-  {
-    id: '1',
-    email: 'admin@police.ps',
-    password: '123',
-    name: 'أحمد محمد',
-    role: 'admin',
-  },
-  {
-    id: '2',
-    email: 'officer1@police.ps',
-    password: 'test123',
-    name: 'محمد علي',
-    role: 'officer',
-  },
-  {
-    id: '3',
-    email: 'user1@police.ps',
-    password: 'user123',
-    name: 'سارة أحمد',
-    role: 'user',
-  },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    // Check for stored user on app load
-    const storedUser = localStorage.getItem('police_app_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        localStorage.removeItem('police_app_user');
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile from profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+            
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: session.user.email || '',
+              name: profile.full_name,
+              role: profile.role as UserRole,
+            });
+          }
+        } else {
+          setUser(null);
+        }
       }
-    }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        // The auth state change listener will handle setting the user
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const demoUser = demoUsers.find(
-      u => u.email === email && u.password === password
-    );
-
-    if (demoUser) {
-      const { password: _, ...userWithoutPassword } = demoUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('police_app_user', JSON.stringify(userWithoutPassword));
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Login error:', error.message);
+        return false;
+      }
+      
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('police_app_user');
+    setSession(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        session,
         login,
         logout,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && !!session,
       }}
     >
       {children}
