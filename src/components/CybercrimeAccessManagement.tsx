@@ -92,14 +92,18 @@ export const CybercrimeAccessManagement = () => {
 
     setIsGranting(true);
     try {
-      // First, find the user by email
-      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-      
-      if (userError) throw userError;
-      
-      const user = userData?.users?.find((u: any) => u.email === searchEmail.trim());
-      
-      if (!user) {
+      // Instead of using admin.listUsers, search for the user by email in profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username')
+        .eq('username', searchEmail.trim())
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      if (!profileData) {
         toast({
           title: "مستخدم غير موجود",
           description: "لم يتم العثور على مستخدم بهذا البريد الإلكتروني",
@@ -108,11 +112,13 @@ export const CybercrimeAccessManagement = () => {
         return;
       }
 
+      const userId = profileData.user_id;
+
       // Check if access already exists
       const { data: existingAccess, error: checkError } = await supabase
         .from('cybercrime_access')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -132,17 +138,19 @@ export const CybercrimeAccessManagement = () => {
           const { error: updateError } = await supabase
             .from('cybercrime_access')
             .update({ is_active: true })
-            .eq('user_id', user.id);
+            .eq('user_id', userId);
 
           if (updateError) throw updateError;
         }
       } else {
         // Grant new access
+        const { data: currentUser } = await supabase.auth.getUser();
+        
         const { error: insertError } = await supabase
           .from('cybercrime_access')
           .insert({
-            user_id: user.id,
-            granted_by: (await supabase.auth.getUser()).data.user?.id || '',
+            user_id: userId,
+            granted_by: currentUser.user?.id || '',
             is_active: true
           });
 
@@ -235,15 +243,15 @@ export const CybercrimeAccessManagement = () => {
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">البريد الإلكتروني للمستخدم</label>
+                <label className="text-sm font-medium">اسم المستخدم أو البريد الإلكتروني</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    type="email"
+                    type="text"
                     value={searchEmail}
                     onChange={(e) => setSearchEmail(e.target.value)}
                     className="pl-10"
-                    placeholder="user@example.com"
+                    placeholder="username أو user@example.com"
                   />
                 </div>
               </div>
