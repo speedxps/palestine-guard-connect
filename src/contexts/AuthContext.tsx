@@ -78,30 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
-      if (data.session && data.user) {
-        // Manually set the session and user immediately
-        setSession(data.session);
-        
-        // Get user profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .single();
-        
-        const userData: User = {
-          id: data.user.id,
-          email: data.user.email || '',
-          name: profile?.full_name || data.user.user_metadata?.full_name || data.user.email || '',
-          role: (profile?.role || data.user.user_metadata?.role || 'user') as UserRole,
-          avatar: data.user.user_metadata?.avatar
-        };
-        
-        setUser(userData);
-        return true;
-      }
-      
-      return false;
+      // Authentication was successful, return true
+      // The onAuthStateChange will handle setting user and session
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
