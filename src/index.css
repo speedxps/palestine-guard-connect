@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    /* Light Theme Police Color System */
+    /* Light Theme Police Color System - Updated for login design */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
 
@@ -17,10 +17,15 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    /* Police blue primary */
+    /* Police blue primary - matches design */
     --primary: 220 91% 15%;
     --primary-foreground: 0 0% 98%;
     --primary-glow: 220 91% 25%;
+    --primary-light: 217 91% 60%;
+    
+    /* Login gradient background */
+    --login-bg-start: 220 91% 15%;
+    --login-bg-end: 217 91% 60%;
 
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
@@ -57,6 +62,7 @@
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-light: linear-gradient(180deg, hsl(0 0% 100%), hsl(240 4.8% 95.9%));
     --gradient-emergency: linear-gradient(135deg, hsl(var(--emergency)), hsl(0 84.2% 45%));
+    --gradient-login: linear-gradient(135deg, hsl(var(--login-bg-start)), hsl(var(--login-bg-end)));
 
     /* Shadows */
     --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);

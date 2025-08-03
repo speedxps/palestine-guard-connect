@@ -53,6 +53,30 @@ export type Database = {
           },
         ]
       }
+      cybercrime_access: {
+        Row: {
+          created_at: string
+          granted_by: string
+          id: string
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by: string
+          id?: string
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string
+          id?: string
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       cybercrime_reports: {
         Row: {
           assigned_to: string | null
@@ -433,6 +457,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      has_cybercrime_access: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -448,7 +476,7 @@ export type Database = {
       incident_status: "new" | "in_progress" | "resolved"
       notification_status: "unread" | "read"
       task_status: "pending" | "completed" | "in_progress"
-      user_role: "admin" | "officer" | "user"
+      user_role: "admin" | "officer" | "user" | "cyber_officer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -586,7 +614,7 @@ export const Constants = {
       incident_status: ["new", "in_progress", "resolved"],
       notification_status: ["unread", "read"],
       task_status: ["pending", "completed", "in_progress"],
-      user_role: ["admin", "officer", "user"],
+      user_role: ["admin", "officer", "user", "cyber_officer"],
     },
   },
 } as const

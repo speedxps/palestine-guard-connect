@@ -13,6 +13,7 @@ import Tasks from "./pages/Tasks";
 import Chat from "./pages/Chat";
 import NewIncident from "./pages/NewIncident";
 import Profile from "./pages/Profile";
+import Cybercrime from "./pages/Cybercrime";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,11 @@ const App = () => (
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/cybercrime" element={
+              <ProtectedRoute>
+                <Cybercrime />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

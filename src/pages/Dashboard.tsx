@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserManagement } from '@/components/UserManagement';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
+import { CybercrimeAccessManagement } from '@/components/CybercrimeAccessManagement';
 import { 
   FileText, 
   AlertTriangle, 
@@ -60,7 +61,7 @@ const Dashboard = () => {
       titleAr: 'الجرائم السيبرانية',
       titleEn: 'Cyber Crimes',
       icon: Shield,
-      route: '/chat',
+      route: '/cybercrime',
       description: 'التواصل الآمن والجرائم الإلكترونية',
     },
   ];
@@ -83,6 +84,14 @@ const Dashboard = () => {
       route: '#',
       description: 'مراجعة طلبات إعادة تعيين كلمة المرور',
     });
+    menuItems.push({
+      id: 'cybercrime-access',
+      titleAr: 'صلاحيات الجرائم الإلكترونية',
+      titleEn: 'Cybercrime Access',
+      icon: Shield,
+      route: '#',
+      description: 'إدارة صلاحيات ضباط الجرائم الإلكترونية',
+    });
   }
 
   const handleNavigation = (route: string, itemId?: string) => {
@@ -90,6 +99,8 @@ const Dashboard = () => {
       setActiveTab('users');
     } else if (itemId === 'password-resets') {
       setActiveTab('password-resets');
+    } else if (itemId === 'cybercrime-access') {
+      setActiveTab('cybercrime-access');
     } else {
       navigate(route);
     }
@@ -150,6 +161,36 @@ const Dashboard = () => {
 
         <div className="px-4 pb-20">
           <PasswordResetManagement />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'cybercrime-access') {
+    return (
+      <div className="mobile-container">
+        {/* Header */}
+        <div className="page-header">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTab('dashboard')}
+            >
+              ← العودة للوحة الرئيسية
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="px-4 pb-20">
+          <CybercrimeAccessManagement />
         </div>
       </div>
     );
