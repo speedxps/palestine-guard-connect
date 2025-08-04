@@ -58,22 +58,32 @@ const Login = () => {
   };
 
   const fillDemoAccount = (role: 'admin' | 'officer' | 'user') => {
-    // Use actual credentials from database
+    // حسابات تجريبية حقيقية موجودة في قاعدة البيانات
     switch (role) {
       case 'admin':
         setEmail('noor-khallaf@hotmail.com');
         setPassword('123123');
         break;
       case 'officer':
-        setEmail('192059@ppu.edu.ps');
+        setEmail('ahmad@police.com');
         setPassword('123123');
         break;
       case 'user':
-        setEmail('ahmad@police.com');
+        setEmail('user@police.ps');
         setPassword('123123');
         break;
     }
   };
+
+  // إضافة حسابات تجريبية للمستخدمين الموجودين
+  const demoAccounts = [
+    { name: 'نور خلاف (مدير)', email: 'noor-khallaf@hotmail.com', password: '123123', role: 'admin' },
+    { name: 'عمر علي (مدير)', email: 'omar@police.com', password: '123123', role: 'admin' },
+    { name: 'أحمد محمد (ضابط)', email: 'ahmad@police.com', password: '123123', role: 'officer' },
+    { name: 'سارة أحمد (ضابط)', email: 'sara@police.com', password: '123123', role: 'officer' },
+    { name: 'Noor kh (ضابط)', email: '192059@ppu.edu.ps', password: '123123', role: 'officer' },
+    { name: 'user test (مستخدم)', email: 'user@police.ps', password: '123123', role: 'user' }
+  ];
 
   return (
     <div className="mobile-container">
@@ -143,26 +153,50 @@ const Login = () => {
 
             {/* Demo Account Buttons */}
             <div className="space-y-3 pt-6 border-t border-muted">
-              <p className="text-sm text-muted-foreground text-center">Demo Accounts:</p>
-              <div className="flex gap-2">
+              <p className="text-sm text-muted-foreground text-center">الحسابات التجريبية المتوفرة:</p>
+              
+              {/* Quick Login Buttons */}
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => fillDemoAccount('admin')}
-                  className="flex-1"
+                  className="flex-1 text-xs"
                 >
-                  Admin
+                  👑 مدير
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => fillDemoAccount('officer')}
-                  className="flex-1"
+                  className="flex-1 text-xs"
                 >
-                  Officer
+                  🛡️ ضابط
                 </Button>
+              </div>
+              
+              {/* Detailed Account List */}
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div className="font-semibold mb-2">تفاصيل الحسابات:</div>
+                {demoAccounts.map((account, index) => (
+                  <div key={index} className="flex justify-between items-center">
+                    <span>{account.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEmail(account.email);
+                        setPassword(account.password);
+                      }}
+                      className="h-6 px-2 text-xs hover:bg-muted"
+                    >
+                      استخدام
+                    </Button>
+                  </div>
+                ))}
               </div>
             </div>
 
