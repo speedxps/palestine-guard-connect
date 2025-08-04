@@ -31,10 +31,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, !!session);
         setSession(session);
         
         if (session?.user) {
-          // Defer profile fetching to prevent deadlocks
+          // Set basic user data immediately
+          const basicUserData = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.full_name || 'User',
+            role: (session.user.user_metadata?.role as UserRole) || 'officer',
+          };
+          setUser(basicUserData);
+          
+          // Try to fetch profile data but don't block on it
           setTimeout(async () => {
             try {
               const { data: profile } = await supabase
@@ -51,35 +61,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   role: profile.role as UserRole,
                 };
                 setUser(userData);
-                // Store user data in localStorage for role-based redirects
-                localStorage.setItem('user', JSON.stringify(userData));
+                console.log('Profile loaded:', userData);
               }
             } catch (error) {
-              console.error('Error fetching profile:', error);
-              // Fallback to basic user data
-              const userData = {
-                id: session.user.id,
-                email: session.user.email || '',
-                name: session.user.user_metadata?.full_name || 'User',
-                role: (session.user.user_metadata?.role as UserRole) || 'user',
-              };
-              setUser(userData);
-              localStorage.setItem('user', JSON.stringify(userData));
+              console.log('Profile fetch failed, using basic data');
             }
-          }, 0);
+          }, 100);
         } else {
           setUser(null);
-          localStorage.removeItem('user');
         }
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        // The auth state change listener will handle setting the user
-      }
+      console.log('Initial session check:', !!session);
     });
 
     return () => subscription.unsubscribe();

@@ -30,25 +30,26 @@ const Login = () => {
       
       if (success) {
         toast({
-          title: "Login Successful",
-          description: "Redirecting to dashboard...",
+          title: "✅ تم تسجيل الدخول بنجاح!",
+          description: "جاري التوجه إلى الصفحة الرئيسية...",
         });
-        // Simple redirect without complex logic
+        
+        // Immediate redirect - don't wait
         setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 500);
+          window.location.replace('/dashboard');
+        }, 1000);
       } else {
         toast({
-          title: "Login Failed", 
-          description: "Please check your email and password",
+          title: "❌ فشل تسجيل الدخول", 
+          description: "تحقق من البريد الإلكتروني وكلمة المرور",
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: "Login Error",
-        description: "Something went wrong. Please try again.",
+        title: "❌ خطأ في تسجيل الدخول",
+        description: "حدث خطأ، حاول مرة أخرى",
         variant: "destructive",
       });
     } finally {
