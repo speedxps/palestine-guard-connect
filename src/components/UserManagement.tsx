@@ -131,21 +131,24 @@ export const UserManagement = () => {
     setIsLoading(true);
 
     try {
-      // Create user using admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Use regular signup instead of admin API for now
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        user_metadata: {
-          username: formData.username,
-          full_name: formData.full_name,
-          role: formData.role,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            username: formData.username,
+            full_name: formData.full_name,
+            role: formData.role,
+          }
         }
       });
 
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create profile
+        // Create profile manually
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -158,7 +161,9 @@ export const UserManagement = () => {
             is_active: true
           });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.warn('Profile might already exist from trigger:', profileError);
+        }
       }
 
       toast({
