@@ -27,21 +27,23 @@ const Login = () => {
       const success = await login(email, password);
       if (success) {
         toast({
-          title: "تم تسجيل الدخول بنجاح",
-          description: "مرحباً بك في تطبيق الشرطة الفلسطينية",
+          title: "Login Successful",
+          description: "Welcome to Palestinian Police Application",
         });
-        navigate('/dashboard');
+        // Use window.location for a full page refresh to ensure clean auth state
+        window.location.href = '/dashboard';
       } else {
         toast({
-          title: "خطأ في تسجيل الدخول",
-          description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+          title: "Login Failed",
+          description: "Invalid email or password",
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء تسجيل الدخول",
+        title: "Error",
+        description: "An error occurred during login",
         variant: "destructive",
       });
     } finally {
