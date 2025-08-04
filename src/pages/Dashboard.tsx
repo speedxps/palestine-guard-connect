@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserManagement } from '@/components/UserManagement';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
-import { CybercrimeAccessManagement } from '@/components/CybercrimeAccessManagement';
+import CybercrimeAccessManagement from '@/components/CybercrimeAccessManagement';
 import { 
   FileText, 
   AlertTriangle, 

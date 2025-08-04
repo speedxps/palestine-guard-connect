@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Shield, AlertTriangle, Computer, CreditCard, Mail, Phone, Globe, ArrowLeft } from 'lucide-react';
+import { Shield, AlertTriangle, Computer, CreditCard, Mail, Phone, Globe, ArrowLeft, Users } from 'lucide-react';
 
 const Cybercrime = () => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -127,7 +127,7 @@ const Cybercrime = () => {
 
         <div className="px-4 pb-6">
           {/* Quick Actions */}
-          <div className="mb-6">
+          <div className="mb-6 space-y-3">
             <Button 
               onClick={() => navigate('/cybercrime-reports')}
               className="w-full bg-primary hover:bg-primary/90 font-arabic"
@@ -135,6 +135,17 @@ const Cybercrime = () => {
               <Shield className="h-4 w-4 ml-2" />
               عرض تقارير الجرائم الإلكترونية
             </Button>
+            
+            {user?.role === 'admin' && (
+              <Button 
+                onClick={() => navigate('/cybercrime-access')}
+                className="w-full"
+                variant="outline"
+              >
+                <Users className="h-4 w-4 ml-2" />
+                إدارة الصلاحيات
+              </Button>
+            )}
           </div>
 
           <Tabs defaultValue="overview" className="space-y-4">
