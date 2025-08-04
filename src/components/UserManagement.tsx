@@ -325,7 +325,7 @@ export const UserManagement = () => {
         .from('cybercrime_access')
         .select('*')
         .eq('user_id', profile.user_id)
-        .single();
+        .maybeSingle();
 
       if (existingAccess) {
         if (existingAccess.is_active) {
@@ -345,12 +345,12 @@ export const UserManagement = () => {
           if (error) throw error;
         }
       } else {
-        // Create new access record
+        // Create new access record - granted_by should be the current user's user_id
         const { error } = await supabase
           .from('cybercrime_access')
           .insert({
             user_id: profile.user_id,
-            granted_by: currentUser.user.id,
+            granted_by: currentUser.user.id, // This should be auth.uid(), not profile id
             is_active: true
           });
 
