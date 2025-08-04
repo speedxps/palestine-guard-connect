@@ -69,48 +69,81 @@ export const UserManagement = () => {
 
   const fetchProfiles = async () => {
     try {
-      // Fetch profiles with cybercrime access data
+      console.log('Starting to fetch profiles...');
+      
+      // First, try to fetch profiles with a simpler query
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          cybercrime_access (
-            id,
-            user_id,
-            granted_by,
-            created_at,
-            is_active
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      console.log('Profiles query result:', { profilesData, profilesError });
 
-      // Get auth users to retrieve email addresses
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        console.warn('Could not fetch auth users:', authError);
+      if (profilesError) {
+        console.error('Profiles error:', profilesError);
+        throw profilesError;
       }
 
-      // Combine profile and auth data
+      // Get auth users to retrieve email addresses (ignore errors for now)
+      let authUsers = null;
+      try {
+        const { data: authUsersData, error: authError } = await supabase.auth.admin.listUsers();
+        if (!authError) {
+          authUsers = authUsersData;
+        }
+      } catch (error) {
+        console.warn('Could not fetch auth users (non-critical):', error);
+      }
+
+      // Get cybercrime access data separately
+      const { data: cybercrimeData } = await supabase
+        .from('cybercrime_access')
+        .select('user_id, is_active')
+        .eq('is_active', true);
+
+      console.log('Cybercrime data:', cybercrimeData);
+
+      // Combine all data
       const enrichedProfiles = profilesData?.map((profile: any) => {
         const authUser = authUsers?.users?.find((u: any) => u.id === profile.user_id);
+        const cybercrimeAccess = cybercrimeData?.find(ca => ca.user_id === profile.user_id);
+        
         return {
           ...profile,
           email: authUser?.email || 'غير متوفر',
-          cybercrime_access: profile.cybercrime_access?.find((access: any) => access.is_active) || null
+          cybercrime_access: cybercrimeAccess ? {
+            id: 'temp',
+            user_id: profile.user_id,
+            granted_by: 'admin',
+            created_at: new Date().toISOString(),
+            is_active: true
+          } : null
         };
       }) || [];
-      
+
+      console.log('Final enriched profiles:', enrichedProfiles);
       setProfiles(enrichedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
       toast({
         title: "❌ خطأ في تحميل المستخدمين",
-        description: "فشل في تحميل قائمة المستخدمين",
+        description: `فشل في تحميل قائمة المستخدمين: ${error.message}`,
         variant: "destructive",
       });
+      
+      // Try to show at least basic profile data
+      try {
+        const { data: basicProfiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (basicProfiles) {
+          setProfiles(basicProfiles.map(p => ({ ...p, email: 'غير متوفر', cybercrime_access: null })));
+        }
+      } catch (fallbackError) {
+        console.error('Even basic fetch failed:', fallbackError);
+      }
     } finally {
       setIsLoading(false);
     }
