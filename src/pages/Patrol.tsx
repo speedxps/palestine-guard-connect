@@ -90,7 +90,7 @@ const Patrol = () => {
         .from('duty_chat_messages')
         .select(`
           *,
-          profiles!duty_chat_messages_user_id_fkey (full_name, username)
+          profiles (full_name, username)
         `)
         .eq('duty_id', dutyId)
         .order('created_at', { ascending: true });
