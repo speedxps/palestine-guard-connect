@@ -24,39 +24,31 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      console.log('Attempting login with:', email);
       const success = await login(email, password);
+      console.log('Login result:', success);
+      
       if (success) {
         toast({
           title: "Login Successful",
-          description: "Welcome to Palestinian Police Application",
+          description: "Redirecting to dashboard...",
         });
-        
-        // Wait a moment for auth context to update with user data
+        // Simple redirect without complex logic
         setTimeout(() => {
-          const user = JSON.parse(localStorage.getItem('user') || 'null');
-          const role = user?.role;
-          
-          // Redirect based on user role
-          if (role === 'admin') {
-            window.location.href = '/dashboard';
-          } else if (role === 'officer' || role === 'cyber_officer') {
-            window.location.href = '/incidents';
-          } else {
-            window.location.href = '/dashboard';
-          }
-        }, 1000);
+          window.location.href = '/dashboard';
+        }, 500);
       } else {
         toast({
-          title: "Login Failed",
-          description: "Invalid email or password",
+          title: "Login Failed", 
+          description: "Please check your email and password",
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: "Error",
-        description: "An error occurred during login",
+        title: "Login Error",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -65,19 +57,19 @@ const Login = () => {
   };
 
   const fillDemoAccount = (role: 'admin' | 'officer' | 'user') => {
-    // These are actual demo accounts that exist in the database
+    // Use actual credentials from database
     switch (role) {
       case 'admin':
         setEmail('noor-khallaf@hotmail.com');
         setPassword('123123');
         break;
       case 'officer':
-        setEmail('officer@police.ps');
-        setPassword('officer123');
+        setEmail('192059@ppu.edu.ps');
+        setPassword('123123');
         break;
       case 'user':
-        setEmail('user@police.ps');
-        setPassword('user123');
+        setEmail('ahmad@police.com');
+        setPassword('123123');
         break;
     }
   };
