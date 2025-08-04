@@ -65,6 +65,28 @@ export const UserManagement = () => {
 
   useEffect(() => {
     fetchProfiles();
+    
+    // إضافة مستمع للتحديثات في الوقت الفعلي
+    const channel = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('Profile change detected:', payload);
+          // تحديث القائمة عند أي تغيير
+          fetchProfiles();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchProfiles = async () => {
