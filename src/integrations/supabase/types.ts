@@ -77,6 +77,73 @@ export type Database = {
         }
         Relationships: []
       }
+      cybercrime_comments: {
+        Row: {
+          attachment_type: string | null
+          attachment_url: string | null
+          content: string
+          created_at: string
+          id: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_cybercrime_comments_report_id"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "cybercrime_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cybercrime_followers: {
+        Row: {
+          created_at: string
+          id: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_cybercrime_followers_report_id"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "cybercrime_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cybercrime_reports: {
         Row: {
           assigned_to: string | null
@@ -130,6 +197,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      duty_chat_messages: {
+        Row: {
+          attachment_type: string | null
+          attachment_url: string | null
+          created_at: string
+          duty_id: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          created_at?: string
+          duty_id: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          created_at?: string
+          duty_id?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       incident_files: {
         Row: {
@@ -348,6 +445,100 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_post_comments_post_id"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_post_likes_post_id"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          privacy_level: string
+          target_groups: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          privacy_level?: string
+          target_groups?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          privacy_level?: string
+          target_groups?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
