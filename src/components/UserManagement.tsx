@@ -4,9 +4,24 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Edit, Trash2, Users, Shield, ShieldCheck } from 'lucide-react';
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Users, 
+  Shield, 
+  ShieldCheck, 
+  Search,
+  Crown,
+  User,
+  Eye,
+  EyeOff,
+  UserCheck,
+  UserX
+} from 'lucide-react';
 import type { UserRole } from '@/contexts/AuthContext';
 
 interface Profile {
@@ -19,6 +34,7 @@ interface Profile {
   badge_number?: string;
   is_active: boolean;
   created_at: string;
+  email?: string;
   cybercrime_access?: {
     id: string;
     user_id: string;
@@ -33,6 +49,7 @@ export const UserManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   // Form state
@@ -52,7 +69,8 @@ export const UserManagement = () => {
 
   const fetchProfiles = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch profiles with cybercrime access data
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           *,
@@ -66,19 +84,31 @@ export const UserManagement = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
+
+      // Get auth users to retrieve email addresses
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       
-      const enrichedProfiles = data?.map((profile: any) => ({
-        ...profile,
-        cybercrime_access: profile.cybercrime_access?.[0] || null
-      })) || [];
+      if (authError) {
+        console.warn('Could not fetch auth users:', authError);
+      }
+
+      // Combine profile and auth data
+      const enrichedProfiles = profilesData?.map((profile: any) => {
+        const authUser = authUsers?.users?.find((u: any) => u.id === profile.user_id);
+        return {
+          ...profile,
+          email: authUser?.email || 'غير متوفر',
+          cybercrime_access: profile.cybercrime_access?.find((access: any) => access.is_active) || null
+        };
+      }) || [];
       
       setProfiles(enrichedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
       toast({
-        title: "خطأ",
-        description: "فشل في تحميل المستخدمين",
+        title: "❌ خطأ في تحميل المستخدمين",
+        description: "فشل في تحميل قائمة المستخدمين",
         variant: "destructive",
       });
     } finally {
@@ -88,52 +118,52 @@ export const UserManagement = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.email || !formData.password || !formData.username || !formData.full_name) {
+      toast({
+        title: "❌ بيانات ناقصة",
+        description: "يرجى ملء جميع الحقول المطلوبة",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Create user using admin API
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: formData.email,
         password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            username: formData.username,
-            full_name: formData.full_name,
-            role: formData.role,
-          }
+        user_metadata: {
+          username: formData.username,
+          full_name: formData.full_name,
+          role: formData.role,
         }
       });
 
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create profile manually if needed - only include role if it's admin or officer
-        const profileData: any = {
-          user_id: authData.user.id,
-          username: formData.username,
-          full_name: formData.full_name,
-          phone: formData.phone || null,
-          badge_number: formData.badge_number || null,
-        };
-
-        // Only add role if it's valid for the database enum
-        if (formData.role === 'admin' || formData.role === 'officer') {
-          profileData.role = formData.role;
-        }
-
+        // Create profile
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert(profileData);
+          .insert({
+            user_id: authData.user.id,
+            username: formData.username,
+            full_name: formData.full_name,
+            phone: formData.phone || null,
+            badge_number: formData.badge_number || null,
+            role: formData.role,
+            is_active: true
+          });
 
-        if (profileError) {
-          console.warn('Profile creation error (might already exist):', profileError);
-        }
+        if (profileError) throw profileError;
       }
 
       toast({
-        title: "تم إنشاء المستخدم",
-        description: "تم إنشاء المستخدم الجديد بنجاح",
+        title: "✅ تم إنشاء المستخدم بنجاح",
+        description: `تم إنشاء حساب ${formData.full_name}`,
       });
 
       setIsCreateModalOpen(false);
@@ -150,8 +180,8 @@ export const UserManagement = () => {
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في إنشاء المستخدم",
+        title: "❌ فشل في إنشاء المستخدم",
+        description: error.message || "حدث خطأ أثناء إنشاء الحساب",
         variant: "destructive",
       });
     } finally {
@@ -166,27 +196,21 @@ export const UserManagement = () => {
     setIsLoading(true);
 
     try {
-      // Only include role if it's valid for the database enum
-      const updateData: any = {
-        username: formData.username,
-        full_name: formData.full_name,
-        phone: formData.phone || null,
-        badge_number: formData.badge_number || null,
-      };
-
-      if (formData.role === 'admin' || formData.role === 'officer') {
-        updateData.role = formData.role;
-      }
-
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({
+          username: formData.username,
+          full_name: formData.full_name,
+          phone: formData.phone || null,
+          badge_number: formData.badge_number || null,
+          role: formData.role,
+        })
         .eq('id', editingProfile.id);
 
       if (error) throw error;
 
       toast({
-        title: "تم تحديث المستخدم",
+        title: "✅ تم تحديث المستخدم",
         description: "تم تحديث بيانات المستخدم بنجاح",
       });
 
@@ -195,7 +219,7 @@ export const UserManagement = () => {
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
-        title: "خطأ",
+        title: "❌ خطأ في التحديث",
         description: error.message || "فشل في تحديث المستخدم",
         variant: "destructive",
       });
@@ -214,7 +238,7 @@ export const UserManagement = () => {
       if (error) throw error;
 
       toast({
-        title: "تم إلغاء تفعيل المستخدم",
+        title: "✅ تم إلغاء تفعيل المستخدم",
         description: "تم إلغاء تفعيل المستخدم بنجاح",
       });
 
@@ -222,7 +246,7 @@ export const UserManagement = () => {
     } catch (error: any) {
       console.error('Error deactivating user:', error);
       toast({
-        title: "خطأ",
+        title: "❌ خطأ",
         description: error.message || "فشل في إلغاء تفعيل المستخدم",
         variant: "destructive",
       });
@@ -253,7 +277,7 @@ export const UserManagement = () => {
       if (error) throw error;
 
       toast({
-        title: "تم منح الوصول",
+        title: "✅ تم منح صلاحية الجرائم الإلكترونية",
         description: `تم منح ${profile.full_name} الوصول إلى قسم الجرائم الإلكترونية`,
       });
 
@@ -261,7 +285,7 @@ export const UserManagement = () => {
     } catch (error: any) {
       console.error('Error granting cybercrime access:', error);
       toast({
-        title: "خطأ",
+        title: "❌ خطأ في منح الصلاحية",
         description: error.message || "فشل في منح الوصول للجرائم الإلكترونية",
         variant: "destructive",
       });
@@ -270,8 +294,6 @@ export const UserManagement = () => {
 
   const handleRevokeCybercrimeAccess = async (profile: Profile) => {
     try {
-      if (!profile.cybercrime_access) return;
-
       const { error } = await supabase
         .from('cybercrime_access')
         .update({ is_active: false })
@@ -280,7 +302,7 @@ export const UserManagement = () => {
       if (error) throw error;
 
       toast({
-        title: "تم إلغاء الوصول",
+        title: "✅ تم إلغاء صلاحية الجرائم الإلكترونية",
         description: `تم إلغاء وصول ${profile.full_name} إلى قسم الجرائم الإلكترونية`,
       });
 
@@ -288,20 +310,39 @@ export const UserManagement = () => {
     } catch (error: any) {
       console.error('Error revoking cybercrime access:', error);
       toast({
-        title: "خطأ",
+        title: "❌ خطأ في إلغاء الصلاحية",
         description: error.message || "فشل في إلغاء الوصول للجرائم الإلكترونية",
         variant: "destructive",
       });
     }
   };
 
-  const getRoleText = (role: UserRole) => {
-    const roleMap = {
-      admin: 'مدير',
-      officer: 'ضابط',
-      user: 'مستخدم'
+  const getRoleIcon = (role: UserRole) => {
+    switch (role) {
+      case 'admin':
+        return <Crown className="w-4 h-4" />;
+      case 'officer':
+        return <Shield className="w-4 h-4" />;
+      default:
+        return <User className="w-4 h-4" />;
+    }
+  };
+
+  const getRoleBadge = (role: UserRole) => {
+    const badges = {
+      admin: { label: 'مدير', variant: 'destructive' as const },
+      officer: { label: 'ضابط', variant: 'default' as const },
+      user: { label: 'مستخدم', variant: 'secondary' as const }
     };
-    return roleMap[role] || role;
+    
+    const badge = badges[role] || badges.user;
+    
+    return (
+      <Badge variant={badge.variant} className="flex items-center gap-1">
+        {getRoleIcon(role)}
+        {badge.label}
+      </Badge>
+    );
   };
 
   const openEditModal = (profile: Profile) => {
@@ -317,6 +358,13 @@ export const UserManagement = () => {
     });
   };
 
+  // Filter users based on search term
+  const filteredProfiles = profiles.filter(profile =>
+    profile.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    profile.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    profile.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (isLoading && profiles.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -330,6 +378,7 @@ export const UserManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" />
@@ -338,7 +387,7 @@ export const UserManagement = () => {
         
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
-            <Button variant="police" size="sm">
+            <Button variant="default" size="sm">
               <Plus className="h-4 w-4 mr-2" />
               إضافة مستخدم
             </Button>
@@ -394,7 +443,7 @@ export const UserManagement = () => {
                   <SelectItem value="user">مستخدم</SelectItem>
                 </SelectContent>
               </Select>
-              <Button type="submit" variant="police" className="w-full" disabled={isLoading}>
+              <Button type="submit" variant="default" className="w-full" disabled={isLoading}>
                 {isLoading ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
               </Button>
             </form>
@@ -402,46 +451,84 @@ export const UserManagement = () => {
         </Dialog>
       </div>
 
+      {/* Search Bar */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <Input
+          placeholder="البحث في المستخدمين..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Users Grid */}
       <div className="grid gap-4">
-        {profiles.map((profile) => (
+        {filteredProfiles.map((profile) => (
           <Card key={profile.id} className="p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <h3 className="font-semibold">{profile.full_name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold">{profile.full_name}</h3>
+                  {getRoleBadge(profile.role)}
+                </div>
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                <p className="text-xs text-muted-foreground">البريد: {profile.email}</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>الدور: {getRoleText(profile.role)}</span>
                   {profile.badge_number && <span>الشارة: {profile.badge_number}</span>}
-                  <span className={profile.is_active ? 'text-success' : 'text-destructive'}>
-                    {profile.is_active ? 'نشط' : 'غير نشط'}
-                  </span>
-                  <span className={profile.cybercrime_access?.is_active ? 'text-blue-600' : 'text-muted-foreground'}>
-                    {profile.cybercrime_access?.is_active ? 'له وصول للجرائم الإلكترونية' : 'لا يملك وصول للجرائم الإلكترونية'}
-                  </span>
+                  {profile.phone && <span>الهاتف: {profile.phone}</span>}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant={profile.is_active ? "default" : "secondary"}>
+                    {profile.is_active ? (
+                      <>
+                        <UserCheck className="w-3 h-3 mr-1" />
+                        نشط
+                      </>
+                    ) : (
+                      <>
+                        <UserX className="w-3 h-3 mr-1" />
+                        غير نشط
+                      </>
+                    )}
+                  </Badge>
+                  <Badge variant={profile.cybercrime_access ? "default" : "secondary"} className="text-xs">
+                    {profile.cybercrime_access ? (
+                      <>
+                        <Eye className="w-3 h-3 mr-1" />
+                        له صلاحية الجرائم الإلكترونية
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="w-3 h-3 mr-1" />
+                        بدون صلاحية الجرائم الإلكترونية
+                      </>
+                    )}
+                  </Badge>
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
                 {/* Cybercrime Access Button */}
-                {profile.cybercrime_access?.is_active ? (
+                {profile.cybercrime_access ? (
                   <Button 
-                    variant="outline" 
+                    variant="destructive" 
                     size="sm"
                     onClick={() => handleRevokeCybercrimeAccess(profile)}
-                    className="text-red-600 hover:text-red-700"
+                    className="flex items-center gap-1"
                   >
-                    <Shield className="h-4 w-4 mr-1" />
-                    إلغاء الوصول
+                    <EyeOff className="h-4 w-4" />
+                    إلغاء صلاحية الجرائم الإلكترونية
                   </Button>
                 ) : (
                   <Button 
-                    variant="outline" 
+                    variant="default" 
                     size="sm"
                     onClick={() => handleGrantCybercrimeAccess(profile)}
-                    className="text-blue-600 hover:text-blue-700"
+                    className="flex items-center gap-1"
                   >
-                    <ShieldCheck className="h-4 w-4 mr-1" />
-                    منح الوصول
+                    <Eye className="h-4 w-4" />
+                    منح صلاحية الجرائم الإلكترونية
                   </Button>
                 )}
 
@@ -492,7 +579,7 @@ export const UserManagement = () => {
                           <SelectItem value="user">مستخدم</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button type="submit" variant="police" className="w-full" disabled={isLoading}>
+                      <Button type="submit" variant="default" className="w-full" disabled={isLoading}>
                         {isLoading ? 'جاري التحديث...' : 'تحديث المستخدم'}
                       </Button>
                     </form>
@@ -513,10 +600,12 @@ export const UserManagement = () => {
           </Card>
         ))}
         
-        {profiles.length === 0 && (
+        {filteredProfiles.length === 0 && (
           <Card className="p-8 text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">لا توجد مستخدمين حتى الآن</p>
+            <p className="text-muted-foreground">
+              {searchTerm ? 'لا توجد نتائج بحث' : 'لا توجد مستخدمين حتى الآن'}
+            </p>
           </Card>
         )}
       </div>
