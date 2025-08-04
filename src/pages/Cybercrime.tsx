@@ -126,6 +126,17 @@ const Cybercrime = () => {
         </div>
 
         <div className="px-4 pb-6">
+          {/* Quick Actions */}
+          <div className="mb-6">
+            <Button 
+              onClick={() => navigate('/cybercrime-reports')}
+              className="w-full bg-primary hover:bg-primary/90 font-arabic"
+            >
+              <Shield className="h-4 w-4 ml-2" />
+              عرض تقارير الجرائم الإلكترونية
+            </Button>
+          </div>
+
           <Tabs defaultValue="overview" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
@@ -134,11 +145,11 @@ const Cybercrime = () => {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <Card className="p-6">
-                <h3 className="text-lg font-bold font-arabic mb-4">نظرة عامة على الجرائم الإلكترونية</h3>
+                <Card className="p-6">
+                <h3 className="text-lg font-bold font-arabic mb-4">نظرة عامة على الجرائم الإلكترونية - محافظة الخليل</h3>
                 <div className="space-y-4 text-sm">
                   <p>
-                    الجرائم الإلكترونية هي أي نشاط إجرامي يتضمن استخدام أجهزة الكمبيوتر أو الشبكات أو الأجهزة المتصلة بالإنترنت كأدوات أو أهداف أو مكان لارتكاب الجريمة.
+                    دائرة الجرائم الإلكترونية في محافظة الخليل تتولى التحقيق في القضايا الإلكترونية التي تؤثر على المواطنين في الخليل ومدنها (دورا، سعير، بني نعيم، حلحول، بيت أمر).
                   </p>
                   <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
                     <div className="flex items-center mb-2">
@@ -146,21 +157,21 @@ const Cybercrime = () => {
                       <span className="font-semibold text-destructive">تحذير هام</span>
                     </div>
                     <p className="text-xs">
-                      هذه المعلومات سرية ومخصصة للاستخدام الرسمي فقط. يُمنع تداولها خارج نطاق العمل.
+                      هذه المعلومات سرية ومخصصة للاستخدام الرسمي فقط. يُمنع تداولها خارج نطاق العمل - دائرة الجرائم الإلكترونية الخليل.
                     </p>
                   </div>
                 </div>
               </Card>
 
               <Card className="p-6">
-                <h4 className="font-semibold font-arabic mb-3">إحصائيات سريعة</h4>
+                <h4 className="font-semibold font-arabic mb-3">إحصائيات سريعة - محافظة الخليل</h4>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="bg-primary/10 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-primary">24</div>
+                    <div className="text-2xl font-bold text-primary">7</div>
                     <div className="text-xs text-muted-foreground">قضايا نشطة</div>
                   </div>
                   <div className="bg-success/10 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-success">156</div>
+                    <div className="text-2xl font-bold text-success">23</div>
                     <div className="text-xs text-muted-foreground">قضايا محلولة</div>
                   </div>
                 </div>
@@ -261,9 +272,9 @@ const Cybercrime = () => {
               <Card className="p-4">
                 <div className="text-center">
                   <Phone className="h-8 w-8 text-emergency mx-auto mb-3" />
-                  <h4 className="font-semibold font-arabic mb-2">الخط الساخن للطوارئ</h4>
-                  <div className="text-2xl font-bold text-emergency mb-2">101</div>
-                  <p className="text-xs text-muted-foreground">متاح 24/7 للحالات العاجلة</p>
+                  <h4 className="font-semibold font-arabic mb-2">الخط الساخن للطوارئ - محافظة الخليل</h4>
+                  <div className="text-2xl font-bold text-emergency mb-2">0599000000</div>
+                  <p className="text-xs text-muted-foreground">متاح 24/7 للحالات العاجلة - دائرة الجرائم الإلكترونية الخليل</p>
                 </div>
               </Card>
             </TabsContent>

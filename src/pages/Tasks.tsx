@@ -10,9 +10,18 @@ import {
   MapPin,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Users,
+  Phone
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+interface TeamMember {
+  name: string;
+  rank: string;
+  phone: string;
+  role: string;
+}
 
 interface Task {
   id: string;
@@ -23,48 +32,84 @@ interface Task {
   status: 'pending' | 'in-progress' | 'completed' | 'delayed';
   priority: 'low' | 'medium' | 'high';
   assignedOfficer: string;
+  teamMembers: TeamMember[];
 }
 
 const demoTasks: Task[] = [
   {
     id: '1',
-    title: 'دورية أمنية في الحي الشرقي',
-    description: 'تنفيذ دورية أمنية روتينية في المنطقة السكنية',
-    location: 'رام الله، الحي الشرقي',
+    title: 'دورية أمنية في منطقة باب الزاوية',
+    description: 'تنفيذ دورية أمنية روتينية في منطقة باب الزاوية وسط الخليل',
+    location: 'الخليل، باب الزاوية',
     deadline: '2024-01-15 18:00',
     status: 'in-progress',
     priority: 'medium',
-    assignedOfficer: 'محمد علي'
+    assignedOfficer: 'الرائد أحمد قاسم',
+    teamMembers: [
+      { name: 'الرائد أحمد قاسم', rank: 'رائد', phone: '0599123456', role: 'قائد المهمة' },
+      { name: 'الملازم محمد الطيطي', rank: 'ملازم', phone: '0599234567', role: 'ضابط ميداني' },
+      { name: 'العريف يوسف أبو سنينة', rank: 'عريف', phone: '0599345678', role: 'أمن وحماية' }
+    ]
   },
   {
     id: '2',
-    title: 'التحقيق في بلاغ سرقة',
-    description: 'متابعة التحقيق في حادثة السرقة المبلغ عنها',
-    location: 'البيرة، شارع الإرسال',
+    title: 'التحقيق في قضية احتيال إلكتروني',
+    description: 'متابعة التحقيق في قضية احتيال إلكتروني في منطقة دورا',
+    location: 'دورا، المركز التجاري',
     deadline: '2024-01-16 10:00',
     status: 'pending',
     priority: 'high',
-    assignedOfficer: 'محمد علي'
+    assignedOfficer: 'المقدم خالد الجعبري',
+    teamMembers: [
+      { name: 'المقدم خالد الجعبري', rank: 'مقدم', phone: '0599987654', role: 'محقق رئيسي' },
+      { name: 'النقيب سامر العويوي', rank: 'نقيب', phone: '0599876543', role: 'ضابط جرائم إلكترونية' },
+      { name: 'الملازم عمر النتشة', rank: 'ملازم', phone: '0599765432', role: 'محقق مساعد' }
+    ]
   },
   {
     id: '3',
-    title: 'تأمين فعالية عامة',
-    description: 'تأمين الحماية للفعالية الثقافية في الساحة العامة',
-    location: 'نابلس، الساحة العامة',
+    title: 'تأمين فعالية ثقافية في جامعة الخليل',
+    description: 'تأمين الحماية للفعالية الثقافية في جامعة الخليل',
+    location: 'الخليل، جامعة الخليل',
     deadline: '2024-01-14 16:00',
     status: 'completed',
     priority: 'medium',
-    assignedOfficer: 'محمد علي'
+    assignedOfficer: 'النقيب محمود العمور',
+    teamMembers: [
+      { name: 'النقيب محمود العمور', rank: 'نقيب', phone: '0599654321', role: 'قائد العملية' },
+      { name: 'الملازم أول رائد الحروب', rank: 'ملازم أول', phone: '0599543210', role: 'تنسيق أمني' },
+      { name: 'الرقيب فادي زيدان', rank: 'رقيب', phone: '0599432109', role: 'مراقبة' }
+    ]
   },
   {
     id: '4',
-    title: 'مراقبة حركة المرور',
-    description: 'مراقبة وتنظيم حركة المرور في الشارع الرئيسي',
-    location: 'غزة، الشارع الرئيسي',
+    title: 'مراقبة حركة المرور في شارع عين سارة',
+    description: 'مراقبة وتنظيم حركة المرور في شارع عين سارة الرئيسي',
+    location: 'الخليل، شارع عين سارة',
     deadline: '2024-01-13 14:00',
     status: 'delayed',
     priority: 'low',
-    assignedOfficer: 'محمد علي'
+    assignedOfficer: 'الملازم أول هاني أبو هيكل',
+    teamMembers: [
+      { name: 'الملازم أول هاني أبو هيكل', rank: 'ملازم أول', phone: '0599321098', role: 'ضابط مرور' },
+      { name: 'العريف وليد العجلوني', rank: 'عريف', phone: '0599210987', role: 'تنظيم مرور' }
+    ]
+  },
+  {
+    id: '5',
+    title: 'حماية قافلة إنسانية في بني نعيم',
+    description: 'تأمين حماية قافلة مساعدات إنسانية في منطقة بني نعيم',
+    location: 'بني نعيم، مركز القرية',
+    deadline: '2024-01-17 09:00',
+    status: 'pending',
+    priority: 'high',
+    assignedOfficer: 'الرائد عماد شاهين',
+    teamMembers: [
+      { name: 'الرائد عماد شاهين', rank: 'رائد', phone: '0599109876', role: 'قائد الحماية' },
+      { name: 'النقيب أحمد دويك', rank: 'نقيب', phone: '0599098765', role: 'تنسيق ميداني' },
+      { name: 'الملازم محمد عدوان', rank: 'ملازم', phone: '0599987650', role: 'أمن محيطي' },
+      { name: 'العريف سالم الشاروني', rank: 'عريف', phone: '0599876540', role: 'دعم لوجستي' }
+    ]
   }
 ];
 
@@ -212,6 +257,30 @@ const Tasks = () => {
                     </div>
                   </div>
                   
+                  {/* Team Members */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <Users className="h-4 w-4" />
+                      <span>الفريق المكلف ({task.teamMembers.length} أعضاء)</span>
+                    </div>
+                    <div className="grid gap-2">
+                      {task.teamMembers.map((member, index) => (
+                        <div key={index} className="bg-muted/50 rounded-lg p-3 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <div className="font-medium text-foreground">{member.name}</div>
+                              <div className="text-muted-foreground">{member.rank} - {member.role}</div>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Phone className="h-3 w-3" />
+                              <span className="font-mono">{member.phone}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <StatusIcon className={`h-4 w-4 ${
