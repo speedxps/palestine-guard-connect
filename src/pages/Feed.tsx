@@ -12,36 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface Post {
-  id: string;
-  user_id: string;
-  content: string;
-  image_url?: string;
-  privacy_level: string;
-  created_at: string;
-  updated_at: string;
-  profiles: {
-    full_name: string;
-    username: string;
-    role: string;
-  };
-  post_likes: { id: string; user_id: string }[];
-  post_comments: {
-    id: string;
-    content: string;
-    created_at: string;
-    profiles: {
-      full_name: string;
-      username: string;
-    };
-  }[];
-}
-
 const Feed = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newPost, setNewPost] = useState('');
   const [newPostPrivacy, setNewPostPrivacy] = useState('public');
@@ -57,23 +32,61 @@ const Feed = () => {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First get posts
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles (full_name, username, role),
-          post_likes (id, user_id),
-          post_comments (
-            id,
-            content,
-            created_at,
-            profiles (full_name, username)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (postsError) throw postsError;
+
+      // Get profiles for each post
+      const postsWithProfiles = await Promise.all(
+        (postsData || []).map(async (post) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, username, role')
+            .eq('user_id', post.user_id)
+            .single();
+
+          const { data: likesData } = await supabase
+            .from('post_likes')
+            .select('id, user_id')
+            .eq('post_id', post.id);
+
+          const { data: commentsData } = await supabase
+            .from('post_comments')
+            .select('*')
+            .eq('post_id', post.id)
+            .order('created_at', { ascending: true });
+
+          // Get profiles for comments
+          const commentsWithProfiles = await Promise.all(
+            (commentsData || []).map(async (comment) => {
+              const { data: commentProfileData } = await supabase
+                .from('profiles')
+                .select('full_name, username')
+                .eq('user_id', comment.user_id)
+                .single();
+
+              return {
+                ...comment,
+                profiles: commentProfileData || { full_name: 'مستخدم مجهول', username: 'unknown' }
+              };
+            })
+          );
+
+          return {
+            ...post,
+            profiles: profileData || { full_name: 'مستخدم مجهول', username: 'unknown', role: 'user' },
+            post_likes: likesData || [],
+            post_comments: commentsWithProfiles
+          };
+        })
+      );
+
+      setPosts(postsWithProfiles);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast({
@@ -246,7 +259,7 @@ const Feed = () => {
     }
   };
 
-  const canEditPost = (post: Post) => {
+  const canEditPost = (post: any) => {
     return user?.role === 'admin' || post.user_id === user?.id;
   };
 
@@ -327,7 +340,7 @@ const Feed = () => {
 
         {/* Posts */}
         {posts.map((post) => {
-          const isLiked = post.post_likes.some(like => like.user_id === user?.id);
+          const isLiked = post.post_likes.some((like: any) => like.user_id === user?.id);
           const likesCount = post.post_likes.length;
           const commentsCount = post.post_comments.length;
 
@@ -338,16 +351,16 @@ const Feed = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                     <span className="font-semibold text-primary">
-                      {post.profiles.full_name.charAt(0)}
+                      {post.profiles?.full_name?.charAt(0) || 'M'}
                     </span>
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">
-                      {post.profiles.full_name}
+                      {post.profiles?.full_name || 'مستخدم مجهول'}
                     </h3>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs">
-                        {post.profiles.role}
+                        {post.profiles?.role || 'مستخدم'}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {getPrivacyLabel(post.privacy_level)}
@@ -444,17 +457,17 @@ const Feed = () => {
               {/* Comments */}
               {post.post_comments.length > 0 && (
                 <div className="space-y-3 pt-2 border-t border-border">
-                  {post.post_comments.map((comment) => (
+                  {post.post_comments.map((comment: any) => (
                     <div key={comment.id} className="flex gap-3">
                       <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                         <span className="text-xs font-semibold">
-                          {comment.profiles.full_name.charAt(0)}
+                          {comment.profiles?.full_name?.charAt(0) || 'M'}
                         </span>
                       </div>
                       <div className="flex-1">
                         <div className="bg-muted rounded-lg p-3">
                           <div className="font-semibold text-sm mb-1">
-                            {comment.profiles.full_name}
+                            {comment.profiles?.full_name || 'مستخدم مجهول'}
                           </div>
                           <div className="text-sm">{comment.content}</div>
                         </div>

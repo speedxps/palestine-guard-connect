@@ -15,9 +15,11 @@ import {
   User,
   ChevronRight,
   Bell,
-  Users
+  Users,
+  Newspaper,
+  Calendar
 } from 'lucide-react';
-import genericPoliceLogo from '@/assets/generic-police-logo.png';
+import policeLogoUrl from '@/assets/police-logo.png';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -32,9 +34,17 @@ const Dashboard = () => {
 
   const menuItems = [
     {
+      id: 'feed',
+      titleAr: 'آخر الأخبار',
+      titleEn: 'News Feed',
+      icon: Newspaper,
+      route: '/feed',
+      description: 'آخر الأخبار والمنشورات',
+    },
+    {
       id: 'incidents',
       titleAr: 'الأحداث',
-      titleEn: 'Posts',
+      titleEn: 'Incidents',
       icon: FileText,
       route: '/incidents',
       description: 'عرض جميع البلاغات والحوادث',
@@ -53,8 +63,16 @@ const Dashboard = () => {
       titleAr: 'الدوريات',
       titleEn: 'Patrols',
       icon: MapPin,
+      route: '/patrol',
+      description: 'متابعة الدوريات',
+    },
+    {
+      id: 'tasks',
+      titleAr: 'المهام',
+      titleEn: 'Tasks',
+      icon: Calendar,
       route: '/tasks',
-      description: 'متابعة الدوريات والمهام',
+      description: 'متابعة المهام والواجبات',
     },
     {
       id: 'cyber',
@@ -203,7 +221,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <img 
-              src={genericPoliceLogo} 
+              src={policeLogoUrl} 
               alt="Police Logo" 
               className="w-8 h-8"
             />

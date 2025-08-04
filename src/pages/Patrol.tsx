@@ -10,40 +10,14 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface PatrolData {
-  id: string;
-  officer_id: string;
-  location_lat: number;
-  location_lng: number;
-  is_active: boolean;
-  created_at: string;
-  profiles: {
-    full_name: string;
-    username: string;
-    badge_number: string;
-  };
-}
-
-interface ChatMessage {
-  id: string;
-  duty_id: string;
-  user_id: string;
-  message: string;
-  created_at: string;
-  profiles: {
-    full_name: string;
-    username: string;
-  };
-}
-
 const Patrol = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [patrols, setPatrols] = useState<PatrolData[]>([]);
+  const [patrols, setPatrols] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDuty, setSelectedDuty] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loadingChat, setLoadingChat] = useState(false);
 
@@ -62,15 +36,29 @@ const Patrol = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('patrol_tracking')
-        .select(`
-          *,
-          profiles!patrol_tracking_officer_id_fkey (full_name, username, badge_number)
-        `)
+        .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPatrols(data || []);
+
+      // Get profiles for each patrol
+      const patrolsWithProfiles = await Promise.all(
+        (data || []).map(async (patrol) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, username, badge_number')
+            .eq('user_id', patrol.officer_id)
+            .single();
+
+          return {
+            ...patrol,
+            profiles: profileData || { full_name: 'مستخدم مجهول', username: 'unknown', badge_number: 'غير محدد' }
+          };
+        })
+      );
+
+      setPatrols(patrolsWithProfiles);
     } catch (error) {
       console.error('Error fetching patrols:', error);
       toast({
@@ -88,15 +76,29 @@ const Patrol = () => {
       setLoadingChat(true);
       const { data, error } = await supabase
         .from('duty_chat_messages')
-        .select(`
-          *,
-          profiles (full_name, username)
-        `)
+        .select('*')
         .eq('duty_id', dutyId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setChatMessages(data || []);
+
+      // Get profiles for each message
+      const messagesWithProfiles = await Promise.all(
+        (data || []).map(async (message) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, username')
+            .eq('user_id', message.user_id)
+            .single();
+
+          return {
+            ...message,
+            profiles: profileData || { full_name: 'مستخدم مجهول', username: 'unknown' }
+          };
+        })
+      );
+
+      setChatMessages(messagesWithProfiles);
     } catch (error) {
       console.error('Error fetching chat messages:', error);
       toast({
@@ -160,7 +162,7 @@ const Patrol = () => {
     }
     acc[dutyId].push(patrol);
     return acc;
-  }, {} as { [key: string]: PatrolData[] });
+  }, {} as { [key: string]: any[] });
 
   if (loading) {
     return (
@@ -213,9 +215,9 @@ const Patrol = () => {
                   <h3 className="font-semibold text-foreground">
                     دورية منطقة {dutyId.split('_')[1]}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {dutyPatrols.length} ضابط نشط
-                  </p>
+                   <p className="text-sm text-muted-foreground">
+                     {Array.isArray(dutyPatrols) ? dutyPatrols.length : 0} ضابط نشط
+                   </p>
                 </div>
                 <Button
                   variant="outline"
@@ -229,19 +231,19 @@ const Patrol = () => {
               </div>
 
               {/* Patrol Members */}
-              <div className="space-y-2">
-                {dutyPatrols.map((patrol) => (
+               <div className="space-y-2">
+                 {Array.isArray(dutyPatrols) && dutyPatrols.map((patrol) => (
                   <div key={patrol.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
                         <span className="text-xs font-semibold text-white">
-                          {patrol.profiles.full_name.charAt(0)}
+                          {patrol.profiles?.full_name?.charAt(0) || 'M'}
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm font-semibold">{patrol.profiles.full_name}</p>
+                        <p className="text-sm font-semibold">{patrol.profiles?.full_name || 'مستخدم مجهول'}</p>
                         <p className="text-xs text-muted-foreground">
-                          {patrol.profiles.badge_number}
+                          {patrol.profiles?.badge_number || 'غير محدد'}
                         </p>
                       </div>
                     </div>
@@ -291,7 +293,7 @@ const Patrol = () => {
                   {message.user_id !== user?.id && (
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                       <span className="text-xs font-semibold">
-                        {message.profiles.full_name.charAt(0)}
+                        {message.profiles?.full_name?.charAt(0) || 'M'}
                       </span>
                     </div>
                   )}
@@ -302,7 +304,7 @@ const Patrol = () => {
                   } rounded-lg p-2`}>
                     {message.user_id !== user?.id && (
                       <p className="text-xs font-semibold mb-1">
-                        {message.profiles.full_name}
+                        {message.profiles?.full_name || 'مستخدم مجهول'}
                       </p>
                     )}
                     <p className="text-sm">{message.message}</p>
@@ -317,7 +319,7 @@ const Patrol = () => {
                   {message.user_id === user?.id && (
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                       <span className="text-xs font-semibold">
-                        {message.profiles.full_name.charAt(0)}
+                        {message.profiles?.full_name?.charAt(0) || 'M'}
                       </span>
                     </div>
                   )}
