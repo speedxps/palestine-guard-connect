@@ -17,6 +17,8 @@ import Profile from "./pages/Profile";
 import Cybercrime from "./pages/Cybercrime";
 import CybercrimeReports from "./pages/CybercrimeReports";
 import CybercrimeAccessManagement from "./components/CybercrimeAccessManagement";
+import Feed from "./pages/Feed";
+import Patrol from "./pages/Patrol";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -77,6 +79,16 @@ const App = () => {
                 <Route path="/cybercrime-access" element={
                   <ProtectedRoute requiredRole="admin">
                     <CybercrimeAccessManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/feed" element={
+                  <ProtectedRoute>
+                    <Feed />
+                  </ProtectedRoute>
+                } />
+                <Route path="/patrol" element={
+                  <ProtectedRoute>
+                    <Patrol />
                   </ProtectedRoute>
                 } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

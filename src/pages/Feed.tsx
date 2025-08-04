@@ -61,13 +61,13 @@ const Feed = () => {
         .from('posts')
         .select(`
           *,
-          profiles (full_name, username, role),
+          profiles!posts_user_id_fkey (full_name, username, role),
           post_likes (id, user_id),
           post_comments (
             id,
             content,
             created_at,
-            profiles (full_name, username)
+            profiles!post_comments_user_id_fkey (full_name, username)
           )
         `)
         .order('created_at', { ascending: false });

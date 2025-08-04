@@ -64,7 +64,7 @@ const Patrol = () => {
         .from('patrol_tracking')
         .select(`
           *,
-          profiles (full_name, username, badge_number)
+          profiles!patrol_tracking_officer_id_fkey (full_name, username, badge_number)
         `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -90,7 +90,7 @@ const Patrol = () => {
         .from('duty_chat_messages')
         .select(`
           *,
-          profiles (full_name, username)
+          profiles!duty_chat_messages_user_id_fkey (full_name, username)
         `)
         .eq('duty_id', dutyId)
         .order('created_at', { ascending: true });
