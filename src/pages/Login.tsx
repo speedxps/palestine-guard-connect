@@ -65,20 +65,19 @@ const Login = () => {
   };
 
   const fillDemoAccount = (role: 'admin' | 'officer' | 'user') => {
-    // These are just placeholder demo accounts for UI demonstration
-    // Real authentication is now handled by Supabase
+    // These are actual demo accounts that exist in the database
     switch (role) {
       case 'admin':
-        setEmail('admin@example.com');
-        setPassword('password123');
+        setEmail('noor-khallaf@hotmail.com');
+        setPassword('123123');
         break;
       case 'officer':
-        setEmail('officer@example.com');
-        setPassword('password123');
+        setEmail('officer@police.ps');
+        setPassword('officer123');
         break;
       case 'user':
-        setEmail('user@example.com');
-        setPassword('password123');
+        setEmail('user@police.ps');
+        setPassword('user123');
         break;
     }
   };
@@ -148,6 +147,31 @@ const Login = () => {
             >
               {isLoading ? 'جاري تسجيل الدخول...' : 'LOGIN'}
             </Button>
+
+            {/* Demo Account Buttons */}
+            <div className="space-y-3 pt-6 border-t border-muted">
+              <p className="text-sm text-muted-foreground text-center">Demo Accounts:</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fillDemoAccount('admin')}
+                  className="flex-1"
+                >
+                  Admin
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fillDemoAccount('officer')}
+                  className="flex-1"
+                >
+                  Officer
+                </Button>
+              </div>
+            </div>
 
             {/* Forgot Password Link */}
             <div className="text-center pt-4">
