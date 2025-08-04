@@ -20,8 +20,10 @@ import {
   Eye,
   EyeOff,
   UserCheck,
-  UserX
+  UserX,
+  Trash
 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import type { UserRole } from '@/contexts/AuthContext';
 
 interface Profile {
@@ -318,23 +320,42 @@ export const UserManagement = () => {
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) throw new Error('غير مسموح');
 
-      const { data: adminProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', currentUser.user.id)
+      // Check if access already exists
+      const { data: existingAccess } = await supabase
+        .from('cybercrime_access')
+        .select('*')
+        .eq('user_id', profile.user_id)
         .single();
 
-      if (!adminProfile) throw new Error('لم يتم العثور على ملف المدير');
+      if (existingAccess) {
+        if (existingAccess.is_active) {
+          toast({
+            title: "⚠️ تحذير",
+            description: "المستخدم يملك صلاحية وصول فعالة بالفعل",
+            variant: "destructive",
+          });
+          return;
+        } else {
+          // Reactivate existing access
+          const { error } = await supabase
+            .from('cybercrime_access')
+            .update({ is_active: true })
+            .eq('user_id', profile.user_id);
 
-      const { error } = await supabase
-        .from('cybercrime_access')
-        .insert({
-          user_id: profile.user_id,
-          granted_by: adminProfile.id,
-          is_active: true
-        });
+          if (error) throw error;
+        }
+      } else {
+        // Create new access record
+        const { error } = await supabase
+          .from('cybercrime_access')
+          .insert({
+            user_id: profile.user_id,
+            granted_by: currentUser.user.id,
+            is_active: true
+          });
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       toast({
         title: "✅ تم منح صلاحية الجرائم الإلكترونية",
@@ -372,6 +393,50 @@ export const UserManagement = () => {
       toast({
         title: "❌ خطأ في إلغاء الصلاحية",
         description: error.message || "فشل في إلغاء الوصول للجرائم الإلكترونية",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePermanentDeleteUser = async (profile: Profile) => {
+    try {
+      // First deactivate the user
+      const { error: deactivateError } = await supabase
+        .from('profiles')
+        .update({ is_active: false })
+        .eq('id', profile.id);
+
+      if (deactivateError) throw deactivateError;
+
+      // Delete cybercrime access if exists
+      const { error: cybercrimeError } = await supabase
+        .from('cybercrime_access')
+        .delete()
+        .eq('user_id', profile.user_id);
+
+      // Ignore cybercrime error if record doesn't exist
+
+      // Try to delete the auth user (might fail if not admin)
+      try {
+        const { error: authError } = await supabase.auth.admin.deleteUser(profile.user_id);
+        if (authError) {
+          console.warn('Could not delete auth user:', authError);
+        }
+      } catch (authError) {
+        console.warn('Could not delete auth user:', authError);
+      }
+
+      toast({
+        title: "✅ تم حذف المستخدم نهائياً",
+        description: `تم حذف ${profile.full_name} نهائياً من النظام`,
+      });
+
+      fetchProfiles();
+    } catch (error: any) {
+      console.error('Error permanently deleting user:', error);
+      toast({
+        title: "❌ خطأ في الحذف",
+        description: error.message || "فشل في حذف المستخدم نهائياً",
         variant: "destructive",
       });
     }
@@ -646,14 +711,39 @@ export const UserManagement = () => {
                   </DialogContent>
                 </Dialog>
                 
-                {profile.is_active && (
+                {profile.is_active ? (
                   <Button 
                     variant="destructive" 
                     size="sm"
                     onClick={() => handleDeactivateUser(profile.id)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <UserX className="h-4 w-4" />
                   </Button>
+                ) : (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="font-arabic">حذف نهائي للمستخدم</AlertDialogTitle>
+                        <AlertDialogDescription className="font-arabic">
+                          هل أنت متأكد من حذف {profile.full_name} نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="font-arabic">إلغاء</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => handlePermanentDeleteUser(profile)}
+                          className="bg-destructive hover:bg-destructive/90 font-arabic"
+                        >
+                          حذف نهائي
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             </div>

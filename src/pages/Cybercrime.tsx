@@ -28,12 +28,27 @@ const Cybercrime = () => {
     }
 
     try {
+      // Check if user is admin first
+      if (user.role === 'admin') {
+        setHasAccess(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Check cybercrime access directly from the table
       const { data, error } = await supabase
-        .rpc('has_cybercrime_access', { user_id: user.id });
+        .from('cybercrime_access')
+        .select('is_active')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
 
-      setHasAccess(data);
+      // User has access if they have an active cybercrime_access record
+      setHasAccess(!!data);
     } catch (error) {
       console.error('Error checking cybercrime access:', error);
       setHasAccess(false);

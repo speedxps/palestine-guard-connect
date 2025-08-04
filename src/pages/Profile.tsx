@@ -4,15 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccountSettings } from '@/components/profile/AccountSettings';
+import { NotificationSettings } from '@/components/profile/NotificationSettings';
+import { SecuritySettings } from '@/components/profile/SecuritySettings';
+import { LanguageSettings } from '@/components/profile/LanguageSettings';
 import { 
   ArrowLeft, 
   User, 
   Shield, 
-  LogOut,
-  Settings,
-  Bell,
-  Lock,
-  Globe
+  LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -56,32 +56,6 @@ const Profile = () => {
     }
   };
 
-  const menuItems = [
-    {
-      icon: Settings,
-      title: 'إعدادات الحساب',
-      subtitle: 'تعديل البيانات الشخصية',
-      action: () => {}
-    },
-    {
-      icon: Bell,
-      title: 'الإشعارات',
-      subtitle: 'إدارة إعدادات الإشعارات',
-      action: () => {}
-    },
-    {
-      icon: Lock,
-      title: 'الأمان والخصوصية',
-      subtitle: 'كلمة المرور والأمان',
-      action: () => {}
-    },
-    {
-      icon: Globe,
-      title: 'اللغة',
-      subtitle: 'العربية / English',
-      action: () => {}
-    }
-  ];
 
   return (
     <div className="mobile-container">
@@ -154,30 +128,10 @@ const Profile = () => {
 
         {/* Menu Items */}
         <div className="space-y-3">
-          {menuItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <Card 
-                key={index}
-                className="glass-card p-4 cursor-pointer hover:bg-card/90 transition-all duration-300"
-                onClick={item.action}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-primary/20 rounded-lg">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold font-arabic text-foreground">
-                      {item.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {item.subtitle}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+          <AccountSettings />
+          <NotificationSettings />
+          <SecuritySettings />
+          <LanguageSettings />
         </div>
 
         {/* Logout Button */}
