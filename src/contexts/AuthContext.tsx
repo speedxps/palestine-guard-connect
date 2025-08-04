@@ -44,26 +44,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .single();
                 
               if (profile) {
-                setUser({
+                const userData = {
                   id: profile.id,
                   email: session.user.email || '',
                   name: profile.full_name,
                   role: profile.role as UserRole,
-                });
+                };
+                setUser(userData);
+                // Store user data in localStorage for role-based redirects
+                localStorage.setItem('user', JSON.stringify(userData));
               }
             } catch (error) {
               console.error('Error fetching profile:', error);
               // Fallback to basic user data
-              setUser({
+              const userData = {
                 id: session.user.id,
                 email: session.user.email || '',
                 name: session.user.user_metadata?.full_name || 'User',
                 role: (session.user.user_metadata?.role as UserRole) || 'user',
-              });
+              };
+              setUser(userData);
+              localStorage.setItem('user', JSON.stringify(userData));
             }
           }, 0);
         } else {
           setUser(null);
+          localStorage.removeItem('user');
         }
       }
     );

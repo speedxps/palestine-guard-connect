@@ -30,8 +30,21 @@ const Login = () => {
           title: "Login Successful",
           description: "Welcome to Palestinian Police Application",
         });
-        // Use window.location for a full page refresh to ensure clean auth state
-        window.location.href = '/dashboard';
+        
+        // Wait a moment for auth context to update with user data
+        setTimeout(() => {
+          const user = JSON.parse(localStorage.getItem('user') || 'null');
+          const role = user?.role;
+          
+          // Redirect based on user role
+          if (role === 'admin') {
+            window.location.href = '/dashboard';
+          } else if (role === 'officer' || role === 'cyber_officer') {
+            window.location.href = '/incidents';
+          } else {
+            window.location.href = '/dashboard';
+          }
+        }, 1000);
       } else {
         toast({
           title: "Login Failed",
