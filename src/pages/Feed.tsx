@@ -138,7 +138,7 @@ const Feed = () => {
         .insert({
           content: newPost,
           privacy_level: newPostPrivacy,
-          user_id: user?.id,
+          user_id: user?.id, // This should be the auth user ID, not profile ID
           image_url: imageUrl
         });
 
@@ -226,7 +226,7 @@ const Feed = () => {
           .from('post_likes')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user?.id);
+          .eq('user_id', user?.id); // Keep using auth user ID for likes
 
         if (error) throw error;
       } else {
@@ -234,7 +234,7 @@ const Feed = () => {
           .from('post_likes')
           .insert({
             post_id: postId,
-            user_id: user?.id
+            user_id: user?.id // Keep using auth user ID for likes
           });
 
         if (error) throw error;
@@ -256,7 +256,7 @@ const Feed = () => {
         .insert({
           post_id: postId,
           content: comment,
-          user_id: user?.id
+          user_id: user?.id // Keep using auth user ID for comments
         });
 
       if (error) throw error;
