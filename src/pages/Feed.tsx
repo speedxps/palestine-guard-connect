@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Plus, Heart, MessageCircle, Share2, MoreHorizontal, Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Heart, MessageCircle, Share2, MoreHorizontal, Edit2, Trash2, Image as ImageIcon, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +24,9 @@ const Feed = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [editingPost, setEditingPost] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -99,16 +102,44 @@ const Feed = () => {
     }
   };
 
+  const uploadImages = async () => {
+    const uploadedUrls: string[] = [];
+    
+    for (const file of selectedImages) {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('post-images')
+        .upload(fileName, file);
+
+      if (error) throw error;
+      
+      const { data: urlData } = supabase.storage
+        .from('post-images')
+        .getPublicUrl(fileName);
+        
+      uploadedUrls.push(urlData.publicUrl);
+    }
+    
+    return uploadedUrls;
+  };
+
   const createPost = async () => {
     if (!newPost.trim()) return;
 
     try {
+      let imageUrl = null;
+      if (selectedImages.length > 0) {
+        const uploadedUrls = await uploadImages();
+        imageUrl = uploadedUrls[0]; // For now, store first image
+      }
+
       const { error } = await supabase
         .from('posts')
         .insert({
           content: newPost,
           privacy_level: newPostPrivacy,
-          user_id: user?.id
+          user_id: user?.id,
+          image_url: imageUrl
         });
 
       if (error) throw error;
@@ -120,6 +151,8 @@ const Feed = () => {
 
       setNewPost('');
       setNewPostPrivacy('public');
+      setSelectedImages([]);
+      setImageUrls([]);
       setShowCreatePost(false);
       fetchPosts();
     } catch (error) {
@@ -263,6 +296,22 @@ const Feed = () => {
     return user?.role === 'admin' || post.user_id === user?.id;
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedImages(files);
+    
+    // Create preview URLs
+    const urls = files.map(file => URL.createObjectURL(file));
+    setImageUrls(urls);
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = selectedImages.filter((_, i) => i !== index);
+    const newUrls = imageUrls.filter((_, i) => i !== index);
+    setSelectedImages(newImages);
+    setImageUrls(newUrls);
+  };
+
   if (loading) {
     return (
       <div className="mobile-container">
@@ -303,40 +352,86 @@ const Feed = () => {
       </div>
 
       <div className="px-4 pb-20 space-y-4">
-        {/* Create Post Dialog */}
-        <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-arabic">إنشاء منشور جديد</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
+        {/* Quick Post Creation */}
+        <Card className="glass-card p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="font-semibold text-primary">
+                {user?.full_name?.charAt(0) || 'U'}
+              </span>
+            </div>
+            <div className="flex-1 space-y-3">
               <Textarea
                 placeholder="ما الذي تريد مشاركته؟"
                 value={newPost}
                 onChange={(e) => setNewPost(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[60px] border-0 bg-muted/30 focus-visible:ring-1"
               />
-              <Select value={newPostPrivacy} onValueChange={setNewPostPrivacy}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر مستوى الخصوصية" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="public">عام</SelectItem>
-                  <SelectItem value="admin_only">المديرين فقط</SelectItem>
-                  <SelectItem value="specific_groups">مجموعات محددة</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowCreatePost(false)}>
-                  إلغاء
-                </Button>
-                <Button onClick={createPost}>
+              
+              {/* Image Previews */}
+              {imageUrls.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {imageUrls.map((url, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={url} 
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6"
+                        onClick={() => removeImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageSelect}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    صور
+                  </Button>
+                  <Select value={newPostPrivacy} onValueChange={setNewPostPrivacy}>
+                    <SelectTrigger className="w-auto border-0 bg-transparent">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">عام</SelectItem>
+                      <SelectItem value="admin_only">المديرين فقط</SelectItem>
+                      <SelectItem value="specific_groups">مجموعات محددة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  onClick={createPost}
+                  disabled={!newPost.trim()}
+                  size="sm"
+                >
                   نشر
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </Card>
 
         {/* Posts */}
         {posts.map((post) => {
