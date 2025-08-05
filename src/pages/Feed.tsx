@@ -340,25 +340,18 @@ const Feed = () => {
               <h1 className="text-xl font-bold font-arabic">آخر الأخبار</h1>
               <p className="text-sm text-muted-foreground">News Feed</p>
             </div>
-          </div>
-          <Button
-            onClick={() => setShowCreatePost(true)}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            منشور جديد
-          </Button>
-        </div>
-      </div>
+           </div>
+         </div>
+       </div>
 
-      <div className="px-4 pb-20 space-y-4">
+       <div className="px-4 pb-20 space-y-4">
         {/* Quick Post Creation */}
         <Card className="glass-card p-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="font-semibold text-primary">
-                {user?.full_name?.charAt(0) || 'U'}
-              </span>
+               <span className="font-semibold text-primary">
+                 {user?.name?.charAt(0) || 'U'}
+               </span>
             </div>
             <div className="flex-1 space-y-3">
               <Textarea

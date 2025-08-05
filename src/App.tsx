@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AccessDenied from "@/components/AccessDenied";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
@@ -42,22 +43,22 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/incidents" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="officer">
                     <Incidents />
                   </ProtectedRoute>
                 } />
                 <Route path="/tasks" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="officer">
                     <Tasks />
                   </ProtectedRoute>
                 } />
                 <Route path="/chat" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="officer">
                     <Chat />
                   </ProtectedRoute>
                 } />
                 <Route path="/new-incident" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="officer">
                     <NewIncident />
                   </ProtectedRoute>
                 } />
@@ -67,12 +68,12 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/cybercrime" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <Cybercrime />
                   </ProtectedRoute>
                 } />
                 <Route path="/cybercrime-reports" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <CybercrimeReports />
                   </ProtectedRoute>
                 } />
@@ -87,10 +88,11 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/patrol" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="officer">
                     <Patrol />
                   </ProtectedRoute>
                 } />
+                <Route path="/access-denied" element={<AccessDenied />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -36,8 +36,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const requiredLevel = roleHierarchy[requiredRole];
     
     if (userLevel < requiredLevel) {
-      console.log('Redirecting to dashboard - insufficient role');
-      return <Navigate to="/dashboard" replace />;
+      console.log('Redirecting to access denied - insufficient role');
+      return <Navigate to="/access-denied" replace />;
     }
   }
 
