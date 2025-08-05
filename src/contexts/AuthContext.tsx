@@ -11,6 +11,7 @@ export interface User {
   name: string;
   role: UserRole;
   avatar?: string;
+  full_name?: string; // Add this for profile updates
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  refreshUser: () => Promise<void>; // Add refresh function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,17 +56,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .single();
                 
               if (profile) {
-                const userData = {
-                  id: profile.id,
-                  email: session.user.email || '',
-                  name: profile.full_name,
-                  role: profile.role as UserRole,
-                };
-                setUser(userData);
-                console.log('Profile loaded:', userData);
+                setUser({
+                  ...basicUserData,
+                  name: profile.full_name || basicUserData.name,
+                  full_name: profile.full_name,
+                  role: profile.role || basicUserData.role,
+                });
+                console.log('Profile loaded:', profile);
+              } else {
+                console.log('No profile found for user');
               }
             } catch (error) {
-              console.log('Profile fetch failed, using basic data');
+              console.log('Profile fetch failed, using basic data:', error);
             }
           }, 100);
         } else {
@@ -109,6 +112,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshUser = async () => {
+    if (!session?.user) return;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      if (profile) {
+        setUser(prev => prev ? {
+          ...prev,
+          name: profile.full_name || prev.name,
+          full_name: profile.full_name,
+          role: profile.role || prev.role,
+        } : null);
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -122,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         login,
         logout,
+        refreshUser,
         isAuthenticated: !!user && !!session,
       }}
     >

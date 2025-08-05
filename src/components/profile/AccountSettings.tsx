@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Settings, Save, Edit } from 'lucide-react';
 
 export const AccountSettings = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +67,9 @@ export const AccountSettings = () => {
         title: "✅ تم حفظ التغييرات",
         description: "تم تحديث معلوماتك الشخصية بنجاح",
       });
+
+      // Refresh user data in context
+      await refreshUser();
 
       setIsOpen(false);
     } catch (error: any) {
