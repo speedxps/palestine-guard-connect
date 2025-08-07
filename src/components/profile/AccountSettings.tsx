@@ -52,6 +52,17 @@ export const AccountSettings = () => {
     
     setIsLoading(true);
     try {
+      // First get the user's profile to ensure we can update it
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!currentProfile) {
+        throw new Error('Profile not found');
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({

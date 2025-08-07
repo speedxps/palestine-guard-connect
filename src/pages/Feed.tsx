@@ -127,18 +127,31 @@ const Feed = () => {
     if (!newPost.trim()) return;
 
     try {
+      // Get the current user profile to use the correct user_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (!profile) {
+        throw new Error('User profile not found');
+      }
+
       let imageUrl = null;
       if (selectedImages.length > 0) {
         const uploadedUrls = await uploadImages();
         imageUrl = uploadedUrls[0]; // For now, store first image
       }
 
+      console.log('Creating post with profile ID:', profile.id);
+
       const { error } = await supabase
         .from('posts')
         .insert({
           content: newPost,
           privacy_level: newPostPrivacy,
-          user_id: user?.id, // This should be the auth user ID, not profile ID
+          user_id: profile.id, // Use profile ID from profiles table
           image_url: imageUrl
         });
 
@@ -221,12 +234,23 @@ const Feed = () => {
 
   const toggleLike = async (postId: string, isLiked: boolean) => {
     try {
+      // Get the current user profile to use the correct user_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (!profile) {
+        throw new Error('User profile not found');
+      }
+
       if (isLiked) {
         const { error } = await supabase
           .from('post_likes')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user?.id); // Keep using auth user ID for likes
+          .eq('user_id', profile.id);
 
         if (error) throw error;
       } else {
@@ -234,7 +258,7 @@ const Feed = () => {
           .from('post_likes')
           .insert({
             post_id: postId,
-            user_id: user?.id // Keep using auth user ID for likes
+            user_id: profile.id
           });
 
         if (error) throw error;
@@ -251,12 +275,23 @@ const Feed = () => {
     if (!comment?.trim()) return;
 
     try {
+      // Get the current user profile to use the correct user_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (!profile) {
+        throw new Error('User profile not found');
+      }
+
       const { error } = await supabase
         .from('post_comments')
         .insert({
           post_id: postId,
           content: comment,
-          user_id: user?.id // Keep using auth user ID for comments
+          user_id: profile.id
         });
 
       if (error) throw error;

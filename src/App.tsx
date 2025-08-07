@@ -26,8 +26,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <React.Fragment>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
@@ -100,7 +99,6 @@ const App = () => {
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
-    </React.Fragment>
   );
 };
 
