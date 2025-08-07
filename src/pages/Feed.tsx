@@ -50,7 +50,7 @@ const Feed = () => {
           const { data: profileData } = await supabase
             .from('profiles')
             .select('full_name, username, role')
-            .eq('user_id', post.user_id)
+            .eq('id', post.user_id)
             .single();
 
           const { data: likesData } = await supabase
@@ -70,7 +70,7 @@ const Feed = () => {
               const { data: commentProfileData } = await supabase
                 .from('profiles')
                 .select('full_name, username')
-                .eq('user_id', comment.user_id)
+                .eq('id', comment.user_id)
                 .single();
 
               return {
