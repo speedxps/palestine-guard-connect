@@ -21,6 +21,8 @@ import CybercrimeAccessManagement from "./components/CybercrimeAccessManagement"
 import Feed from "./pages/Feed";
 import Patrol from "./pages/Patrol";
 import NotFound from "./pages/NotFound";
+import Violations from "./pages/Violations";
+import ViolationsAdmin from "./pages/ViolationsAdmin";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,7 @@ const App = () => {
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
+                <Route path="/violations" element={<Violations />} />
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
@@ -89,6 +92,11 @@ const App = () => {
                 <Route path="/patrol" element={
                   <ProtectedRoute requiredRole="officer">
                     <Patrol />
+                  </ProtectedRoute>
+                } />
+                <Route path="/violations-admin" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <ViolationsAdmin />
                   </ProtectedRoute>
                 } />
                 <Route path="/access-denied" element={<AccessDenied />} />
