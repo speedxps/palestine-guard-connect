@@ -17,7 +17,8 @@ import {
   Bell,
   Users,
   Newspaper,
-  Calendar
+  Calendar,
+  Search
 } from 'lucide-react';
 import policeLogoUrl from '@/assets/police-logo.png';
 
@@ -40,6 +41,14 @@ const Dashboard = () => {
       icon: Newspaper,
       route: '/feed',
       description: 'آخر الأخبار والمنشورات',
+    },
+    {
+      id: 'violations',
+      titleAr: 'استعلام المخالفات والقضايا',
+      titleEn: 'Violations & Cases Inquiry',
+      icon: Search,
+      route: '/violations',
+      description: 'البحث برقم الهوية',
     },
     {
       id: 'incidents',
@@ -109,6 +118,14 @@ const Dashboard = () => {
       icon: Shield,
       route: '#',
       description: 'إدارة صلاحيات ضباط الجرائم الإلكترونية',
+    });
+    menuItems.push({
+      id: 'violations-admin-panel',
+      titleAr: 'إدارة المخالفات والقضايا',
+      titleEn: 'Violations Admin',
+      icon: Shield,
+      route: '/violations-admin',
+      description: 'إضافة/تعديل/حذف السجلات',
     });
   }
 
