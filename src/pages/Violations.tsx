@@ -6,6 +6,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type RecordItem = {
   id: string;
@@ -24,6 +25,12 @@ export default function Violations() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const { toast } = useToast();
+
+  // Details dialog state
+  const [selected, setSelected] = useState<RecordItem | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [relatedRecords, setRelatedRecords] = useState<RecordItem[]>([]);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
     // SEO basics
@@ -69,6 +76,34 @@ export default function Violations() {
       setLoading(false);
     }
   };
+
+  const openDetails = async (r: RecordItem) => {
+    setSelected(r);
+    setDetailsOpen(true);
+  };
+
+  // Load related records for the selected person when dialog opens
+  useEffect(() => {
+    const fetchRelated = async () => {
+      if (!detailsOpen || !selected?.national_id) return;
+      setDetailsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("traffic_records")
+          .select("id, national_id, citizen_name, record_type, record_date, details")
+          .eq("national_id", selected.national_id)
+          .order("record_date", { ascending: false });
+        if (error) throw error;
+        setRelatedRecords(data || []);
+      } catch (err: any) {
+        console.error("Details fetch error:", err);
+        toast({ title: "خطأ", description: "تعذر تحميل التفاصيل.", variant: "destructive" });
+      } finally {
+        setDetailsLoading(false);
+      }
+    };
+    fetchRelated();
+  }, [detailsOpen, selected?.national_id]);
 
   // Optional: reload if data changes in realtime while a query is active
   useEffect(() => {
@@ -144,7 +179,14 @@ export default function Violations() {
                 <TableBody>
                   {results.map((r) => (
                     <TableRow key={r.id}>
-                      <TableCell>{r.citizen_name}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <span>{r.citizen_name}</span>
+                          <Button variant="secondary" size="sm" onClick={() => openDetails(r)}>
+                            التفاصيل العامة
+                          </Button>
+                        </div>
+                      </TableCell>
                       <TableCell>{r.national_id}</TableCell>
                       <TableCell>{typeToArabic(r.record_type)}</TableCell>
                       <TableCell>{r.record_date}</TableCell>
@@ -157,6 +199,69 @@ export default function Violations() {
           </Card>
         )}
       </section>
+
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>التفاصيل العامة</DialogTitle>
+            <DialogDescription>معلومات شاملة عن المواطن والسجلات المرتبطة.</DialogDescription>
+          </DialogHeader>
+          {selected ? (
+            <div className="space-y-6">
+              <section>
+                <h3 className="font-medium">المعلومات الأساسية</h3>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  <p>الاسم: {selected.citizen_name}</p>
+                  <p>رقم الهوية: {selected.national_id}</p>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="font-medium">المركبات</h3>
+                <p className="mt-2 text-sm text-muted-foreground">لا توجد بيانات متاحة.</p>
+              </section>
+
+              <section>
+                <h3 className="font-medium">بيانات الأسرة</h3>
+                <p className="mt-2 text-sm text-muted-foreground">لا توجد بيانات متاحة.</p>
+              </section>
+
+              <section>
+                <h3 className="font-medium">المعلومات الأمنية</h3>
+                <div className="mt-2">
+                  {detailsLoading ? (
+                    <p className="text-sm text-muted-foreground">جاري التحميل...</p>
+                  ) : relatedRecords.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>النوع</TableHead>
+                          <TableHead>التاريخ</TableHead>
+                          <TableHead>الحالة</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {relatedRecords.map((rec) => (
+                          <TableRow key={rec.id}>
+                            <TableCell>{typeToArabic(rec.record_type)}</TableCell>
+                            <TableCell>{rec.record_date}</TableCell>
+                            <TableCell>-</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">لا توجد سجلات.</p>
+                  )}
+                </div>
+              </section>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">لا يوجد عنصر محدد.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </main>
   );
 }
