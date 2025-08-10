@@ -669,6 +669,39 @@ export type Database = {
           },
         ]
       }
+      traffic_records: {
+        Row: {
+          citizen_name: string
+          created_at: string
+          details: string | null
+          id: string
+          national_id: string
+          record_date: string
+          record_type: Database["public"]["Enums"]["traffic_record_type"]
+          updated_at: string
+        }
+        Insert: {
+          citizen_name: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          national_id: string
+          record_date: string
+          record_type: Database["public"]["Enums"]["traffic_record_type"]
+          updated_at?: string
+        }
+        Update: {
+          citizen_name?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          national_id?: string
+          record_date?: string
+          record_type?: Database["public"]["Enums"]["traffic_record_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -701,6 +734,7 @@ export type Database = {
       incident_status: "new" | "in_progress" | "resolved"
       notification_status: "unread" | "read"
       task_status: "pending" | "completed" | "in_progress"
+      traffic_record_type: "violation" | "case"
       user_role: "admin" | "officer" | "user" | "cyber_officer"
     }
     CompositeTypes: {
@@ -839,6 +873,7 @@ export const Constants = {
       incident_status: ["new", "in_progress", "resolved"],
       notification_status: ["unread", "read"],
       task_status: ["pending", "completed", "in_progress"],
+      traffic_record_type: ["violation", "case"],
       user_role: ["admin", "officer", "user", "cyber_officer"],
     },
   },

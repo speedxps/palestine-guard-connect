@@ -4,59 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-// Types
-type EntryType = "violation" | "case";
-
-interface RecordItem {
+type RecordItem = {
   id: string;
-  nationalId: string;
-  name: string;
-  type: EntryType;
-  date: string; // YYYY-MM-DD
-  details: string;
-}
+  national_id: string;
+  citizen_name: string;
+  record_type: "violation" | "case";
+  record_date: string; // ISO date string
+  details: string | null;
+};
 
-const STORAGE_KEY = "violationsData";
-
-const DEFAULT_DATA: Omit<RecordItem, "id">[] = [
-  {
-    nationalId: "401234567",
-    name: "Ahmed Mohammed",
-    type: "violation",
-    date: "2025-07-15",
-    details: "Speed limit exceeded",
-  },
-  {
-    nationalId: "402345678",
-    name: "Layla Khaled",
-    type: "case",
-    date: "2025-06-10",
-    details: "Property dispute",
-  },
-  {
-    nationalId: "404706285",
-    name: "Samer Youssef",
-    type: "violation",
-    date: "2025-08-01",
-    details: "Parking in a prohibited area",
-  },
-];
-
-function ensureSeedData(): RecordItem[] {
-  const existing = localStorage.getItem(STORAGE_KEY);
-  if (existing) return JSON.parse(existing);
-  const seeded: RecordItem[] = DEFAULT_DATA.map((r) => ({ id: crypto.randomUUID(), ...r }));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-  return seeded;
-}
-
-const typeToArabic = (t: EntryType) => (t === "violation" ? "مخالفة مرورية" : "قضية");
+const typeToArabic = (t: RecordItem["record_type"]) => (t === "violation" ? "مخالفة مرورية" : "قضية");
 
 export default function Violations() {
   const [nationalId, setNationalId] = useState("");
-  const [data, setData] = useState<RecordItem[]>([]);
+  const [results, setResults] = useState<RecordItem[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // SEO basics
@@ -69,8 +36,7 @@ export default function Violations() {
       document.head.appendChild(meta);
     }
     meta.setAttribute("content", desc);
-    const linkEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!linkEl) {
+    if (!document.querySelector('link[rel="canonical"]')) {
       const l = document.createElement("link");
       l.rel = "canonical";
       l.href = window.location.href;
@@ -78,15 +44,47 @@ export default function Violations() {
     }
   }, []);
 
-  useEffect(() => {
-    setData(ensureSeedData());
-  }, []);
-
-  const results = useMemo(() => {
+  const handleSearch = async () => {
     const q = nationalId.trim();
-    if (!q) return [] as RecordItem[];
-    return data.filter((r) => r.nationalId === q);
-  }, [nationalId, data]);
+    setSearched(true);
+    if (!q) {
+      setResults([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("traffic_records")
+        .select("id, national_id, citizen_name, record_type, record_date, details")
+        .eq("national_id", q)
+        .order("record_date", { ascending: false });
+
+      if (error) throw error;
+      setResults(data || []);
+    } catch (err: any) {
+      console.error("Search error:", err);
+      toast({ title: "خطأ في البحث", description: "تعذر جلب النتائج. حاول لاحقًا.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Optional: reload if data changes in realtime while a query is active
+  useEffect(() => {
+    if (!searched || !nationalId.trim()) return;
+    const channel = supabase
+      .channel("traffic-records-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "traffic_records" }, handleSearch)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "traffic_records" }, handleSearch)
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "traffic_records" }, handleSearch)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searched, nationalId]);
 
   return (
     <main className="container mx-auto max-w-4xl px-4 py-10">
@@ -109,9 +107,9 @@ export default function Violations() {
               className="md:flex-1"
               aria-label="رقم الهوية الوطنية"
             />
-            <Button onClick={() => setSearched(true)} className="md:w-40">
+            <Button onClick={handleSearch} className="md:w-40" disabled={loading}>
               <Search className="mr-2 h-4 w-4" />
-              بحث
+              {loading ? "جاري البحث..." : "بحث"}
             </Button>
           </div>
         </CardContent>
@@ -146,11 +144,11 @@ export default function Violations() {
                 <TableBody>
                   {results.map((r) => (
                     <TableRow key={r.id}>
-                      <TableCell>{r.name}</TableCell>
-                      <TableCell>{r.nationalId}</TableCell>
-                      <TableCell>{typeToArabic(r.type)}</TableCell>
-                      <TableCell>{r.date}</TableCell>
-                      <TableCell>{r.details}</TableCell>
+                      <TableCell>{r.citizen_name}</TableCell>
+                      <TableCell>{r.national_id}</TableCell>
+                      <TableCell>{typeToArabic(r.record_type)}</TableCell>
+                      <TableCell>{r.record_date}</TableCell>
+                      <TableCell>{r.details || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

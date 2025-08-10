@@ -9,29 +9,17 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Edit, Filter, Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Types
+// DB Types
 type EntryType = "violation" | "case";
-
 interface RecordItem {
   id: string;
-  nationalId: string;
-  name: string;
-  type: EntryType;
-  date: string; // YYYY-MM-DD
-  details: string;
-}
-
-const STORAGE_KEY = "violationsData";
-
-function loadData(): RecordItem[] {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as RecordItem[]; } catch { return []; }
-}
-
-function saveData(d: RecordItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+  national_id: string;
+  citizen_name: string;
+  record_type: EntryType;
+  record_date: string; // ISO date
+  details: string | null;
 }
 
 const typeToArabic = (t: EntryType) => (t === "violation" ? "مخالفة مرورية" : "قضية");
@@ -39,7 +27,7 @@ const typeToArabic = (t: EntryType) => (t === "violation" ? "مخالفة مرو
 export default function ViolationsAdmin() {
   const { toast } = useToast();
 
-  // SEO basics
+  // SEO
   useEffect(() => {
     document.title = "لوحة إدارة المخالفات والقضايا | الشرطة";
     const desc = "إدارة وإضافة وتعديل سجلات المخالفات والقضايا مع إمكانات التصفية";
@@ -50,8 +38,7 @@ export default function ViolationsAdmin() {
       document.head.appendChild(meta);
     }
     meta.setAttribute("content", desc);
-    const linkEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!linkEl) {
+    if (!document.querySelector('link[rel="canonical"]')) {
       const l = document.createElement("link");
       l.rel = "canonical";
       l.href = window.location.href;
@@ -59,7 +46,8 @@ export default function ViolationsAdmin() {
     }
   }, []);
 
-  const [data, setData] = useState<RecordItem[]>(() => loadData());
+  const [data, setData] = useState<RecordItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Add form
   const [nationalId, setNationalId] = useState("");
@@ -76,45 +64,99 @@ export default function ViolationsAdmin() {
   // Edit dialog
   const [editing, setEditing] = useState<RecordItem | null>(null);
 
-  const filtered = useMemo(() => {
-    return data.filter((r) => {
-      const typeOk = typeFilter === "all" ? true : r.type === typeFilter;
-      const d = new Date(r.date).getTime();
-      const fromOk = fromDate ? d >= new Date(fromDate).getTime() : true;
-      const toOk = toDate ? d <= new Date(toDate).getTime() : true;
-      return typeOk && fromOk && toOk;
-    });
-  }, [data, typeFilter, fromDate, toDate]);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("traffic_records")
+        .select("id, national_id, citizen_name, record_type, record_date, details")
+        .order("record_date", { ascending: false });
 
-  const addRecord = () => {
+      if (typeFilter !== "all") query = query.eq("record_type", typeFilter);
+      if (fromDate) query = query.gte("record_date", fromDate);
+      if (toDate) query = query.lte("record_date", toDate);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      setData(data || []);
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      toast({ title: "خطأ في الجلب", description: "تعذر تحميل السجلات.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter, fromDate, toDate]);
+
+  // Realtime updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("traffic-records-admin")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "traffic_records" }, fetchData)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "traffic_records" }, fetchData)
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "traffic_records" }, fetchData)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const addRecord = async () => {
     if (!nationalId || !name || !date) {
       toast({ title: "بيانات ناقصة", description: "يرجى تعبئة رقم الهوية والاسم والتاريخ", variant: "destructive" });
       return;
     }
-    const newItem: RecordItem = { id: crypto.randomUUID(), nationalId, name, type, date, details };
-    const next = [newItem, ...data];
-    setData(next);
-    saveData(next);
-    setNationalId(""); setName(""); setType("violation"); setDate(""); setDetails("");
-    toast({ title: "تمت الإضافة", description: "تمت إضافة السجل بنجاح" });
+    try {
+      const { error } = await supabase.from("traffic_records").insert({
+        national_id: nationalId,
+        citizen_name: name,
+        record_type: type,
+        record_date: date,
+        details: details || null,
+      });
+      if (error) throw error;
+      setNationalId(""); setName(""); setType("violation"); setDate(""); setDetails("");
+      toast({ title: "تمت الإضافة", description: "تمت إضافة السجل بنجاح" });
+    } catch (err: any) {
+      console.error("Insert error:", err);
+      toast({ title: "فشل الإضافة", description: "تحقق من الصلاحيات أو البيانات.", variant: "destructive" });
+    }
   };
 
-  const deleteRecord = (id: string) => {
-    const next = data.filter((r) => r.id !== id);
-    setData(next);
-    saveData(next);
-    toast({ title: "تم الحذف", description: "تم حذف السجل" });
+  const deleteRecord = async (id: string) => {
+    try {
+      const { error } = await supabase.from("traffic_records").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "تم الحذف", description: "تم حذف السجل" });
+    } catch (err: any) {
+      console.error("Delete error:", err);
+      toast({ title: "فشل الحذف", description: "تحقق من الصلاحيات.", variant: "destructive" });
+    }
   };
 
-  const openEdit = (item: RecordItem) => setEditing(item);
-
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editing) return;
-    const next = data.map((r) => (r.id === editing.id ? editing : r));
-    setData(next);
-    saveData(next);
-    setEditing(null);
-    toast({ title: "تم التعديل", description: "تم حفظ التعديلات" });
+    try {
+      const { error } = await supabase
+        .from("traffic_records")
+        .update({
+          national_id: editing.national_id,
+          citizen_name: editing.citizen_name,
+          record_type: editing.record_type,
+          record_date: editing.record_date,
+          details: editing.details ?? null,
+        })
+        .eq("id", editing.id);
+      if (error) throw error;
+      setEditing(null);
+      toast({ title: "تم التعديل", description: "تم حفظ التعديلات" });
+    } catch (err: any) {
+      console.error("Update error:", err);
+      toast({ title: "فشل التعديل", description: "تحقق من الصلاحيات أو البيانات.", variant: "destructive" });
+    }
   };
 
   return (
@@ -202,7 +244,7 @@ export default function ViolationsAdmin() {
         </CardHeader>
         <CardContent>
           <Table>
-            <TableCaption>إجمالي السجلات: {filtered.length}</TableCaption>
+            <TableCaption>{loading ? "جاري التحميل..." : `إجمالي السجلات: ${data.length}`}</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>الاسم</TableHead>
@@ -214,15 +256,15 @@ export default function ViolationsAdmin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((r) => (
+              {data.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell>{r.name}</TableCell>
-                  <TableCell>{r.nationalId}</TableCell>
-                  <TableCell>{typeToArabic(r.type)}</TableCell>
-                  <TableCell>{r.date}</TableCell>
-                  <TableCell className="max-w-[320px] truncate" title={r.details}>{r.details}</TableCell>
+                  <TableCell>{r.citizen_name}</TableCell>
+                  <TableCell>{r.national_id}</TableCell>
+                  <TableCell>{typeToArabic(r.record_type)}</TableCell>
+                  <TableCell>{r.record_date}</TableCell>
+                  <TableCell className="max-w-[320px] truncate" title={r.details || undefined}>{r.details || "-"}</TableCell>
                   <TableCell className="space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(r)}>
+                    <Button variant="outline" size="sm" onClick={() => setEditing(r)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => deleteRecord(r.id)}>
@@ -231,7 +273,7 @@ export default function ViolationsAdmin() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {!loading && data.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                     لا توجد سجلات مطابقة لمعايير التصفية الحالية.
@@ -254,15 +296,15 @@ export default function ViolationsAdmin() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>رقم الهوية</Label>
-                  <Input value={editing.nationalId} onChange={(e) => setEditing({ ...editing, nationalId: e.target.value.replace(/[^0-9]/g, "") })} />
+                  <Input value={editing.national_id} onChange={(e) => setEditing({ ...editing, national_id: e.target.value.replace(/[^0-9]/g, "") })} />
                 </div>
                 <div>
                   <Label>الاسم</Label>
-                  <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+                  <Input value={editing.citizen_name} onChange={(e) => setEditing({ ...editing, citizen_name: e.target.value })} />
                 </div>
                 <div>
                   <Label>النوع</Label>
-                  <Select value={editing.type} onValueChange={(v: EntryType) => setEditing({ ...editing, type: v })}>
+                  <Select value={editing.record_type} onValueChange={(v: EntryType) => setEditing({ ...editing, record_type: v })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -274,12 +316,12 @@ export default function ViolationsAdmin() {
                 </div>
                 <div>
                   <Label>التاريخ</Label>
-                  <Input type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} />
+                  <Input type="date" value={editing.record_date} onChange={(e) => setEditing({ ...editing, record_date: e.target.value })} />
                 </div>
               </div>
               <div>
                 <Label>تفاصيل إضافية</Label>
-                <Textarea value={editing.details} onChange={(e) => setEditing({ ...editing, details: e.target.value })} rows={3} />
+                <Textarea value={editing.details || ""} onChange={(e) => setEditing({ ...editing, details: e.target.value })} rows={3} />
               </div>
             </div>
           )}
