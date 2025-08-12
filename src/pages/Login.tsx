@@ -209,11 +209,6 @@ const Login = () => {
               >
                 Forgot password?
               </button>
-              <div className="text-sm">
-                <Link to="/violations" className="underline underline-offset-4 text-muted-foreground hover:text-foreground">
-                  الاستعلام عن المخالفات والقضايا (صفحة عامة)
-                </Link>
-              </div>
             </div>
           </form>
         </div>
