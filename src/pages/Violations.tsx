@@ -34,8 +34,8 @@ export default function Violations() {
 
   useEffect(() => {
     // SEO basics
-    document.title = "الاستعلام عن المخالفات والقضايا | الشرطة";
-    const desc = "ابحث برقم الهوية عن المخالفات والقضايا المسجلة";
+    document.title = "المخالفات والقضايا | للمستخدمين";
+    const desc = "ابحث برقم الهوية عن المخالفات والقضايا المسجلة (للمستخدمين المسجّلين)";
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
       meta = document.createElement("meta");
@@ -124,7 +124,7 @@ export default function Violations() {
   return (
     <main className="container mx-auto max-w-4xl px-4 py-10">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold">الاستعلام عن المخالفات والقضايا</h1>
+        <h1 className="text-3xl font-bold">المخالفات والقضايا</h1>
         <p className="text-muted-foreground mt-2">أدخل رقم الهوية الوطنية لعرض أي مخالفات مرورية أو قضايا مسجلة.</p>
       </header>
 
@@ -183,7 +183,7 @@ export default function Violations() {
                         <div className="flex items-center gap-3">
                           <span>{r.citizen_name}</span>
                           <Button variant="secondary" size="sm" onClick={() => openDetails(r)}>
-                            التفاصيل العامة
+                            التفاصيل
                           </Button>
                         </div>
                       </TableCell>
@@ -203,7 +203,7 @@ export default function Violations() {
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>التفاصيل العامة</DialogTitle>
+            <DialogTitle>تفاصيل السجل</DialogTitle>
             <DialogDescription>معلومات شاملة عن المواطن والسجلات المرتبطة.</DialogDescription>
           </DialogHeader>
           {selected ? (
