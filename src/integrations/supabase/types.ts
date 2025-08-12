@@ -53,6 +53,42 @@ export type Database = {
           },
         ]
       }
+      citizens: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          full_name: string
+          gender: string | null
+          has_vehicle: boolean
+          id: string
+          national_id: string
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name: string
+          gender?: string | null
+          has_vehicle?: boolean
+          id?: string
+          national_id: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string
+          gender?: string | null
+          has_vehicle?: boolean
+          id?: string
+          national_id?: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cybercrime_access: {
         Row: {
           created_at: string
@@ -247,6 +283,51 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          created_at: string
+          id: string
+          person_id: string
+          relation: Database["public"]["Enums"]["family_relation"]
+          relative_id: string | null
+          relative_name: string
+          relative_national_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          person_id: string
+          relation: Database["public"]["Enums"]["family_relation"]
+          relative_id?: string | null
+          relative_name: string
+          relative_national_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          person_id?: string
+          relation?: Database["public"]["Enums"]["family_relation"]
+          relative_id?: string | null
+          relative_name?: string
+          relative_national_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_members_relative_id_fkey"
+            columns: ["relative_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -675,6 +756,7 @@ export type Database = {
           created_at: string
           details: string | null
           id: string
+          is_resolved: boolean
           national_id: string
           record_date: string
           record_type: Database["public"]["Enums"]["traffic_record_type"]
@@ -685,6 +767,7 @@ export type Database = {
           created_at?: string
           details?: string | null
           id?: string
+          is_resolved?: boolean
           national_id: string
           record_date: string
           record_type: Database["public"]["Enums"]["traffic_record_type"]
@@ -695,12 +778,89 @@ export type Database = {
           created_at?: string
           details?: string | null
           id?: string
+          is_resolved?: boolean
           national_id?: string
           record_date?: string
           record_type?: Database["public"]["Enums"]["traffic_record_type"]
           updated_at?: string
         }
         Relationships: []
+      }
+      vehicles: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          owner_id: string
+          plate_number: string
+          purchase_date: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          owner_id: string
+          plate_number: string
+          purchase_date?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          plate_number?: string
+          purchase_date?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wanted_persons: {
+        Row: {
+          citizen_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          monitor_end_date: string | null
+          monitor_start_date: string
+          reason: string | null
+        }
+        Insert: {
+          citizen_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monitor_end_date?: string | null
+          monitor_start_date?: string
+          reason?: string | null
+        }
+        Update: {
+          citizen_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          monitor_end_date?: string | null
+          monitor_start_date?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wanted_persons_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -731,6 +891,14 @@ export type Database = {
         | "harassment"
         | "identity_theft"
         | "other"
+      family_relation:
+        | "father"
+        | "mother"
+        | "spouse"
+        | "brother"
+        | "sister"
+        | "son"
+        | "daughter"
       incident_status: "new" | "in_progress" | "resolved"
       notification_status: "unread" | "read"
       task_status: "pending" | "completed" | "in_progress"
@@ -869,6 +1037,15 @@ export const Constants = {
         "harassment",
         "identity_theft",
         "other",
+      ],
+      family_relation: [
+        "father",
+        "mother",
+        "spouse",
+        "brother",
+        "sister",
+        "son",
+        "daughter",
       ],
       incident_status: ["new", "in_progress", "resolved"],
       notification_status: ["unread", "read"],
