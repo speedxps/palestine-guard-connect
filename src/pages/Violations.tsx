@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, AlertTriangle, Users, Calendar } from "lucide-react";
+import { Search, AlertTriangle, Users, Calendar, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -201,6 +201,249 @@ export default function Violations() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searched, nationalId]);
 
+  const handlePrint = () => {
+    if (!selected) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const currentDate = new Date().toLocaleDateString('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const isWanted = wantedPersons[selected.national_id];
+    
+    const printContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="utf-8">
+        <title>تقرير المخالفات والقضايا</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 20px;
+          }
+          .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+          }
+          .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+          }
+          .subtitle {
+            font-size: 16px;
+            color: #666;
+          }
+          .main-info {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-right: 4px solid #1e40af;
+          }
+          .info-row {
+            display: flex;
+            margin-bottom: 10px;
+          }
+          .info-label {
+            font-weight: bold;
+            width: 120px;
+            color: #374151;
+          }
+          .info-value {
+            color: #111827;
+          }
+          .wanted-alert {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+          }
+          .wanted-title {
+            color: #dc2626;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+          }
+          .section {
+            margin-bottom: 25px;
+          }
+          .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+          }
+          .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+          }
+          .records-table th,
+          .records-table td {
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            text-align: right;
+          }
+          .records-table th {
+            background: #f3f4f6;
+            font-weight: bold;
+          }
+          .family-member {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 15px;
+          }
+          @media print {
+            body { -webkit-print-color-adjust: exact; }
+            .header { page-break-after: avoid; }
+            .section { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <img src="/src/assets/police-logo.png" alt="شعار الشرطة" class="logo">
+          <div class="title">وزارة الداخلية - الأمن العام</div>
+          <div class="subtitle">تقرير المخالفات والقضايا</div>
+        </div>
+
+        <div class="main-info">
+          <div class="info-row">
+            <span class="info-label">الاسم الكامل:</span>
+            <span class="info-value">${selected.citizen_name}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">رقم الهوية:</span>
+            <span class="info-value">${selected.national_id}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">تاريخ التقرير:</span>
+            <span class="info-value">${currentDate}</span>
+          </div>
+        </div>
+
+        ${isWanted ? `
+          <div class="wanted-alert">
+            <div class="wanted-title">⚠️ شخص مطلوب للسلطات</div>
+            <div class="info-row">
+              <span class="info-label">بداية المراقبة:</span>
+              <span class="info-value">${new Date(isWanted.monitor_start_date).toLocaleDateString('ar-SA')}</span>
+            </div>
+            ${isWanted.monitor_end_date ? `
+              <div class="info-row">
+                <span class="info-label">نهاية المراقبة:</span>
+                <span class="info-value">${new Date(isWanted.monitor_end_date).toLocaleDateString('ar-SA')}</span>
+              </div>
+            ` : ''}
+            ${isWanted.reason ? `
+              <div class="info-row">
+                <span class="info-label">سبب المطالبة:</span>
+                <span class="info-value">${isWanted.reason}</span>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        <div class="section">
+          <div class="section-title">السجل الأمني</div>
+          ${relatedRecords.length > 0 ? `
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>نوع السجل</th>
+                  <th>التاريخ</th>
+                  <th>التفاصيل</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${relatedRecords.map(record => `
+                  <tr>
+                    <td>${typeToArabic(record.record_type)}</td>
+                    <td>${record.record_date}</td>
+                    <td>${record.details || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : '<p>لا توجد سجلات أمنية مسجلة.</p>'}
+        </div>
+
+        <div class="section">
+          <div class="section-title">بيانات الأسرة</div>
+          ${familyMembers.length > 0 ? 
+            familyMembers.map(member => `
+              <div class="family-member">
+                <div class="info-row">
+                  <span class="info-label">الاسم:</span>
+                  <span class="info-value">${member.relative_name}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">صلة القرابة:</span>
+                  <span class="info-value">${member.relation}</span>
+                </div>
+                ${member.relative_national_id ? `
+                  <div class="info-row">
+                    <span class="info-label">رقم الهوية:</span>
+                    <span class="info-value">${member.relative_national_id}</span>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('') 
+            : '<p>لا توجد بيانات عائلية مسجلة.</p>'
+          }
+        </div>
+
+        <div class="footer">
+          <p>هذا التقرير صادر من نظام إدارة المخالفات والقضايا - وزارة الداخلية</p>
+          <p>تم إنشاء التقرير في: ${new Date().toLocaleString('ar-SA')}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for images to load then print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    };
+  };
+
   return (
     <main className="container mx-auto max-w-4xl px-4 py-10">
       <header className="mb-8">
@@ -325,8 +568,21 @@ export default function Violations() {
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>تفاصيل السجل</DialogTitle>
-            <DialogDescription>معلومات شاملة عن المواطن والسجلات المرتبطة.</DialogDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>تفاصيل السجل</DialogTitle>
+                <DialogDescription>معلومات شاملة عن المواطن والسجلات المرتبطة.</DialogDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handlePrint}
+                className="flex items-center gap-2"
+              >
+                <Printer className="w-4 h-4" />
+                طباعة التقرير
+              </Button>
+            </div>
           </DialogHeader>
           {selected ? (
             <div className="space-y-6">
