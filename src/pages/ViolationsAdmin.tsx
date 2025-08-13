@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Filter, Plus, Trash2 } from "lucide-react";
+import { Edit, Filter, Plus, Trash2, Upload, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // DB Types
@@ -48,6 +48,13 @@ export default function ViolationsAdmin() {
 
   const [data, setData] = useState<RecordItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [citizenPhotos, setCitizenPhotos] = useState<Record<string, string>>({});
+  
+  // Photo management
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [selectedCitizen, setSelectedCitizen] = useState<{national_id: string, name: string} | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Add form
   const [nationalId, setNationalId] = useState("");
@@ -79,6 +86,25 @@ export default function ViolationsAdmin() {
       const { data, error } = await query;
       if (error) throw error;
       setData(data || []);
+      
+      // Fetch citizen photos
+      if (data && data.length > 0) {
+        const nationalIds = [...new Set(data.map(r => r.national_id))];
+        const { data: citizenData, error: citizenError } = await supabase
+          .from("citizens")
+          .select("national_id, photo_url")
+          .in("national_id", nationalIds);
+        
+        if (!citizenError && citizenData) {
+          const photoMap = citizenData.reduce((acc, citizen) => {
+            if (citizen.photo_url) {
+              acc[citizen.national_id] = citizen.photo_url;
+            }
+            return acc;
+          }, {} as Record<string, string>);
+          setCitizenPhotos(photoMap);
+        }
+      }
     } catch (err: any) {
       console.error("Fetch error:", err);
       toast({ title: "خطأ في الجلب", description: "تعذر تحميل السجلات.", variant: "destructive" });
@@ -156,6 +182,62 @@ export default function ViolationsAdmin() {
     } catch (err: any) {
       console.error("Update error:", err);
       toast({ title: "فشل التعديل", description: "تحقق من الصلاحيات أو البيانات.", variant: "destructive" });
+    }
+  };
+
+  const openPhotoDialog = (nationalId: string, name: string) => {
+    setSelectedCitizen({ national_id: nationalId, name });
+    setPhotoDialogOpen(true);
+    setPhotoFile(null);
+  };
+
+  const uploadPhoto = async () => {
+    if (!photoFile || !selectedCitizen) return;
+    
+    setUploadingPhoto(true);
+    try {
+      const fileExt = photoFile.name.split('.').pop();
+      const fileName = `${selectedCitizen.national_id}_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('citizen-photos')
+        .upload(fileName, photoFile);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('citizen-photos')
+        .getPublicUrl(fileName);
+      
+      // Update or insert citizen record
+      const { error: upsertError } = await supabase
+        .from('citizens')
+        .upsert({
+          national_id: selectedCitizen.national_id,
+          full_name: selectedCitizen.name,
+          photo_url: publicUrl
+        }, {
+          onConflict: 'national_id'
+        });
+      
+      if (upsertError) throw upsertError;
+      
+      // Update local state
+      setCitizenPhotos(prev => ({
+        ...prev,
+        [selectedCitizen.national_id]: publicUrl
+      }));
+      
+      setPhotoDialogOpen(false);
+      setPhotoFile(null);
+      setSelectedCitizen(null);
+      
+      toast({ title: "تم رفع الصورة", description: "تم رفع الصورة الشخصية بنجاح" });
+    } catch (err: any) {
+      console.error("Photo upload error:", err);
+      toast({ title: "فشل رفع الصورة", description: "تعذر رفع الصورة. حاول مرة أخرى.", variant: "destructive" });
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -247,6 +329,7 @@ export default function ViolationsAdmin() {
             <TableCaption>{loading ? "جاري التحميل..." : `إجمالي السجلات: ${data.length}`}</TableCaption>
             <TableHeader>
               <TableRow>
+                <TableHead>الصورة</TableHead>
                 <TableHead>الاسم</TableHead>
                 <TableHead>رقم الهوية</TableHead>
                 <TableHead>النوع</TableHead>
@@ -258,6 +341,31 @@ export default function ViolationsAdmin() {
             <TableBody>
               {data.map((r) => (
                 <TableRow key={r.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
+                        {citizenPhotos[r.national_id] ? (
+                          <img 
+                            src={citizenPhotos[r.national_id]} 
+                            alt={`صورة ${r.citizen_name}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => openPhotoDialog(r.national_id, r.citizen_name)}
+                        title="إدارة الصورة"
+                      >
+                        <Upload className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>{r.citizen_name}</TableCell>
                   <TableCell>{r.national_id}</TableCell>
                   <TableCell>{typeToArabic(r.record_type)}</TableCell>
@@ -275,7 +383,7 @@ export default function ViolationsAdmin() {
               ))}
               {!loading && data.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                     لا توجد سجلات مطابقة لمعايير التصفية الحالية.
                   </TableCell>
                 </TableRow>
@@ -328,6 +436,56 @@ export default function ViolationsAdmin() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>إلغاء</Button>
             <Button onClick={saveEdit}>حفظ</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Management Dialog */}
+      <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إدارة الصورة الشخصية</DialogTitle>
+          </DialogHeader>
+          {selectedCitizen && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-muted mx-auto mb-4">
+                  {citizenPhotos[selectedCitizen.national_id] ? (
+                    <img 
+                      src={citizenPhotos[selectedCitizen.national_id]} 
+                      alt={`صورة ${selectedCitizen.name}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <p className="font-medium">{selectedCitizen.name}</p>
+                <p className="text-sm text-muted-foreground">رقم الهوية: {selectedCitizen.national_id}</p>
+              </div>
+              
+              <div>
+                <Label htmlFor="photo-upload">اختر صورة جديدة</Label>
+                <Input 
+                  id="photo-upload"
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPhotoDialogOpen(false)}>إلغاء</Button>
+            <Button 
+              onClick={uploadPhoto} 
+              disabled={!photoFile || uploadingPhoto}
+            >
+              {uploadingPhoto ? "جاري الرفع..." : "رفع الصورة"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

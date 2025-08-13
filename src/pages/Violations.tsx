@@ -24,6 +24,7 @@ export default function Violations() {
   const [results, setResults] = useState<RecordItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [citizenPhotos, setCitizenPhotos] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   // Details dialog state
@@ -69,6 +70,25 @@ export default function Violations() {
 
       if (error) throw error;
       setResults(data || []);
+      
+      // Fetch citizen photos
+      if (data && data.length > 0) {
+        const nationalIds = [...new Set(data.map(r => r.national_id))];
+        const { data: citizenData, error: citizenError } = await supabase
+          .from("citizens")
+          .select("national_id, photo_url")
+          .in("national_id", nationalIds);
+        
+        if (!citizenError && citizenData) {
+          const photoMap = citizenData.reduce((acc, citizen) => {
+            if (citizen.photo_url) {
+              acc[citizen.national_id] = citizen.photo_url;
+            }
+            return acc;
+          }, {} as Record<string, string>);
+          setCitizenPhotos(photoMap);
+        }
+      }
     } catch (err: any) {
       console.error("Search error:", err);
       toast({ title: "خطأ في البحث", description: "تعذر جلب النتائج. حاول لاحقًا.", variant: "destructive" });
@@ -169,6 +189,7 @@ export default function Violations() {
                 <TableCaption>نتائج البحث المطابقة لرقم الهوية: {nationalId}</TableCaption>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>الصورة</TableHead>
                     <TableHead>الاسم</TableHead>
                     <TableHead>رقم الهوية</TableHead>
                     <TableHead>النوع</TableHead>
@@ -179,6 +200,21 @@ export default function Violations() {
                 <TableBody>
                   {results.map((r) => (
                     <TableRow key={r.id}>
+                      <TableCell>
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
+                          {citizenPhotos[r.national_id] ? (
+                            <img 
+                              src={citizenPhotos[r.national_id]} 
+                              alt={`صورة ${r.citizen_name}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                              لا توجد صورة
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <span>{r.citizen_name}</span>
