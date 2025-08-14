@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, AlertTriangle, Users, Calendar, Printer } from "lucide-react";
+import { Search, AlertTriangle, Users, Calendar, Printer, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -333,7 +333,7 @@ export default function Violations() {
       </head>
       <body>
         <div class="header">
-          <img src="/src/assets/police-logo.png" alt="شعار الشرطة" class="logo">
+          <img src="${window.location.origin}/src/assets/police-logo.png" alt="شعار الشرطة" class="logo">
           <div class="title">وزارة الداخلية - الأمن العام</div>
           <div class="subtitle">تقرير المخالفات والقضايا</div>
         </div>
@@ -435,13 +435,10 @@ export default function Violations() {
     printWindow.document.write(printContent);
     printWindow.document.close();
     
-    // Wait for images to load then print
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 250);
-    };
+    // Wait for content to load, then print
+    setTimeout(() => {
+      printWindow.print();
+    }, 1000);
   };
 
   return (

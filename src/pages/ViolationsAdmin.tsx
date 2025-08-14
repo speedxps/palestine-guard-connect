@@ -55,6 +55,8 @@ export default function ViolationsAdmin() {
   const [selectedCitizen, setSelectedCitizen] = useState<{national_id: string, name: string} | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [excelUploading, setExcelUploading] = useState(false);
+  const [markingWanted, setMarkingWanted] = useState(false);
 
   // Add form
   const [nationalId, setNationalId] = useState("");
@@ -238,6 +240,86 @@ export default function ViolationsAdmin() {
       toast({ title: "فشل رفع الصورة", description: "تعذر رفع الصورة. حاول مرة أخرى.", variant: "destructive" });
     } finally {
       setUploadingPhoto(false);
+    }
+  };
+
+  const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      toast({ title: "خطأ", description: "يرجى رفع ملف Excel أو CSV", variant: "destructive" });
+      return;
+    }
+
+    setExcelUploading(true);
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      // Skip header row and process data
+      for (let i = 1; i < lines.length; i++) {
+        const columns = lines[i].split(',').map(col => col.trim().replace(/"/g, ''));
+        
+        if (columns.length >= 4) {
+          const [nationalId, citizenName, recordType, details] = columns;
+          
+          // Insert record
+          await supabase.from("traffic_records").insert({
+            national_id: nationalId,
+            citizen_name: citizenName,
+            record_type: recordType.toLowerCase() === 'violation' ? 'violation' : 'case',
+            record_date: new Date().toISOString().split('T')[0],
+            details: details || null,
+            is_resolved: false
+          });
+        }
+      }
+
+      toast({ title: "نجح", description: `تم رفع ${lines.length - 1} سجلاً من الملف` });
+      fetchData();
+    } catch (error) {
+      console.error("Excel upload error:", error);
+      toast({ title: "خطأ", description: "فشل في معالجة الملف", variant: "destructive" });
+    } finally {
+      setExcelUploading(false);
+      event.target.value = '';
+    }
+  };
+
+  const markAsWanted = async (citizenNationalId: string) => {
+    setMarkingWanted(true);
+    try {
+      // Find citizen by national ID
+      const { data: citizen } = await supabase
+        .from("citizens")
+        .select("id")
+        .eq("national_id", citizenNationalId)
+        .single();
+
+      if (!citizen) {
+        toast({ title: "خطأ", description: "لم يتم العثور على المواطن", variant: "destructive" });
+        return;
+      }
+
+      // Add to wanted persons
+      const { error } = await supabase
+        .from("wanted_persons")
+        .insert({
+          citizen_id: citizen.id,
+          monitor_start_date: new Date().toISOString().split('T')[0],
+          reason: "مطلوب للسلطات",
+          is_active: true
+        });
+
+      if (error) throw error;
+
+      toast({ title: "نجح", description: "تم وضع علامة مطلوب على الشخص" });
+    } catch (error) {
+      console.error("Mark wanted error:", error);
+      toast({ title: "خطأ", description: "فشل في وضع علامة مطلوب", variant: "destructive" });
+    } finally {
+      setMarkingWanted(false);
     }
   };
 
