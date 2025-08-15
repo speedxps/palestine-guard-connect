@@ -19,6 +19,7 @@ const NewIncident = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     type: '',
     title: '',
@@ -86,6 +87,44 @@ const NewIncident = () => {
         }
       );
     }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      // Validate file size (10MB max)
+      const validFiles = newFiles.filter(file => file.size <= 10 * 1024 * 1024);
+      
+      if (validFiles.length !== newFiles.length) {
+        toast({
+          title: "تحذير",
+          description: "بعض الملفات تم تجاهلها لأن حجمها أكبر من 10MB",
+          variant: "destructive",
+        });
+      }
+      
+      setAttachedFiles(prev => [...prev, ...validFiles]);
+      
+      if (validFiles.length > 0) {
+        toast({
+          title: "تم إرفاق الملفات",
+          description: `تم إرفاق ${validFiles.length} ملف بنجاح`,
+        });
+      }
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -216,7 +255,10 @@ const NewIncident = () => {
               <label className="text-sm font-medium text-foreground font-arabic">
                 إرفاق صورة أو فيديو (اختياري)
               </label>
-              <div className="border-2 border-dashed border-border/50 rounded-lg p-6 text-center">
+              <div 
+                className="border-2 border-dashed border-border/50 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => document.getElementById('file-upload')?.click()}
+              >
                 <div className="space-y-2">
                   <div className="flex justify-center gap-2">
                     <Camera className="h-6 w-6 text-muted-foreground" />
@@ -230,12 +272,43 @@ const NewIncident = () => {
                   </p>
                 </div>
                 <input
+                  id="file-upload"
                   type="file"
                   accept="image/*,video/*"
+                  multiple
                   className="hidden"
-                  onChange={() => {}}
+                  onChange={handleFileUpload}
                 />
               </div>
+              
+              {/* Display attached files */}
+              {attachedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">الملفات المرفقة:</p>
+                  {attachedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2">
+                        {file.type.startsWith('image/') ? (
+                          <Camera className="h-4 w-4 text-blue-500" />
+                        ) : (
+                          <Upload className="h-4 w-4 text-green-500" />
+                        )}
+                        <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                        <span className="text-xs text-muted-foreground">({formatFileSize(file.size)})</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        إزالة
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
