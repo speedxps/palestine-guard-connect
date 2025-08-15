@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Filter, Plus, Trash2, Upload, User } from "lucide-react";
+import { Edit, Filter, Plus, Trash2, Upload, User, AlertTriangle } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 
 // DB Types
@@ -48,6 +49,10 @@ export default function ViolationsAdmin() {
 
   const [data, setData] = useState<RecordItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [markWantedDialogOpen, setMarkWantedDialogOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<RecordItem | null>(null);
   const [citizenPhotos, setCitizenPhotos] = useState<Record<string, string>>({});
   
   // Photo management
@@ -399,6 +404,33 @@ export default function ViolationsAdmin() {
               <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
             </div>
           </div>
+          <div className="mt-4 flex gap-2">
+            <Button 
+              variant="secondary" 
+              onClick={() => setUploadDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              رفع ملف Excel
+            </Button>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleExcelUpload}
+              style={{ display: 'none' }}
+              id="excel-upload"
+              disabled={excelUploading}
+            />
+            <Button 
+              variant="outline" 
+              onClick={() => document.getElementById('excel-upload')?.click()}
+              disabled={excelUploading}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {excelUploading ? "جاري الرفع..." : "رفع سريع CSV"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -453,9 +485,18 @@ export default function ViolationsAdmin() {
                   <TableCell>{typeToArabic(r.record_type)}</TableCell>
                   <TableCell>{r.record_date}</TableCell>
                   <TableCell className="max-w-[320px] truncate" title={r.details || undefined}>{r.details || "-"}</TableCell>
-                  <TableCell className="space-x-2">
+                   <TableCell className="space-x-2">
                     <Button variant="outline" size="sm" onClick={() => setEditing(r)}>
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => markAsWanted(r.national_id)}
+                      disabled={markingWanted}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <AlertTriangle className="h-4 w-4" />
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => deleteRecord(r.id)}>
                       <Trash2 className="h-4 w-4" />
@@ -569,6 +610,39 @@ export default function ViolationsAdmin() {
               {uploadingPhoto ? "جاري الرفع..." : "رفع الصورة"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Excel Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>رفع ملف Excel للمخالفات والمطلوبين</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              اختر ملف Excel يحتوي على البيانات التالية: رقم الهوية، اسم المواطن، نوع السجل، التفاصيل
+            </p>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleExcelUpload({ target: { files: [file] } } as any);
+                  setUploadDialogOpen(false);
+                }
+              }}
+              className="w-full"
+              disabled={uploading}
+            />
+            {uploading && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                جاري معالجة الملف...
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </main>

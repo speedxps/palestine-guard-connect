@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, AlertTriangle, Users, Calendar, Printer, Upload } from "lucide-react";
+import { Search, AlertTriangle, Users, Calendar, Printer, Upload, FileSpreadsheet } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -45,6 +46,8 @@ export default function Violations() {
   const [citizenPhotos, setCitizenPhotos] = useState<Record<string, string>>({});
   const [wantedPersons, setWantedPersons] = useState<Record<string, WantedPerson>>({});
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   // Details dialog state
@@ -200,6 +203,139 @@ export default function Violations() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searched, nationalId]);
+
+  const isWanted = (nationalId: string) => wantedPersons[nationalId]?.is_active;
+
+  const handleExcelUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      
+      // Skip header row and process data
+      const rows = jsonData.slice(1) as any[][];
+      
+      for (const row of rows) {
+        if (row[0] && row[1] && row[2]) { // national_id, citizen_name, record_type required
+          const recordType = String(row[2]).toLowerCase() === 'violation' ? 'violation' : 'case';
+          const record = {
+            national_id: String(row[0]),
+            citizen_name: String(row[1]),
+            record_type: recordType as "violation" | "case",
+            record_date: row[3] ? new Date(row[3]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            details: row[4] ? String(row[4]) : null,
+            is_resolved: false
+          };
+          
+          const { error } = await supabase
+            .from('traffic_records')
+            .insert(record);
+            
+          if (error) {
+            console.error('Insert error:', error);
+            throw error;
+          }
+        }
+      }
+      
+      toast({ title: "نجح", description: `تم رفع ${rows.length} سجل بنجاح` });
+      setUploadDialogOpen(false);
+      
+      // Refresh current search if active
+      if (nationalId.trim()) {
+        handleSearch();
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({ 
+        title: "خطأ في الرفع", 
+        description: "فشل في معالجة الملف. تأكد من تنسيق البيانات.",
+        variant: "destructive" 
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const searchRelatives = async (nationalId: string) => {
+    if (!nationalId) return;
+    
+    try {
+      // First get the citizen
+      const { data: citizenData, error: citizenError } = await supabase
+        .from("citizens")
+        .select("id, full_name")
+        .eq("national_id", nationalId)
+        .single();
+
+      if (citizenError || !citizenData) {
+        toast({ title: "لم يتم العثور على المواطن", variant: "destructive" });
+        return;
+      }
+
+      // Get family members
+      const { data: familyData, error: familyError } = await supabase
+        .from("family_members")
+        .select(`
+          id,
+          relative_name,
+          relative_national_id,
+          relation
+        `)
+        .eq("person_id", citizenData.id);
+
+      if (familyError) throw familyError;
+
+      if (familyData && familyData.length > 0) {
+        setFamilyMembers(familyData);
+        
+        // Check if any relatives are wanted
+        const relativeIds = familyData
+          .map(f => f.relative_national_id)
+          .filter(Boolean);
+          
+        if (relativeIds.length > 0) {
+          const { data: relativeCitizens } = await supabase
+            .from("citizens")
+            .select("id, national_id")
+            .in("national_id", relativeIds);
+            
+          if (relativeCitizens) {
+            const citizenIds = relativeCitizens.map(c => c.id);
+            const { data: wantedRelatives } = await supabase
+              .from("wanted_persons")
+              .select("*")
+              .in("citizen_id", citizenIds)
+              .eq("is_active", true);
+              
+            if (wantedRelatives && wantedRelatives.length > 0) {
+              toast({ 
+                title: "تنبيه", 
+                description: `تم العثور على ${wantedRelatives.length} من الأقارب في قائمة المطلوبين`,
+                variant: "destructive"
+              });
+            }
+          }
+        }
+        
+        toast({ 
+          title: "تم العثور على الأقارب", 
+          description: `${familyData.length} فرد من العائلة`
+        });
+      } else {
+        toast({ title: "لا توجد بيانات أقارب مسجلة" });
+      }
+    } catch (error: any) {
+      console.error('Relatives search error:', error);
+      toast({ 
+        title: "خطأ في البحث", 
+        description: "فشل في البحث عن الأقارب",
+        variant: "destructive" 
+      });
+    }
+  };
 
   const handlePrint = () => {
     if (!selected) return;
@@ -466,6 +602,23 @@ export default function Violations() {
               <Search className="mr-2 h-4 w-4" />
               {loading ? "جاري البحث..." : "بحث"}
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => searchRelatives(nationalId)}
+              disabled={!nationalId.trim()}
+              className="md:w-40"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              بحث الأقارب
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => setUploadDialogOpen(true)}
+              className="md:w-40"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              رفع ملف Excel
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -690,6 +843,39 @@ export default function Violations() {
           ) : (
             <p className="text-sm text-muted-foreground">لا يوجد عنصر محدد.</p>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Excel Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>رفع ملف Excel</DialogTitle>
+            <DialogDescription>
+              اختر ملف Excel يحتوي على بيانات المخالفات والمطلوبين. يجب أن يحتوي الملف على الأعمدة التالية:
+              رقم الهوية، اسم المواطن، نوع السجل (violation/case)، التاريخ، التفاصيل
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleExcelUpload(file);
+                }
+              }}
+              className="w-full"
+              disabled={uploading}
+            />
+            {uploading && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                جاري معالجة الملف...
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
