@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -514,6 +514,44 @@ export type Database = {
         }
         Relationships: []
       }
+      patrol_members: {
+        Row: {
+          created_at: string
+          id: string
+          officer_id: string
+          officer_name: string
+          officer_phone: string | null
+          patrol_id: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          officer_id: string
+          officer_name: string
+          officer_phone?: string | null
+          patrol_id: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          officer_id?: string
+          officer_name?: string
+          officer_phone?: string | null
+          patrol_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patrol_members_patrol_id_fkey"
+            columns: ["patrol_id"]
+            isOneToOne: false
+            referencedRelation: "patrols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patrol_tracking: {
         Row: {
           created_at: string
@@ -548,6 +586,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patrols: {
+        Row: {
+          area: string
+          created_at: string
+          created_by: string
+          id: string
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          created_by: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       post_comments: {
         Row: {
