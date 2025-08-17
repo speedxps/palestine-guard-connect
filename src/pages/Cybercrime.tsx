@@ -35,11 +35,22 @@ const Cybercrime = () => {
         return;
       }
 
-      // Check cybercrime access directly from the table
+      // Get user profile first
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) {
+        throw new Error('User profile not found');
+      }
+
+      // Check cybercrime access directly from the table using profile ID
       const { data, error } = await supabase
         .from('cybercrime_access')
         .select('is_active')
-        .eq('user_id', user.id)
+        .eq('user_id', profile.id)
         .eq('is_active', true)
         .single();
 

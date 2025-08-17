@@ -328,7 +328,11 @@ const Feed = () => {
   };
 
   const canEditPost = (post: any) => {
-    return user?.role === 'admin' || post.user_id === user?.id;
+    if (user?.role === 'admin') return true;
+    
+    // Get current user's profile ID to compare
+    const currentUserProfile = posts.find(p => p.profiles?.full_name === user?.full_name);
+    return post.user_id === currentUserProfile?.user_id;
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -463,7 +467,9 @@ const Feed = () => {
 
         {/* Posts */}
         {posts.map((post) => {
-          const isLiked = post.post_likes.some((like: any) => like.user_id === user?.id);
+          // Get user profile ID to check likes correctly
+          const userProfileId = posts.length > 0 ? posts[0].profiles?.id : null;
+          const isLiked = post.post_likes.some((like: any) => like.user_id === userProfileId);
           const likesCount = post.post_likes.length;
           const commentsCount = post.post_comments.length;
 

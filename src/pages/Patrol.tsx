@@ -1,69 +1,87 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Users, MessageCircle, Send, MapPin } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Plus, MapPin, Users, Phone, Edit, Trash2, Search, Map } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import MapComponent from '@/components/MapComponent';
 
-const Patrol = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
+interface PatrolMember {
+  officer_name: string;
+  officer_phone: string;
+  role: string;
+}
+
+interface Patrol {
+  id: string;
+  name: string;
+  area: string;
+  location_address: string;
+  location_lat: number | null;
+  location_lng: number | null;
+  status: string;
+  created_by: string;
+  patrol_members: PatrolMember[];
+}
+
+const PatrolUpdated = () => {
   const { user } = useAuth();
-  const [patrols, setPatrols] = useState<any[]>([]);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [patrols, setPatrols] = useState<Patrol[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDuty, setSelectedDuty] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loadingChat, setLoadingChat] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedPatrol, setSelectedPatrol] = useState<Patrol | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showMap, setShowMap] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    area: '',
+    location_address: '',
+    location_lat: null as number | null,
+    location_lng: null as number | null,
+    status: 'active',
+    members: [] as PatrolMember[]
+  });
+
+  const [newMember, setNewMember] = useState({
+    officer_name: '',
+    officer_phone: '',
+    role: 'member'
+  });
 
   useEffect(() => {
     fetchPatrols();
   }, []);
 
-  useEffect(() => {
-    if (selectedDuty) {
-      fetchChatMessages(selectedDuty);
-    }
-  }, [selectedDuty]);
-
   const fetchPatrols = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('patrol_tracking')
-        .select('*')
-        .eq('is_active', true)
+        .from('patrols')
+        .select(`
+          *,
+          patrol_members(officer_name, officer_phone, role)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Get profiles for each patrol
-      const patrolsWithProfiles = await Promise.all(
-        (data || []).map(async (patrol) => {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('full_name, username, badge_number')
-            .eq('user_id', patrol.officer_id)
-            .single();
-
-          return {
-            ...patrol,
-            profiles: profileData || { full_name: 'مستخدم مجهول', username: 'unknown', badge_number: 'غير محدد' }
-          };
-        })
-      );
-
-      setPatrols(patrolsWithProfiles);
+      setPatrols(data || []);
     } catch (error) {
       console.error('Error fetching patrols:', error);
       toast({
         title: "خطأ",
-        description: "فشل في تحميل بيانات الدوريات",
+        description: "فشل في تحميل الدوريات",
         variant: "destructive",
       });
     } finally {
@@ -71,98 +89,218 @@ const Patrol = () => {
     }
   };
 
-  const fetchChatMessages = async (dutyId: string) => {
+  const createPatrol = async () => {
+    if (!user || !formData.name || !formData.area) return;
+
     try {
-      setLoadingChat(true);
-      const { data, error } = await supabase
-        .from('duty_chat_messages')
-        .select('*')
-        .eq('duty_id', dutyId)
-        .order('created_at', { ascending: true });
+      // Get user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) throw error;
+      if (!profile) throw new Error('User profile not found');
 
-      // Get profiles for each message
-      const messagesWithProfiles = await Promise.all(
-        (data || []).map(async (message) => {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('full_name, username')
-            .eq('user_id', message.user_id)
-            .single();
-
-          return {
-            ...message,
-            profiles: profileData || { full_name: 'مستخدم مجهول', username: 'unknown' }
-          };
+      // Create patrol
+      const { data: patrol, error: patrolError } = await supabase
+        .from('patrols')
+        .insert({
+          name: formData.name,
+          area: formData.area,
+          location_address: formData.location_address,
+          location_lat: formData.location_lat,
+          location_lng: formData.location_lng,
+          status: formData.status,
+          created_by: profile.id
         })
-      );
+        .select()
+        .single();
 
-      setChatMessages(messagesWithProfiles);
+      if (patrolError) throw patrolError;
+
+      // Add members if any
+      if (formData.members.length > 0) {
+        const memberInserts = formData.members.map(member => ({
+          patrol_id: patrol.id,
+          officer_id: profile.id,
+          officer_name: member.officer_name,
+          officer_phone: member.officer_phone,
+          role: member.role
+        }));
+
+        await supabase
+          .from('patrol_members')
+          .insert(memberInserts);
+      }
+
+      toast({
+        title: "تم إنشاء الدورية بنجاح",
+        description: "تم إضافة الدورية الجديدة",
+      });
+
+      setCreateDialogOpen(false);
+      resetForm();
+      fetchPatrols();
     } catch (error) {
-      console.error('Error fetching chat messages:', error);
+      console.error('Error creating patrol:', error);
       toast({
         title: "خطأ",
-        description: "فشل في تحميل رسائل المحادثة",
+        description: "فشل في إنشاء الدورية",
         variant: "destructive",
       });
-    } finally {
-      setLoadingChat(false);
     }
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedDuty) return;
+  const updatePatrol = async () => {
+    if (!selectedPatrol || !formData.name || !formData.area) return;
 
     try {
       const { error } = await supabase
-        .from('duty_chat_messages')
-        .insert({
-          duty_id: selectedDuty,
-          message: newMessage,
-          user_id: user?.id
-        });
+        .from('patrols')
+        .update({
+          name: formData.name,
+          area: formData.area,
+          location_address: formData.location_address,
+          location_lat: formData.location_lat,
+          location_lng: formData.location_lng,
+          status: formData.status
+        })
+        .eq('id', selectedPatrol.id);
 
       if (error) throw error;
 
-      setNewMessage('');
-      fetchChatMessages(selectedDuty);
+      // Update members - delete existing and add new
+      await supabase
+        .from('patrol_members')
+        .delete()
+        .eq('patrol_id', selectedPatrol.id);
+
+      if (formData.members.length > 0) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user?.id)
+          .single();
+
+        if (profile) {
+          const memberInserts = formData.members.map(member => ({
+            patrol_id: selectedPatrol.id,
+            officer_id: profile.id,
+            officer_name: member.officer_name,
+            officer_phone: member.officer_phone,
+            role: member.role
+          }));
+
+          await supabase
+            .from('patrol_members')
+            .insert(memberInserts);
+        }
+      }
+
+      toast({
+        title: "تم تحديث الدورية",
+        description: "تم حفظ التغييرات بنجاح",
+      });
+
+      setEditDialogOpen(false);
+      setSelectedPatrol(null);
+      resetForm();
+      fetchPatrols();
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error updating patrol:', error);
       toast({
         title: "خطأ",
-        description: "فشل في إرسال الرسالة",
+        description: "فشل في تحديث الدورية",
         variant: "destructive",
       });
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ar-PS', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const deletePatrol = async (patrolId: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الدورية؟')) return;
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('ar-PS', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+    try {
+      const { error } = await supabase
+        .from('patrols')
+        .delete()
+        .eq('id', patrolId);
 
-  // Group patrols by area/duty
-  const groupedPatrols = patrols.reduce((acc, patrol) => {
-    const dutyId = `patrol_${Math.floor(patrol.location_lat * 100)}_${Math.floor(patrol.location_lng * 100)}`;
-    if (!acc[dutyId]) {
-      acc[dutyId] = [];
+      if (error) throw error;
+
+      toast({
+        title: "تم حذف الدورية",
+        description: "تم حذف الدورية بنجاح",
+      });
+
+      fetchPatrols();
+    } catch (error) {
+      console.error('Error deleting patrol:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف الدورية",
+        variant: "destructive",
+      });
     }
-    acc[dutyId].push(patrol);
-    return acc;
-  }, {} as { [key: string]: any[] });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      area: '',
+      location_address: '',
+      location_lat: null,
+      location_lng: null,
+      status: 'active',
+      members: []
+    });
+    setNewMember({
+      officer_name: '',
+      officer_phone: '',
+      role: 'member'
+    });
+  };
+
+  const addMember = () => {
+    if (!newMember.officer_name) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      members: [...prev.members, newMember]
+    }));
+    
+    setNewMember({
+      officer_name: '',
+      officer_phone: '',
+      role: 'member'
+    });
+  };
+
+  const removeMember = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      members: prev.members.filter((_, i) => i !== index)
+    }));
+  };
+
+  const openEditDialog = (patrol: Patrol) => {
+    setSelectedPatrol(patrol);
+    setFormData({
+      name: patrol.name,
+      area: patrol.area,
+      location_address: patrol.location_address || '',
+      location_lat: patrol.location_lat,
+      location_lng: patrol.location_lng,
+      status: patrol.status,
+      members: patrol.patrol_members || []
+    });
+    setEditDialogOpen(true);
+  };
+
+  const filteredPatrols = patrols.filter(patrol =>
+    patrol.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patrol.area.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -177,181 +315,439 @@ const Patrol = () => {
   return (
     <div className="mobile-container">
       {/* Header */}
-      <div className="page-header">
-        <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/dashboard')}
-            className="text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold font-arabic">الدوريات</h1>
-            <p className="text-sm text-muted-foreground">Patrol Management</p>
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-bold font-arabic">الدوريات</h1>
+              <p className="text-sm text-muted-foreground">Patrols Management</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 pb-20 space-y-4">
-        {/* Active Patrols Stats */}
-        <Card className="glass-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">الدوريات النشطة</p>
-              <p className="text-2xl font-bold text-foreground">{patrols.length}</p>
-            </div>
-            <Users className="h-8 w-8 text-primary" />
+      <div className="p-4 space-y-4">
+        {/* Header Actions */}
+        <div className="flex justify-between items-center">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="البحث في الدوريات..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-10 font-arabic"
+            />
           </div>
-        </Card>
-
-        {/* Patrol Groups */}
-        <div className="space-y-3">
-          {Object.entries(groupedPatrols).map(([dutyId, dutyPatrols]) => (
-            <Card key={dutyId} className="glass-card p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-foreground">
-                    دورية منطقة {dutyId.split('_')[1]}
-                  </h3>
-                   <p className="text-sm text-muted-foreground">
-                     {Array.isArray(dutyPatrols) ? dutyPatrols.length : 0} ضابط نشط
-                   </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDuty(dutyId)}
-                  className="gap-2"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  محادثة
+          <div className="flex gap-2 mr-4">
+            <Button 
+              variant={showMap ? "default" : "outline"}
+              onClick={() => setShowMap(!showMap)}
+            >
+              <Map className="h-4 w-4 ml-2" />
+              {showMap ? "إخفاء الخريطة" : "عرض الخريطة"}
+            </Button>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 ml-2" />
+                  دورية جديدة
                 </Button>
-              </div>
-
-              {/* Patrol Members */}
-               <div className="space-y-2">
-                 {Array.isArray(dutyPatrols) && dutyPatrols.map((patrol) => (
-                  <div key={patrol.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                        <span className="text-xs font-semibold text-white">
-                          {patrol.profiles?.full_name?.charAt(0) || 'M'}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{patrol.profiles?.full_name || 'مستخدم مجهول'}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {patrol.profiles?.badge_number || 'غير محدد'}
-                        </p>
-                      </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="font-arabic">إنشاء دورية جديدة</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">اسم الدورية</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="دورية الخليل الشمالية"
+                        className="font-arabic"
+                      />
                     </div>
-                    <div className="text-right">
-                      <Badge variant="outline" className="text-xs">
-                        نشط
-                      </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatTime(patrol.created_at)}
-                      </p>
+                    <div>
+                      <Label htmlFor="area">المنطقة</Label>
+                      <Input
+                        id="area"
+                        value={formData.area}
+                        onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
+                        placeholder="اسم المنطقة"
+                        className="font-arabic"
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
-            </Card>
-          ))}
+                  <div>
+                    <Label htmlFor="location">العنوان (اختياري)</Label>
+                    <Input
+                      id="location"
+                      value={formData.location_address}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location_address: e.target.value }))}
+                      placeholder="العنوان التفصيلي"
+                      className="font-arabic"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="lat">خط العرض</Label>
+                      <Input
+                        id="lat"
+                        type="number"
+                        step="any"
+                        value={formData.location_lat || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location_lat: parseFloat(e.target.value) || null }))}
+                        placeholder="31.5326"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lng">خط الطول</Label>
+                      <Input
+                        id="lng"
+                        type="number"
+                        step="any"
+                        value={formData.location_lng || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location_lng: parseFloat(e.target.value) || null }))}
+                        placeholder="35.0998"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Members Section */}
+                  <div className="space-y-3">
+                    <Label>أعضاء الدورية</Label>
+                    <div className="border rounded-lg p-4 space-y-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input
+                          placeholder="اسم الضابط"
+                          value={newMember.officer_name}
+                          onChange={(e) => setNewMember(prev => ({ ...prev, officer_name: e.target.value }))}
+                          className="font-arabic"
+                        />
+                        <Input
+                          placeholder="رقم الهاتف"
+                          value={newMember.officer_phone}
+                          onChange={(e) => setNewMember(prev => ({ ...prev, officer_phone: e.target.value }))}
+                        />
+                        <div className="flex gap-1">
+                          <Select value={newMember.role} onValueChange={(value) => setNewMember(prev => ({ ...prev, role: value }))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="leader">قائد</SelectItem>
+                              <SelectItem value="member">عضو</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button type="button" onClick={addMember} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {formData.members.length > 0 && (
+                        <div className="space-y-2">
+                          {formData.members.map((member, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{member.officer_name}</span>
+                                <Badge variant="outline">
+                                  {member.role === 'leader' ? 'قائد' : 'عضو'}
+                                </Badge>
+                                {member.officer_phone && (
+                                  <span className="text-sm text-muted-foreground">{member.officer_phone}</span>
+                                )}
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeMember(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button onClick={createPatrol}>
+                      إنشاء الدورية
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        {patrols.length === 0 && (
-          <div className="text-center py-8">
-            <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">لا توجد دوريات نشطة حالياً</p>
+        {/* Map View */}
+        {showMap && (
+          <div className="mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-arabic">خريطة الدوريات</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MapComponent 
+                  patrols={filteredPatrols.filter(p => p.location_lat && p.location_lng)} 
+                  height="500px"
+                />
+              </CardContent>
+            </Card>
           </div>
         )}
-      </div>
 
-      {/* Chat Dialog */}
-      <Dialog open={!!selectedDuty} onOpenChange={() => setSelectedDuty(null)}>
-        <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="font-arabic">
-              محادثة دورية منطقة {selectedDuty?.split('_')[1]}
-            </DialogTitle>
-          </DialogHeader>
+        {/* Patrols List */}
+        <div className="grid gap-4">
+          {filteredPatrols.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">لا توجد دوريات</h3>
+                <p className="text-muted-foreground">لم يتم العثور على أي دوريات تطابق البحث</p>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredPatrols.map((patrol) => (
+              <Card key={patrol.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold font-arabic mb-2">{patrol.name}</h3>
+                      <Badge 
+                        className={patrol.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
+                      >
+                        {patrol.status === 'active' ? 'نشطة' : 'غير نشطة'}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(patrol)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      {(user?.role === 'admin' || patrol.created_by === user?.id) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deletePatrol(patrol.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
 
-          {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto space-y-3 max-h-96">
-            {loadingChat ? (
-              <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-              </div>
-            ) : (
-              chatMessages.map((message) => (
-                <div key={message.id} className={`flex gap-2 ${
-                  message.user_id === user?.id ? 'justify-end' : 'justify-start'
-                }`}>
-                  {message.user_id !== user?.id && (
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-xs font-semibold">
-                        {message.profiles?.full_name?.charAt(0) || 'M'}
-                      </span>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>المنطقة: {patrol.area}</span>
+                    </div>
+                    {patrol.location_address && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span>العنوان: {patrol.location_address}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>عدد الأعضاء: {patrol.patrol_members?.length || 0}</span>
+                    </div>
+                    {patrol.location_lat && patrol.location_lng && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        <span>الإحداثيات: {patrol.location_lat.toFixed(4)}, {patrol.location_lng.toFixed(4)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Patrol Members */}
+                  {patrol.patrol_members && patrol.patrol_members.length > 0 && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        أعضاء الدورية
+                      </h4>
+                      <div className="space-y-2">
+                        {patrol.patrol_members.map((member, index) => (
+                          <div key={index} className="flex justify-between items-center p-2 bg-background rounded">
+                            <div>
+                              <span className="font-medium">{member.officer_name}</span>
+                              <Badge variant="outline" className="mr-2 text-xs">
+                                {member.role === 'leader' ? 'قائد' : 'عضو'}
+                              </Badge>
+                            </div>
+                            {member.officer_phone && (
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Phone className="h-3 w-3" />
+                                <span>{member.officer_phone}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <div className={`max-w-[70%] ${
-                    message.user_id === user?.id 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted'
-                  } rounded-lg p-2`}>
-                    {message.user_id !== user?.id && (
-                      <p className="text-xs font-semibold mb-1">
-                        {message.profiles?.full_name || 'مستخدم مجهول'}
-                      </p>
-                    )}
-                    <p className="text-sm">{message.message}</p>
-                    <p className={`text-xs mt-1 ${
-                      message.user_id === user?.id 
-                        ? 'text-primary-foreground/70' 
-                        : 'text-muted-foreground'
-                    }`}>
-                      {formatTime(message.created_at)}
-                    </p>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="font-arabic">تعديل الدورية</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-name">اسم الدورية</Label>
+                  <Input
+                    id="edit-name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="font-arabic"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-area">المنطقة</Label>
+                  <Input
+                    id="edit-area"
+                    value={formData.area}
+                    onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
+                    className="font-arabic"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="edit-location">العنوان</Label>
+                <Input
+                  id="edit-location"
+                  value={formData.location_address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location_address: e.target.value }))}
+                  className="font-arabic"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-lat">خط العرض</Label>
+                  <Input
+                    id="edit-lat"
+                    type="number"
+                    step="any"
+                    value={formData.location_lat || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location_lat: parseFloat(e.target.value) || null }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-lng">خط الطول</Label>
+                  <Input
+                    id="edit-lng"
+                    type="number"
+                    step="any"
+                    value={formData.location_lng || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location_lng: parseFloat(e.target.value) || null }))}
+                  />
+                </div>
+              </div>
+              
+              {/* Members Section */}
+              <div className="space-y-3">
+                <Label>أعضاء الدورية</Label>
+                <div className="border rounded-lg p-4 space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input
+                      placeholder="اسم الضابط"
+                      value={newMember.officer_name}
+                      onChange={(e) => setNewMember(prev => ({ ...prev, officer_name: e.target.value }))}
+                      className="font-arabic"
+                    />
+                    <Input
+                      placeholder="رقم الهاتف"
+                      value={newMember.officer_phone}
+                      onChange={(e) => setNewMember(prev => ({ ...prev, officer_phone: e.target.value }))}
+                    />
+                    <div className="flex gap-1">
+                      <Select value={newMember.role} onValueChange={(value) => setNewMember(prev => ({ ...prev, role: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="leader">قائد</SelectItem>
+                          <SelectItem value="member">عضو</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button type="button" onClick={addMember} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  {message.user_id === user?.id && (
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-xs font-semibold">
-                        {message.profiles?.full_name?.charAt(0) || 'M'}
-                      </span>
+                  
+                  {formData.members.length > 0 && (
+                    <div className="space-y-2">
+                      {formData.members.map((member, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{member.officer_name}</span>
+                            <Badge variant="outline">
+                              {member.role === 'leader' ? 'قائد' : 'عضو'}
+                            </Badge>
+                            {member.officer_phone && (
+                              <span className="text-sm text-muted-foreground">{member.officer_phone}</span>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeMember(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-              ))
-            )}
-          </div>
+              </div>
 
-          {/* Message Input */}
-          <div className="flex gap-2 pt-3 border-t">
-            <Input
-              placeholder="اكتب رسالة..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  sendMessage();
-                }
-              }}
-            />
-            <Button
-              size="sm"
-              onClick={sendMessage}
-              disabled={!newMessage.trim()}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  إلغاء
+                </Button>
+                <Button onClick={updatePatrol}>
+                  حفظ التغييرات
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
 
-export default Patrol;
+export default PatrolUpdated;

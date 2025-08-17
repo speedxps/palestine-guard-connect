@@ -72,7 +72,7 @@ const IncidentsManagement = () => {
     }
   };
 
-  const updateIncidentStatus = async (incidentId: string, newStatus: 'new' | 'in_progress' | 'resolved' | 'closed') => {
+  const updateIncidentStatus = async (incidentId: string, newStatus: 'new' | 'in_progress' | 'resolved') => {
     try {
       const { error } = await supabase
         .from('incidents')
@@ -135,7 +135,6 @@ const IncidentsManagement = () => {
       case 'new': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'in_progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'resolved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'closed': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -145,7 +144,6 @@ const IncidentsManagement = () => {
       case 'new': return 'جديد';
       case 'in_progress': return 'قيد المعالجة';
       case 'resolved': return 'محلول';
-      case 'closed': return 'مغلق';
       default: return status;
     }
   };
@@ -213,7 +211,6 @@ const IncidentsManagement = () => {
               <SelectItem value="new">جديد</SelectItem>
               <SelectItem value="in_progress">قيد المعالجة</SelectItem>
               <SelectItem value="resolved">محلول</SelectItem>
-              <SelectItem value="closed">مغلق</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -409,7 +406,7 @@ const IncidentsManagement = () => {
                 <Label htmlFor="status">الحالة</Label>
                 <Select 
                   value={selectedIncident.status} 
-                  onValueChange={(value) => updateIncidentStatus(selectedIncident.id, value)}
+                  onValueChange={(value) => updateIncidentStatus(selectedIncident.id, value as 'new' | 'in_progress' | 'resolved')}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -418,7 +415,6 @@ const IncidentsManagement = () => {
                     <SelectItem value="new">جديد</SelectItem>
                     <SelectItem value="in_progress">قيد المعالجة</SelectItem>
                     <SelectItem value="resolved">محلول</SelectItem>
-                    <SelectItem value="closed">مغلق</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

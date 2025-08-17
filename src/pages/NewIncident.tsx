@@ -14,10 +14,13 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const NewIncident = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
@@ -25,7 +28,7 @@ const NewIncident = () => {
     title: '',
     description: '',
     location: '',
-    urgency: 'medium'
+    coordinates: null as { lat: number; lng: number } | null
   });
 
   const incidentTypes = [
@@ -39,29 +42,106 @@ const NewIncident = () => {
     { value: 'other', label: 'أخرى', icon: '📝' }
   ];
 
+  const uploadFiles = async (incidentId: string, profileId: string) => {
+    for (const file of attachedFiles) {
+      try {
+        // Upload to storage
+        const fileName = `${Date.now()}-${file.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('incident-files')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        // Get file URL
+        const { data: urlData } = supabase.storage
+          .from('incident-files')
+          .getPublicUrl(fileName);
+
+        // Save file record to database
+        await supabase
+          .from('incident_files')
+          .insert({
+            incident_id: incidentId,
+            file_name: file.name,
+            file_type: file.type,
+            file_url: urlData.publicUrl,
+            uploaded_by: profileId
+          });
+
+      } catch (error) {
+        console.error('Error uploading file:', file.name, error);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     setIsSubmitting(true);
+    try {
+      // Get user profile to use correct ID
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!profile) {
+        throw new Error('User profile not found');
+      }
 
-    toast({
-      title: "تم إرسال البلاغ بنجاح",
-      description: "شكراً لك، سيتم متابعة البلاغ من قبل الفريق المختص",
-    });
+      // Create the incident
+      const { data: incident, error: incidentError } = await supabase
+        .from('incidents')
+        .insert({
+          title: formData.title,
+          description: formData.description,
+          incident_type: formData.type,
+          location_address: formData.location,
+          location_lat: formData.coordinates?.lat,
+          location_lng: formData.coordinates?.lng,
+          reporter_id: profile.id,
+          status: 'new'
+        })
+        .select()
+        .single();
 
-    // Reset form
-    setFormData({
-      type: '',
-      title: '',
-      description: '',
-      location: '',
-      urgency: 'medium'
-    });
+      if (incidentError) throw incidentError;
 
-    setIsSubmitting(false);
-    navigate('/dashboard');
+      // Upload files if any
+      if (attachedFiles.length > 0 && incident) {
+        await uploadFiles(incident.id, profile.id);
+      }
+
+      toast({
+        title: "تم إرسال البلاغ بنجاح",
+        description: "سيتم مراجعة بلاغك والرد عليك قريباً",
+      });
+
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        type: '',
+        location: '',
+        coordinates: null
+      });
+      setAttachedFiles([]);
+      
+      // Navigate back
+      navigate(-1);
+    } catch (error) {
+      console.error('Error submitting incident:', error);
+      toast({
+        title: "خطأ في إرسال البلاغ",
+        description: "حدث خطأ أثناء إرسال البلاغ، يرجى المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getCurrentLocation = () => {
@@ -71,7 +151,8 @@ const NewIncident = () => {
           const { latitude, longitude } = position.coords;
           setFormData(prev => ({
             ...prev,
-            location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+            location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+            coordinates: { lat: latitude, lng: longitude }
           }));
           toast({
             title: "تم تحديد الموقع",
@@ -227,27 +308,6 @@ const NewIncident = () => {
                   <MapPin className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-
-            {/* Urgency */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground font-arabic">
-                مستوى الإلحاح
-              </label>
-              <Select 
-                value={formData.urgency} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, urgency: value }))}
-              >
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">منخفض</SelectItem>
-                  <SelectItem value="medium">متوسط</SelectItem>
-                  <SelectItem value="high">عالي</SelectItem>
-                  <SelectItem value="critical">طارئ</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Media Upload */}
