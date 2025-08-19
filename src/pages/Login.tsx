@@ -95,8 +95,8 @@ const Login = () => {
           </h1>
           <div className="mx-auto w-32 h-32 mb-4 relative">
             <img 
-              src={genericPoliceLogo} 
-              alt="Police Department Logo" 
+              src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+              alt="Palestinian Police Department Logo" 
               className="w-full h-full object-contain drop-shadow-2xl"
             />
           </div>

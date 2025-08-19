@@ -119,14 +119,14 @@ const Dashboard = () => {
       route: '#',
       description: 'إدارة صلاحيات ضباط الجرائم الإلكترونية',
     });
-    menuItems.push({
-      id: 'violations-admin-panel',
-      titleAr: 'إدارة المخالفات والقضايا',
-      titleEn: 'Violations Admin',
-      icon: Shield,
-      route: '/violations-admin',
-      description: 'إضافة/تعديل/حذف السجلات',
-    });
+     menuItems.push({
+       id: 'incidents-management',
+       titleAr: 'إدارة البلاغات',
+       titleEn: 'Incidents Management',
+       icon: FileText,
+       route: '/incidents-management',
+       description: 'إدارة ومتابعة جميع البلاغات',
+     });
   }
 
   const handleNavigation = (route: string, itemId?: string) => {
@@ -238,8 +238,8 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <img 
-              src={policeLogoUrl} 
-              alt="Police Logo" 
+              src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+              alt="Palestinian Police Department Logo" 
               className="w-8 h-8"
             />
             <div>
