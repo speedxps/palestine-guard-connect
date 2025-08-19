@@ -12,7 +12,7 @@ import { ArrowLeft, Plus, MapPin, Users, Phone, Edit, Trash2, Search, Map } from
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import MapComponent from '@/components/MapComponent';
+import MapboxComponent from '@/components/MapboxComponent';
 
 interface PatrolMember {
   officer_name: string;
@@ -602,18 +602,17 @@ const PatrolUpdated = () => {
 
         {/* Map View */}
         {showMap && (
-          <div className="mb-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-arabic">خريطة الدوريات</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <MapComponent 
-                  patrols={filteredPatrols.filter(p => p.location_lat && p.location_lng)} 
-                  height="500px"
-                />
-              </CardContent>
-            </Card>
+          <div className="bg-card rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold font-arabic">خريطة الدوريات</h3>
+              <div className="text-sm text-muted-foreground">
+                {filteredPatrols.filter(p => p.location_lat && p.location_lng).length} من {filteredPatrols.length} دورية لها موقع محدد
+              </div>
+            </div>
+            <MapboxComponent 
+              patrols={filteredPatrols.filter(p => p.location_lat && p.location_lng)} 
+              height="500px"
+            />
           </div>
         )}
 
