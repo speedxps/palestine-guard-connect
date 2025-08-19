@@ -60,6 +60,8 @@ const PatrolUpdated = () => {
     role: 'member'
   });
 
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+
   useEffect(() => {
     fetchPatrols();
   }, []);
@@ -283,6 +285,65 @@ const PatrolUpdated = () => {
     }));
   };
 
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "غير مدعوم",
+        description: "متصفحك لا يدعم خدمة تحديد الموقع",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setFormData(prev => ({
+          ...prev,
+          location_lat: latitude,
+          location_lng: longitude,
+          location_address: `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`
+        }));
+        
+        toast({
+          title: "تم تحديد الموقع",
+          description: "تم تحديد موقعك الحالي بنجاح",
+        });
+        
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        let errorMessage = "لم نتمكن من تحديد موقعك";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "تم رفض الإذن للوصول إلى الموقع";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "معلومات الموقع غير متوفرة";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "انتهت مهلة طلب الموقع";
+            break;
+        }
+        
+        toast({
+          title: "خطأ في تحديد الموقع",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        
+        setIsGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
   const openEditDialog = (patrol: Patrol) => {
     setSelectedPatrol(patrol);
     setFormData({
@@ -397,29 +458,71 @@ const PatrolUpdated = () => {
                       className="font-arabic"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="lat">خط العرض</Label>
-                      <Input
-                        id="lat"
-                        type="number"
-                        step="any"
-                        value={formData.location_lat || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, location_lat: parseFloat(e.target.value) || null }))}
-                        placeholder="31.5326"
-                      />
+                  
+                  {/* Location Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>الموقع الجغرافي</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={getCurrentLocation}
+                        disabled={isGettingLocation}
+                        className="flex items-center gap-2"
+                      >
+                        {isGettingLocation ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                            جاري التحديد...
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="h-4 w-4" />
+                            تحديد موقعي
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <div>
-                      <Label htmlFor="lng">خط الطول</Label>
-                      <Input
-                        id="lng"
-                        type="number"
-                        step="any"
-                        value={formData.location_lng || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, location_lng: parseFloat(e.target.value) || null }))}
-                        placeholder="35.0998"
-                      />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="lat">خط العرض</Label>
+                        <Input
+                          id="lat"
+                          type="number"
+                          step="any"
+                          value={formData.location_lat || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, location_lat: parseFloat(e.target.value) || null }))}
+                          placeholder="31.5326"
+                          disabled={isGettingLocation}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lng">خط الطول</Label>
+                        <Input
+                          id="lng"
+                          type="number"
+                          step="any"
+                          value={formData.location_lng || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, location_lng: parseFloat(e.target.value) || null }))}
+                          placeholder="35.0998"
+                          disabled={isGettingLocation}
+                        />
+                      </div>
                     </div>
+                    
+                    {formData.location_lat && formData.location_lng && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-700">
+                          <MapPin className="h-4 w-4" />
+                          <span className="text-sm font-medium">تم تحديد الموقع بنجاح</span>
+                        </div>
+                        <p className="text-xs text-green-600 mt-1">
+                          {formData.location_lat.toFixed(6)}, {formData.location_lng.toFixed(6)}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Members Section */}
@@ -650,27 +753,69 @@ const PatrolUpdated = () => {
                   className="font-arabic"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-lat">خط العرض</Label>
-                  <Input
-                    id="edit-lat"
-                    type="number"
-                    step="any"
-                    value={formData.location_lat || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location_lat: parseFloat(e.target.value) || null }))}
-                  />
+              
+              {/* Location Section for Edit */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>الموقع الجغرافي</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={getCurrentLocation}
+                    disabled={isGettingLocation}
+                    className="flex items-center gap-2"
+                  >
+                    {isGettingLocation ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        جاري التحديد...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="h-4 w-4" />
+                        تحديد موقعي
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div>
-                  <Label htmlFor="edit-lng">خط الطول</Label>
-                  <Input
-                    id="edit-lng"
-                    type="number"
-                    step="any"
-                    value={formData.location_lng || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location_lng: parseFloat(e.target.value) || null }))}
-                  />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-lat">خط العرض</Label>
+                    <Input
+                      id="edit-lat"
+                      type="number"
+                      step="any"
+                      value={formData.location_lat || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location_lat: parseFloat(e.target.value) || null }))}
+                      disabled={isGettingLocation}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-lng">خط الطول</Label>
+                    <Input
+                      id="edit-lng"
+                      type="number"
+                      step="any"
+                      value={formData.location_lng || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location_lng: parseFloat(e.target.value) || null }))}
+                      disabled={isGettingLocation}
+                    />
+                  </div>
                 </div>
+                
+                {formData.location_lat && formData.location_lng && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm font-medium">تم تحديد الموقع بنجاح</span>
+                    </div>
+                    <p className="text-xs text-green-600 mt-1">
+                      {formData.location_lat.toFixed(6)}, {formData.location_lng.toFixed(6)}
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Members Section */}
