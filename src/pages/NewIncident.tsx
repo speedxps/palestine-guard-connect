@@ -23,6 +23,7 @@ const NewIncident = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [formData, setFormData] = useState({
     type: '',
     title: '',
@@ -145,29 +146,61 @@ const NewIncident = () => {
   };
 
   const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setFormData(prev => ({
-            ...prev,
-            location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-            coordinates: { lat: latitude, lng: longitude }
-          }));
-          toast({
-            title: "تم تحديد الموقع",
-            description: "تم تحديد موقعك الحالي بنجاح",
-          });
-        },
-        (error) => {
-          toast({
-            title: "خطأ في تحديد الموقع",
-            description: "لم نتمكن من تحديد موقعك الحالي",
-            variant: "destructive",
-          });
-        }
-      );
+    if (!navigator.geolocation) {
+      toast({
+        title: "غير مدعوم",
+        description: "متصفحك لا يدعم خدمة تحديد الموقع",
+        variant: "destructive",
+      });
+      return;
     }
+
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setFormData(prev => ({
+          ...prev,
+          location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          coordinates: { lat: latitude, lng: longitude }
+        }));
+        
+        toast({
+          title: "تم تحديد الموقع",
+          description: "تم تحديد موقعك الحالي بنجاح",
+        });
+        
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        let errorMessage = "لم نتمكن من تحديد موقعك";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "تم رفض الإذن للوصول إلى الموقع";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "معلومات الموقع غير متوفرة";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "انتهت مهلة طلب الموقع";
+            break;
+        }
+        
+        toast({
+          title: "خطأ في تحديد الموقع",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        
+        setIsGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,11 +334,21 @@ const NewIncident = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
                   onClick={getCurrentLocation}
-                  className="h-12 w-12"
+                  disabled={isGettingLocation}
+                  className="h-12 px-3 flex items-center gap-2"
                 >
-                  <MapPin className="h-4 w-4" />
+                  {isGettingLocation ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      <span className="text-sm">جاري التحديد...</span>
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm">تحديد موقعي</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
