@@ -18,6 +18,8 @@ interface Incident {
   title: string;
   description: string;
   location_address: string;
+  location_lat: number | null;
+  location_lng: number | null;
   status: string;
   created_at: string;
   reporter_profile: {
@@ -117,6 +119,48 @@ const IncidentsManagement = () => {
       toast({
         title: "خطأ",
         description: "فشل في حذف البلاغ",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const publishAsTask = async (incident: Incident) => {
+    try {
+      // الحصول على معرف الأدمن الحالي
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // إنشاء مهمة جديدة بناءً على البلاغ
+      const { error } = await supabase
+        .from('tasks')
+        .insert({
+          title: `مهمة: ${incident.title}`,
+          description: `${incident.description}\n\nهذه المهمة تم إنشاؤها من البلاغ رقم: ${incident.id}`,
+          location_address: incident.location_address,
+          location_lat: incident.location_lat,
+          location_lng: incident.location_lng,
+          assigned_to: null, // سيتم تعيينها لاحقاً
+          assigned_by: profileData.id,
+          status: 'pending',
+          due_date: null
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "تم النشر",
+        description: "تم نشر البلاغ كمهمة جديدة بنجاح",
+      });
+    } catch (error) {
+      console.error('Error publishing as task:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في نشر البلاغ كمهمة",
         variant: "destructive",
       });
     }
@@ -332,6 +376,14 @@ const IncidentsManagement = () => {
                       onClick={() => updateIncidentStatus(incident.id, incident.status === 'resolved' ? 'in_progress' : 'resolved')}
                     >
                       {incident.status === 'resolved' ? 'إلغاء الحل' : 'وضع علامة كمحلول'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => publishAsTask(incident)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      نشر كمهمة
                     </Button>
                   </div>
                 </CardContent>

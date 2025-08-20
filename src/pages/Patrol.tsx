@@ -296,6 +296,15 @@ const PatrolUpdated = () => {
     }
 
     setIsGettingLocation(true);
+    
+    // إعدادات محسنة للهاتف المحمول
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 30000, // زيادة الوقت للهاتف
+      maximumAge: 300000 // 5 دقائق
+    };
+
+    // محاولة أولى بدقة عالية
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -308,39 +317,67 @@ const PatrolUpdated = () => {
         
         toast({
           title: "تم تحديد الموقع",
-          description: "تم تحديد موقعك الحالي بنجاح",
+          description: `دقة الموقع: ${position.coords.accuracy.toFixed(0)}م`,
         });
         
         setIsGettingLocation(false);
       },
       (error) => {
-        let errorMessage = "لم نتمكن من تحديد موقعك";
+        console.log("خطأ في المحاولة الأولى:", error);
         
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "تم رفض الإذن للوصول إلى الموقع";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "معلومات الموقع غير متوفرة";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "انتهت مهلة طلب الموقع";
-            break;
-        }
-        
-        toast({
-          title: "خطأ في تحديد الموقع",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        
-        setIsGettingLocation(false);
+        // محاولة ثانية بدقة أقل للهاتف
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setFormData(prev => ({
+              ...prev,
+              location_lat: latitude,
+              location_lng: longitude,
+              location_address: `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`
+            }));
+            
+            toast({
+              title: "تم تحديد الموقع",
+              description: `دقة الموقع: ${position.coords.accuracy.toFixed(0)}م`,
+            });
+            
+            setIsGettingLocation(false);
+          },
+          (secondError) => {
+            let errorMessage = "تعذر تحديد الموقع";
+            let helpText = "";
+            
+            switch (secondError.code) {
+              case secondError.PERMISSION_DENIED:
+                errorMessage = "تم رفض الإذن للوصول إلى الموقع";
+                helpText = "يرجى السماح بالوصول للموقع في إعدادات المتصفح";
+                break;
+              case secondError.POSITION_UNAVAILABLE:
+                errorMessage = "معلومات الموقع غير متوفرة";
+                helpText = "تأكد من تفعيل GPS أو خدمات الموقع";
+                break;
+              case secondError.TIMEOUT:
+                errorMessage = "انتهت مهلة طلب الموقع";
+                helpText = "حاول مرة أخرى في مكان مكشوف";
+                break;
+            }
+            
+            toast({
+              title: errorMessage,
+              description: helpText,
+              variant: "destructive",
+            });
+            
+            setIsGettingLocation(false);
+          },
+          {
+            enableHighAccuracy: false, // دقة أقل للمحاولة الثانية
+            timeout: 15000,
+            maximumAge: 600000 // 10 دقائق
+          }
+        );
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
+      options
     );
   };
 

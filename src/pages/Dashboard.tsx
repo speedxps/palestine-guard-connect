@@ -258,19 +258,19 @@ const Dashboard = () => {
       </div>
 
       <div className="px-4 pb-20 space-y-6">
-        {/* Emergency Alert */}
+        {/* Latest News Alert */}
         <Card className="emergency-alert p-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-emergency/20 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-emergency" />
+            <div className="p-2 bg-primary/20 rounded-lg">
+              <Newspaper className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-emergency-foreground">Emergency</h3>
-              <p className="text-sm text-emergency-foreground/80 mt-1">
-                Major disturbance reported, additional support required
+              <h3 className="font-semibold text-foreground font-arabic">آخر الأخبار من المدير</h3>
+              <p className="text-sm text-muted-foreground mt-1 font-arabic">
+                تم تحديث بروتوكولات الأمان الجديدة، يرجى مراجعة التعليمات
               </p>
             </div>
-            <Bell className="h-4 w-4 text-emergency animate-pulse" />
+            <Bell className="h-4 w-4 text-primary" />
           </div>
         </Card>
 
