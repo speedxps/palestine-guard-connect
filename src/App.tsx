@@ -25,6 +25,7 @@ import Violations from "./pages/Violations";
 import ViolationsAdmin from "./pages/ViolationsAdmin";
 import Backup from "./pages/Backup";
 import WantedPersonsTree from "./pages/WantedPersonsTree";
+import IncidentsManagement from "./pages/IncidentsManagement";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +114,11 @@ const App = () => {
                 <Route path="/wanted-tree" element={
                   <ProtectedRoute requiredRole="admin">
                     <WantedPersonsTree />
+                  </ProtectedRoute>
+                } />
+                <Route path="/incidents-management" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <IncidentsManagement />
                   </ProtectedRoute>
                 } />
                 <Route path="/access-denied" element={<AccessDenied />} />

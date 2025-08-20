@@ -22,7 +22,7 @@ interface Incident {
   location_lng: number | null;
   status: string;
   created_at: string;
-  reporter_profile: {
+  profiles: {
     full_name: string;
     phone: string;
   };
@@ -55,7 +55,7 @@ const IncidentsManagement = () => {
         .from('incidents')
         .select(`
           *,
-          reporter_profile:profiles!incidents_reporter_id_fkey(full_name, phone),
+          profiles!incidents_reporter_id_fkey(full_name, phone),
           incident_files(file_name, file_url, file_type)
         `)
         .order('created_at', { ascending: false });
@@ -169,7 +169,7 @@ const IncidentsManagement = () => {
   const filteredIncidents = incidents.filter(incident => {
     const matchesSearch = incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         incident.reporter_profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+                         incident.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || incident.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -339,11 +339,11 @@ const IncidentsManagement = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <User className="h-4 w-4" />
-                      <span>{incident.reporter_profile?.full_name || 'غير محدد'}</span>
-                      {incident.reporter_profile?.phone && (
+                      <span>{incident.profiles?.full_name || 'غير محدد'}</span>
+                      {incident.profiles?.phone && (
                         <>
                           <Phone className="h-4 w-4 mr-2" />
-                          <span>{incident.reporter_profile.phone}</span>
+                          <span>{incident.profiles.phone}</span>
                         </>
                       )}
                     </div>
@@ -411,11 +411,11 @@ const IncidentsManagement = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium">المبلغ</Label>
-                <p className="mt-1">{selectedIncident.reporter_profile?.full_name}</p>
+                <p className="mt-1">{selectedIncident.profiles?.full_name}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">رقم الهاتف</Label>
-                <p className="mt-1">{selectedIncident.reporter_profile?.phone || 'غير محدد'}</p>
+                <p className="mt-1">{selectedIncident.profiles?.phone || 'غير محدد'}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">الموقع</Label>

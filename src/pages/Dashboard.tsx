@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UserManagement } from '@/components/UserManagement';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
 import CybercrimeAccessManagement from '@/components/CybercrimeAccessManagement';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, 
   AlertTriangle, 
@@ -26,6 +27,45 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState('dashboard');
+  const [latestNews, setLatestNews] = useState({ title: 'آخر الأخبار من المدير', content: 'لا توجد أخبار جديدة حالياً' });
+
+  // Fetch latest news from admin
+  useEffect(() => {
+    const fetchLatestNews = async () => {
+      try {
+        // First get admin profile
+        const { data: adminProfile, error: adminError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('role', 'admin')
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle();
+
+        if (adminProfile && !adminError) {
+          // Then get their latest post
+          const { data: latestPost, error: postError } = await supabase
+            .from('posts')
+            .select('content, created_at')
+            .eq('user_id', adminProfile.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (latestPost && !postError) {
+            setLatestNews({
+              title: `آخر الأخبار من ${adminProfile.full_name}`,
+              content: latestPost.content || 'لا توجد أخبار جديدة حالياً'
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching latest news:', error);
+      }
+    };
+
+    fetchLatestNews();
+  }, []);
 
   const stats = [
     { label: 'إجمالي البلاغات', value: '24', color: 'text-blue-400' },
@@ -265,9 +305,9 @@ const Dashboard = () => {
               <Newspaper className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground font-arabic">آخر الأخبار من المدير</h3>
-              <p className="text-sm text-muted-foreground mt-1 font-arabic">
-                تم تحديث بروتوكولات الأمان الجديدة، يرجى مراجعة التعليمات
+              <h3 className="font-semibold text-foreground font-arabic">{latestNews.title}</h3>
+              <p className="text-sm text-muted-foreground mt-1 font-arabic line-clamp-2">
+                {latestNews.content}
               </p>
             </div>
             <Bell className="h-4 w-4 text-primary" />
