@@ -25,7 +25,7 @@ const NewIncident = () => {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [formData, setFormData] = useState({
-    type: '',
+    type: undefined as string | undefined,
     title: '',
     description: '',
     location: '',
@@ -123,9 +123,9 @@ const NewIncident = () => {
 
       // Reset form
       setFormData({
+        type: undefined,
         title: '',
         description: '',
-        type: '',
         location: '',
         coordinates: null
       });
@@ -306,7 +306,7 @@ const NewIncident = () => {
                 نوع البلاغ *
               </label>
               <Select 
-                value={formData.type} 
+                value={formData.type || ''} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                 required
               >
