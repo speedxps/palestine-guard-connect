@@ -39,7 +39,7 @@ const IncidentsManagement = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -170,7 +170,7 @@ const IncidentsManagement = () => {
     const matchesSearch = incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          incident.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !statusFilter || incident.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || incident.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -251,7 +251,7 @@ const IncidentsManagement = () => {
               <SelectValue placeholder="تصفية حسب الحالة" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">جميع الحالات</SelectItem>
+              <SelectItem value="all">جميع الحالات</SelectItem>
               <SelectItem value="new">جديد</SelectItem>
               <SelectItem value="in_progress">قيد المعالجة</SelectItem>
               <SelectItem value="resolved">محلول</SelectItem>
