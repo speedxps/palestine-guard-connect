@@ -14,7 +14,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import MapboxComponent from '@/components/MapboxComponent';
 
+interface Profile {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  badge_number: string | null;
+}
+
 interface PatrolMember {
+  officer_id: string;
   officer_name: string;
   officer_phone: string;
   role: string;
@@ -37,6 +45,7 @@ const PatrolUpdated = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [patrols, setPatrols] = useState<Patrol[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -55,6 +64,7 @@ const PatrolUpdated = () => {
   });
 
   const [newMember, setNewMember] = useState({
+    officer_id: '',
     officer_name: '',
     officer_phone: '',
     role: 'member'
@@ -64,6 +74,7 @@ const PatrolUpdated = () => {
 
   useEffect(() => {
     fetchPatrols();
+    fetchProfiles();
   }, []);
 
   const fetchPatrols = async () => {
@@ -73,7 +84,7 @@ const PatrolUpdated = () => {
         .from('patrols')
         .select(`
           *,
-          patrol_members(officer_name, officer_phone, role)
+          patrol_members(officer_id, officer_name, officer_phone, role)
         `)
         .order('created_at', { ascending: false });
 
@@ -88,6 +99,21 @@ const PatrolUpdated = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone, badge_number')
+        .eq('is_active', true)
+        .order('full_name');
+
+      if (error) throw error;
+      setProfiles(data || []);
+    } catch (error) {
+      console.error('Error fetching profiles:', error);
     }
   };
 
@@ -125,7 +151,7 @@ const PatrolUpdated = () => {
       if (formData.members.length > 0) {
         const memberInserts = formData.members.map(member => ({
           patrol_id: patrol.id,
-          officer_id: profile.id,
+          officer_id: member.officer_id,
           officer_name: member.officer_name,
           officer_phone: member.officer_phone,
           role: member.role
@@ -188,7 +214,7 @@ const PatrolUpdated = () => {
         if (profile) {
           const memberInserts = formData.members.map(member => ({
             patrol_id: selectedPatrol.id,
-            officer_id: profile.id,
+            officer_id: member.officer_id,
             officer_name: member.officer_name,
             officer_phone: member.officer_phone,
             role: member.role
@@ -257,6 +283,7 @@ const PatrolUpdated = () => {
       members: []
     });
     setNewMember({
+      officer_id: '',
       officer_name: '',
       officer_phone: '',
       role: 'member'
@@ -264,7 +291,7 @@ const PatrolUpdated = () => {
   };
 
   const addMember = () => {
-    if (!newMember.officer_name) return;
+    if (!newMember.officer_id || !newMember.officer_name) return;
     
     setFormData(prev => ({
       ...prev,
@@ -272,10 +299,23 @@ const PatrolUpdated = () => {
     }));
     
     setNewMember({
+      officer_id: '',
       officer_name: '',
       officer_phone: '',
       role: 'member'
     });
+  };
+
+  const handleOfficerSelect = (officerId: string) => {
+    const selectedProfile = profiles.find(p => p.id === officerId);
+    if (selectedProfile) {
+      setNewMember(prev => ({
+        ...prev,
+        officer_id: selectedProfile.id,
+        officer_name: selectedProfile.full_name,
+        officer_phone: selectedProfile.phone || ''
+      }));
+    }
   };
 
   const removeMember = (index: number) => {
@@ -567,16 +607,23 @@ const PatrolUpdated = () => {
                     <Label>أعضاء الدورية</Label>
                     <div className="border rounded-lg p-4 space-y-3">
                       <div className="grid grid-cols-3 gap-2">
-                        <Input
-                          placeholder="اسم الضابط"
-                          value={newMember.officer_name}
-                          onChange={(e) => setNewMember(prev => ({ ...prev, officer_name: e.target.value }))}
-                          className="font-arabic"
-                        />
+                        <Select value={newMember.officer_id} onValueChange={handleOfficerSelect}>
+                          <SelectTrigger className="col-span-1">
+                            <SelectValue placeholder="اختر الضابط" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {profiles.map((profile) => (
+                              <SelectItem key={profile.id} value={profile.id}>
+                                {profile.full_name} {profile.badge_number ? `(${profile.badge_number})` : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <Input
                           placeholder="رقم الهاتف"
                           value={newMember.officer_phone}
                           onChange={(e) => setNewMember(prev => ({ ...prev, officer_phone: e.target.value }))}
+                          disabled={!!newMember.officer_id}
                         />
                         <div className="flex gap-1">
                           <Select value={newMember.role} onValueChange={(value) => setNewMember(prev => ({ ...prev, role: value }))}>
@@ -588,7 +635,7 @@ const PatrolUpdated = () => {
                               <SelectItem value="member">عضو</SelectItem>
                             </SelectContent>
                           </Select>
-                          <Button type="button" onClick={addMember} size="sm">
+                          <Button type="button" onClick={addMember} size="sm" disabled={!newMember.officer_id}>
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
@@ -859,16 +906,23 @@ const PatrolUpdated = () => {
                 <Label>أعضاء الدورية</Label>
                 <div className="border rounded-lg p-4 space-y-3">
                   <div className="grid grid-cols-3 gap-2">
-                    <Input
-                      placeholder="اسم الضابط"
-                      value={newMember.officer_name}
-                      onChange={(e) => setNewMember(prev => ({ ...prev, officer_name: e.target.value }))}
-                      className="font-arabic"
-                    />
+                    <Select value={newMember.officer_id} onValueChange={handleOfficerSelect}>
+                      <SelectTrigger className="col-span-1">
+                        <SelectValue placeholder="اختر الضابط" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {profiles.map((profile) => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {profile.full_name} {profile.badge_number ? `(${profile.badge_number})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Input
                       placeholder="رقم الهاتف"
                       value={newMember.officer_phone}
                       onChange={(e) => setNewMember(prev => ({ ...prev, officer_phone: e.target.value }))}
+                      disabled={!!newMember.officer_id}
                     />
                     <div className="flex gap-1">
                       <Select value={newMember.role} onValueChange={(value) => setNewMember(prev => ({ ...prev, role: value }))}>
@@ -880,7 +934,7 @@ const PatrolUpdated = () => {
                           <SelectItem value="member">عضو</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button type="button" onClick={addMember} size="sm">
+                      <Button type="button" onClick={addMember} size="sm" disabled={!newMember.officer_id}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
