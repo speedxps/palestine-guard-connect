@@ -108,7 +108,13 @@ const CybercrimeAccessManagement = () => {
     try {
       // Get current user's auth uid
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) throw new Error('User not authenticated');
+      if (!authUser) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Current auth user:', authUser.id);
+      console.log('Target user_id:', userId);
+      console.log('Has access:', hasAccess);
 
       if (hasAccess) {
         // Remove access
@@ -120,7 +126,7 @@ const CybercrimeAccessManagement = () => {
         if (error) throw error;
       } else {
         // Grant access
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('cybercrime_access')
           .upsert({
             user_id: userId,
@@ -128,7 +134,11 @@ const CybercrimeAccessManagement = () => {
             is_active: true
           });
 
-        if (error) throw error;
+        console.log('Upsert result:', data);
+        if (error) {
+          console.error('Upsert error:', error);
+          throw error;
+        }
       }
 
       toast({
