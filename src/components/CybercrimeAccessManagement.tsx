@@ -115,12 +115,18 @@ const CybercrimeAccessManagement = () => {
 
         if (error) throw error;
       } else {
-        // Grant access
+        // Grant access - get current user's profile to get user_id
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('id', user?.id)
+          .single();
+
         const { error } = await supabase
           .from('cybercrime_access')
           .upsert({
             user_id: userId,
-            granted_by: user?.id,
+            granted_by: currentProfile?.user_id,
             is_active: true
           });
 
