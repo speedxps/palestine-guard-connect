@@ -106,6 +106,10 @@ const CybercrimeAccessManagement = () => {
 
   const toggleCybercrimeAccess = async (userId: string, hasAccess: boolean) => {
     try {
+      // Get current user's auth uid
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error('User not authenticated');
+
       if (hasAccess) {
         // Remove access
         const { error } = await supabase
@@ -115,18 +119,12 @@ const CybercrimeAccessManagement = () => {
 
         if (error) throw error;
       } else {
-        // Grant access - get current user's profile to get user_id
-        const { data: currentProfile } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .eq('id', user?.id)
-          .single();
-
+        // Grant access
         const { error } = await supabase
           .from('cybercrime_access')
           .upsert({
             user_id: userId,
-            granted_by: currentProfile?.user_id,
+            granted_by: authUser.id,
             is_active: true
           });
 
