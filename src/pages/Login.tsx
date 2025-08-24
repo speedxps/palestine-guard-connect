@@ -3,9 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { Eye, EyeOff, Mail, Lock, Fingerprint, Save } from 'lucide-react';
 import genericPoliceLogo from '@/assets/generic-police-logo.png';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
@@ -15,9 +19,109 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isSupported: biometricSupported, authenticate: biometricAuth } = useBiometricAuth();
+
+  // Load saved credentials and settings on component mount
+  React.useEffect(() => {
+    const loadSavedData = () => {
+      // Load saved credentials if remember me was enabled
+      const savedCredentials = localStorage.getItem('savedCredentials');
+      if (savedCredentials) {
+        try {
+          const { email: savedEmail, rememberMe: savedRememberMe } = JSON.parse(savedCredentials);
+          if (savedRememberMe) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+          }
+        } catch (error) {
+          console.error('Error loading saved credentials:', error);
+        }
+      }
+
+      // Load biometric settings
+      const biometricSetting = localStorage.getItem('biometricEnabled');
+      if (biometricSetting === 'true') {
+        setBiometricEnabled(true);
+      }
+    };
+
+    loadSavedData();
+  }, []);
+
+  const saveCredentials = (email: string, rememberMe: boolean) => {
+    if (rememberMe) {
+      localStorage.setItem('savedCredentials', JSON.stringify({
+        email,
+        rememberMe: true,
+        timestamp: Date.now()
+      }));
+    } else {
+      localStorage.removeItem('savedCredentials');
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    if (!biometricSupported) {
+      toast({
+        title: "❌ غير مدعوم",
+        description: "المصادقة البيومترية غير متوفرة على هذا الجهاز",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const savedCredentials = localStorage.getItem('savedCredentials');
+    if (!savedCredentials) {
+      toast({
+        title: "❌ لا توجد بيانات محفوظة",
+        description: "يجب تسجيل الدخول أولاً وتفعيل حفظ البيانات",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await biometricAuth();
+      
+      if (result.success) {
+        const { email: savedEmail } = JSON.parse(savedCredentials);
+        setEmail(savedEmail);
+        
+        toast({
+          title: "✅ تم التحقق بنجاح",
+          description: "تم التحقق من هويتك باستخدام البصمة",
+        });
+
+        // Auto login with saved credentials
+        // Note: In real implementation, you'd need to store and retrieve the password securely
+        toast({
+          title: "ℹ️ يرجى إدخال كلمة المرور",
+          description: "أدخل كلمة المرور لإتمام عملية تسجيل الدخول",
+        });
+      } else {
+        toast({
+          title: "❌ فشل التحقق",
+          description: result.error || "فشل في التحقق البيومتري",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Biometric login error:', error);
+      toast({
+        title: "❌ خطأ",
+        description: "حدث خطأ في المصادقة البيومترية",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +133,12 @@ const Login = () => {
       console.log('Login result:', success);
       
       if (success) {
+        // Save credentials if remember me is checked
+        saveCredentials(email, rememberMe);
+
+        // Save biometric setting
+        localStorage.setItem('biometricEnabled', biometricEnabled.toString());
+
         toast({
           title: "✅ تم تسجيل الدخول بنجاح!",
           description: "جاري التوجه إلى الصفحة الرئيسية...",
@@ -170,6 +280,58 @@ const Login = () => {
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
+              </div>
+
+              {/* Login Options */}
+              <div className="space-y-4">
+                {/* Remember Me */}
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <Checkbox 
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label 
+                    htmlFor="rememberMe" 
+                    className="text-sm text-muted-foreground cursor-pointer font-arabic flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    حفظ تسجيل الدخول
+                  </Label>
+                </div>
+
+                {/* Biometric Authentication */}
+                {biometricSupported && (
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Switch 
+                      id="biometricAuth"
+                      checked={biometricEnabled}
+                      onCheckedChange={setBiometricEnabled}
+                    />
+                    <Label 
+                      htmlFor="biometricAuth" 
+                      className="text-sm text-muted-foreground cursor-pointer font-arabic flex items-center gap-2"
+                    >
+                      <Fingerprint className="h-4 w-4" />
+                      تفعيل المصادقة البيومترية
+                    </Label>
+                  </div>
+                )}
+
+                {/* Biometric Login Button */}
+                {biometricSupported && biometricEnabled && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBiometricLogin}
+                    disabled={isLoading}
+                    className="w-full h-12 bg-gradient-to-r from-green-50/50 to-green-100/50 border-green-200/50 hover:from-green-100/70 hover:to-green-200/70 text-green-700 font-semibold rounded-2xl transition-all duration-300 hover:scale-[1.02]"
+                  >
+                    <Fingerprint className="h-5 w-5 mr-2" />
+                    تسجيل الدخول بالبصمة
+                  </Button>
+                )}
               </div>
 
               {/* Login Button */}

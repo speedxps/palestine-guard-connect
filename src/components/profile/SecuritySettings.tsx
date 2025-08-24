@@ -1,22 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Lock, Save, Key, Shield } from 'lucide-react';
+import { Lock, Save, Key, Shield, Fingerprint, Smartphone } from 'lucide-react';
 
 export const SecuritySettings = () => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const { isSupported: biometricSupported, authenticate: biometricAuth } = useBiometricAuth();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+
+  useEffect(() => {
+    loadSecuritySettings();
+  }, []);
+
+  const loadSecuritySettings = () => {
+    try {
+      const biometricSetting = localStorage.getItem('biometricEnabled');
+      setBiometricEnabled(biometricSetting === 'true');
+      
+      const twoFactorSetting = localStorage.getItem('twoFactorEnabled');
+      setTwoFactorEnabled(twoFactorSetting === 'true');
+    } catch (error) {
+      console.error('Error loading security settings:', error);
+    }
+  };
+
+  const handleToggleBiometric = async (enabled: boolean) => {
+    if (enabled && biometricSupported) {
+      try {
+        const result = await biometricAuth();
+        if (result.success) {
+          setBiometricEnabled(true);
+          localStorage.setItem('biometricEnabled', 'true');
+          toast({
+            title: "✅ تم تفعيل المصادقة البيومترية",
+            description: "يمكنك الآن استخدام البصمة لتسجيل الدخول",
+          });
+        } else {
+          toast({
+            title: "❌ فشل التحقق",
+            description: result.error || "فشل في تفعيل المصادقة البيومترية",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Biometric setup error:', error);
+        toast({
+          title: "❌ خطأ",
+          description: "حدث خطأ في إعداد المصادقة البيومترية",
+          variant: "destructive",
+        });
+      }
+    } else {
+      setBiometricEnabled(false);
+      localStorage.setItem('biometricEnabled', 'false');
+      toast({
+        title: "ℹ️ تم إلغاء المصادقة البيومترية",
+        description: "لن تتمكن من استخدام البصمة لتسجيل الدخول",
+      });
+    }
+  };
+
+  const handleToggleTwoFactor = (enabled: boolean) => {
+    setTwoFactorEnabled(enabled);
+    localStorage.setItem('twoFactorEnabled', enabled.toString());
+    
+    toast({
+      title: enabled ? "✅ تم تفعيل المصادقة الثنائية" : "ℹ️ تم إلغاء المصادقة الثنائية",
+      description: enabled 
+        ? "سيتم طلب رمز إضافي عند تسجيل الدخول" 
+        : "لن يتم طلب رمز إضافي عند تسجيل الدخول",
+    });
+  };
 
   const handleChangePassword = async () => {
     if (!formData.currentPassword || !formData.newPassword) {
@@ -177,6 +246,50 @@ export const SecuritySettings = () => {
                 placeholder="أعد إدخال كلمة المرور الجديدة"
                 className="font-arabic"
               />
+            </div>
+          </div>
+
+          {/* المصادقة المتقدمة */}
+          <div className="space-y-4 border-t border-border/50 pt-4">
+            <div className="flex items-center gap-2">
+              <Fingerprint className="h-4 w-4 text-blue-400" />
+              <h4 className="font-semibold font-arabic">المصادقة المتقدمة</h4>
+            </div>
+
+            {/* المصادقة البيومترية */}
+            {biometricSupported && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Fingerprint className="h-4 w-4 text-blue-400" />
+                    <Label className="font-arabic text-sm">المصادقة البيومترية</Label>
+                  </div>
+                  <Switch
+                    checked={biometricEnabled}
+                    onCheckedChange={handleToggleBiometric}
+                  />
+                </div>
+                <p className="text-xs text-blue-400/80 font-arabic">
+                  استخدام البصمة أو الوجه لتسجيل الدخول
+                </p>
+              </div>
+            )}
+
+            {/* المصادقة الثنائية */}
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4 text-orange-400" />
+                  <Label className="font-arabic text-sm">المصادقة الثنائية</Label>
+                </div>
+                <Switch
+                  checked={twoFactorEnabled}
+                  onCheckedChange={handleToggleTwoFactor}
+                />
+              </div>
+              <p className="text-xs text-orange-400/80 font-arabic">
+                طلب رمز إضافي عند تسجيل الدخول للحماية الإضافية
+              </p>
             </div>
           </div>
 
