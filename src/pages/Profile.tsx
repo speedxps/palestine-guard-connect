@@ -77,7 +77,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="px-4 pb-20 space-y-6">
+      <div className="px-4 pb-32 space-y-6">
         {/* User Info Card */}
         <Card className="glass-card p-6">
           <div className="flex items-center gap-4 mb-4">

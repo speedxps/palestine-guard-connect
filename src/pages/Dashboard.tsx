@@ -204,7 +204,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="px-4 pb-20">
+        <div className="px-4 pb-32">
           <UserManagement />
         </div>
       </div>
@@ -234,7 +234,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="px-4 pb-20">
+        <div className="px-4 pb-32">
           <PasswordResetManagement />
         </div>
       </div>
@@ -264,7 +264,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="px-4 pb-20">
+        <div className="px-4 pb-32">
           <CybercrimeAccessManagement />
         </div>
       </div>
@@ -305,7 +305,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="px-6 py-8 space-y-8">
+      <div className="px-6 py-8 pb-32 space-y-8">
         {/* Hero News Section */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 p-6 shadow-xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
