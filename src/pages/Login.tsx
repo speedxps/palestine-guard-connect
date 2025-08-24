@@ -9,6 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
+import { TwoFactorVerificationModal } from '@/components/TwoFactorVerificationModal';
 import { Eye, EyeOff, Mail, Lock, Fingerprint, Save } from 'lucide-react';
 import genericPoliceLogo from '@/assets/generic-police-logo.png';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
@@ -19,12 +21,15 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showTwoFactorVerification, setShowTwoFactorVerification] = useState(false);
+  const [pendingLoginData, setPendingLoginData] = useState<{ email: string; password: string } | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isSupported: biometricSupported, authenticate: biometricAuth } = useBiometricAuth();
+  const { isEnabled: twoFactorEnabled } = useTwoFactorAuth();
 
   // Load saved credentials and settings on component mount
   React.useEffect(() => {
@@ -129,32 +134,20 @@ const Login = () => {
 
     try {
       console.log('Attempting login with:', email);
-      const success = await login(email, password);
-      console.log('Login result:', success);
       
-      if (success) {
-        // Save credentials if remember me is checked
-        saveCredentials(email, rememberMe);
-
-        // Save biometric setting
-        localStorage.setItem('biometricEnabled', biometricEnabled.toString());
-
-        toast({
-          title: "✅ تم تسجيل الدخول بنجاح!",
-          description: "جاري التوجه إلى الصفحة الرئيسية...",
-        });
-        
-        // Immediate redirect - don't wait
-        setTimeout(() => {
-          window.location.replace('/dashboard');
-        }, 1000);
-      } else {
-        toast({
-          title: "❌ فشل تسجيل الدخول", 
-          description: "تحقق من البريد الإلكتروني وكلمة المرور",
-          variant: "destructive",
-        });
+      // First, check if user has two-factor authentication enabled
+      const userTwoFactorEnabled = localStorage.getItem('twoFactorEnabled') === 'true';
+      
+      if (userTwoFactorEnabled) {
+        // Store login data for later use after 2FA verification
+        setPendingLoginData({ email, password });
+        setShowTwoFactorVerification(true);
+        setIsLoading(false);
+        return;
       }
+      
+      // Regular login without 2FA
+      await performLogin(email, password);
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -162,7 +155,44 @@ const Login = () => {
         description: "حدث خطأ، حاول مرة أخرى",
         variant: "destructive",
       });
-    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const performLogin = async (loginEmail: string, loginPassword: string) => {
+    const success = await login(loginEmail, loginPassword);
+    console.log('Login result:', success);
+    
+    if (success) {
+      // Save credentials if remember me is checked
+      saveCredentials(loginEmail, rememberMe);
+
+      // Save biometric setting
+      localStorage.setItem('biometricEnabled', biometricEnabled.toString());
+
+      toast({
+        title: "✅ تم تسجيل الدخول بنجاح!",
+        description: "جاري التوجه إلى الصفحة الرئيسية...",
+      });
+      
+      // Immediate redirect - don't wait
+      setTimeout(() => {
+        window.location.replace('/dashboard');
+      }, 1000);
+    } else {
+      toast({
+        title: "❌ فشل تسجيل الدخول", 
+        description: "تحقق من البريد الإلكتروني وكلمة المرور",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTwoFactorSuccess = async () => {
+    if (pendingLoginData) {
+      setIsLoading(true);
+      await performLogin(pendingLoginData.email, pendingLoginData.password);
+      setPendingLoginData(null);
       setIsLoading(false);
     }
   };
@@ -436,6 +466,18 @@ const Login = () => {
       <ForgotPasswordModal 
         isOpen={showForgotPassword} 
         onClose={() => setShowForgotPassword(false)} 
+      />
+      
+      {/* Two-Factor Verification Modal */}
+      <TwoFactorVerificationModal
+        isOpen={showTwoFactorVerification}
+        onClose={() => {
+          setShowTwoFactorVerification(false);
+          setPendingLoginData(null);
+          setIsLoading(false);
+        }}
+        onSuccess={handleTwoFactorSuccess}
+        userEmail={email}
       />
     </div>
   );

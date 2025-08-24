@@ -7,16 +7,19 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
+import { TwoFactorSetupModal } from '@/components/TwoFactorSetupModal';
 import { supabase } from '@/integrations/supabase/client';
-import { Lock, Save, Key, Shield, Fingerprint, Smartphone } from 'lucide-react';
+import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode } from 'lucide-react';
 
 export const SecuritySettings = () => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
   const { isSupported: biometricSupported, authenticate: biometricAuth } = useBiometricAuth();
+  const { isEnabled: twoFactorEnabled, disable: disableTwoFactor } = useTwoFactorAuth();
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -31,9 +34,6 @@ export const SecuritySettings = () => {
     try {
       const biometricSetting = localStorage.getItem('biometricEnabled');
       setBiometricEnabled(biometricSetting === 'true');
-      
-      const twoFactorSetting = localStorage.getItem('twoFactorEnabled');
-      setTwoFactorEnabled(twoFactorSetting === 'true');
     } catch (error) {
       console.error('Error loading security settings:', error);
     }
@@ -75,16 +75,23 @@ export const SecuritySettings = () => {
     }
   };
 
-  const handleToggleTwoFactor = (enabled: boolean) => {
-    setTwoFactorEnabled(enabled);
-    localStorage.setItem('twoFactorEnabled', enabled.toString());
-    
-    toast({
-      title: enabled ? "✅ تم تفعيل المصادقة الثنائية" : "ℹ️ تم إلغاء المصادقة الثنائية",
-      description: enabled 
-        ? "سيتم طلب رمز إضافي عند تسجيل الدخول" 
-        : "لن يتم طلب رمز إضافي عند تسجيل الدخول",
-    });
+  const handleTwoFactorToggle = (enabled: boolean) => {
+    if (enabled && !twoFactorEnabled) {
+      // Show setup modal
+      setShowTwoFactorSetup(true);
+    } else if (!enabled && twoFactorEnabled) {
+      // Disable two-factor
+      disableTwoFactor();
+      toast({
+        title: "ℹ️ تم إلغاء المصادقة الثنائية",
+        description: "لن يتم طلب رمز إضافي عند تسجيل الدخول",
+      });
+    }
+  };
+
+  const handleTwoFactorSuccess = () => {
+    // Refresh component to show updated status
+    loadSecuritySettings();
   };
 
   const handleChangePassword = async () => {
@@ -279,17 +286,23 @@ export const SecuritySettings = () => {
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Smartphone className="h-4 w-4 text-orange-400" />
-                  <Label className="font-arabic text-sm">المصادقة الثنائية</Label>
+                  <QrCode className="h-4 w-4 text-orange-400" />
+                  <Label className="font-arabic text-sm">المصادقة الثنائية (TOTP)</Label>
                 </div>
                 <Switch
                   checked={twoFactorEnabled}
-                  onCheckedChange={handleToggleTwoFactor}
+                  onCheckedChange={handleTwoFactorToggle}
                 />
               </div>
-              <p className="text-xs text-orange-400/80 font-arabic">
-                طلب رمز إضافي عند تسجيل الدخول للحماية الإضافية
+              <p className="text-xs text-orange-400/80 font-arabic mb-2">
+                استخدم تطبيق المصادقة لرموز إضافية آمنة
               </p>
+              {twoFactorEnabled && (
+                <div className="flex items-center gap-1 text-xs text-green-400">
+                  <span>✓</span>
+                  <span className="font-arabic">مفعل - محمي بـ TOTP</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -341,6 +354,13 @@ export const SecuritySettings = () => {
           </Button>
         </div>
       </DialogContent>
+      
+      {/* Two-Factor Setup Modal */}
+      <TwoFactorSetupModal
+        isOpen={showTwoFactorSetup}
+        onClose={() => setShowTwoFactorSetup(false)}
+        onSuccess={handleTwoFactorSuccess}
+      />
     </Dialog>
   );
 };
