@@ -28,7 +28,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isSupported: biometricSupported, authenticate: biometricAuth } = useBiometricAuth();
+  const { isSupported: biometricSupported, isRegistered: biometricRegistered, authenticate: biometricAuth } = useBiometricAuth();
   const { isEnabled: twoFactorEnabled } = useTwoFactorAuth();
 
   // Load saved credentials and settings on component mount
@@ -78,6 +78,15 @@ const Login = () => {
       toast({
         title: "❌ غير مدعوم",
         description: "المصادقة البيومترية غير متوفرة على هذا الجهاز",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!biometricRegistered) {
+      toast({
+        title: "❌ غير مسجل",
+        description: "يجب تسجيل البصمة أولاً من إعدادات الأمان في الملف الشخصي",
         variant: "destructive",
       });
       return;
@@ -368,7 +377,7 @@ const Login = () => {
                 )}
 
                 {/* Biometric Login Button */}
-                {biometricSupported && biometricEnabled && (
+                {biometricSupported && biometricEnabled && biometricRegistered && (
                   <Button
                     type="button"
                     variant="outline"
@@ -379,6 +388,15 @@ const Login = () => {
                     <Fingerprint className="h-5 w-5 mr-2" />
                     تسجيل الدخول بالبصمة
                   </Button>
+                )}
+                
+                {/* Biometric Registration Required Message */}
+                {biometricSupported && biometricEnabled && !biometricRegistered && (
+                  <div className="bg-orange-50/50 border border-orange-200/50 rounded-lg p-3">
+                    <p className="text-xs text-orange-600 font-arabic text-center">
+                      ⚠️ يجب تسجيل البصمة أولاً من إعدادات الأمان في الملف الشخصي
+                    </p>
+                  </div>
                 )}
               </div>
 

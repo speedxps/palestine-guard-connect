@@ -17,7 +17,7 @@ export const SecuritySettings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
-  const { isSupported: biometricSupported, authenticate: biometricAuth } = useBiometricAuth();
+  const { isSupported: biometricSupported, isRegistered: biometricRegistered, authenticate: biometricAuth, register: biometricRegister } = useBiometricAuth();
   const { isEnabled: twoFactorEnabled, disable: disableTwoFactor } = useTwoFactorAuth();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,28 +41,39 @@ export const SecuritySettings = () => {
 
   const handleToggleBiometric = async (enabled: boolean) => {
     if (enabled && biometricSupported) {
-      try {
-        const result = await biometricAuth();
-        if (result.success) {
-          setBiometricEnabled(true);
-          localStorage.setItem('biometricEnabled', 'true');
+      if (!biometricRegistered) {
+        // First register biometric data
+        try {
+          const result = await biometricRegister();
+          if (result.success) {
+            setBiometricEnabled(true);
+            localStorage.setItem('biometricEnabled', 'true');
+            toast({
+              title: "✅ تم تسجيل البصمة بنجاح",
+              description: "يمكنك الآن استخدام البصمة لتسجيل الدخول",
+            });
+          } else {
+            toast({
+              title: "❌ فشل التسجيل",
+              description: result.error || "فشل في تسجيل البيانات البيومترية",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error('Biometric registration error:', error);
           toast({
-            title: "✅ تم تفعيل المصادقة البيومترية",
-            description: "يمكنك الآن استخدام البصمة لتسجيل الدخول",
-          });
-        } else {
-          toast({
-            title: "❌ فشل التحقق",
-            description: result.error || "فشل في تفعيل المصادقة البيومترية",
+            title: "❌ خطأ",
+            description: "حدث خطأ في تسجيل البيانات البيومترية",
             variant: "destructive",
           });
         }
-      } catch (error) {
-        console.error('Biometric setup error:', error);
+      } else {
+        // Already registered, just enable
+        setBiometricEnabled(true);
+        localStorage.setItem('biometricEnabled', 'true');
         toast({
-          title: "❌ خطأ",
-          description: "حدث خطأ في إعداد المصادقة البيومترية",
-          variant: "destructive",
+          title: "✅ تم تفعيل المصادقة البيومترية",
+          description: "يمكنك الآن استخدام البصمة لتسجيل الدخول",
         });
       }
     } else {
@@ -276,9 +287,20 @@ export const SecuritySettings = () => {
                     onCheckedChange={handleToggleBiometric}
                   />
                 </div>
-                <p className="text-xs text-blue-400/80 font-arabic">
+                <p className="text-xs text-blue-400/80 font-arabic mb-2">
                   استخدام البصمة أو الوجه لتسجيل الدخول
                 </p>
+                {biometricRegistered ? (
+                  <div className="flex items-center gap-1 text-xs text-green-400">
+                    <span>✓</span>
+                    <span className="font-arabic">مسجل - جاهز للاستخدام</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-xs text-orange-400">
+                    <span>⚠️</span>
+                    <span className="font-arabic">غير مسجل - سيطلب التسجيل عند التفعيل</span>
+                  </div>
+                )}
               </div>
             )}
 
