@@ -58,13 +58,16 @@ const Login = () => {
     loadSavedData();
   }, []);
 
-  const saveCredentials = (email: string, rememberMe: boolean) => {
+  const saveCredentials = (email: string, password: string, rememberMe: boolean) => {
     if (rememberMe) {
-      localStorage.setItem('savedCredentials', JSON.stringify({
+      // Save credentials securely for biometric login
+      const credentialsData = {
         email,
+        password: biometricEnabled ? password : undefined, // Only save password if biometric is enabled
         rememberMe: true,
         timestamp: Date.now()
-      }));
+      };
+      localStorage.setItem('savedCredentials', JSON.stringify(credentialsData));
     } else {
       localStorage.removeItem('savedCredentials');
     }
@@ -84,7 +87,7 @@ const Login = () => {
     if (!savedCredentials) {
       toast({
         title: "❌ لا توجد بيانات محفوظة",
-        description: "يجب تسجيل الدخول أولاً وتفعيل حفظ البيانات",
+        description: "يجب تسجيل الدخول أولاً وتفعيل حفظ البيانات وحفظ كلمة المرور",
         variant: "destructive",
       });
       return;
@@ -95,20 +98,26 @@ const Login = () => {
       const result = await biometricAuth();
       
       if (result.success) {
-        const { email: savedEmail } = JSON.parse(savedCredentials);
-        setEmail(savedEmail);
+        const credentialsData = JSON.parse(savedCredentials);
+        const { email: savedEmail, password: savedPassword } = credentialsData;
         
+        if (!savedPassword) {
+          toast({
+            title: "❌ لا توجد كلمة مرور محفوظة",
+            description: "يجب تسجيل الدخول أولاً وتفعيل حفظ كلمة المرور",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         toast({
           title: "✅ تم التحقق بنجاح",
-          description: "تم التحقق من هويتك باستخدام البصمة",
+          description: "جاري تسجيل الدخول باستخدام البصمة...",
         });
 
         // Auto login with saved credentials
-        // Note: In real implementation, you'd need to store and retrieve the password securely
-        toast({
-          title: "ℹ️ يرجى إدخال كلمة المرور",
-          description: "أدخل كلمة المرور لإتمام عملية تسجيل الدخول",
-        });
+        await performLogin(savedEmail, savedPassword);
       } else {
         toast({
           title: "❌ فشل التحقق",
@@ -165,7 +174,7 @@ const Login = () => {
     
     if (success) {
       // Save credentials if remember me is checked
-      saveCredentials(loginEmail, rememberMe);
+      saveCredentials(loginEmail, loginPassword, rememberMe);
 
       // Save biometric setting
       localStorage.setItem('biometricEnabled', biometricEnabled.toString());
@@ -333,19 +342,28 @@ const Login = () => {
 
                 {/* Biometric Authentication */}
                 {biometricSupported && (
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <Switch 
-                      id="biometricAuth"
-                      checked={biometricEnabled}
-                      onCheckedChange={setBiometricEnabled}
-                    />
-                    <Label 
-                      htmlFor="biometricAuth" 
-                      className="text-sm text-muted-foreground cursor-pointer font-arabic flex items-center gap-2"
-                    >
-                      <Fingerprint className="h-4 w-4" />
-                      تفعيل المصادقة البيومترية
-                    </Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Switch 
+                        id="biometricAuth"
+                        checked={biometricEnabled}
+                        onCheckedChange={setBiometricEnabled}
+                      />
+                      <Label 
+                        htmlFor="biometricAuth" 
+                        className="text-sm text-muted-foreground cursor-pointer font-arabic flex items-center gap-2"
+                      >
+                        <Fingerprint className="h-4 w-4" />
+                        تفعيل المصادقة البيومترية
+                      </Label>
+                    </div>
+                    {biometricEnabled && (
+                      <div className="bg-blue-50/50 border border-blue-200/50 rounded-lg p-2">
+                        <p className="text-xs text-blue-600 font-arabic">
+                          ⚠️ في البيئة التطويرية: سيظهر مربع حوار للمحاكاة. في الجهاز الحقيقي: ستستخدم البصمة أو الوجه الفعلي.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -49,44 +49,62 @@ export const useBiometricAuth = (): BiometricAuthResult => {
         return { success: false, error: 'المصادقة البيومترية غير مدعومة على هذا الجهاز' };
       }
 
-      // In sandbox environment, simulate authentication
+      // In sandbox environment, simulate authentication with improved realism
       if (isSandboxEnvironment()) {
-        // Simulate authentication delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Show a more realistic authentication prompt
+        const confirmAuth = window.confirm('🔐 مصادقة بيومترية\n\nضع إصبعك على مستشعر البصمة أو انظر إلى الكاميرا للتحقق من هويتك.\n\nاضغط موافق للمحاكاة أو إلغاء للرفض.');
         
-        // Simulate 80% success rate for demo
-        const success = Math.random() > 0.2;
+        if (!confirmAuth) {
+          return { success: false, error: 'تم إلغاء المصادقة البيومترية' };
+        }
+        
+        // Simulate realistic authentication delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Simulate 90% success rate for demo (more realistic)
+        const success = Math.random() > 0.1;
         
         if (success) {
           return { success: true };
         } else {
-          return { success: false, error: 'فشل في التحقق من البصمة' };
+          return { success: false, error: 'فشل في التحقق من البصمة. حاول مرة أخرى.' };
         }
       }
 
       // Real WebAuthn implementation for production
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+      
       const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
-        challenge: new Uint8Array(32),
+        challenge: challenge,
         allowCredentials: [],
         userVerification: 'required',
         timeout: 60000,
       };
 
       // Request authentication
-      await navigator.credentials.get({
+      const credential = await navigator.credentials.get({
         publicKey: publicKeyCredentialRequestOptions,
       });
 
-      return { success: true };
+      if (credential) {
+        return { success: true };
+      } else {
+        return { success: false, error: 'فشل في المصادقة البيومترية' };
+      }
     } catch (error: any) {
       console.error('Biometric authentication error:', error);
       
       if (error.name === 'NotAllowedError') {
-        return { success: false, error: 'تم إلغاء المصادقة البيومترية' };
+        return { success: false, error: 'تم إلغاء المصادقة البيومترية من قبل المستخدم' };
       } else if (error.name === 'NotSupportedError') {
-        return { success: false, error: 'المصادقة البيومترية غير مدعومة' };
+        return { success: false, error: 'المصادقة البيومترية غير مدعومة على هذا المتصفح' };
+      } else if (error.name === 'SecurityError') {
+        return { success: false, error: 'خطأ أمني في المصادقة البيومترية' };
+      } else if (error.name === 'AbortError') {
+        return { success: false, error: 'تم إيقاف عملية المصادقة البيومترية' };
       } else {
-        return { success: false, error: 'فشل في المصادقة البيومترية' };
+        return { success: false, error: 'فشل في المصادقة البيومترية - تحقق من إعدادات الجهاز' };
       }
     }
   };
