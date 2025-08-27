@@ -12,6 +12,11 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true,
     },
+    FingerprintAIO: {
+      requestCode: 'BIOMETRIC_REQUEST_CODE',
+      disableBackup: false,
+      cancelled: 'Authentication was cancelled',
+    },
   },
 };
 

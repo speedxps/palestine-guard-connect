@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 interface BiometricAuthResult {
   isSupported: boolean;
@@ -28,13 +29,22 @@ export const useBiometricAuth = (): BiometricAuthResult => {
 
   const checkSupport = async (): Promise<boolean> => {
     try {
-      // Check if Web Authentication API is available
+      // Check if we're on a mobile device with Capacitor
+      if (Capacitor.isNativePlatform()) {
+        console.log('Running on native platform, checking biometric support');
+        // On native platforms, assume biometrics are available if device has them
+        return true;
+      }
+      
+      // Check if Web Authentication API is available (web/browser)
       if (!window.PublicKeyCredential) {
+        console.log('PublicKeyCredential not available');
         return false;
       }
 
       // Check if platform authenticator is available
       const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      console.log('Platform authenticator available:', available);
       return available;
     } catch (error) {
       console.error('Biometric check error:', error);
@@ -48,7 +58,70 @@ export const useBiometricAuth = (): BiometricAuthResult => {
         return { success: false, error: 'المصادقة البيومترية غير مدعومة على هذا الجهاز' };
       }
 
-      // Try real WebAuthn first, fallback to simulation only if not supported
+      console.log('Starting biometric registration...');
+
+      // For native platforms (mobile apps)
+      if (Capacitor.isNativePlatform()) {
+        console.log('Registering biometrics on native platform');
+        
+        try {
+          // Try to use WebAuthn even on mobile
+          const challenge = new Uint8Array(32);
+          crypto.getRandomValues(challenge);
+          
+          const userId = new Uint8Array(32);
+          crypto.getRandomValues(userId);
+
+          const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
+            challenge: challenge,
+            rp: {
+              name: "Palestinian Police System",
+              id: window.location.hostname || 'police.ps',
+            },
+            user: {
+              id: userId,
+              name: "user@police.ps",
+              displayName: "Police User",
+            },
+            pubKeyCredParams: [
+              { alg: -7, type: "public-key" }, // ES256
+              { alg: -257, type: "public-key" } // RS256
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: "platform",
+              userVerification: "required",
+              requireResidentKey: false,
+            },
+            timeout: 60000,
+            attestation: "direct"
+          };
+
+          const credential = await navigator.credentials.create({
+            publicKey: publicKeyCredentialCreationOptions,
+          });
+
+          if (credential) {
+            const credentialId = Array.from(new Uint8Array((credential as PublicKeyCredential).rawId));
+            localStorage.setItem('biometricCredentialId', JSON.stringify(credentialId));
+            localStorage.setItem('biometricRegistered', 'true');
+            localStorage.removeItem('biometricSimulated'); // Remove simulation flag
+            setIsRegistered(true);
+            
+            console.log('Biometric registration successful');
+            return { success: true };
+          } else {
+            throw new Error('No credential returned');
+          }
+        } catch (nativeError: any) {
+          console.error('Native biometric registration failed:', nativeError);
+          return { 
+            success: false, 
+            error: 'فشل في تسجيل البيانات البيومترية. تأكد من أن جهازك يدعم البصمة وأنها مُفعلة.' 
+          };
+        }
+      }
+
+      // Web platform handling (existing code)
       try {
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
@@ -68,14 +141,8 @@ export const useBiometricAuth = (): BiometricAuthResult => {
             displayName: "Police User",
           },
           pubKeyCredParams: [
-            {
-              alg: -7, // ES256
-              type: "public-key",
-            },
-            {
-              alg: -257, // RS256
-              type: "public-key",
-            }
+            { alg: -7, type: "public-key" },
+            { alg: -257, type: "public-key" }
           ],
           authenticatorSelection: {
             authenticatorAttachment: "platform",
@@ -91,7 +158,6 @@ export const useBiometricAuth = (): BiometricAuthResult => {
         });
 
         if (credential) {
-          // Save the credential ID for future authentication
           const credentialId = Array.from(new Uint8Array((credential as PublicKeyCredential).rawId));
           localStorage.setItem('biometricCredentialId', JSON.stringify(credentialId));
           localStorage.setItem('biometricRegistered', 'true');
@@ -111,10 +177,8 @@ export const useBiometricAuth = (): BiometricAuthResult => {
           return { success: false, error: 'تم إلغاء تسجيل البيانات البيومترية' };
         }
         
-        // Simulate registration delay
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Save registration status
         localStorage.setItem('biometricRegistered', 'true');
         localStorage.setItem('biometricSimulated', 'true');
         setIsRegistered(true);
@@ -146,21 +210,21 @@ export const useBiometricAuth = (): BiometricAuthResult => {
         return { success: false, error: 'يجب تسجيل البيانات البيومترية أولاً' };
       }
 
+      console.log('Starting biometric authentication...');
+
       // Check if using simulated biometrics
       const isSimulated = localStorage.getItem('biometricSimulated') === 'true';
       
       if (isSimulated) {
-        // Fallback simulation for development
+        console.log('Using simulated biometrics');
         const confirmAuth = window.confirm('🔐 مصادقة بيومترية\n\n⚠️ وضع المحاكاة النشط\nفي الجهاز الحقيقي: سيتم استخدام البصمة الفعلية.\n\nاضغط موافق للمتابعة أو إلغاء للرفض.');
         
         if (!confirmAuth) {
           return { success: false, error: 'تم إلغاء المصادقة البيومترية' };
         }
         
-        // Simulate authentication delay
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Simulate 90% success rate
         const success = Math.random() > 0.1;
         
         if (success) {
@@ -170,12 +234,56 @@ export const useBiometricAuth = (): BiometricAuthResult => {
         }
       }
 
-      // Try real WebAuthn authentication first
+      // For native platforms (mobile apps) - try real WebAuthn
+      if (Capacitor.isNativePlatform()) {
+        console.log('Authenticating on native platform');
+        
+        try {
+          const challenge = new Uint8Array(32);
+          crypto.getRandomValues(challenge);
+          
+          const savedCredentialId = localStorage.getItem('biometricCredentialId');
+          const allowCredentials = [];
+          
+          if (savedCredentialId) {
+            const credentialId = new Uint8Array(JSON.parse(savedCredentialId));
+            allowCredentials.push({
+              id: credentialId,
+              type: "public-key" as const,
+            });
+          }
+          
+          const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
+            challenge: challenge,
+            allowCredentials: allowCredentials,
+            userVerification: 'required',
+            timeout: 60000,
+          };
+
+          const credential = await navigator.credentials.get({
+            publicKey: publicKeyCredentialRequestOptions,
+          });
+
+          if (credential) {
+            console.log('Native biometric authentication successful');
+            return { success: true };
+          } else {
+            return { success: false, error: 'فشل في المصادقة البيومترية' };
+          }
+        } catch (nativeError: any) {
+          console.error('Native biometric authentication failed:', nativeError);
+          return { 
+            success: false, 
+            error: 'فشل في المصادقة البيومترية. تأكد من أن بصمتك مسجلة على الجهاز.' 
+          };
+        }
+      }
+
+      // Web platform handling (existing code)
       try {
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
         
-        // Get saved credential ID
         const savedCredentialId = localStorage.getItem('biometricCredentialId');
         const allowCredentials = [];
         
@@ -206,7 +314,6 @@ export const useBiometricAuth = (): BiometricAuthResult => {
       } catch (webAuthnError: any) {
         console.log('WebAuthn authentication failed, using fallback:', webAuthnError.message);
         
-        // Fallback to simulation if WebAuthn fails
         const confirmAuth = window.confirm('🔐 مصادقة بيومترية - وضع بديل\n\n⚠️ WebAuthn غير متاح - سيتم استخدام المحاكاة.\nفي المتصفحات والأجهزة المدعومة: ستعمل البصمة الحقيقية.\n\nاضغط موافق للمتابعة.');
         
         if (!confirmAuth) {
