@@ -6,41 +6,27 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Globe, Save, CheckCircle } from 'lucide-react';
-
-type Language = 'ar' | 'en';
+import { useTranslation, type Language } from '@/hooks/useLanguage';
 
 export const LanguageSettings = () => {
   const { toast } = useToast();
+  const { language, setLanguage, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('ar');
-  const [currentLanguage, setCurrentLanguage] = useState<Language>('ar');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(language);
 
   useEffect(() => {
-    // تحميل اللغة المحفوظة
-    const savedLanguage = localStorage.getItem('appLanguage') as Language;
-    if (savedLanguage) {
-      setSelectedLanguage(savedLanguage);
-      setCurrentLanguage(savedLanguage);
-    }
-  }, []);
+    setSelectedLanguage(language);
+  }, [language]);
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // حفظ اللغة في localStorage
-      localStorage.setItem('appLanguage', selectedLanguage);
-      setCurrentLanguage(selectedLanguage);
-      
-      // تطبيق اللغة على الصفحة
-      document.documentElement.lang = selectedLanguage;
-      document.documentElement.dir = selectedLanguage === 'ar' ? 'rtl' : 'ltr';
+      setLanguage(selectedLanguage);
       
       toast({
-        title: selectedLanguage === 'ar' ? "✅ تم تغيير اللغة" : "✅ Language Changed",
-        description: selectedLanguage === 'ar' ? 
-          "تم تطبيق اللغة العربية بنجاح" : 
-          "English language applied successfully",
+        title: `✅ ${t('language.changed')}`,
+        description: t('language.changed_success'),
       });
 
       setIsOpen(false);
@@ -52,7 +38,7 @@ export const LanguageSettings = () => {
     } catch (error: any) {
       console.error('Error saving language:', error);
       toast({
-        title: "❌ خطأ",
+        title: `❌ ${t('general.error')}`,
         description: "فشل في تغيير اللغة",
         variant: "destructive",
       });
@@ -74,14 +60,14 @@ export const LanguageSettings = () => {
             </div>
             <div className="flex-1">
               <h4 className="font-semibold font-arabic text-foreground">
-                اللغة
+                {t('language.title')}
               </h4>
               <p className="text-sm text-muted-foreground">
-                العربية / English
+                {t('language.arabic')} / {t('language.english')}
               </p>
             </div>
             <div className="text-xs text-muted-foreground">
-              {currentLanguage === 'ar' ? 'عربي' : 'English'}
+              {language === 'ar' ? t('language.arabic') : t('language.english')}
             </div>
           </div>
         </Card>
@@ -89,7 +75,7 @@ export const LanguageSettings = () => {
       
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-arabic">إعدادات اللغة</DialogTitle>
+          <DialogTitle className="font-arabic">{t('language.title')} - إعدادات</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -106,10 +92,10 @@ export const LanguageSettings = () => {
                 <Label htmlFor="ar" className="flex-1 cursor-pointer">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold font-arabic">العربية</div>
+                      <div className="font-semibold font-arabic">{t('language.arabic')}</div>
                       <div className="text-sm text-muted-foreground">اللغة الافتراضية للتطبيق</div>
                     </div>
-                    {currentLanguage === 'ar' && (
+                    {language === 'ar' && (
                       <CheckCircle className="h-4 w-4 text-primary" />
                     )}
                   </div>
@@ -121,10 +107,10 @@ export const LanguageSettings = () => {
                 <Label htmlFor="en" className="flex-1 cursor-pointer">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold">English</div>
+                      <div className="font-semibold">{t('language.english')}</div>
                       <div className="text-sm text-muted-foreground">Switch to English interface</div>
                     </div>
-                    {currentLanguage === 'en' && (
+                    {language === 'en' && (
                       <CheckCircle className="h-4 w-4 text-primary" />
                     )}
                   </div>
@@ -138,11 +124,13 @@ export const LanguageSettings = () => {
               <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
               <div className="text-xs text-muted-foreground">
                 <p className="font-arabic mb-1">
-                  ملاحظة: سيتم إعادة تحميل التطبيق لتطبيق اللغة الجديدة.
+                  {t('language.note')}
                 </p>
-                <p>
-                  Note: The app will reload to apply the new language.
-                </p>
+                {language === 'ar' && (
+                  <p>
+                    Note: The app will reload to apply the new language.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -154,15 +142,15 @@ export const LanguageSettings = () => {
             onClick={() => setIsOpen(false)}
             className="flex-1 font-arabic"
           >
-            إلغاء
+            {t('general.cancel')}
           </Button>
           <Button 
             onClick={handleSave}
-            disabled={isLoading || selectedLanguage === currentLanguage}
+            disabled={isLoading || selectedLanguage === language}
             className="flex-1 font-arabic"
           >
             <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'جاري التطبيق...' : 'تطبيق اللغة'}
+            {isLoading ? t('language.applying') : t('language.apply')}
           </Button>
         </div>
       </DialogContent>

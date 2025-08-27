@@ -159,14 +159,22 @@ const Dashboard = () => {
       route: '#',
       description: 'إدارة صلاحيات ضباط الجرائم الإلكترونية',
     });
-     menuItems.push({
-       id: 'incidents-management',
-       titleAr: 'إدارة البلاغات',
-       titleEn: 'Incidents Management',
-       icon: FileText,
-       route: '/incidents-management',
-       description: 'إدارة ومتابعة جميع البلاغات',
-     });
+    menuItems.push({
+      id: 'incidents-management',
+      titleAr: 'إدارة البلاغات',
+      titleEn: 'Incidents Management',
+      icon: FileText,
+      route: '/incidents-management',
+      description: 'إدارة ومتابعة جميع البلاغات',
+    });
+    menuItems.push({
+      id: 'citizen-records',
+      titleAr: 'سجلات المواطنين',
+      titleEn: 'Citizen Records',
+      icon: Users,
+      route: '/citizen-records',
+      description: 'سجلات المواطنين مع القضايا والمخالفات',
+    });
   }
 
   const handleNavigation = (route: string, itemId?: string) => {
