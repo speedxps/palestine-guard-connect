@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/components/LanguageProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AccessDenied from "@/components/AccessDenied";
 import Login from "./pages/Login";
@@ -33,6 +34,7 @@ const queryClient = new QueryClient();
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
@@ -134,7 +136,8 @@ const App = () => {
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
-      </QueryClientProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
   );
 };
 

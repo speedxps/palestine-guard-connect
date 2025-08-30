@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useLanguage';
 import { UserManagement } from '@/components/UserManagement';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
 import CybercrimeAccessManagement from '@/components/CybercrimeAccessManagement';
@@ -26,8 +27,9 @@ import policeLogoUrl from '@/assets/police-logo.png';
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState('dashboard');
-  const [latestNews, setLatestNews] = useState({ title: 'آخر الأخبار من المدير', content: 'لا توجد أخبار جديدة حالياً' });
+  const [latestNews, setLatestNews] = useState({ title: t('dashboard.welcome'), content: t('general.loading') });
 
   // Fetch latest news from admin
   useEffect(() => {
@@ -68,68 +70,61 @@ const Dashboard = () => {
   }, []);
 
   const stats = [
-    { label: 'إجمالي البلاغات', value: '24', color: 'text-blue-400' },
-    { label: 'المهام النشطة', value: '12', color: 'text-green-400' },
-    { label: 'الدوريات النشطة', value: '8', color: 'text-yellow-400' },
+    { label: t('dashboard.recent_incidents'), value: '24', color: 'text-blue-400' },
+    { label: t('dashboard.pending_tasks'), value: '12', color: 'text-green-400' },
+    { label: t('dashboard.active_patrols'), value: '8', color: 'text-yellow-400' },
   ];
 
   const menuItems = [
     {
       id: 'feed',
-      titleAr: 'آخر الأخبار',
-      titleEn: 'News Feed',
+      title: t('nav.feed'),
       icon: Newspaper,
       route: '/feed',
-      description: 'آخر الأخبار والمنشورات',
+      description: t('nav.feed'),
     },
     {
       id: 'violations',
-      titleAr: 'استعلام المخالفات والقضايا',
-      titleEn: 'Violations & Cases Inquiry',
+      title: t('nav.violations'),
       icon: Search,
       route: '/violations',
-      description: 'البحث برقم الهوية',
+      description: t('nav.violations'),
     },
     {
       id: 'incidents',
-      titleAr: 'الأحداث',
-      titleEn: 'Incidents',
+      title: t('nav.incidents'),
       icon: FileText,
       route: '/incidents',
-      description: 'عرض جميع البلاغات والحوادث',
+      description: t('nav.incidents'),
     },
     {
       id: 'emergency',
-      titleAr: 'البلاغ الطارئ',
-      titleEn: 'Emergency Report',
+      title: t('nav.new_incident'),
       icon: AlertTriangle,
       route: '/new-incident',
-      description: 'إبلاغ عن حالة طوارئ',
+      description: t('nav.new_incident'),
       variant: 'emergency' as const,
     },
     {
       id: 'patrols',
-      titleAr: 'الدوريات',
-      titleEn: 'Patrols',
+      title: t('nav.patrol'),
       icon: MapPin,
       route: '/patrol',
-      description: 'متابعة الدوريات',
+      description: t('nav.patrol'),
     },
     {
       id: 'tasks',
-      titleAr: 'المهام',
-      titleEn: 'Tasks',
+      title: t('nav.tasks'),
       icon: Calendar,
-      route: '/tasks',
-      description: 'متابعة المهام والواجبات',
+      route: '/tasks',  
+      description: t('nav.tasks'),
     },
     {
       id: 'cyber',
-      titleAr: 'الجرائم السيبرانية',
-      titleEn: 'Cyber Crimes',
+      title: t('nav.cybercrime'),
       icon: Shield,
       route: '/cybercrime',
-      description: 'التواصل الآمن والجرائم الإلكترونية',
+      description: t('nav.cybercrime'),
     },
   ];
 
@@ -137,43 +132,38 @@ const Dashboard = () => {
   if (user?.role === 'admin') {
     menuItems.push({
       id: 'users',
-      titleAr: 'إدارة المستخدمين',
-      titleEn: 'User Management',
+      title: 'User Management',
       icon: Users,
       route: '#',
-      description: 'إدارة المستخدمين والصلاحيات',
+      description: 'User Management',
     });
     menuItems.push({
       id: 'password-resets',
-      titleAr: 'طلبات كلمة المرور',
-      titleEn: 'Password Requests',
+      title: 'Password Requests',
       icon: Users,
       route: '#',
-      description: 'مراجعة طلبات إعادة تعيين كلمة المرور',
+      description: 'Password Reset Requests',
     });
     menuItems.push({
       id: 'cybercrime-access',
-      titleAr: 'صلاحيات الجرائم الإلكترونية',
-      titleEn: 'Cybercrime Access',
+      title: 'Cybercrime Access',
       icon: Shield,
       route: '#',
-      description: 'إدارة صلاحيات ضباط الجرائم الإلكترونية',
+      description: 'Cybercrime Access Management',
     });
     menuItems.push({
       id: 'incidents-management',
-      titleAr: 'إدارة البلاغات',
-      titleEn: 'Incidents Management',
+      title: 'Incidents Management',
       icon: FileText,
       route: '/incidents-management',
-      description: 'إدارة ومتابعة جميع البلاغات',
+      description: 'Incidents Management',
     });
     menuItems.push({
       id: 'citizen-records',
-      titleAr: 'سجلات المواطنين',
-      titleEn: 'Citizen Records',
+      title: t('nav.citizen_records'),
       icon: Users,
       route: '/citizen-records',
-      description: 'سجلات المواطنين مع القضايا والمخالفات',
+      description: t('citizen_records.subtitle'),
     });
   }
 
@@ -200,7 +190,7 @@ const Dashboard = () => {
               size="sm"
               onClick={() => setActiveTab('dashboard')}
             >
-              ← العودة للوحة الرئيسية
+              ← {t('general.back')}
             </Button>
             <Button
               variant="ghost"
@@ -298,7 +288,7 @@ const Dashboard = () => {
                 <h1 className="text-xl font-bold font-arabic bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   الشرطة الفلسطينية
                 </h1>
-                <p className="text-sm text-muted-foreground font-arabic">مرحباً، {user?.name}</p>
+                <p className="text-sm text-muted-foreground font-arabic">{t('dashboard.welcome')}، {user?.name}</p>
               </div>
             </div>
             <Button
@@ -393,7 +383,7 @@ const Dashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <h3 className="text-lg font-bold font-arabic text-foreground group-hover:text-primary transition-colors duration-300">
-                          {item.titleAr}
+                          {item.title}
                         </h3>
                         {isEmergency && (
                           <div className="flex space-x-1">
@@ -403,7 +393,7 @@ const Dashboard = () => {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground font-inter font-medium">
-                        {item.titleEn}
+                        {item.title}
                       </p>
                       <p className="text-xs text-muted-foreground/80 font-arabic mt-1">
                         {item.description}
@@ -430,7 +420,7 @@ const Dashboard = () => {
               className="flex flex-col items-center gap-2 h-auto py-3 px-6 rounded-xl bg-primary/10 hover:bg-primary/20 transition-all duration-300"
             >
               <Home className="h-6 w-6 text-primary" />
-              <span className="text-xs text-primary font-semibold">الرئيسية</span>
+              <span className="text-xs text-primary font-semibold">{t('nav.dashboard')}</span>
             </Button>
             <Button
               variant="ghost"
@@ -439,7 +429,7 @@ const Dashboard = () => {
               onClick={() => navigate('/profile')}
             >
               <User className="h-6 w-6 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-semibold">الملف الشخصي</span>
+              <span className="text-xs text-muted-foreground font-semibold">{t('nav.profile')}</span>
             </Button>
           </div>
         </div>

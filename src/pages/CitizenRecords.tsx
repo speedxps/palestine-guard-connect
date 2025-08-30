@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/hooks/useLanguage';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   Search, 
@@ -20,7 +21,9 @@ import {
   IdCard,
   Users,
   Filter,
-  Eye
+  Eye,
+  ArrowLeft,
+  User
 } from 'lucide-react';
 
 interface CitizenRecord {
@@ -78,6 +81,7 @@ interface WantedPerson {
 const CitizenRecords: React.FC = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [records, setRecords] = useState<CitizenRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<CitizenRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,187 +257,204 @@ const CitizenRecords: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-muted-foreground font-arabic">{t('general.loading')}</p>
+      <div className="mobile-container">
+        <div className="page-header">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="font-arabic"
+            >
+              <ArrowLeft className="h-4 w-4 ml-2" />
+              {t('general.back')}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="h-5 w-5" />
+            </Button>
           </div>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground font-arabic">{t('general.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+    <div className="mobile-container">
+      {/* Mobile Header */}
+      <div className="page-header">
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className="font-arabic"
+          >
+            <ArrowLeft className="h-4 w-4 ml-2" />
+            {t('general.back')}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/profile')}
+          >
+            <User className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
             <div className="p-2 bg-primary/20 rounded-lg">
               <Users className="h-6 w-6 text-primary" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold font-arabic text-foreground">
-                {t('citizen_records.title')}
-              </h1>
-              <p className="text-muted-foreground font-arabic">
-                {t('citizen_records.subtitle')}
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold font-arabic text-foreground">
+              {t('citizen_records.title')}
+            </h1>
           </div>
+          <p className="text-sm text-muted-foreground font-arabic">
+            {t('citizen_records.subtitle')}
+          </p>
         </div>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <Card className="glass-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/20 rounded-lg">
-                <Users className="h-5 w-5 text-primary" />
+      <div className="px-4 pb-32 space-y-6">
+        {/* Mobile Stats Cards - 2 columns grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="glass-card p-3">
+            <div className="text-center">
+              <div className="p-2 bg-primary/20 rounded-lg w-fit mx-auto mb-2">
+                <Users className="h-4 w-4 text-primary" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-arabic">
-                  {t('citizen_records.total_records')}
-                </p>
-                <p className="text-2xl font-bold">{totalStats.total}</p>
-              </div>
+              <p className="text-xs text-muted-foreground font-arabic mb-1">
+                {t('citizen_records.total_records')}
+              </p>
+              <p className="text-xl font-bold">{totalStats.total}</p>
             </div>
           </Card>
 
-          <Card className="glass-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <FileText className="h-5 w-5 text-orange-500" />
+          <Card className="glass-card p-3">
+            <div className="text-center">
+              <div className="p-2 bg-orange-500/20 rounded-lg w-fit mx-auto mb-2">
+                <FileText className="h-4 w-4 text-orange-500" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-arabic">
-                  {t('citizen_records.traffic_violations')}
-                </p>
-                <p className="text-2xl font-bold">{totalStats.violations}</p>
-              </div>
+              <p className="text-xs text-muted-foreground font-arabic mb-1">
+                {t('citizen_records.traffic_violations')}
+              </p>
+              <p className="text-xl font-bold">{totalStats.violations}</p>
             </div>
           </Card>
 
-          <Card className="glass-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-500/20 rounded-lg">
-                <Shield className="h-5 w-5 text-red-500" />
+          <Card className="glass-card p-3">
+            <div className="text-center">
+              <div className="p-2 bg-red-500/20 rounded-lg w-fit mx-auto mb-2">
+                <Shield className="h-4 w-4 text-red-500" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-arabic">
-                  {t('citizen_records.cybercrime_reports')}
-                </p>
-                <p className="text-2xl font-bold">{totalStats.cybercrime}</p>
-              </div>
+              <p className="text-xs text-muted-foreground font-arabic mb-1">
+                {t('citizen_records.cybercrime_reports')}
+              </p>
+              <p className="text-xl font-bold">{totalStats.cybercrime}</p>
             </div>
           </Card>
 
-          <Card className="glass-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-blue-500" />
+          <Card className="glass-card p-3">
+            <div className="text-center">
+              <div className="p-2 bg-red-600/20 rounded-lg w-fit mx-auto mb-2">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-arabic">
-                  {t('citizen_records.incidents')}
-                </p>
-                <p className="text-2xl font-bold">{totalStats.incidents}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="glass-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-600/20 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-arabic">
-                  {t('citizen_records.wanted')}
-                </p>
-                <p className="text-2xl font-bold">{totalStats.wanted}</p>
-              </div>
+              <p className="text-xs text-muted-foreground font-arabic mb-1">
+                {t('citizen_records.wanted')}
+              </p>
+              <p className="text-xl font-bold">{totalStats.wanted}</p>
             </div>
           </Card>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
+        {/* Mobile Search */}
+        <div className="space-y-3">
+          <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="البحث بالاسم أو رقم الهوية..."
+              placeholder={`${t('general.search')}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pr-10 font-arabic"
             />
           </div>
-          <div className="flex gap-2">
+          
+          {/* Mobile Filter Buttons - Horizontal scroll */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {['all', 'violations', 'cybercrime', 'incidents', 'wanted'].map((type) => (
               <Button
                 key={type}
                 variant={filterType === type ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterType(type as any)}
-                className="font-arabic"
+                className="font-arabic whitespace-nowrap flex-shrink-0"
               >
-                <Filter className="h-4 w-4 mr-1" />
-                {type === 'all' ? 'الكل' :
-                 type === 'violations' ? 'مخالفات' :
-                 type === 'cybercrime' ? 'جرائم إلكترونية' :
-                 type === 'incidents' ? 'حوادث' : 'مطلوبين'}
+                <Filter className="h-3 w-3 mr-1" />
+                {type === 'all' ? t('general.filter') :
+                 type === 'violations' ? t('citizen_records.traffic_violations') :
+                 type === 'cybercrime' ? t('citizen_records.cybercrime_reports') :
+                 type === 'incidents' ? t('citizen_records.incidents') : t('citizen_records.wanted')}
               </Button>
             ))}
           </div>
         </div>
 
-        {/* Records Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Mobile Records List */}
+        <div className="space-y-4">
           {filteredRecords.map((record) => (
             <Card key={record.id} className="glass-card overflow-hidden hover:shadow-lg transition-all duration-300">
-              <div className="p-6">
+              <div className="p-4">
                 {/* Citizen Info */}
-                <div className="flex items-start gap-4 mb-4">
-                  <Avatar className="h-12 w-12">
+                <div className="flex items-start gap-3 mb-3">
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={record.photo_url} />
-                    <AvatarFallback className="font-arabic">
+                    <AvatarFallback className="font-arabic text-sm">
                       {record.full_name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <h3 className="font-semibold font-arabic text-lg">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold font-arabic text-base leading-tight">
                       {record.full_name}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <IdCard className="h-4 w-4" />
-                      <span>{record.national_id}</span>
+                      <IdCard className="h-3 w-3" />
+                      <span className="truncate">{record.national_id}</span>
                     </div>
                     {record.wanted_status && (
-                      <Badge variant="destructive" className="mt-1">
-                        مطلوب
+                      <Badge variant="destructive" className="mt-1 text-xs">
+                        {t('citizen_records.wanted')}
                       </Badge>
                     )}
                   </div>
                 </div>
 
-                {/* Records Summary */}
-                <div className="space-y-2 mb-4">
+                {/* Records Summary - Mobile Layout */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   {record.traffic_violations.length > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-arabic text-muted-foreground">مخالفات مرورية:</span>
-                      <Badge variant="secondary">{record.traffic_violations.length}</Badge>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-arabic text-muted-foreground truncate">مخالفات:</span>
+                      <Badge variant="secondary" className="text-xs">{record.traffic_violations.length}</Badge>
                     </div>
                   )}
                   {record.cybercrime_reports.length > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-arabic text-muted-foreground">جرائم إلكترونية:</span>
-                      <Badge variant="destructive">{record.cybercrime_reports.length}</Badge>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-arabic text-muted-foreground truncate">جرائم:</span>
+                      <Badge variant="destructive" className="text-xs">{record.cybercrime_reports.length}</Badge>
                     </div>
                   )}
                   {record.incidents.length > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-arabic text-muted-foreground">حوادث:</span>
-                      <Badge>{record.incidents.length}</Badge>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-arabic text-muted-foreground truncate">حوادث:</span>
+                      <Badge className="text-xs">{record.incidents.length}</Badge>
                     </div>
                   )}
                 </div>
@@ -443,21 +464,22 @@ const CitizenRecords: React.FC = () => {
                   <DialogTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="w-full font-arabic"
+                      size="sm"
+                      className="w-full font-arabic text-sm"
                       onClick={() => setSelectedRecord(record)}
                     >
-                      <Eye className="h-4 w-4 ml-2" />
+                      <Eye className="h-3 w-3 ml-1" />
                       {t('citizen_records.view_details')}
                     </Button>
                   </DialogTrigger>
                   
                   {selectedRecord && (
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle className="font-arabic flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                        <DialogTitle className="font-arabic flex items-center gap-3 text-lg">
+                          <Avatar className="h-6 w-6">
                             <AvatarImage src={selectedRecord.photo_url} />
-                            <AvatarFallback className="font-arabic">
+                            <AvatarFallback className="font-arabic text-xs">
                               {selectedRecord.full_name.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
@@ -466,67 +488,67 @@ const CitizenRecords: React.FC = () => {
                       </DialogHeader>
 
                       <Tabs defaultValue="info" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                          <TabsTrigger value="info" className="font-arabic">
+                        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 text-xs">
+                          <TabsTrigger value="info" className="font-arabic text-xs">
                             {t('citizen_records.citizen_info')}
                           </TabsTrigger>
-                          <TabsTrigger value="violations" className="font-arabic">
-                            {t('citizen_records.violations_history')}
+                          <TabsTrigger value="violations" className="font-arabic text-xs">
+                            مخالفات
                           </TabsTrigger>
-                          <TabsTrigger value="cybercrime" className="font-arabic">
-                            جرائم إلكترونية
+                          <TabsTrigger value="cybercrime" className="font-arabic text-xs">
+                            جرائم
                           </TabsTrigger>
-                          <TabsTrigger value="incidents" className="font-arabic">
+                          <TabsTrigger value="incidents" className="font-arabic text-xs">
                             حوادث
                           </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="info" className="space-y-4">
                           <Card className="p-4">
-                            <h4 className="font-semibold font-arabic mb-3">المعلومات الشخصية</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <h4 className="font-semibold font-arabic mb-3 text-base">المعلومات الشخصية</h4>
+                            <div className="space-y-3">
                               <div>
                                 <label className="text-sm font-arabic text-muted-foreground">الاسم الكامل</label>
-                                <p className="font-arabic">{selectedRecord.full_name}</p>
+                                <p className="font-arabic text-sm">{selectedRecord.full_name}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-arabic text-muted-foreground">رقم الهوية</label>
-                                <p>{selectedRecord.national_id}</p>
+                                <p className="text-sm">{selectedRecord.national_id}</p>
                               </div>
                               {selectedRecord.gender && (
                                 <div>
                                   <label className="text-sm font-arabic text-muted-foreground">الجنس</label>
-                                  <p className="font-arabic">{selectedRecord.gender}</p>
+                                  <p className="font-arabic text-sm">{selectedRecord.gender}</p>
                                 </div>
                               )}
                               {selectedRecord.date_of_birth && (
                                 <div>
                                   <label className="text-sm font-arabic text-muted-foreground">تاريخ الميلاد</label>
-                                  <p>{formatDate(selectedRecord.date_of_birth)}</p>
+                                  <p className="text-sm">{formatDate(selectedRecord.date_of_birth)}</p>
                                 </div>
                               )}
                               <div>
                                 <label className="text-sm font-arabic text-muted-foreground">يملك مركبة</label>
-                                <p className="font-arabic">{selectedRecord.has_vehicle ? 'نعم' : 'لا'}</p>
+                                <p className="font-arabic text-sm">{selectedRecord.has_vehicle ? 'نعم' : 'لا'}</p>
                               </div>
                             </div>
                             
                             {selectedRecord.wanted_status && (
                               <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <h5 className="font-semibold font-arabic text-red-800 mb-2">حالة المطلوب</h5>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <h5 className="font-semibold font-arabic text-red-800 mb-2 text-sm">حالة المطلوب</h5>
+                                <div className="space-y-2">
                                   <div>
-                                    <label className="text-sm font-arabic text-red-600">السبب</label>
-                                    <p className="font-arabic text-red-800">{selectedRecord.wanted_status.reason || 'غير محدد'}</p>
+                                    <label className="text-xs font-arabic text-red-600">السبب</label>
+                                    <p className="font-arabic text-red-800 text-sm">{selectedRecord.wanted_status.reason || 'غير محدد'}</p>
                                   </div>
                                   <div>
-                                    <label className="text-sm font-arabic text-red-600">تاريخ بدء المراقبة</label>
-                                    <p className="text-red-800">{formatDate(selectedRecord.wanted_status.monitor_start_date)}</p>
+                                    <label className="text-xs font-arabic text-red-600">تاريخ بدء المراقبة</label>
+                                    <p className="text-red-800 text-sm">{formatDate(selectedRecord.wanted_status.monitor_start_date)}</p>
                                   </div>
                                   {selectedRecord.wanted_status.monitor_end_date && (
                                     <div>
-                                      <label className="text-sm font-arabic text-red-600">تاريخ انتهاء المراقبة</label>
-                                      <p className="text-red-800">{formatDate(selectedRecord.wanted_status.monitor_end_date)}</p>
+                                      <label className="text-xs font-arabic text-red-600">تاريخ انتهاء المراقبة</label>
+                                      <p className="text-red-800 text-sm">{formatDate(selectedRecord.wanted_status.monitor_end_date)}</p>
                                     </div>
                                   )}
                                 </div>
@@ -535,28 +557,28 @@ const CitizenRecords: React.FC = () => {
                           </Card>
                         </TabsContent>
 
-                        <TabsContent value="violations" className="space-y-4">
+                        <TabsContent value="violations" className="space-y-3">
                           {selectedRecord.traffic_violations.length === 0 ? (
-                            <p className="text-center text-muted-foreground font-arabic py-8">
+                            <p className="text-center text-muted-foreground font-arabic py-8 text-sm">
                               لا توجد مخالفات مرورية
                             </p>
                           ) : (
                             <div className="space-y-3">
                               {selectedRecord.traffic_violations.map((violation) => (
-                                <Card key={violation.id} className="p-4">
+                                <Card key={violation.id} className="p-3">
                                   <div className="flex items-start justify-between mb-2">
-                                    <div className="flex-1">
-                                      <h5 className="font-semibold font-arabic">{violation.record_type}</h5>
-                                      <p className="text-sm text-muted-foreground">
+                                    <div className="flex-1 min-w-0">
+                                      <h5 className="font-semibold font-arabic text-sm truncate">{violation.record_type}</h5>
+                                      <p className="text-xs text-muted-foreground">
                                         {formatDate(violation.record_date)}
                                       </p>
                                     </div>
-                                    <Badge variant={violation.is_resolved ? 'default' : 'secondary'}>
-                                      {violation.is_resolved ? 'محلولة' : 'غير محلولة'}
+                                    <Badge variant={violation.is_resolved ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
+                                      {violation.is_resolved ? 'محلولة' : 'معلقة'}
                                     </Badge>
                                   </div>
                                   {violation.details && (
-                                    <p className="text-sm font-arabic text-muted-foreground">
+                                    <p className="text-xs font-arabic text-muted-foreground">
                                       {violation.details}
                                     </p>
                                   )}
@@ -566,30 +588,30 @@ const CitizenRecords: React.FC = () => {
                           )}
                         </TabsContent>
 
-                        <TabsContent value="cybercrime" className="space-y-4">
+                        <TabsContent value="cybercrime" className="space-y-3">
                           {selectedRecord.cybercrime_reports.length === 0 ? (
-                            <p className="text-center text-muted-foreground font-arabic py-8">
+                            <p className="text-center text-muted-foreground font-arabic py-8 text-sm">
                               لا توجد بلاغات جرائم إلكترونية
                             </p>
                           ) : (
                             <div className="space-y-3">
                               {selectedRecord.cybercrime_reports.map((report) => (
-                                <Card key={report.id} className="p-4">
+                                <Card key={report.id} className="p-3">
                                   <div className="flex items-start justify-between mb-2">
-                                    <div className="flex-1">
-                                      <h5 className="font-semibold font-arabic">{report.crime_type}</h5>
-                                      <p className="text-sm text-muted-foreground">
+                                    <div className="flex-1 min-w-0">
+                                      <h5 className="font-semibold font-arabic text-sm truncate">{report.crime_type}</h5>
+                                      <p className="text-xs text-muted-foreground">
                                         {formatDate(report.created_at)}
                                       </p>
                                       {report.platform && (
-                                        <p className="text-sm text-blue-600 font-arabic">
+                                        <p className="text-xs text-blue-600 font-arabic">
                                           المنصة: {report.platform}
                                         </p>
                                       )}
                                     </div>
                                     {getStatusBadge(report.status)}
                                   </div>
-                                  <p className="text-sm font-arabic text-muted-foreground">
+                                  <p className="text-xs font-arabic text-muted-foreground">
                                     {report.description}
                                   </p>
                                 </Card>
@@ -598,34 +620,34 @@ const CitizenRecords: React.FC = () => {
                           )}
                         </TabsContent>
 
-                        <TabsContent value="incidents" className="space-y-4">
+                        <TabsContent value="incidents" className="space-y-3">
                           {selectedRecord.incidents.length === 0 ? (
-                            <p className="text-center text-muted-foreground font-arabic py-8">
+                            <p className="text-center text-muted-foreground font-arabic py-8 text-sm">
                               لا توجد حوادث
                             </p>
                           ) : (
                             <div className="space-y-3">
                               {selectedRecord.incidents.map((incident) => (
-                                <Card key={incident.id} className="p-4">
+                                <Card key={incident.id} className="p-3">
                                   <div className="flex items-start justify-between mb-2">
-                                    <div className="flex-1">
-                                      <h5 className="font-semibold font-arabic">{incident.title}</h5>
-                                      <p className="text-sm text-muted-foreground">
+                                    <div className="flex-1 min-w-0">
+                                      <h5 className="font-semibold font-arabic text-sm truncate">{incident.title}</h5>
+                                      <p className="text-xs text-muted-foreground">
                                         {formatDate(incident.created_at)}
                                       </p>
-                                      <p className="text-sm text-blue-600 font-arabic">
+                                      <p className="text-xs text-blue-600 font-arabic">
                                         النوع: {incident.incident_type}
                                       </p>
                                       {incident.location_address && (
-                                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                          <MapPin className="h-3 w-3" />
-                                          <span className="font-arabic">{incident.location_address}</span>
+                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                                          <span className="font-arabic truncate">{incident.location_address}</span>
                                         </div>
                                       )}
                                     </div>
                                     {getStatusBadge(incident.status)}
                                   </div>
-                                  <p className="text-sm font-arabic text-muted-foreground">
+                                  <p className="text-xs font-arabic text-muted-foreground">
                                     {incident.description}
                                   </p>
                                 </Card>
@@ -645,10 +667,10 @@ const CitizenRecords: React.FC = () => {
         {filteredRecords.length === 0 && !loading && (
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-xl font-arabic text-muted-foreground mb-2">
+            <p className="text-lg font-arabic text-muted-foreground mb-2">
               {t('citizen_records.no_records')}
             </p>
-            <p className="text-muted-foreground font-arabic">
+            <p className="text-sm text-muted-foreground font-arabic">
               لم يتم العثور على سجلات مطابقة للبحث
             </p>
           </div>
