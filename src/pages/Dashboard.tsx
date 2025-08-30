@@ -20,7 +20,8 @@ import {
   Users,
   Newspaper,
   Calendar,
-  Search
+  Search,
+  Info
 } from 'lucide-react';
 import policeLogoUrl from '@/assets/police-logo.png';
 
@@ -125,6 +126,13 @@ const Dashboard = () => {
       icon: Shield,
       route: '/cybercrime',
       description: t('nav.cybercrime'),
+    },
+    {
+      id: 'about',
+      title: t('nav.about'),
+      icon: Info,
+      route: '/about',
+      description: t('nav.about'),
     },
   ];
 

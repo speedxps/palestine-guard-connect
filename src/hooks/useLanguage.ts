@@ -26,6 +26,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.citizen_records': 'سجلات المواطنين',
     'nav.profile': 'الملف الشخصي',
     'nav.backup': 'النسخ الاحتياطية',
+    'nav.about': 'حول التطبيق',
     
     // General
     'general.loading': 'جاري التحميل...',
@@ -94,7 +95,23 @@ export const translations: Record<Language, Record<string, string>> = {
     'language.apply': 'تطبيق اللغة',
     'language.applying': 'جاري التطبيق...',
     'language.changed': 'تم تغيير اللغة',
-    'language.changed_success': 'تم تطبيق اللغة العربية بنجاح'
+    'language.changed_success': 'تم تطبيق اللغة العربية بنجاح',
+    
+    // About Page
+    'about.title': 'حول نظام الشرطة الفلسطينية',
+    'about.subtitle': 'نظام إدارة شامل ومتطور للشرطة الفلسطينية',
+    'about.version': 'الإصدار',
+    'about.developed_by': 'تم تطويره بواسطة',
+    'about.development_start': 'بدء التطوير',
+    'about.last_update': 'آخر تحديث',
+    'about.overview_title': 'نظرة عامة',
+    'about.overview_desc': 'نظام إدارة شامل مصمم خصيصاً للشرطة الفلسطينية يتضمن كافة الوظائف الأساسية لإدارة العمليات الشرطية بكفاءة وأمان عالي.',
+    'about.tech_stack_title': 'التقنيات المستخدمة',
+    'about.features_title': 'الميزات الرئيسية',
+    'about.security_title': 'الأمان والحماية',
+    'about.architecture_title': 'هيكل النظام',
+    'about.future_title': 'التطويرات المستقبلية',
+    'about.contact_title': 'التواصل والدعم',
   },
   en: {
     // Navigation
@@ -111,6 +128,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.citizen_records': 'Citizen Records',
     'nav.profile': 'Profile',
     'nav.backup': 'Backup',
+    'nav.about': 'About',
     
     // General
     'general.loading': 'Loading...',
@@ -179,7 +197,23 @@ export const translations: Record<Language, Record<string, string>> = {
     'language.apply': 'Apply Language',
     'language.applying': 'Applying...',
     'language.changed': 'Language Changed',
-    'language.changed_success': 'English language applied successfully'
+    'language.changed_success': 'English language applied successfully',
+    
+    // About Page
+    'about.title': 'About Palestinian Police System',
+    'about.subtitle': 'Comprehensive and Advanced Management System for Palestinian Police',
+    'about.version': 'Version',
+    'about.developed_by': 'Developed by',
+    'about.development_start': 'Development Started',
+    'about.last_update': 'Last Updated',
+    'about.overview_title': 'Overview',
+    'about.overview_desc': 'A comprehensive management system specifically designed for the Palestinian Police, including all essential functions for efficient and secure police operations management.',
+    'about.tech_stack_title': 'Technology Stack',
+    'about.features_title': 'Key Features',
+    'about.security_title': 'Security & Protection',
+    'about.architecture_title': 'System Architecture',
+    'about.future_title': 'Future Developments',
+    'about.contact_title': 'Contact & Support',
   }
 };
 
