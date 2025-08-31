@@ -26,11 +26,31 @@ const Feed = () => {
   const [editContent, setEditContent] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [userProfileId, setUserProfileId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchPosts();
+    getCurrentUserProfile();
   }, []);
+
+  const getCurrentUserProfile = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profile) {
+        setUserProfileId(profile.id);
+      }
+    } catch (error) {
+      console.error('Error getting user profile:', error);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -329,10 +349,7 @@ const Feed = () => {
 
   const canEditPost = (post: any) => {
     if (user?.role === 'admin') return true;
-    
-    // Get current user's profile ID to compare
-    const currentUserProfile = posts.find(p => p.profiles?.full_name === user?.full_name);
-    return post.user_id === currentUserProfile?.user_id;
+    return post.user_id === userProfileId;
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -467,8 +484,6 @@ const Feed = () => {
 
         {/* Posts */}
         {posts.map((post) => {
-          // Get user profile ID to check likes correctly
-          const userProfileId = posts.length > 0 ? posts[0].profiles?.id : null;
           const isLiked = post.post_likes.some((like: any) => like.user_id === userProfileId);
           const likesCount = post.post_likes.length;
           const commentsCount = post.post_comments.length;
