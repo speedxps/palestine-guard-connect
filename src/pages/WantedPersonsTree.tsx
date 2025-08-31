@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, MapPin, AlertTriangle, Calendar, Eye } from "lucide-react";
+import { Search, Users, MapPin, AlertTriangle, Calendar, Eye, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -205,6 +205,292 @@ export default function WantedPersonsTree() {
     return sampleSuspects[name] || null;
   };
 
+  const handlePrint = () => {
+    if (!selectedPerson) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const currentDate = new Date().toLocaleDateString('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const suspectDetails = getSuspectDetails(selectedPerson.citizen.full_name);
+    
+    const printContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="utf-8">
+        <title>تقرير المطلوبين</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #dc2626;
+            padding-bottom: 20px;
+          }
+          .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+          }
+          .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 5px;
+          }
+          .subtitle {
+            font-size: 16px;
+            color: #666;
+          }
+          .main-info {
+            background: #fef2f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-right: 4px solid #dc2626;
+          }
+          .info-row {
+            display: flex;
+            margin-bottom: 10px;
+          }
+          .info-label {
+            font-weight: bold;
+            width: 120px;
+            color: #374151;
+          }
+          .info-value {
+            color: #111827;
+          }
+          .wanted-alert {
+            background: #dc2626;
+            color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+          }
+          .section {
+            margin-bottom: 25px;
+          }
+          .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+          }
+          .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+          }
+          .records-table th,
+          .records-table td {
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            text-align: right;
+          }
+          .records-table th {
+            background: #f3f4f6;
+            font-weight: bold;
+          }
+          .family-member {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+          }
+          .suspect-details {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+          }
+          .associates {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+          }
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 15px;
+          }
+          @media print {
+            body { -webkit-print-color-adjust: exact; }
+            .header { page-break-after: avoid; }
+            .section { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <img src="${window.location.origin}/src/assets/police-logo.png" alt="شعار الشرطة" class="logo">
+          <div class="title">وزارة الداخلية - الأمن العام</div>
+          <div class="subtitle">تقرير المطلوبين</div>
+        </div>
+
+        <div class="wanted-alert">
+          ⚠️ شخص مطلوب للسلطات - خطر أمني
+        </div>
+
+        <div class="main-info">
+          <div class="info-row">
+            <span class="info-label">الاسم الكامل:</span>
+            <span class="info-value">${selectedPerson.citizen.full_name}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">رقم الهوية:</span>
+            <span class="info-value">${selectedPerson.citizen.national_id}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">تاريخ الميلاد:</span>
+            <span class="info-value">${selectedPerson.citizen.date_of_birth || "غير محدد"}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">الجنس:</span>
+            <span class="info-value">${selectedPerson.citizen.gender || "غير محدد"}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">بداية المراقبة:</span>
+            <span class="info-value">${new Date(selectedPerson.monitor_start_date).toLocaleDateString('ar-SA')}</span>
+          </div>
+          ${selectedPerson.monitor_end_date ? `
+            <div class="info-row">
+              <span class="info-label">نهاية المراقبة:</span>
+              <span class="info-value">${new Date(selectedPerson.monitor_end_date).toLocaleDateString('ar-SA')}</span>
+            </div>
+          ` : ''}
+          <div class="info-row">
+            <span class="info-label">سبب المطالبة:</span>
+            <span class="info-value">${selectedPerson.reason || "غير محدد"}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">تاريخ التقرير:</span>
+            <span class="info-value">${currentDate}</span>
+          </div>
+        </div>
+
+        ${suspectDetails ? `
+          <div class="section">
+            <div class="section-title">الملف الشخصي التفصيلي</div>
+            <div class="suspect-details">
+              <p>${suspectDetails.description}</p>
+            </div>
+            
+            <div class="associates">
+              <h4 style="margin-bottom: 10px; color: #dc2626; font-weight: bold;">المعاونون المعروفون:</h4>
+              <ul style="list-style: disc; padding-right: 20px;">
+                ${suspectDetails.associates.map(associate => `<li>${associate}</li>`).join('')}
+              </ul>
+            </div>
+            
+            <div style="margin-top: 15px;">
+              <div class="info-row">
+                <span class="info-label">المركبة:</span>
+                <span class="info-value">${suspectDetails.vehicle}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">تاريخ السفر:</span>
+                <span class="info-value">${suspectDetails.travelHistory}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">الأنشطة:</span>
+                <span class="info-value">${suspectDetails.activities}</span>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="section">
+          <div class="section-title">السجل الأمني</div>
+          ${selectedPerson.traffic_records.length > 0 ? `
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>نوع السجل</th>
+                  <th>التاريخ</th>
+                  <th>التفاصيل</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${selectedPerson.traffic_records.map(record => `
+                  <tr>
+                    <td>${record.record_type === "violation" ? "مخالفة" : "قضية"}</td>
+                    <td>${record.record_date}</td>
+                    <td>${record.details || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : '<p>لا توجد سجلات أمنية مسجلة.</p>'}
+        </div>
+
+        <div class="section">
+          <div class="section-title">بيانات الأسرة</div>
+          ${selectedPerson.family_members.length > 0 ? 
+            selectedPerson.family_members.map(member => `
+              <div class="family-member">
+                <div class="info-row">
+                  <span class="info-label">الاسم:</span>
+                  <span class="info-value">${member.relative_name}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">صلة القرابة:</span>
+                  <span class="info-value">${member.relation}</span>
+                </div>
+                ${member.relative_national_id ? `
+                  <div class="info-row">
+                    <span class="info-label">رقم الهوية:</span>
+                    <span class="info-value">${member.relative_national_id}</span>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('') 
+            : '<p>لا توجد بيانات عائلية مسجلة.</p>'
+          }
+        </div>
+
+        <div class="footer">
+          <p>هذا التقرير صادر من نظام إدارة المطلوبين - وزارة الداخلية</p>
+          <p>تم إنشاء التقرير في: ${new Date().toLocaleString('ar-SA')}</p>
+          <p style="color: #dc2626; font-weight: bold; margin-top: 10px;">تحذير: هذا الشخص مطلوب للسلطات - يرجى الحذر والتواصل مع الجهات المختصة</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for content to load, then print
+    setTimeout(() => {
+      printWindow.print();
+    }, 1000);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto max-w-6xl px-4 py-10">
@@ -352,7 +638,20 @@ export default function WantedPersonsTree() {
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>تفاصيل المشتبه به</DialogTitle>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>تفاصيل المشتبه به</DialogTitle>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handlePrint}
+                className="flex items-center gap-2"
+              >
+                <Printer className="w-4 h-4" />
+                طباعة التقرير
+              </Button>
+            </div>
           </DialogHeader>
           {selectedPerson && (
             <div className="space-y-6">
