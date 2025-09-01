@@ -215,6 +215,17 @@ export class RealtimeChat {
         const data = JSON.parse(event.data);
         console.log("Received message:", data.type);
         
+        // Handle error messages from the backend
+        if (data.type === 'error') {
+          console.error("Backend error:", data);
+          this.onMessage({
+            role: 'assistant',
+            content: `خطأ: ${data.message || 'حدث خطأ في الاتصال مع المساعد الذكي'}`,
+            type: 'error'
+          });
+          return;
+        }
+        
         if (data.type === 'response.audio.delta') {
           // Convert base64 to Uint8Array
           const binaryString = atob(data.delta);

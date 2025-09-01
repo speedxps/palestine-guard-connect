@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  type?: 'transcript' | 'transcript_delta';
+  type?: 'transcript' | 'transcript_delta' | 'error';
 }
 
 interface VoiceAssistantProps {
@@ -28,7 +28,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ className }) => {
   const handleMessage = (message: Message) => {
     if (message.type === 'transcript_delta') {
       setCurrentTranscript(prev => prev + message.content);
-    } else if (message.type === 'transcript' || !message.type) {
+    } else if (message.type === 'transcript' || message.type === 'error' || !message.type) {
       setMessages(prev => [...prev, message]);
       setCurrentTranscript('');
     }
@@ -106,14 +106,16 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ className }) => {
                     message.role === 'user' ? "ml-auto" : "mr-auto"
                   )}
                 >
-                  <div
-                    className={cn(
-                      "px-3 py-2 rounded-lg text-sm",
-                      message.role === 'user'
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    )}
-                  >
+                   <div
+                     className={cn(
+                       "px-3 py-2 rounded-lg text-sm",
+                       message.type === 'error'
+                         ? "bg-destructive text-destructive-foreground"
+                         : message.role === 'user'
+                         ? "bg-primary text-primary-foreground"
+                         : "bg-secondary text-secondary-foreground"
+                     )}
+                   >
                     {message.content}
                   </div>
                 </div>
