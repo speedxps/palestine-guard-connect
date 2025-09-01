@@ -7,6 +7,7 @@ import { useTranslation } from '@/hooks/useLanguage';
 import { UserManagement } from '@/components/UserManagement';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
 import CybercrimeAccessManagement from '@/components/CybercrimeAccessManagement';
+import VoiceAssistant from '@/components/VoiceAssistant';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, 
@@ -350,6 +351,11 @@ const Dashboard = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* AI Voice Assistant */}
+        <div className="bg-gradient-to-r from-card/60 to-card/40 backdrop-blur-sm border border-border/30 rounded-2xl p-1 shadow-xl">
+          <VoiceAssistant />
         </div>
 
         {/* Dashboard Section Title */}
