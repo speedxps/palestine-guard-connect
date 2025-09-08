@@ -29,27 +29,33 @@ serve(async (req: Request) => {
     // Check if OpenAI API key is available
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     console.log("OpenAI API Key available:", !!openaiApiKey);
+    console.log("API Key length:", openaiApiKey?.length || 0);
     
-    if (!openaiApiKey) {
-      console.error("OPENAI_API_KEY environment variable not set");
+    if (!openaiApiKey || openaiApiKey.trim() === '') {
+      console.error("OPENAI_API_KEY environment variable not set or empty");
       socket.send(JSON.stringify({
         type: 'error',
-        message: 'OpenAI API key not configured',
-        details: { error: 'Missing OPENAI_API_KEY environment variable' }
+        message: 'OpenAI API key not configured properly',
+        details: { error: 'Missing or empty OPENAI_API_KEY environment variable' }
       }));
       return;
     }
     
-    // Connect to OpenAI Realtime API
+    // Connect to OpenAI Realtime API - use the exact URL from OpenAI docs
     const openaiUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01`;
     console.log("Connecting to OpenAI:", openaiUrl);
     
-    openaiWs = new WebSocket(openaiUrl, [], {
-      headers: {
-        "Authorization": `Bearer ${openaiApiKey}`,
-        "OpenAI-Beta": "realtime=v1"
-      }
+    // Create headers object for debugging
+    const headers = {
+      "Authorization": `Bearer ${openaiApiKey}`,
+      "OpenAI-Beta": "realtime=v1"
+    };
+    console.log("Headers being sent:", { 
+      "Authorization": `Bearer sk-...${openaiApiKey.slice(-4)}`,
+      "OpenAI-Beta": headers["OpenAI-Beta"]
     });
+    
+    openaiWs = new WebSocket(openaiUrl, [], { headers });
 
     openaiWs.onopen = () => {
       console.log("Connected to OpenAI Realtime API");
