@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useTranslation } from '@/hooks/useLanguage';
-import { ArrowLeft, ExternalLink, Newspaper, Facebook } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Newspaper, Facebook, AlertCircle, RefreshCcw } from 'lucide-react';
 
 // Facebook SDK types
 declare global {
@@ -16,27 +16,107 @@ declare global {
 const PoliceNews = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [fbLoaded, setFbLoaded] = useState(false);
+  const [fbError, setFbError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    // Set a timeout to detect if Facebook plugin fails to load
+    timeoutId = setTimeout(() => {
+      console.log('Facebook plugin timeout - switching to fallback');
+      setFbError(true);
+      setLoading(false);
+    }, 10000); // 10 seconds timeout
+
     // Load Facebook SDK
     if (!document.getElementById('facebook-jssdk')) {
+      console.log('Loading Facebook SDK...');
       const script = document.createElement('script');
       script.id = 'facebook-jssdk';
-      script.src = 'https://connect.facebook.net/ar_AR/sdk.js#xfbml=1&version=v18.0';
+      script.src = 'https://connect.facebook.net/ar_AR/sdk.js#xfbml=1&version=v19.0&appId=1234567890123456';
       script.async = true;
+      script.crossOrigin = 'anonymous';
+      
+      script.onload = () => {
+        console.log('Facebook SDK loaded successfully');
+        clearTimeout(timeoutId);
+        setFbLoaded(true);
+        setLoading(false);
+      };
+      
+      script.onerror = () => {
+        console.error('Failed to load Facebook SDK');
+        clearTimeout(timeoutId);
+        setFbError(true);
+        setLoading(false);
+      };
+      
       document.body.appendChild(script);
 
       // Initialize Facebook SDK
       window.fbAsyncInit = function() {
-        (window as any).FB.init({
-          appId: 'your-app-id', // يمكن تركه فارغ للاستخدام العام
-          cookie: true,
-          xfbml: true,
-          version: 'v18.0'
-        });
+        console.log('Initializing Facebook SDK...');
+        try {
+          (window as any).FB.init({
+            appId: '1234567890123456', // Generic App ID for public pages
+            cookie: true,
+            xfbml: true,
+            version: 'v19.0'
+          });
+          
+          (window as any).FB.XFBML.parse();
+          console.log('Facebook SDK initialized successfully');
+          setFbLoaded(true);
+          setLoading(false);
+          clearTimeout(timeoutId);
+        } catch (error) {
+          console.error('Error initializing Facebook SDK:', error);
+          setFbError(true);
+          setLoading(false);
+          clearTimeout(timeoutId);
+        }
       };
+    } else {
+      // SDK already loaded
+      console.log('Facebook SDK already exists');
+      if (window.FB) {
+        try {
+          (window as any).FB.XFBML.parse();
+          setFbLoaded(true);
+          setLoading(false);
+          clearTimeout(timeoutId);
+        } catch (error) {
+          console.error('Error parsing Facebook content:', error);
+          setFbError(true);
+          setLoading(false);
+          clearTimeout(timeoutId);
+        }
+      }
     }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
+
+  const handleRetry = () => {
+    setFbError(false);
+    setLoading(true);
+    setFbLoaded(false);
+    
+    // Remove existing script and reload
+    const existingScript = document.getElementById('facebook-jssdk');
+    if (existingScript) {
+      existingScript.remove();
+    }
+    
+    // Trigger useEffect again
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
@@ -89,39 +169,132 @@ const PoliceNews = () => {
               </div>
             </div>
 
-            {/* Facebook Page Plugin */}
-            <div className="w-full bg-white rounded-lg overflow-hidden shadow-lg">
-            <div 
-                className="fb-page" 
-                data-href="https://www.facebook.com/Palestinianpolice1" 
-                data-tabs="timeline"
-                data-width="500" 
-                data-height="600" 
-                data-small-header="false" 
-                data-adapt-container-width="true" 
-                data-hide-cover="false" 
-                data-show-facepile="true"
-              >
-                <blockquote 
-                  cite="https://www.facebook.com/Palestinianpolice1" 
-                  className="fb-xfbml-parse-ignore p-6 text-center"
-                >
+            {/* Facebook Page Plugin or Fallback */}
+            <div className="w-full bg-white rounded-lg overflow-hidden shadow-lg min-h-[400px]">
+              {loading && (
+                <div className="p-8 text-center">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                    <p className="text-muted-foreground font-arabic">
+                    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                    <p className="text-gray-600 font-arabic">
                       جاري تحميل منشورات الشرطة الفلسطينية...
                     </p>
+                  </div>
+                </div>
+              )}
+
+              {fbError && (
+                <div className="p-8 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="p-4 bg-red-100 rounded-full">
+                      <AlertCircle className="h-8 w-8 text-red-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-gray-800 font-arabic font-semibold">
+                        تعذر تحميل منشورات الفيسبوك
+                      </p>
+                      <p className="text-gray-600 font-arabic text-sm">
+                        يمكنك زيارة الصفحة مباشرة على فيسبوك لمشاهدة آخر الأخبار
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => window.open('https://www.facebook.com/Palestinianpolice1', '_blank')}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-arabic"
+                      >
+                        <Facebook className="h-4 w-4 mr-2" />
+                        زيارة الصفحة
+                      </Button>
+                      <Button
+                        onClick={handleRetry}
+                        variant="outline"
+                        className="font-arabic"
+                      >
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                        إعادة المحاولة
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {fbLoaded && !fbError && (
+                <div 
+                  className="fb-page" 
+                  data-href="https://www.facebook.com/Palestinianpolice1" 
+                  data-tabs="timeline"
+                  data-width="500" 
+                  data-height="600" 
+                  data-small-header="false" 
+                  data-adapt-container-width="true" 
+                  data-hide-cover="false" 
+                  data-show-facepile="true"
+                >
+                  <blockquote 
+                    cite="https://www.facebook.com/Palestinianpolice1" 
+                    className="fb-xfbml-parse-ignore p-6 text-center"
+                  >
                     <a 
                       href="https://www.facebook.com/Palestinianpolice1" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:underline font-arabic"
                     >
-                      زيارة الصفحة على فيسبوك
+                      شرطة فلسطين
                     </a>
+                  </blockquote>
+                </div>
+              )}
+
+              {/* Alternative content when Facebook plugin is not available */}
+              {!loading && !fbLoaded && !fbError && (
+                <div className="p-8 space-y-6">
+                  <div className="text-center">
+                    <div className="p-4 bg-blue-100 rounded-full inline-block mb-4">
+                      <Facebook className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <h3 className="text-lg font-bold font-arabic text-gray-800 mb-2">
+                      صفحة الشرطة الفلسطينية الرسمية
+                    </h3>
+                    <p className="text-gray-600 font-arabic">
+                      تابع آخر الأخبار والإعلانات الرسمية من الشرطة الفلسطينية
+                    </p>
                   </div>
-                </blockquote>
-              </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="font-semibold font-arabic text-gray-800">الأخبار والإعلانات</p>
+                        <p className="text-sm text-gray-600 font-arabic">تابع آخر الأخبار والبيانات الرسمية</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="font-semibold font-arabic text-gray-800">الخدمات المتاحة</p>
+                        <p className="text-sm text-gray-600 font-arabic">معلومات حول الخدمات والإجراءات</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="font-semibold font-arabic text-gray-800">التواصل المباشر</p>
+                        <p className="text-sm text-gray-600 font-arabic">إمكانية التواصل والاستفسار</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <Button
+                      onClick={() => window.open('https://www.facebook.com/Palestinianpolice1', '_blank')}
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-arabic"
+                    >
+                      <Facebook className="h-4 w-4 mr-2" />
+                      زيارة الصفحة على فيسبوك
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </Card>
