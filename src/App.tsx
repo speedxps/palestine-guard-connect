@@ -29,6 +29,7 @@ import WantedPersonsTree from "./pages/WantedPersonsTree";
 import IncidentsManagement from "./pages/IncidentsManagement";
 import CitizenRecords from "./pages/CitizenRecords";
 import About from "./pages/About";
+import PoliceNews from "./pages/PoliceNews";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,11 @@ const App = () => {
                 <Route path="/about" element={
                   <ProtectedRoute>
                     <About />
+                  </ProtectedRoute>
+                } />
+                <Route path="/police-news" element={
+                  <ProtectedRoute>
+                    <PoliceNews />
                   </ProtectedRoute>
                 } />
                 <Route path="/access-denied" element={<AccessDenied />} />

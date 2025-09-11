@@ -79,6 +79,13 @@ const Dashboard = () => {
 
   const menuItems = [
     {
+      id: 'police-news',
+      title: 'أخبار الشرطة الفلسطينية',
+      icon: Newspaper,
+      route: '/police-news',
+      description: 'آخر الأخبار والتحديثات الرسمية',
+    },
+    {
       id: 'feed',
       title: t('nav.feed'),
       icon: Newspaper,
