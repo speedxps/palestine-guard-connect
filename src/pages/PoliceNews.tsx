@@ -91,9 +91,9 @@ const PoliceNews = () => {
 
             {/* Facebook Page Plugin */}
             <div className="w-full bg-white rounded-lg overflow-hidden shadow-lg">
-              <div 
+            <div 
                 className="fb-page" 
-                data-href="https://www.facebook.com/PalestinianPolice" 
+                data-href="https://www.facebook.com/Palestinianpolice1" 
                 data-tabs="timeline"
                 data-width="500" 
                 data-height="600" 
@@ -103,7 +103,7 @@ const PoliceNews = () => {
                 data-show-facepile="true"
               >
                 <blockquote 
-                  cite="https://www.facebook.com/PalestinianPolice" 
+                  cite="https://www.facebook.com/Palestinianpolice1" 
                   className="fb-xfbml-parse-ignore p-6 text-center"
                 >
                   <div className="flex flex-col items-center gap-4">
@@ -112,7 +112,7 @@ const PoliceNews = () => {
                       جاري تحميل منشورات الشرطة الفلسطينية...
                     </p>
                     <a 
-                      href="https://www.facebook.com/PalestinianPolice" 
+                      href="https://www.facebook.com/Palestinianpolice1" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:underline font-arabic"
@@ -146,7 +146,7 @@ const PoliceNews = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open('https://www.facebook.com/PalestinianPolice', '_blank')}
+                onClick={() => window.open('https://www.facebook.com/Palestinianpolice1', '_blank')}
                 className="text-blue-500 hover:bg-blue-500/10"
               >
                 <ExternalLink className="h-4 w-4" />
