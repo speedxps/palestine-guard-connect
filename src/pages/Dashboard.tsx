@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import VoiceReportButton from '@/components/VoiceReportButton';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -141,6 +142,27 @@ const Dashboard = () => {
       icon: Info,
       route: '/about',
       description: t('nav.about'),
+    },
+    {
+      id: 'vehicle-lookup',
+      title: 'الاستعلام عن السيارات',
+      icon: Search,
+      route: '/vehicle-lookup',
+      description: 'البحث عن السيارات برقم اللوحة',
+    },
+    {
+      id: 'face-recognition',
+      title: 'التعرف على الوجوه',
+      icon: Search,
+      route: '/face-recognition',
+      description: 'البحث عن الأشخاص بالصور',
+    },
+    {
+      id: 'reports',
+      title: 'التقارير والإحصائيات',
+      icon: FileText,
+      route: '/reports',
+      description: 'تقارير شاملة للنظام',
     },
   ];
 
@@ -290,23 +312,25 @@ const Dashboard = () => {
       {/* Enhanced Header with Glass Effect */}
       <div className="sticky top-0 z-50 backdrop-blur-xl bg-card/30 border-b border-border/20">
         <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-md"></div>
-                <img 
-                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
-                  alt="Palestinian Police Department Logo" 
-                  className="relative w-12 h-12 rounded-full shadow-lg"
-                />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold font-arabic bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  الشرطة الفلسطينية
-                </h1>
-                <p className="text-sm text-muted-foreground font-arabic">{t('dashboard.welcome')}، {user?.name}</p>
-              </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-md"></div>
+              <img 
+                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                alt="Palestinian Police Department Logo" 
+                className="relative w-12 h-12 rounded-full shadow-lg"
+              />
             </div>
+            <div>
+              <h1 className="text-xl font-bold font-arabic bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                الشرطة الفلسطينية
+              </h1>
+              <p className="text-sm text-muted-foreground font-arabic">{t('dashboard.welcome')}، {user?.name}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <VoiceReportButton />
             <Button
               variant="ghost"
               size="icon"
@@ -316,6 +340,7 @@ const Dashboard = () => {
               <User className="h-5 w-5 text-primary" />
             </Button>
           </div>
+        </div>
         </div>
       </div>
 

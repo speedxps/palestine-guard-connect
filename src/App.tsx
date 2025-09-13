@@ -30,6 +30,10 @@ import IncidentsManagement from "./pages/IncidentsManagement";
 import CitizenRecords from "./pages/CitizenRecords";
 import About from "./pages/About";
 import PoliceNews from "./pages/PoliceNews";
+import VehicleLookup from "./pages/VehicleLookup";
+import FaceRecognition from "./pages/FaceRecognition";
+import Reports from "./pages/Reports";
+import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
 
 const queryClient = new QueryClient();
 
@@ -141,10 +145,26 @@ const App = () => {
                     <PoliceNews />
                   </ProtectedRoute>
                 } />
+                <Route path="/vehicle-lookup" element={
+                  <ProtectedRoute>
+                    <VehicleLookup />
+                  </ProtectedRoute>
+                } />
+                <Route path="/face-recognition" element={
+                  <ProtectedRoute>
+                    <FaceRecognition />
+                  </ProtectedRoute>
+                } />
+                <Route path="/reports" element={
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                } />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <EmergencyNotificationSystem />
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
