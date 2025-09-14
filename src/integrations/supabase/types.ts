@@ -994,7 +994,14 @@ export type Database = {
       notification_status: "unread" | "read"
       task_status: "pending" | "completed" | "in_progress"
       traffic_record_type: "violation" | "case"
-      user_role: "admin" | "officer" | "user" | "cyber_officer"
+      user_role:
+        | "admin"
+        | "traffic_police"
+        | "cid"
+        | "special_police"
+        | "cybercrime"
+        | "officer"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1142,7 +1149,15 @@ export const Constants = {
       notification_status: ["unread", "read"],
       task_status: ["pending", "completed", "in_progress"],
       traffic_record_type: ["violation", "case"],
-      user_role: ["admin", "officer", "user", "cyber_officer"],
+      user_role: [
+        "admin",
+        "traffic_police",
+        "cid",
+        "special_police",
+        "cybercrime",
+        "officer",
+        "user",
+      ],
     },
   },
 } as const
