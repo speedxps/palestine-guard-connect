@@ -33,6 +33,7 @@ import PoliceNews from "./pages/PoliceNews";
 import VehicleLookup from "./pages/VehicleLookup";
 import FaceRecognition from "./pages/FaceRecognition";
 import Reports from "./pages/Reports";
+import AdminPanel from "./pages/AdminPanel";
 import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
 
 const queryClient = new QueryClient();
@@ -158,6 +159,11 @@ const App = () => {
                 <Route path="/reports" element={
                   <ProtectedRoute>
                     <Reports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminPanel />
                   </ProtectedRoute>
                 } />
                 <Route path="/access-denied" element={<AccessDenied />} />

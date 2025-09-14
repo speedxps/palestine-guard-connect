@@ -25,7 +25,6 @@ import {
   Search,
   Info
 } from 'lucide-react';
-import policeLogoUrl from '@/assets/police-logo.png';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -166,8 +165,19 @@ const Dashboard = () => {
     },
   ];
 
-  // Add user management option for admin users
-  if (user?.role === 'admin') {
+    // Add admin panel option for admin users
+    if (user?.role === 'admin') {
+      menuItems.push({
+        id: 'admin-panel',
+        title: 'لوحة تحكم الإدارة',
+        icon: Shield,
+        route: '/admin',
+        description: 'إدارة شاملة للنظام',
+      });
+    }
+
+    // Add user management option for admin users
+    if (user?.role === 'admin') {
     menuItems.push({
       id: 'users',
       title: 'User Management',

@@ -455,7 +455,11 @@ export const UserManagement = () => {
 
   const getRoleBadge = (role: UserRole) => {
     const badges = {
-      admin: { label: 'مدير', variant: 'destructive' as const },
+      admin: { label: 'الإدارة العامة', variant: 'destructive' as const },
+      traffic_police: { label: 'شرطة المرور', variant: 'default' as const },
+      cid: { label: 'المباحث الجنائية', variant: 'secondary' as const },
+      special_police: { label: 'الشرطة الخاصة', variant: 'outline' as const },
+      cybercrime: { label: 'الجرائم الإلكترونية', variant: 'default' as const },
       officer: { label: 'ضابط', variant: 'default' as const },
       user: { label: 'مستخدم', variant: 'secondary' as const }
     };
