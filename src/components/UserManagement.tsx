@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -21,7 +22,10 @@ import {
   EyeOff,
   UserCheck,
   UserX,
-  Trash
+  Trash,
+  Car,
+  Computer,
+  FileUser
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import type { UserRole } from '@/contexts/AuthContext';
@@ -493,6 +497,17 @@ export const UserManagement = () => {
       badge_number: profile.badge_number || '',
       role: profile.role,
     });
+  };
+
+  // Group users by department
+  const groupedProfiles = {
+    admin: profiles.filter(p => p.role === 'admin'),
+    traffic_police: profiles.filter(p => p.role === 'traffic_police'),
+    cid: profiles.filter(p => p.role === 'cid'),
+    special_police: profiles.filter(p => p.role === 'special_police'),
+    cybercrime: profiles.filter(p => p.role === 'cybercrime'),
+    officer: profiles.filter(p => p.role === 'officer'),
+    user: profiles.filter(p => p.role === 'user')
   };
 
   // Filter users based on search term
