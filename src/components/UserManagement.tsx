@@ -446,6 +446,14 @@ export const UserManagement = () => {
     switch (role) {
       case 'admin':
         return <Crown className="w-4 h-4" />;
+      case 'traffic_police':
+        return <Shield className="w-4 h-4" />;
+      case 'cid':
+        return <ShieldCheck className="w-4 h-4" />;
+      case 'special_police':
+        return <Users className="w-4 h-4" />;
+      case 'cybercrime':
+        return <Shield className="w-4 h-4" />;
       case 'officer':
         return <Shield className="w-4 h-4" />;
       default:
@@ -460,7 +468,7 @@ export const UserManagement = () => {
       cid: { label: 'المباحث الجنائية', variant: 'secondary' as const },
       special_police: { label: 'الشرطة الخاصة', variant: 'outline' as const },
       cybercrime: { label: 'الجرائم الإلكترونية', variant: 'default' as const },
-      officer: { label: 'ضابط', variant: 'default' as const },
+      officer: { label: 'ضابط عام', variant: 'default' as const },
       user: { label: 'مستخدم', variant: 'secondary' as const }
     };
     
@@ -564,11 +572,15 @@ export const UserManagement = () => {
               />
               <Select value={formData.role} onValueChange={(value: UserRole) => setFormData(prev => ({...prev, role: value}))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر الدور" />
+                  <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">مدير</SelectItem>
-                  <SelectItem value="officer">ضابط</SelectItem>
+                  <SelectItem value="admin">الإدارة العامة</SelectItem>
+                  <SelectItem value="traffic_police">شرطة المرور</SelectItem>
+                  <SelectItem value="cid">المباحث الجنائية</SelectItem>
+                  <SelectItem value="special_police">الشرطة الخاصة</SelectItem>
+                  <SelectItem value="cybercrime">الجرائم الإلكترونية</SelectItem>
+                  <SelectItem value="officer">ضابط عام</SelectItem>
                   <SelectItem value="user">مستخدم</SelectItem>
                 </SelectContent>
               </Select>

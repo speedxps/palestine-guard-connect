@@ -171,7 +171,7 @@ const Dashboard = () => {
         id: 'admin-panel',
         title: 'لوحة تحكم الإدارة',
         icon: Shield,
-        route: '/admin',
+        route: '/admin-panel',
         description: 'إدارة شاملة للنظام',
       });
     }

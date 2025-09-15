@@ -272,6 +272,10 @@ const AdminPanel = () => {
             })}
           </TabsList>
 
+      <TabsContent value="overview" className="space-y-6">
+        {renderOverview()}
+      </TabsContent>
+
       <TabsContent value="user-management" className="space-y-6">
         <Card className="p-1">
           <UserManagement />
