@@ -40,6 +40,11 @@ import EmergencyNotificationSystem from "./components/EmergencyNotificationSyste
 const queryClient = new QueryClient();
 
 const App = () => {
+  // Set default dark mode for better UI
+  React.useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
@@ -181,7 +186,6 @@ const App = () => {
                 } />
                 
                 <Route path="/access-denied" element={<AccessDenied />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <EmergencyNotificationSystem />
