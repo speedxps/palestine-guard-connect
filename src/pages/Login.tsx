@@ -158,10 +158,19 @@ const Login = () => {
     }
   };
 
-  // حسابات تجريبية مع أقسامهم
+  // حسابات تجريبية مع أقسامهم ومدرائهم
   const demoAccounts = [
+    // مدراء النظام
     { name: 'نور خلاف', email: 'noor-khallaf@hotmail.com', password: '123123', role: 'admin', department: 'الإدارة العامة' },
     { name: 'عمر علي', email: 'omar@police.com', password: '123123', role: 'admin', department: 'الإدارة العامة' },
+    
+    // مديرو الأقسام
+    { name: 'ياسر المرور', email: 'traffic-manager@police.com', password: '123123', role: 'traffic_manager', department: 'مدير شرطة المرور' },
+    { name: 'خالد المباحث', email: 'cid-manager@police.com', password: '123123', role: 'cid_manager', department: 'مدير المباحث الجنائية' },
+    { name: 'سمير الخاصة', email: 'special-manager@police.com', password: '123123', role: 'special_manager', department: 'مدير الشرطة الخاصة' },
+    { name: 'علي السيبراني', email: 'cyber-manager@police.com', password: '123123', role: 'cybercrime_manager', department: 'مدير الجرائم الإلكترونية' },
+    
+    // موظفو الأقسام
     { name: 'أحمد محمد', email: 'ahmad@police.com', password: '123123', role: 'traffic_police', department: 'شرطة المرور' },
     { name: 'سارة أحمد', email: 'sara@police.com', password: '123123', role: 'cid', department: 'المباحث الجنائية' },
     { name: 'محمد علي', email: '192059@ppu.edu.ps', password: '123123', role: 'special_police', department: 'الشرطة الخاصة' },
@@ -227,7 +236,7 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-14 bg-muted/30 border-2 border-muted/50 focus:border-primary/50 text-base rounded-2xl transition-all duration-300 focus:shadow-lg"
+                  className="pl-12 h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-base rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
                   placeholder="البريد الإلكتروني"
                   required
                 />
@@ -242,7 +251,7 @@ const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-14 h-14 bg-muted/30 border-2 border-muted/50 focus:border-primary/50 text-base rounded-2xl transition-all duration-300 focus:shadow-lg"
+                  className="pl-12 pr-14 h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-base rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
                   placeholder="كلمة المرور"
                   required
                 />
@@ -287,7 +296,7 @@ const Login = () => {
                       setPassword(account.password);
                     }
                   }}>
-                    <SelectTrigger className="w-full h-12 bg-muted/30 border-2 border-muted/50 rounded-2xl">
+                    <SelectTrigger className="w-full h-12 bg-white border-2 border-blue-500 rounded-2xl text-gray-900">
                       <SelectValue placeholder="اختر حساب تجريبي" />
                     </SelectTrigger>
                     <SelectContent>

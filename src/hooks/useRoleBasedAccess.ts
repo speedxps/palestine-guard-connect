@@ -1,17 +1,32 @@
 import { useAuth, type UserRole } from '@/contexts/AuthContext';
 
-// صفحات كل قسم
+// صفحات كل قسم ومدرائه
 const rolePages = {
   admin: [
     'dashboard', 'profile', 'admin-panel', 'users', 'incidents', 'incidents-management', 
     'new-incident', 'cybercrime', 'cybercrime-reports', 'reports', 'violations', 
     'violations-admin', 'vehicle-lookup', 'tasks', 'patrol', 'patrol-old', 'feed', 
     'chat', 'wanted-persons-tree', 'face-recognition', 'police-news', 'backup',
-    'citizen-records', 'about'
+    'citizen-records', 'about', 'cybercrime-advanced'
   ],
-  traffic_police: [
+  // مدراء الأقسام - صلاحيات إدارية لقسمهم
+  traffic_manager: [
     'dashboard', 'profile', 'violations', 'violations-admin', 'vehicle-lookup', 
-    'patrol', 'police-news'
+    'patrol', 'police-news', 'admin-panel'
+  ],
+  cid_manager: [
+    'dashboard', 'profile', 'incidents', 'incidents-management', 'new-incident',
+    'wanted-persons-tree', 'face-recognition', 'police-news', 'admin-panel'
+  ],
+  special_manager: [
+    'dashboard', 'profile', 'tasks', 'patrol', 'patrol-old', 'feed', 'chat', 'police-news', 'admin-panel'
+  ],
+  cybercrime_manager: [
+    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'cybercrime-advanced', 'admin-panel'
+  ],
+  // موظفو الأقسام - صلاحيات محدودة
+  traffic_police: [
+    'dashboard', 'profile', 'violations', 'vehicle-lookup', 'patrol', 'police-news'
   ],
   cid: [
     'dashboard', 'profile', 'incidents', 'incidents-management', 'new-incident',
@@ -76,8 +91,8 @@ export const useRoleBasedAccess = () => {
           icon: 'AlertTriangle'
         },
         {
-          title: 'الجرائم الإلكترونية', 
-          path: '/cybercrime',
+          title: 'الجرائم الإلكترونية المتقدمة', 
+          path: '/cybercrime-advanced',
           icon: 'Shield'
         },
         {
@@ -94,6 +109,95 @@ export const useRoleBasedAccess = () => {
           title: 'الدوريات',
           path: '/patrol',
           icon: 'Users'
+        }
+      ],
+      // مدراء الأقسام
+      traffic_manager: [
+        {
+          title: 'إدارة المخالفات',
+          path: '/violations-admin',
+          icon: 'Settings'
+        },
+        {
+          title: 'المخالفات',
+          path: '/violations',
+          icon: 'FileText'
+        },
+        {
+          title: 'البحث عن مركبة',
+          path: '/vehicle-lookup',
+          icon: 'Car'
+        },
+        {
+          title: 'إدارة القسم',
+          path: '/admin-panel',
+          icon: 'Settings'
+        }
+      ],
+      cid_manager: [
+        {
+          title: 'إدارة البلاغات',
+          path: '/incidents-management',
+          icon: 'Settings'
+        },
+        {
+          title: 'البلاغات',
+          path: '/incidents',
+          icon: 'AlertTriangle'
+        },
+        {
+          title: 'المطلوبون',
+          path: '/wanted-persons-tree',
+          icon: 'Users'
+        },
+        {
+          title: 'إدارة القسم',
+          path: '/admin-panel',
+          icon: 'Settings'
+        }
+      ],
+      special_manager: [
+        {
+          title: 'إدارة المهام',
+          path: '/tasks',
+          icon: 'CheckSquare'
+        },
+        {
+          title: 'الدوريات',
+          path: '/patrol',
+          icon: 'Users'
+        },
+        {
+          title: 'المحادثات',
+          path: '/chat',
+          icon: 'MessageCircle'
+        },
+        {
+          title: 'إدارة القسم',
+          path: '/admin-panel',
+          icon: 'Settings'
+        }
+      ],
+      cybercrime_manager: [
+        {
+          title: 'لوحة التحكم المتقدمة',
+          path: '/cybercrime-advanced',
+          icon: 'Shield'
+        },
+        {
+          title: 'الجرائم الإلكترونية',
+          path: '/cybercrime',
+          icon: 'Computer'
+        },
+        {
+          title: 'التقارير والإحصائيات',
+          path: '/reports',
+          icon: 'BarChart3'
+        },
+        {
+          title: 'إدارة القسم',
+          path: '/admin-panel',
+          icon: 'Settings'
         }
       ],
       traffic_police: [

@@ -27,7 +27,11 @@ import {
   Menu
 } from 'lucide-react';
 
-const ModernSidebar = () => {
+interface ModernSidebarProps {
+  onClose?: () => void;
+}
+
+const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -149,7 +153,13 @@ const ModernSidebar = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => {
+              if (onClose) {
+                onClose();
+              } else {
+                setIsCollapsed(!isCollapsed);
+              }
+            }}
             className="shrink-0"
           >
             <Menu className="h-4 w-4" />
