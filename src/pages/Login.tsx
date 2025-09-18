@@ -178,9 +178,9 @@ const Login = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden login-page">
       {/* Bright Professional Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 z-0">
         {/* Professional Geometric Elements */}
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-xl animate-pulse"></div>
@@ -200,8 +200,8 @@ const Login = () => {
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col justify-center px-6">
-        {/* Header Section */}
-        <div className="text-center mb-12 animate-fade-in">
+        {/* Header Section - No overlapping elements */}
+        <div className="text-center mb-12 animate-fade-in relative z-20">
           <div className="relative mb-8">
             <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
             <div className="relative mx-auto w-32 h-32 bg-white/90 backdrop-blur-sm rounded-full p-4 shadow-2xl border border-blue-200/30">
@@ -212,18 +212,18 @@ const Login = () => {
               />
             </div>
           </div>
-          <h1 className="text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm">
+          <h1 className="text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
             الشرطة الفلسطينية
           </h1>
-          <p className="text-gray-600 font-inter text-sm">Palestinian Police Department</p>
+          <p className="text-gray-600 font-inter text-sm relative z-30">Palestinian Police Department</p>
         </div>
 
-        {/* Login Form */}
-        <div className="w-full max-w-sm mx-auto">
+        {/* Login Form - Elevated z-index */}
+        <div className="w-full max-w-sm mx-auto relative z-20">
           <div className="bg-white/98 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-200/30 p-8 animate-scale-in">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">تسجيل الدخول</h2>
-              <p className="text-muted-foreground text-sm">أدخل بياناتك للوصول إلى النظام</p>
+            <div className="text-center mb-8 relative z-30">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">تسجيل الدخول</h2>
+              <p className="text-gray-600 text-sm">أدخل بياناتك للوصول إلى النظام</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -245,7 +245,7 @@ const Login = () => {
               {/* Password Input */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
+                  <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors duration-300" />
                 </div>
                 <Input
                   type={showPassword ? 'text' : 'password'}
@@ -258,7 +258,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-primary transition-colors duration-300"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-primary transition-colors duration-300"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -276,7 +276,7 @@ const Login = () => {
                   />
                   <Label 
                     htmlFor="rememberMe" 
-                    className="text-sm text-muted-foreground cursor-pointer font-arabic flex items-center gap-2"
+                    className="text-sm text-gray-600 cursor-pointer font-arabic flex items-center gap-2"
                   >
                     <Save className="h-4 w-4" />
                     حفظ تسجيل الدخول
@@ -285,7 +285,7 @@ const Login = () => {
 
                 {/* Demo Accounts Dropdown */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground font-arabic">
+                  <Label className="text-sm font-medium text-gray-700 font-arabic">
                     الحسابات التجريبية
                   </Label>
                   <Select value={selectedDemo} onValueChange={(value) => {
@@ -344,7 +344,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium text-sm"
+                  className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium text-sm"
                 >
                   نسيت كلمة المرور؟
                 </button>

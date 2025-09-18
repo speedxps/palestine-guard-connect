@@ -163,6 +163,18 @@
   .font-inter {
     font-family: 'Inter', sans-serif;
   }
+  
+  /* Prevent Layout Overlap Issues */
+  .login-page {
+    position: relative;
+    z-index: 100;
+    isolation: isolate;
+  }
+  
+  .login-page * {
+    position: relative;
+    z-index: auto;
+  }
 }
 
 @layer components {
@@ -198,5 +210,36 @@
     @apply flex items-center justify-between p-4 bg-card/50 backdrop-blur-sm;
     @apply border border-border/30 rounded-xl transition-all duration-300;
     @apply hover:bg-accent/50 hover:scale-[1.02] active:scale-95;
+  }
+
+  /* Custom animation classes */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
