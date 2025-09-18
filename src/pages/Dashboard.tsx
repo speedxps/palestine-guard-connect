@@ -73,7 +73,8 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6" dir="rtl">
+      <div className="min-h-screen bg-white">
+        <div className="p-6 space-y-6" dir="rtl">
         {/* Welcome Section */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -85,14 +86,14 @@ const Dashboard = () => {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground font-arabic">
+              <h1 className="text-2xl font-bold text-gray-900 font-arabic">
                 مرحباً، {user?.full_name || 'المستخدم'}
               </h1>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="font-arabic">
+                <Badge variant="secondary" className="font-arabic bg-primary/10 text-primary">
                   {getRoleName(userRole || 'user')}
                 </Badge>
-                <span className="text-muted-foreground font-arabic text-sm">
+                <span className="text-gray-600 font-arabic text-sm">
                   الشرطة الفلسطينية
                 </span>
               </div>
@@ -102,7 +103,7 @@ const Dashboard = () => {
 
         {/* Statistics Cards */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground font-arabic mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
             الإحصائيات العامة
           </h2>
           <StatsCards />
@@ -110,13 +111,13 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground font-arabic mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
             إجراءات سريعة
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* User Dashboard Access */}
             <Card 
-              className="p-4 hover:shadow-lg transition-shadow cursor-pointer" 
+              className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200" 
               onClick={() => navigate('/user-dashboard')}
             >
               <div className="flex items-center gap-3">
@@ -124,10 +125,10 @@ const Dashboard = () => {
                   <Shield className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground font-arabic text-sm">
+                  <h3 className="font-semibold text-gray-900 font-arabic text-sm">
                     صلاحياتي
                   </h3>
-                  <p className="text-xs text-muted-foreground font-arabic">
+                  <p className="text-xs text-gray-600 font-arabic">
                     عرض الصفحات المسموح بالوصول إليها
                   </p>
                 </div>
@@ -137,16 +138,16 @@ const Dashboard = () => {
             {getQuickActions().map((action, index) => {
               const Icon = action.icon;
               return (
-                <Card key={index} className="p-4 hover:shadow-lg transition-shadow cursor-pointer">
+                <Card key={index} className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg bg-gradient-to-r ${action.color}`}>
                       <Icon className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground font-arabic text-sm">
+                      <h3 className="font-semibold text-gray-900 font-arabic text-sm">
                         {action.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground font-arabic">
+                      <p className="text-xs text-gray-600 font-arabic">
                         {action.description}
                       </p>
                     </div>
@@ -159,17 +160,17 @@ const Dashboard = () => {
 
         {/* Voice Assistant */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground font-arabic mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
             المساعد الذكي
           </h2>
-          <Card className="p-4">
+          <Card className="p-4 bg-white border border-gray-200">
             <VoiceAssistant />
           </Card>
         </div>
 
         {/* Police News */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground font-arabic mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
             الأخبار الرسمية
           </h2>
           <PoliceNews />
@@ -177,11 +178,12 @@ const Dashboard = () => {
 
         {/* Recent Activity */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground font-arabic mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
             النشاط الأخير
           </h2>
           <RecentActivity />
         </div>
+      </div>
       </div>
     </DashboardLayout>
   );

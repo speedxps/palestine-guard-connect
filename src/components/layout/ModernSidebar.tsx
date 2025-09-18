@@ -129,11 +129,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
   const currentDept = getCurrentDepartment();
 
   return (
-    <div className={`h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ${
+    <div className={`h-screen bg-white border-r border-gray-200 transition-all duration-300 shadow-sm ${
       isCollapsed ? 'w-16' : 'w-72'
     }`}>
-      {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
+      {/* Header with Integrated Logo & Menu */}
+      <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center gap-3">
@@ -145,8 +145,8 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
                 />
               </div>
               <div>
-                <h2 className="font-bold text-sidebar-foreground font-arabic">نظام إدارة الشرطة</h2>
-                <p className="text-xs text-muted-foreground font-arabic">فلسطين - Palestine</p>
+                <h2 className="font-bold text-gray-900 font-arabic">نظام إدارة الشرطة</h2>
+                <p className="text-xs text-gray-600 font-arabic">فلسطين - Palestine</p>
               </div>
             </div>
           )}
@@ -160,7 +160,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
                 setIsCollapsed(!isCollapsed);
               }
             }}
-            className="shrink-0"
+            className="shrink-0 hover:bg-primary/10 text-primary"
           >
             <Menu className="h-4 w-4" />
           </Button>
@@ -169,7 +169,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
 
       {/* User Info */}
       {!isCollapsed && (
-        <div className="p-4 border-b border-sidebar-border">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
               <span className="text-primary font-semibold font-arabic">
@@ -177,10 +177,10 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
               </span>
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-sidebar-foreground font-arabic text-sm">
+              <h3 className="font-semibold text-gray-900 font-arabic text-sm">
                 {user?.full_name || 'مستخدم'}
               </h3>
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs bg-white text-gray-700">
                 {userRole === 'admin' && 'مدير النظام'}
                 {userRole === 'traffic_police' && 'شرطة المرور'}
                 {userRole === 'cid' && 'مباحث جنائية'}
@@ -200,7 +200,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           {/* Dashboard Link */}
           <Button
             variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
-            className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
+            className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''} ${
+              location.pathname === '/dashboard' 
+                ? 'bg-primary text-white hover:bg-primary/90' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
             onClick={() => navigate('/dashboard')}
           >
             <Crown className="h-4 w-4 shrink-0" />
@@ -210,7 +214,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           {/* Police News Link */}
           <Button
             variant={location.pathname === '/police-news' ? 'default' : 'ghost'}
-            className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
+            className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''} ${
+              location.pathname === '/police-news' 
+                ? 'bg-primary text-white hover:bg-primary/90' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
             onClick={() => navigate('/police-news')}
           >
             <Newspaper className="h-4 w-4 shrink-0" />
@@ -220,7 +228,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           {/* Departments */}
           {!isCollapsed && (
             <div className="pt-4">
-              <h3 className="text-xs font-semibold text-muted-foreground font-arabic px-2 mb-2">
+              <h3 className="text-xs font-semibold text-gray-600 font-arabic px-2 mb-2">
                 الأقسام
               </h3>
               
@@ -238,7 +246,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
                       <CollapsibleTrigger asChild>
                         <Button
                           variant={currentDept === dept.id ? 'secondary' : 'ghost'}
-                          className="w-full justify-start gap-3 mb-1"
+                          className={`w-full justify-start gap-3 mb-1 ${
+                            currentDept === dept.id 
+                              ? 'bg-gray-100 text-gray-900' 
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
                         >
                           <div className={`p-1.5 rounded-md bg-gradient-to-r ${dept.color}`}>
                             <Icon className="h-3.5 w-3.5 text-white" />
@@ -261,7 +273,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
                               <Button
                                 key={page.path}
                                 variant={location.pathname === page.path ? 'secondary' : 'ghost'}
-                                className="w-full justify-start gap-3 mr-6 text-sm"
+                                className={`w-full justify-start gap-3 mr-6 text-sm ${
+                                  location.pathname === page.path 
+                                    ? 'bg-primary/10 text-primary border-r-2 border-primary' 
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                }`}
                                 onClick={() => navigate(page.path)}
                               >
                                 <PageIcon className="h-3.5 w-3.5" />
@@ -277,10 +293,14 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           )}
 
           {/* Profile Link */}
-          <div className="pt-4 border-t border-sidebar-border mt-4">
+          <div className="pt-4 border-t border-gray-200 mt-4">
             <Button
               variant={location.pathname === '/profile' ? 'default' : 'ghost'}
-              className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
+              className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''} ${
+                location.pathname === '/profile' 
+                  ? 'bg-primary text-white hover:bg-primary/90' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
               onClick={() => navigate('/profile')}
             >
               <Settings className="h-4 w-4 shrink-0" />

@@ -21,9 +21,9 @@ const StatsCards = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
-          <Card key={i} className="p-6 animate-pulse">
-            <div className="h-4 bg-muted rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-muted rounded w-3/4"></div>
+          <Card key={i} className="p-6 animate-pulse bg-white border border-gray-200">
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
           </Card>
         ))}
       </div>
@@ -161,16 +161,16 @@ const StatsCards = () => {
       {statsCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-300">
+          <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-300 bg-white border border-gray-200">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground font-arabic">
+                <p className="text-sm font-medium text-gray-600 font-arabic">
                   {stat.title}
                 </p>
-                <p className="text-3xl font-bold text-foreground">
+                <p className="text-3xl font-bold text-gray-900">
                   {stat.value}
                 </p>
-                <Badge variant="secondary" className="text-xs font-arabic">
+                <Badge variant="secondary" className="text-xs font-arabic bg-gray-100 text-gray-700">
                   {stat.change}
                 </Badge>
               </div>

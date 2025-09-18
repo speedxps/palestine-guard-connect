@@ -42,9 +42,11 @@ import EmergencyNotificationSystem from "./components/EmergencyNotificationSyste
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Set default dark mode for better UI
+  // Set default light mode for professional appearance
   React.useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
+    // Ensure RTL direction
+    document.documentElement.dir = 'rtl';
   }, []);
 
   return (

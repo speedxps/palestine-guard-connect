@@ -11,17 +11,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   return (
-    <div className="flex h-screen bg-background" dir="rtl">
-      {/* Toggle Button for Mobile/Hidden Sidebar */}
+    <div className="flex h-screen bg-white" dir="rtl">
+      {/* Integrated Logo & Menu Button */}
       {!isSidebarVisible && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsSidebarVisible(true)}
-          className="fixed top-4 right-4 z-50 bg-white/90 backdrop-blur-sm border-primary/20"
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 bg-white/95 backdrop-blur-sm border border-primary/20 rounded-lg p-3 shadow-lg">
+          <div className="p-1.5 rounded-md bg-gradient-to-r from-primary to-primary-glow">
+            <img 
+              src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+              alt="Palestinian Police Logo" 
+              className="h-5 w-5 object-contain"
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarVisible(true)}
+            className="p-2 hover:bg-primary/10"
+          >
+            <Menu className="h-4 w-4 text-primary" />
+          </Button>
+        </div>
       )}
 
       {/* Sidebar - Hidden by default */}
@@ -39,7 +48,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </>
       )}
 
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto bg-gray-50 min-h-screen">
         {children}
       </main>
     </div>

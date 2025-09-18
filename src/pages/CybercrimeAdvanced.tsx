@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import PageHeader from '@/components/layout/PageHeader';
+import BackButton from '@/components/BackButton';
 import { 
   ArrowLeft, 
   Shield, 
