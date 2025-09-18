@@ -27,11 +27,9 @@ import {
   Menu
 } from 'lucide-react';
 
-interface ModernSidebarProps {
-  onClose?: () => void;
-}
+interface ModernSidebarProps {}
 
-const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
+const ModernSidebar: React.FC<ModernSidebarProps> = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -139,7 +137,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
                 <img 
-                  src="/lovable-uploads/official-police-logo.png" 
+                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                   alt="Palestinian Police Logo" 
                   className="h-5 w-5 object-contain"
                 />
@@ -153,13 +151,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              if (onClose) {
-                onClose();
-              } else {
-                setIsCollapsed(!isCollapsed);
-              }
-            }}
+            onClick={() => setIsCollapsed(!isCollapsed)}
             className="shrink-0 hover:bg-primary/10 text-primary"
           >
             <Menu className="h-4 w-4" />

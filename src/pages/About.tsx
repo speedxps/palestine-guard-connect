@@ -247,7 +247,7 @@ const About: React.FC = () => {
         <Card className="glass-card p-4">
           <div className="flex items-center gap-3 mb-4">
             <img 
-              src="/lovable-uploads/official-police-logo.png" 
+              src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
               alt="Logo" 
               className="w-12 h-12 rounded-lg"
             />

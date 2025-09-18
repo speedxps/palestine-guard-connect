@@ -31,7 +31,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
               <img 
-                src="/lovable-uploads/official-police-logo.png" 
+                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                 alt="Palestinian Police Logo" 
                 className="h-6 w-6 object-contain"
               />

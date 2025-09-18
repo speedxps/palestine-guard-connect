@@ -220,7 +220,7 @@ const AdminPanel = () => {
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-md"></div>
                 <img 
-                  src="/lovable-uploads/official-police-logo.png" 
+                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                   alt="Palestinian Police Department Logo" 
                   className="relative w-12 h-12 rounded-full shadow-lg"
                 />
