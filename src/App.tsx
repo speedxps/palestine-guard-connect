@@ -30,7 +30,7 @@ import WantedPersonsTree from "./pages/WantedPersonsTree";
 import IncidentsManagement from "./pages/IncidentsManagement";
 import CitizenRecords from "./pages/CitizenRecords";
 import About from "./pages/About";
-import PoliceNews from "./pages/PoliceNews";
+
 import VehicleLookup from "./pages/VehicleLookup";
 import FaceRecognition from "./pages/FaceRecognition";
 import Reports from "./pages/Reports";
@@ -71,14 +71,29 @@ const App = () => {
                     <Profile />
                   </ProtectedRoute>
                 } />
-                <Route path="/police-news" element={
-                  <ProtectedRoute>
-                    <PoliceNews />
-                  </ProtectedRoute>
-                } />
                 <Route path="/about" element={
                   <ProtectedRoute>
                     <About />
+                  </ProtectedRoute>
+                } />
+                <Route path="/daily-stats" element={
+                  <ProtectedRoute>
+                    <DailyStats />
+                  </ProtectedRoute>
+                } />
+                <Route path="/urgent-tasks" element={
+                  <ProtectedRoute>
+                    <UrgentTasks />
+                  </ProtectedRoute>
+                } />
+                <Route path="/scheduling" element={
+                  <ProtectedRoute>
+                    <SchedulingPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/activity/:id/:type" element={
+                  <ProtectedRoute>
+                    <ActivityDetail />
                   </ProtectedRoute>
                 } />
                 

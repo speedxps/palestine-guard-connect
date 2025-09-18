@@ -137,8 +137,22 @@ const Dashboard = () => {
             
             {getQuickActions().map((action, index) => {
               const Icon = action.icon;
+              const getActionPath = (title: string) => {
+                switch (title) {
+                  case 'الإحصائيات اليومية': return '/daily-stats';
+                  case 'المهام العاجلة': return '/urgent-tasks';
+                  case 'الجدولة': return '/scheduling';
+                  case 'إدارة المستخدمين': return '/user-management';
+                  default: return '/dashboard';
+                }
+              };
+              
               return (
-                <Card key={index} className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200">
+                <Card 
+                  key={index} 
+                  className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200"
+                  onClick={() => navigate(getActionPath(action.title))}
+                >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg bg-gradient-to-r ${action.color}`}>
                       <Icon className="h-5 w-5 text-white" />

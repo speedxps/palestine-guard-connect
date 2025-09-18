@@ -18,27 +18,38 @@ const PoliceNews = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // محاكاة جلب آخر منشور من صفحة الشرطة على فيسبوك
+    // جلب آخر منشور من صفحة الشرطة الفلسطينية على فيسبوك
     const fetchLatestPost = async () => {
       setLoading(true);
       
-      // محاكاة بيانات آخر منشور
-      setTimeout(() => {
-        const mockPost: NewsPost = {
-          id: '1',
-          title: 'بيان صادر عن قيادة الشرطة الفلسطينية',
-          content: 'تعلن قيادة الشرطة الفلسطينية عن إطلاق حملة توعوية جديدة للحد من الحوادث المرورية. الحملة تهدف إلى تعزيز الوعي المروري لدى المواطنين وتقليل عدد الحوادث على الطرق الفلسطينية.',
-          publishedAt: new Date().toISOString(),
-          imageUrl: '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png',
-          link: 'https://www.facebook.com/palestinepolice'
-        };
+      try {
+        // محاكاة استدعاء Facebook Graph API
+        // في التطبيق الحقيقي، ستحتاج إلى Facebook App Token
         
-        setLatestPost(mockPost);
+        setTimeout(() => {
+          const mockPost: NewsPost = {
+            id: '1',
+            title: 'إعلان هام من الشرطة الفلسطينية',
+            content: 'تعلن قيادة الشرطة الفلسطينية عن تفعيل الخطة الأمنية الشاملة خلال الأيام القادمة، وذلك لضمان الأمن والسلامة العامة. نرجو من المواطنين التعاون مع رجال الأمن والإبلاغ عن أي أمور مشبوهة.',
+            publishedAt: new Date().toISOString(),
+            imageUrl: '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png',
+            link: 'https://www.facebook.com/Palestinianpolice1'
+          };
+          
+          setLatestPost(mockPost);
+          setLoading(false);
+        }, 800);
+      } catch (error) {
+        console.error('Error fetching Facebook post:', error);
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchLatestPost();
+    
+    // تحديث كل 10 دقائق
+    const interval = setInterval(fetchLatestPost, 10 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -137,17 +148,28 @@ const PoliceNews = () => {
               <span className="font-arabic">{formatDate(latestPost.publishedAt)}</span>
             </div>
             
-            {latestPost.link && (
+            <div className="flex gap-2">
+              {latestPost.link && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(latestPost.link, '_blank')}
+                  className="flex items-center gap-2 font-arabic"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  عرض على فيسبوك
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(latestPost.link, '_blank')}
+                onClick={() => window.open('https://www.facebook.com/Palestinianpolice1', '_blank')}
                 className="flex items-center gap-2 font-arabic"
               >
                 <ExternalLink className="h-4 w-4" />
-                عرض المنشور
+                زيارة الصفحة الرسمية
               </Button>
-            )}
+            </div>
           </div>
         </div>
       </CardContent>

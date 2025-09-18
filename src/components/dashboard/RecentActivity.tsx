@@ -198,13 +198,19 @@ const RecentActivity = () => {
           activities.map((activity) => {
             const Icon = getActivityIcon(activity.type);
             return (
-              <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <div 
+                key={activity.id} 
+                className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => window.location.href = `/activity/${activity.id}/${activity.type}`}
+              >
                 <div className={`p-2 rounded-lg bg-muted ${getActivityColor(activity.type)}`}>
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <h4 className="font-medium text-sm font-arabic">{activity.title}</h4>
+                    <h4 className="font-medium text-sm font-arabic hover:text-primary">
+                      {activity.title}
+                    </h4>
                     {getStatusBadge(activity.status)}
                   </div>
                   <p className="text-xs text-muted-foreground font-arabic line-clamp-2">
