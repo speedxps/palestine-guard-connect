@@ -1,81 +1,142 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 import { 
-  FileText, 
   Car, 
-  Users, 
-  Settings,
-  Shield
+  FileText, 
+  Settings, 
+  Search, 
+  Users,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 
-export const TrafficPoliceSection = () => {
+const TrafficPoliceSection = () => {
   const navigate = useNavigate();
 
-  const trafficPages = [
+  const sections = [
     {
       title: 'المخالفات',
-      description: 'عرض وإدارة المخالفات المرورية',
-      path: '/violations',
+      description: 'عرض جميع المخالفات المرورية',
       icon: FileText,
-      color: 'from-red-500 to-red-600'
+      path: '/violations',
+      color: 'from-yellow-500 to-yellow-600',
+      stats: '156 جديد'
     },
     {
       title: 'إدارة المخالفات',
-      description: 'تحرير ومراجعة المخالفات',
-      path: '/violations-admin',
+      description: 'إدارة ومتابعة المخالفات',
       icon: Settings,
-      color: 'from-orange-500 to-orange-600'
+      path: '/violations-admin',
+      color: 'from-orange-500 to-orange-600',
+      stats: '89 معلق'
     },
     {
       title: 'البحث عن مركبة',
-      description: 'استعلام وإدارة بيانات المركبات',
+      description: 'البحث في قاعدة بيانات المركبات',
+      icon: Search,
       path: '/vehicle-lookup',
-      icon: Car,
-      color: 'from-blue-500 to-blue-600'
+      color: 'from-blue-500 to-blue-600',
+      stats: ''
     },
     {
       title: 'الدوريات',
-      description: 'إدارة وتنسيق الدوريات',
-      path: '/patrol',
+      description: 'إدارة الدوريات المرورية',
       icon: Users,
-      color: 'from-green-500 to-green-600'
+      path: '/patrol',
+      color: 'from-green-500 to-green-600',
+      stats: '12 نشط'
     }
+  ];
+
+  const quickStats = [
+    { label: 'المخالفات اليوم', value: '156', icon: FileText, trend: '+23%' },
+    { label: 'الدوريات النشطة', value: '12', icon: Users, trend: '+5%' },
+    { label: 'المخالفات المحلولة', value: '89', icon: CheckCircle, trend: '+15%' },
+    { label: 'المعلقة', value: '67', icon: AlertCircle, trend: '-8%' }
   ];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600">
-          <Shield className="h-6 w-6 text-white" />
+          <Car className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold font-arabic">شرطة المرور</h2>
-          <p className="text-muted-foreground font-arabic">إدارة المخالفات والمركبات والدوريات المرورية</p>
+          <h1 className="text-2xl font-bold font-arabic">شرطة المرور</h1>
+          <p className="text-muted-foreground font-arabic">المخالفات المرورية والمركبات</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {trafficPages.map((page) => {
-          const Icon = page.icon;
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {quickStats.map((stat, index) => {
+          const Icon = stat.icon;
           return (
-            <Card key={page.path} className="p-6 hover:shadow-lg transition-shadow">
-              <Button
-                variant="ghost"
-                className="w-full h-auto p-0 flex flex-col items-center gap-4 hover:bg-transparent"
-                onClick={() => navigate(page.path)}
-              >
-                <div className={`p-4 rounded-xl bg-gradient-to-r ${page.color} shadow-lg`}>
-                  <Icon className="h-8 w-8 text-white" />
+            <Card key={index}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground font-arabic">{stat.label}</p>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Icon className="h-5 w-5 text-primary" />
+                    <Badge variant={stat.trend.startsWith('+') ? 'default' : 'secondary'} className="text-xs">
+                      {stat.trend}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="text-center space-y-2">
-                  <h3 className="text-lg font-semibold font-arabic">{page.title}</h3>
-                  <p className="text-sm text-muted-foreground font-arabic leading-relaxed">
-                    {page.description}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Service Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <Card 
+              key={section.path}
+              className="hover:shadow-lg transition-all duration-300 cursor-pointer"
+              onClick={() => navigate(section.path)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className={`p-3 rounded-lg bg-gradient-to-r ${section.color}`}>
+                    <Icon className="h-6 w-6 text-white" />
+                  </div>
+                  {section.stats && (
+                    <Badge variant="secondary" className="font-arabic">
+                      {section.stats}
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <h3 className="font-bold text-lg font-arabic">{section.title}</h3>
+                  <p className="text-sm text-muted-foreground font-arabic">
+                    {section.description}
                   </p>
                 </div>
-              </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full font-arabic"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(section.path);
+                  }}
+                >
+                  الدخول للقسم
+                </Button>
+              </CardContent>
             </Card>
           );
         })}
@@ -83,3 +144,5 @@ export const TrafficPoliceSection = () => {
     </div>
   );
 };
+
+export default TrafficPoliceSection;
