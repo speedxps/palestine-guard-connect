@@ -200,7 +200,7 @@ const Login = () => {
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col justify-center px-6">
-        {/* Header Section - No overlapping elements */}
+        {/* Header Section with Welcome Message */}
         <div className="text-center mb-12 animate-fade-in relative z-20">
           <div className="relative mb-8">
             <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
@@ -213,15 +213,15 @@ const Login = () => {
             </div>
           </div>
           
-          {/* Welcome Message and Title */}
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
+          {/* Personalized Welcome Message */}
+          <div className="space-y-3">
+            <h1 className="text-4xl font-bold font-arabic text-gray-800 drop-shadow-sm relative z-30">
               مرحباً، نور الدين خلاف
             </h1>
-            <h2 className="text-2xl font-semibold font-arabic text-primary mb-2 drop-shadow-sm relative z-30">
+            <h2 className="text-2xl font-semibold font-arabic text-primary drop-shadow-sm relative z-30">
               مدير النظام
             </h2>
-            <h3 className="text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
+            <h3 className="text-3xl font-bold font-arabic text-gray-800 drop-shadow-sm relative z-30">
               الشرطة الفلسطينية
             </h3>
             <p className="text-gray-600 font-inter text-sm relative z-30">Palestinian Police Department</p>
