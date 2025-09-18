@@ -12,24 +12,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-white" dir="rtl">
-      {/* Integrated Logo & Menu Button - Fixed positioning with proper spacing */}
+      {/* Logo on the left side */}
       {!isSidebarVisible && (
-        <div className="fixed top-4 left-4 z-[60] flex items-center gap-3 bg-white/95 backdrop-blur-sm border border-primary/20 rounded-xl p-3 shadow-lg">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
-              <img 
-                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
-                alt="Palestinian Police Logo" 
-                className="h-5 w-5 object-contain"
-              />
-            </div>
-            <span className="text-sm font-semibold text-foreground">الشرطة الفلسطينية</span>
+        <div className="fixed top-4 left-4 z-[60] flex items-center gap-2 bg-white/95 backdrop-blur-sm border border-primary/20 rounded-xl p-3 shadow-lg">
+          <div className="p-1.5 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
+            <img 
+              src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+              alt="Palestinian Police Logo" 
+              className="h-5 w-5 object-contain"
+            />
           </div>
+          <span className="text-sm font-semibold text-foreground">الشرطة الفلسطينية</span>
+        </div>
+      )}
+
+      {/* Menu button on the right side */}
+      {!isSidebarVisible && (
+        <div className="fixed top-4 right-4 z-[60]">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsSidebarVisible(true)}
-            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+            className="p-3 hover:bg-primary/10 rounded-xl transition-colors bg-white/95 backdrop-blur-sm border border-primary/20 shadow-lg"
           >
             <Menu className="h-4 w-4 text-primary" />
           </Button>
