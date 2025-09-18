@@ -1,81 +1,142 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 import { 
+  Shield, 
   CheckSquare, 
   Users, 
   Rss, 
   MessageCircle,
-  Shield
+  Clock,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 
-export const SpecialPoliceSection = () => {
+const SpecialPoliceSection = () => {
   const navigate = useNavigate();
 
-  const specialPolicePages = [
+  const sections = [
     {
       title: 'المهام',
       description: 'إدارة ومتابعة المهام الخاصة',
-      path: '/tasks',
       icon: CheckSquare,
-      color: 'from-green-500 to-green-600'
+      path: '/tasks',
+      color: 'from-purple-500 to-purple-600',
+      stats: '18 نشط'
     },
     {
       title: 'الدوريات',
-      description: 'تنسيق وإدارة الدوريات',
-      path: '/patrol',
+      description: 'دوريات الشرطة الخاصة',
       icon: Users,
-      color: 'from-blue-500 to-blue-600'
+      path: '/patrol',
+      color: 'from-green-500 to-green-600',
+      stats: '8 دورية'
     },
     {
       title: 'التغذية',
-      description: 'متابعة التحديثات والأخبار',
-      path: '/feed',
+      description: 'آخر التحديثات والأخبار',
       icon: Rss,
-      color: 'from-purple-500 to-purple-600'
+      path: '/feed',
+      color: 'from-blue-500 to-blue-600',
+      stats: '24 جديد'
     },
     {
       title: 'المحادثات',
-      description: 'نظام التواصل والمحادثات',
-      path: '/chat',
+      description: 'التواصل مع الفريق',
       icon: MessageCircle,
-      color: 'from-indigo-500 to-indigo-600'
+      path: '/chat',
+      color: 'from-indigo-500 to-indigo-600',
+      stats: '5 رسائل'
     }
+  ];
+
+  const quickStats = [
+    { label: 'المهام النشطة', value: '18', icon: CheckSquare, trend: '+12%' },
+    { label: 'الدوريات', value: '8', icon: Users, trend: '+3%' },
+    { label: 'المهام المكتملة', value: '45', icon: Target, trend: '+25%' },
+    { label: 'الرسائل الجديدة', value: '5', icon: MessageCircle, trend: '+2' }
   ];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
           <Shield className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold font-arabic">الشرطة الخاصة</h2>
-          <p className="text-muted-foreground font-arabic">إدارة المهام والدوريات الخاصة</p>
+          <h1 className="text-2xl font-bold font-arabic">الشرطة الخاصة</h1>
+          <p className="text-muted-foreground font-arabic">المهام الخاصة والدوريات الأمنية</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {specialPolicePages.map((page) => {
-          const Icon = page.icon;
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {quickStats.map((stat, index) => {
+          const Icon = stat.icon;
           return (
-            <Card key={page.path} className="p-6 hover:shadow-lg transition-shadow">
-              <Button
-                variant="ghost"
-                className="w-full h-auto p-0 flex flex-col items-center gap-4 hover:bg-transparent"
-                onClick={() => navigate(page.path)}
-              >
-                <div className={`p-4 rounded-xl bg-gradient-to-r ${page.color} shadow-lg`}>
-                  <Icon className="h-8 w-8 text-white" />
+            <Card key={index}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground font-arabic">{stat.label}</p>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Icon className="h-5 w-5 text-primary" />
+                    <Badge variant="default" className="text-xs">
+                      {stat.trend}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="text-center space-y-2">
-                  <h3 className="text-lg font-semibold font-arabic">{page.title}</h3>
-                  <p className="text-sm text-muted-foreground font-arabic leading-relaxed">
-                    {page.description}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Service Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <Card 
+              key={section.path}
+              className="hover:shadow-lg transition-all duration-300 cursor-pointer"
+              onClick={() => navigate(section.path)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className={`p-3 rounded-lg bg-gradient-to-r ${section.color}`}>
+                    <Icon className="h-6 w-6 text-white" />
+                  </div>
+                  {section.stats && (
+                    <Badge variant="secondary" className="font-arabic">
+                      {section.stats}
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <h3 className="font-bold text-lg font-arabic">{section.title}</h3>
+                  <p className="text-sm text-muted-foreground font-arabic">
+                    {section.description}
                   </p>
                 </div>
-              </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full font-arabic"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(section.path);
+                  }}
+                >
+                  الدخول للقسم
+                </Button>
+              </CardContent>
             </Card>
           );
         })}
@@ -83,3 +144,5 @@ export const SpecialPoliceSection = () => {
     </div>
   );
 };
+
+export default SpecialPoliceSection;
