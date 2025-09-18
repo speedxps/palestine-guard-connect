@@ -158,36 +158,38 @@ const Login = () => {
     }
   };
 
-  // حسابات تجريبية مع أقسامهم
+  // حسابات تجريبية مع أقسامهم ومدراء الأقسام
   const demoAccounts = [
-    { name: 'نور خلاف', email: 'noor-khallaf@hotmail.com', password: '123123', role: 'admin', department: 'الإدارة العامة' },
-    { name: 'عمر علي', email: 'omar@police.com', password: '123123', role: 'admin', department: 'الإدارة العامة' },
-    { name: 'أحمد محمد', email: 'ahmad@police.com', password: '123123', role: 'traffic_police', department: 'شرطة المرور' },
-    { name: 'سارة أحمد', email: 'sara@police.com', password: '123123', role: 'cid', department: 'المباحث الجنائية' },
-    { name: 'محمد علي', email: '192059@ppu.edu.ps', password: '123123', role: 'special_police', department: 'الشرطة الخاصة' },
-    { name: 'فاطمة خالد', email: 'user@police.ps', password: '123123', role: 'cybercrime', department: 'الجرائم الإلكترونية' }
+    { name: 'نور خلاف', email: 'noor-khallaf@hotmail.com', password: '123123', role: 'admin', department: 'الإدارة العامة', position: 'مدير عام' },
+    { name: 'عمر علي', email: 'omar@police.com', password: '123123', role: 'admin', department: 'الإدارة العامة', position: 'مدير عام' },
+    
+    // مدراء الأقسام
+    { name: 'أحمد محمد', email: 'ahmad@police.com', password: '123123', role: 'traffic_police_manager', department: 'شرطة المرور', position: 'مدير القسم' },
+    { name: 'سارة أحمد', email: 'sara@police.com', password: '123123', role: 'cid_manager', department: 'المباحث الجنائية', position: 'مدير القسم' },
+    { name: 'محمد علي', email: '192059@ppu.edu.ps', password: '123123', role: 'special_police_manager', department: 'الشرطة الخاصة', position: 'مدير القسم' },
+    { name: 'فاطمة خالد', email: 'user@police.ps', password: '123123', role: 'cybercrime_manager', department: 'الجرائم الإلكترونية', position: 'مدير القسم' },
+    
+    // موظفين عاديين
+    { name: 'خالد سالم', email: 'khalid@police.com', password: '123123', role: 'traffic_police', department: 'شرطة المرور', position: 'ضابط' },
+    { name: 'ليلى حسن', email: 'laila@police.com', password: '123123', role: 'cid', department: 'المباحث الجنائية', position: 'ضابط' },
+    { name: 'يوسف قاسم', email: 'youssef@police.com', password: '123123', role: 'special_police', department: 'الشرطة الخاصة', position: 'ضابط' },
+    { name: 'رنا محمود', email: 'rana@police.com', password: '123123', role: 'cybercrime', department: 'الجرائم الإلكترونية', position: 'ضابط' }
   ];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Bright Professional Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
-        {/* Professional Geometric Elements */}
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute top-1/4 right-16 w-24 h-24 bg-indigo-200/15 rounded-lg rotate-45 animate-bounce" style={{ animationDelay: '1s', animationDuration: '3s' }}></div>
-          <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-blue-100/20 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-20 right-12 w-20 h-20 bg-indigo-300/25 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+      {/* Police Blue Gradient Background - Matching Reference Design */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#3b82f6]">
+        {/* Subtle Overlay Pattern */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute top-1/3 right-16 w-24 h-24 bg-white/3 rounded-lg rotate-45"></div>
+          <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 right-12 w-20 h-20 bg-white/7 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
         
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="grid grid-cols-6 gap-4 h-full p-4">
-            {Array.from({ length: 24 }, (_, i) => (
-              <div key={i} className="border border-blue-300/30 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
+        {/* Radial Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/10"></div>
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col justify-center px-6">
@@ -293,9 +295,12 @@ const Login = () => {
                     <SelectContent>
                       {demoAccounts.map((account) => (
                         <SelectItem key={account.email} value={account.email}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{account.name}</span>
-                            <span className="text-xs text-muted-foreground">({account.department})</span>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{account.name}</span>
+                              <span className="text-xs text-blue-600">({account.position})</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{account.department}</span>
                           </div>
                         </SelectItem>
                       ))}

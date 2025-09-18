@@ -27,7 +27,11 @@ import {
   Menu
 } from 'lucide-react';
 
-const ModernSidebar = () => {
+interface ModernSidebarProps {
+  onClose?: () => void;
+}
+
+const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -191,7 +195,10 @@ const ModernSidebar = () => {
           <Button
             variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
             className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
-            onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                navigate('/dashboard');
+                onClose?.();
+              }}
           >
             <Crown className="h-4 w-4 shrink-0" />
             {!isCollapsed && <span className="font-arabic">الرئيسية</span>}
@@ -201,7 +208,10 @@ const ModernSidebar = () => {
           <Button
             variant={location.pathname === '/police-news' ? 'default' : 'ghost'}
             className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
-            onClick={() => navigate('/police-news')}
+              onClick={() => {
+                navigate('/police-news');
+                onClose?.();
+              }}
           >
             <Newspaper className="h-4 w-4 shrink-0" />
             {!isCollapsed && <span className="font-arabic">أخبار الشرطة</span>}
@@ -252,7 +262,10 @@ const ModernSidebar = () => {
                                 key={page.path}
                                 variant={location.pathname === page.path ? 'secondary' : 'ghost'}
                                 className="w-full justify-start gap-3 mr-6 text-sm"
-                                onClick={() => navigate(page.path)}
+                              onClick={() => {
+                                navigate(page.path);
+                                onClose?.();
+                              }}
                               >
                                 <PageIcon className="h-3.5 w-3.5" />
                                 <span className="font-arabic">{page.title}</span>
@@ -271,7 +284,10 @@ const ModernSidebar = () => {
             <Button
               variant={location.pathname === '/profile' ? 'default' : 'ghost'}
               className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
-              onClick={() => navigate('/profile')}
+              onClick={() => {
+                navigate('/profile');
+                onClose?.();
+              }}
             >
               <Settings className="h-4 w-4 shrink-0" />
               {!isCollapsed && <span className="font-arabic">الملف الشخصي</span>}
