@@ -12,11 +12,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-white" dir="rtl">
-      {/* Logo & Text on left, Menu Button on right */}
+      {/* Integrated Logo & Menu Button - Fixed positioning with proper spacing */}
       {!isSidebarVisible && (
-        <>
-          {/* Logo and Text - Left side */}
-          <div className="fixed top-4 left-4 z-[60] flex items-center gap-2 bg-white/95 backdrop-blur-sm border border-primary/20 rounded-xl p-3 shadow-lg">
+        <div className="fixed top-4 left-4 z-[60] flex items-center gap-3 bg-white/95 backdrop-blur-sm border border-primary/20 rounded-xl p-3 shadow-lg">
+          <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
               <img 
                 src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
@@ -26,19 +25,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
             <span className="text-sm font-semibold text-foreground">الشرطة الفلسطينية</span>
           </div>
-          
-          {/* Menu Button - Right side */}
-          <div className="fixed top-4 right-4 z-[60]">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarVisible(true)}
-              className="p-3 hover:bg-primary/10 rounded-xl bg-white/95 backdrop-blur-sm border border-primary/20 shadow-lg transition-colors"
-            >
-              <Menu className="h-5 w-5 text-primary" />
-            </Button>
-          </div>
-        </>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarVisible(true)}
+            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+          >
+            <Menu className="h-4 w-4 text-primary" />
+          </Button>
+        </div>
       )}
 
       {/* Sidebar - Hidden by default */}
