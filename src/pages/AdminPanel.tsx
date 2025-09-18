@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { UserManagementTabbed } from '@/components/UserManagementTabbed';
-import UserManagementProfessional from '@/components/UserManagementProfessional';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
 import CybercrimeAccessManagement from '@/components/CybercrimeAccessManagement';
 import { useAuth } from '@/contexts/AuthContext';
@@ -279,7 +278,7 @@ const AdminPanel = () => {
 
       <TabsContent value="user-management" className="space-y-6">
         <Card className="p-1">
-        <UserManagementProfessional />
+          <UserManagementTabbed />
         </Card>
       </TabsContent>
 

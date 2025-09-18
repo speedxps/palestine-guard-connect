@@ -27,11 +27,7 @@ import {
   Menu
 } from 'lucide-react';
 
-interface ModernSidebarProps {
-  onClose?: () => void;
-}
-
-const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
+const ModernSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -138,11 +134,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           {!isCollapsed && (
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
-                <img 
-                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
-                  alt="Palestinian Police Logo" 
-                  className="h-5 w-5 object-contain"
-                />
+                <Crown className="h-5 w-5 text-white" />
               </div>
               <div>
                 <h2 className="font-bold text-sidebar-foreground font-arabic">نظام إدارة الشرطة</h2>
@@ -195,10 +187,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           <Button
             variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
             className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
-              onClick={() => {
-                navigate('/dashboard');
-                onClose?.();
-              }}
+            onClick={() => navigate('/dashboard')}
           >
             <Crown className="h-4 w-4 shrink-0" />
             {!isCollapsed && <span className="font-arabic">الرئيسية</span>}
@@ -208,10 +197,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           <Button
             variant={location.pathname === '/police-news' ? 'default' : 'ghost'}
             className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
-              onClick={() => {
-                navigate('/police-news');
-                onClose?.();
-              }}
+            onClick={() => navigate('/police-news')}
           >
             <Newspaper className="h-4 w-4 shrink-0" />
             {!isCollapsed && <span className="font-arabic">أخبار الشرطة</span>}
@@ -262,10 +248,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
                                 key={page.path}
                                 variant={location.pathname === page.path ? 'secondary' : 'ghost'}
                                 className="w-full justify-start gap-3 mr-6 text-sm"
-                              onClick={() => {
-                                navigate(page.path);
-                                onClose?.();
-                              }}
+                                onClick={() => navigate(page.path)}
                               >
                                 <PageIcon className="h-3.5 w-3.5" />
                                 <span className="font-arabic">{page.title}</span>
@@ -284,10 +267,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
             <Button
               variant={location.pathname === '/profile' ? 'default' : 'ghost'}
               className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''}`}
-              onClick={() => {
-                navigate('/profile');
-                onClose?.();
-              }}
+              onClick={() => navigate('/profile')}
             >
               <Settings className="h-4 w-4 shrink-0" />
               {!isCollapsed && <span className="font-arabic">الملف الشخصي</span>}

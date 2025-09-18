@@ -9,8 +9,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
-import { Eye, EyeOff, Mail, Lock, Save, Camera, ChevronDown } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
+import { TwoFactorVerificationModal } from '@/components/TwoFactorVerificationModal';
+import { Eye, EyeOff, Mail, Lock, Fingerprint, Save } from 'lucide-react';
 import genericPoliceLogo from '@/assets/generic-police-logo.png';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
@@ -20,11 +21,15 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showTwoFactorVerification, setShowTwoFactorVerification] = useState(false);
+  const [pendingLoginData, setPendingLoginData] = useState<{ email: string; password: string } | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
-  const [selectedDemo, setSelectedDemo] = useState<string>("");
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isSupported: biometricSupported, isRegistered: biometricRegistered, authenticate: biometricAuth } = useBiometricAuth();
+  const { isEnabled: twoFactorEnabled } = useTwoFactorAuth();
 
   // Load saved credentials and settings on component mount
   React.useEffect(() => {
@@ -43,6 +48,11 @@ const Login = () => {
         }
       }
 
+      // Load biometric settings
+      const biometricSetting = localStorage.getItem('biometricEnabled');
+      if (biometricSetting === 'true') {
+        setBiometricEnabled(true);
+      }
     };
 
     loadSavedData();
@@ -50,8 +60,10 @@ const Login = () => {
 
   const saveCredentials = (email: string, password: string, rememberMe: boolean) => {
     if (rememberMe) {
+      // Save credentials securely for biometric login
       const credentialsData = {
         email,
+        password: biometricEnabled ? password : undefined, // Only save password if biometric is enabled
         rememberMe: true,
         timestamp: Date.now()
       };
@@ -61,36 +73,75 @@ const Login = () => {
     }
   };
 
-  const handleFaceRecognitionLogin = async () => {
-    try {
-      setIsLoading(true);
+  const handleBiometricLogin = async () => {
+    if (!biometricSupported) {
       toast({
-        title: "🔍 بدء التعرف على الوجه",
-        description: "يرجى توجيه وجهك نحو الكاميرا...",
-      });
-
-      // محاكاة التعرف على الوجه - في التطبيق الحقيقي سيتم استخدام AI
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      
-      // بعد 3 ثوان، محاكاة نجح التعرف
-      setTimeout(async () => {
-        stream.getTracks().forEach(track => track.stop());
-        
-        // محاكاة تسجيل دخول ناجح بحساب تجريبي
-        await performLogin('noor-khallaf@hotmail.com', '123123');
-        
-        toast({
-          title: "✅ تم التعرف بنجاح!",
-          description: "مرحباً نور، جاري تسجيل الدخول...",
-        });
-      }, 3000);
-      
-    } catch (error) {
-      toast({
-        title: "❌ فشل التعرف على الوجه",
-        description: "تأكد من السماح بالوصول للكاميرا",
+        title: "❌ غير مدعوم",
+        description: "المصادقة البيومترية غير متوفرة على هذا الجهاز",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (!biometricRegistered) {
+      toast({
+        title: "❌ غير مسجل",
+        description: "يجب تسجيل البصمة أولاً من إعدادات الأمان في الملف الشخصي",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const savedCredentials = localStorage.getItem('savedCredentials');
+    if (!savedCredentials) {
+      toast({
+        title: "❌ لا توجد بيانات محفوظة",
+        description: "يجب تسجيل الدخول أولاً وتفعيل حفظ البيانات وحفظ كلمة المرور",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await biometricAuth();
+      
+      if (result.success) {
+        const credentialsData = JSON.parse(savedCredentials);
+        const { email: savedEmail, password: savedPassword } = credentialsData;
+        
+        if (!savedPassword) {
+          toast({
+            title: "❌ لا توجد كلمة مرور محفوظة",
+            description: "يجب تسجيل الدخول أولاً وتفعيل حفظ كلمة المرور",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        toast({
+          title: "✅ تم التحقق بنجاح",
+          description: "جاري تسجيل الدخول باستخدام البصمة...",
+        });
+
+        // Auto login with saved credentials
+        await performLogin(savedEmail, savedPassword);
+      } else {
+        toast({
+          title: "❌ فشل التحقق",
+          description: result.error || "فشل في التحقق البيومتري",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Biometric login error:', error);
+      toast({
+        title: "❌ خطأ",
+        description: "حدث خطأ في المصادقة البيومترية",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -101,6 +152,19 @@ const Login = () => {
 
     try {
       console.log('Attempting login with:', email);
+      
+      // First, check if user has two-factor authentication enabled
+      const userTwoFactorEnabled = localStorage.getItem('twoFactorEnabled') === 'true';
+      
+      if (userTwoFactorEnabled) {
+        // Store login data for later use after 2FA verification
+        setPendingLoginData({ email, password });
+        setShowTwoFactorVerification(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Regular login without 2FA
       await performLogin(email, password);
     } catch (error) {
       console.error('Login error:', error);
@@ -121,6 +185,9 @@ const Login = () => {
       // Save credentials if remember me is checked
       saveCredentials(loginEmail, loginPassword, rememberMe);
 
+      // Save biometric setting
+      localStorage.setItem('biometricEnabled', biometricEnabled.toString());
+
       toast({
         title: "✅ تم تسجيل الدخول بنجاح!",
         description: "جاري التوجه إلى الصفحة الرئيسية...",
@@ -139,6 +206,14 @@ const Login = () => {
     }
   };
 
+  const handleTwoFactorSuccess = async () => {
+    if (pendingLoginData) {
+      setIsLoading(true);
+      await performLogin(pendingLoginData.email, pendingLoginData.password);
+      setPendingLoginData(null);
+      setIsLoading(false);
+    }
+  };
 
   const fillDemoAccount = (role: 'admin' | 'officer' | 'user') => {
     // حسابات تجريبية حقيقية موجودة في قاعدة البيانات
@@ -158,46 +233,44 @@ const Login = () => {
     }
   };
 
-  // حسابات تجريبية مع أقسامهم ومدراء الأقسام
+  // إضافة حسابات تجريبية للمستخدمين الموجودين
   const demoAccounts = [
-    { name: 'نور خلاف', email: 'noor-khallaf@hotmail.com', password: '123123', role: 'admin', department: 'الإدارة العامة', position: 'مدير عام' },
-    { name: 'عمر علي', email: 'omar@police.com', password: '123123', role: 'admin', department: 'الإدارة العامة', position: 'مدير عام' },
-    
-    // مدراء الأقسام
-    { name: 'أحمد محمد', email: 'ahmad@police.com', password: '123123', role: 'traffic_police_manager', department: 'شرطة المرور', position: 'مدير القسم' },
-    { name: 'سارة أحمد', email: 'sara@police.com', password: '123123', role: 'cid_manager', department: 'المباحث الجنائية', position: 'مدير القسم' },
-    { name: 'محمد علي', email: '192059@ppu.edu.ps', password: '123123', role: 'special_police_manager', department: 'الشرطة الخاصة', position: 'مدير القسم' },
-    { name: 'فاطمة خالد', email: 'user@police.ps', password: '123123', role: 'cybercrime_manager', department: 'الجرائم الإلكترونية', position: 'مدير القسم' },
-    
-    // موظفين عاديين
-    { name: 'خالد سالم', email: 'khalid@police.com', password: '123123', role: 'traffic_police', department: 'شرطة المرور', position: 'ضابط' },
-    { name: 'ليلى حسن', email: 'laila@police.com', password: '123123', role: 'cid', department: 'المباحث الجنائية', position: 'ضابط' },
-    { name: 'يوسف قاسم', email: 'youssef@police.com', password: '123123', role: 'special_police', department: 'الشرطة الخاصة', position: 'ضابط' },
-    { name: 'رنا محمود', email: 'rana@police.com', password: '123123', role: 'cybercrime', department: 'الجرائم الإلكترونية', position: 'ضابط' }
+    { name: 'نور خلاف (مدير)', email: 'noor-khallaf@hotmail.com', password: '123123', role: 'admin' },
+    { name: 'عمر علي (مدير)', email: 'omar@police.com', password: '123123', role: 'admin' },
+    { name: 'أحمد محمد (ضابط)', email: 'ahmad@police.com', password: '123123', role: 'officer' },
+    { name: 'سارة أحمد (ضابط)', email: 'sara@police.com', password: '123123', role: 'officer' },
+    { name: 'Noor kh (ضابط)', email: '192059@ppu.edu.ps', password: '123123', role: 'officer' },
+    { name: 'user test (مستخدم)', email: 'user@police.ps', password: '123123', role: 'user' }
   ];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Police Blue Gradient Background - Matching Reference Design */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#3b82f6]">
-        {/* Subtle Overlay Pattern */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute top-1/3 right-16 w-24 h-24 bg-white/3 rounded-lg rotate-45"></div>
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-glow">
+        {/* Geometric Shapes */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute top-1/4 right-16 w-24 h-24 bg-white/5 rounded-lg rotate-45 animate-bounce" style={{ animationDelay: '1s', animationDuration: '3s' }}></div>
           <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-20 right-12 w-20 h-20 bg-white/7 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-20 right-12 w-20 h-20 bg-white/10 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
         
-        {/* Radial Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/10"></div>
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="grid grid-cols-6 gap-4 h-full p-4">
+            {Array.from({ length: 24 }, (_, i) => (
+              <div key={i} className="border border-white/20 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col justify-center px-6">
         {/* Header Section */}
         <div className="text-center mb-12 animate-fade-in">
           <div className="relative mb-8">
-            <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
-            <div className="relative mx-auto w-32 h-32 bg-white/90 backdrop-blur-sm rounded-full p-4 shadow-2xl border border-blue-200/30">
+            <div className="absolute inset-0 bg-white/20 rounded-full blur-2xl transform scale-150"></div>
+            <div className="relative mx-auto w-32 h-32 bg-white/10 backdrop-blur-sm rounded-full p-4 shadow-2xl border border-white/20">
               <img 
                 src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                 alt="Palestinian Police Department Logo" 
@@ -205,15 +278,15 @@ const Login = () => {
               />
             </div>
           </div>
-          <h1 className="text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm">
+          <h1 className="text-3xl font-bold font-arabic text-white mb-2 drop-shadow-lg">
             الشرطة الفلسطينية
           </h1>
-          <p className="text-gray-600 font-inter text-sm">Palestinian Police Department</p>
+          <p className="text-white/80 font-inter text-sm">Palestinian Police Department</p>
         </div>
 
         {/* Login Form */}
         <div className="w-full max-w-sm mx-auto">
-          <div className="bg-white/98 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-200/30 p-8 animate-scale-in">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 animate-scale-in">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-foreground mb-2">تسجيل الدخول</h2>
               <p className="text-muted-foreground text-sm">أدخل بياناتك للوصول إلى النظام</p>
@@ -276,49 +349,55 @@ const Login = () => {
                   </Label>
                 </div>
 
-                {/* Demo Accounts Dropdown */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground font-arabic">
-                    الحسابات التجريبية
-                  </Label>
-                  <Select value={selectedDemo} onValueChange={(value) => {
-                    setSelectedDemo(value);
-                    const account = demoAccounts.find(acc => acc.email === value);
-                    if (account) {
-                      setEmail(account.email);
-                      setPassword(account.password);
-                    }
-                  }}>
-                    <SelectTrigger className="w-full h-12 bg-muted/30 border-2 border-muted/50 rounded-2xl">
-                      <SelectValue placeholder="اختر حساب تجريبي" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {demoAccounts.map((account) => (
-                        <SelectItem key={account.email} value={account.email}>
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{account.name}</span>
-                              <span className="text-xs text-blue-600">({account.position})</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">{account.department}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Biometric Authentication */}
+                {biometricSupported && (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Switch 
+                        id="biometricAuth"
+                        checked={biometricEnabled}
+                        onCheckedChange={setBiometricEnabled}
+                      />
+                      <Label 
+                        htmlFor="biometricAuth" 
+                        className="text-sm text-muted-foreground cursor-pointer font-arabic flex items-center gap-2"
+                      >
+                        <Fingerprint className="h-4 w-4" />
+                        تفعيل المصادقة البيومترية
+                      </Label>
+                    </div>
+                    {biometricEnabled && (
+                      <div className="bg-blue-50/50 border border-blue-200/50 rounded-lg p-2">
+                        <p className="text-xs text-blue-600 font-arabic">
+                          ⚠️ في البيئة التطويرية: سيظهر مربع حوار للمحاكاة. في الجهاز الحقيقي: ستستخدم البصمة أو الوجه الفعلي.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Face Recognition Login */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleFaceRecognitionLogin}
-                  disabled={isLoading}
-                  className="w-full h-12 bg-gradient-to-r from-purple-50/50 to-purple-100/50 border-purple-200/50 hover:from-purple-100/70 hover:to-purple-200/70 text-purple-700 font-semibold rounded-2xl transition-all duration-300 hover:scale-[1.02]"
-                >
-                  <Camera className="h-5 w-5 mr-2" />
-                  تسجيل الدخول بالتعرف على الوجه
-                </Button>
+                {/* Biometric Login Button */}
+                {biometricSupported && biometricEnabled && biometricRegistered && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBiometricLogin}
+                    disabled={isLoading}
+                    className="w-full h-12 bg-gradient-to-r from-green-50/50 to-green-100/50 border-green-200/50 hover:from-green-100/70 hover:to-green-200/70 text-green-700 font-semibold rounded-2xl transition-all duration-300 hover:scale-[1.02]"
+                  >
+                    <Fingerprint className="h-5 w-5 mr-2" />
+                    تسجيل الدخول بالبصمة
+                  </Button>
+                )}
+                
+                {/* Biometric Registration Required Message */}
+                {biometricSupported && biometricEnabled && !biometricRegistered && (
+                  <div className="bg-orange-50/50 border border-orange-200/50 rounded-lg p-3">
+                    <p className="text-xs text-orange-600 font-arabic text-center">
+                      ⚠️ يجب تسجيل البصمة أولاً من إعدادات الأمان في الملف الشخصي
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Login Button */}
@@ -348,6 +427,74 @@ const Login = () => {
             </form>
           </div>
 
+          {/* Demo Accounts Section */}
+          <div className="mt-8 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6">
+            <h3 className="text-center font-bold text-foreground mb-4 flex items-center justify-center gap-2">
+              <span className="text-lg">🧪</span>
+              الحسابات التجريبية
+            </h3>
+            
+            {/* Quick Access Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fillDemoAccount('admin')}
+                className="h-12 bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:from-green-100 hover:to-green-200 text-green-700 font-semibold rounded-xl transition-all duration-300 hover:scale-105"
+              >
+                <span className="mr-2">👑</span>
+                مدير النظام
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fillDemoAccount('officer')}
+                className="h-12 bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:from-blue-100 hover:to-blue-200 text-blue-700 font-semibold rounded-xl transition-all duration-300 hover:scale-105"
+              >
+                <span className="mr-2">🛡️</span>
+                ضابط
+              </Button>
+            </div>
+            
+            {/* Detailed Accounts */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground text-center mb-3">اختر حساب للدخول السريع:</p>
+              <div className="max-h-40 overflow-y-auto space-y-2">
+                {demoAccounts.map((account, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-center justify-between p-3 bg-muted/30 rounded-xl hover:bg-muted/50 transition-all duration-200 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                        account.role === 'admin' ? 'bg-green-100 text-green-600' :
+                        account.role === 'officer' ? 'bg-blue-100 text-blue-600' : 
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {account.role === 'admin' ? '👑' : account.role === 'officer' ? '🛡️' : '👤'}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-foreground">{account.name}</p>
+                        <p className="text-xs text-muted-foreground">{account.email}</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        setEmail(account.email);
+                        setPassword(account.password);
+                      }}
+                      className="h-8 px-3 bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105"
+                      variant="outline"
+                    >
+                      استخدام
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -355,6 +502,18 @@ const Login = () => {
       <ForgotPasswordModal 
         isOpen={showForgotPassword} 
         onClose={() => setShowForgotPassword(false)} 
+      />
+      
+      {/* Two-Factor Verification Modal */}
+      <TwoFactorVerificationModal
+        isOpen={showTwoFactorVerification}
+        onClose={() => {
+          setShowTwoFactorVerification(false);
+          setPendingLoginData(null);
+          setIsLoading(false);
+        }}
+        onSuccess={handleTwoFactorSuccess}
+        userEmail={email}
       />
     </div>
   );
