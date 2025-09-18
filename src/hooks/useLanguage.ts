@@ -217,30 +217,13 @@ export const translations: Record<Language, Record<string, string>> = {
   }
 };
 
+// This hook is now deprecated - use useTranslation instead
 export const useLanguage = () => {
-  const [language, setLanguageState] = useState<Language>('ar');
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('appLanguage') as Language;
-    if (savedLanguage) {
-      setLanguageState(savedLanguage);
-      document.documentElement.lang = savedLanguage;
-      document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
-    }
-  }, []);
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem('appLanguage', lang);
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  };
-
-  const t = (key: string): string => {
-    return translations[language]?.[key] || key;
-  };
-
-  return { language, setLanguage, t };
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
 };
 
 export const useTranslation = () => {
