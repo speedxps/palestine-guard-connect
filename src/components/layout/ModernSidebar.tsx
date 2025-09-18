@@ -27,9 +27,11 @@ import {
   Menu
 } from 'lucide-react';
 
-interface ModernSidebarProps {}
+interface ModernSidebarProps {
+  onClose?: () => void;
+}
 
-const ModernSidebar: React.FC<ModernSidebarProps> = () => {
+const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -127,64 +129,73 @@ const ModernSidebar: React.FC<ModernSidebarProps> = () => {
   const currentDept = getCurrentDepartment();
 
   return (
-    <div className={`h-screen bg-white border-r border-gray-200 transition-all duration-300 shadow-sm ${
-      isCollapsed ? 'w-16' : 'w-72'
-    }`}>
-      {/* Header with Integrated Logo & Menu */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
-                <img 
-                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
-                  alt="Palestinian Police Logo" 
-                  className="h-5 w-5 object-contain"
-                />
-              </div>
-              <div>
-                <h2 className="font-bold text-gray-900 font-arabic">نظام إدارة الشرطة</h2>
-                <p className="text-xs text-gray-600 font-arabic">فلسطين - Palestine</p>
-              </div>
-            </div>
-          )}
+    <div className="h-screen bg-white border-r border-gray-200 transition-all duration-300 shadow-sm w-72">
+      {/* Close button for mobile */}
+      {onClose && (
+        <div className="p-4 border-b border-gray-200 flex justify-end">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="shrink-0 hover:bg-primary/10 text-primary"
+            onClick={onClose}
+            className="hover:bg-primary/10 text-primary"
           >
             <Menu className="h-4 w-4" />
           </Button>
         </div>
+      )}
+      {/* Header with Integrated Logo & Menu */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
+              <img 
+                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                alt="Palestinian Police Logo" 
+                className="h-5 w-5 object-contain"
+              />
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900 font-arabic">نظام إدارة الشرطة</h2>
+              <p className="text-xs text-gray-600 font-arabic">فلسطين - Palestine</p>
+            </div>
+          </div>
+          {!onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="shrink-0 hover:bg-primary/10 text-primary"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* User Info */}
-      {!isCollapsed && (
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-semibold font-arabic">
-                {user?.full_name?.charAt(0) || 'م'}
-              </span>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 font-arabic text-sm">
-                {user?.full_name || 'مستخدم'}
-              </h3>
-              <Badge variant="secondary" className="text-xs bg-white text-gray-700">
-                {userRole === 'admin' && 'مدير النظام'}
-                {userRole === 'traffic_police' && 'شرطة المرور'}
-                {userRole === 'cid' && 'مباحث جنائية'}
-                {userRole === 'special_police' && 'شرطة خاصة'}
-                {userRole === 'cybercrime' && 'جرائم إلكترونية'}
-                {userRole === 'officer' && 'ضابط'}
-                {userRole === 'user' && 'مستخدم'}
-              </Badge>
-            </div>
+      <div className="p-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <span className="text-primary font-semibold font-arabic">
+              {user?.full_name?.charAt(0) || 'م'}
+            </span>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 font-arabic text-sm">
+              {user?.full_name || 'مستخدم'}
+            </h3>
+            <Badge variant="secondary" className="text-xs bg-white text-gray-700">
+              {userRole === 'admin' && 'مدير النظام'}
+              {userRole === 'traffic_police' && 'شرطة المرور'}
+              {userRole === 'cid' && 'مباحث جنائية'}
+              {userRole === 'special_police' && 'شرطة خاصة'}
+              {userRole === 'cybercrime' && 'جرائم إلكترونية'}
+              {userRole === 'officer' && 'ضابط'}
+              {userRole === 'user' && 'مستخدم'}
+            </Badge>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto p-4">
@@ -192,7 +203,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = () => {
           {/* Dashboard Link */}
           <Button
             variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
-            className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''} ${
+            className={`w-full justify-start gap-3 ${
               location.pathname === '/dashboard' 
                 ? 'bg-primary text-white hover:bg-primary/90' 
                 : 'text-gray-700 hover:bg-gray-100'
@@ -200,13 +211,13 @@ const ModernSidebar: React.FC<ModernSidebarProps> = () => {
             onClick={() => navigate('/dashboard')}
           >
             <Crown className="h-4 w-4 shrink-0" />
-            {!isCollapsed && <span className="font-arabic">الرئيسية</span>}
+            <span className="font-arabic">الرئيسية</span>
           </Button>
 
           {/* Police News Link */}
           <Button
             variant={location.pathname === '/police-news' ? 'default' : 'ghost'}
-            className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''} ${
+            className={`w-full justify-start gap-3 ${
               location.pathname === '/police-news' 
                 ? 'bg-primary text-white hover:bg-primary/90' 
                 : 'text-gray-700 hover:bg-gray-100'
@@ -214,81 +225,79 @@ const ModernSidebar: React.FC<ModernSidebarProps> = () => {
             onClick={() => navigate('/police-news')}
           >
             <Newspaper className="h-4 w-4 shrink-0" />
-            {!isCollapsed && <span className="font-arabic">أخبار الشرطة</span>}
+            <span className="font-arabic">أخبار الشرطة</span>
           </Button>
 
           {/* Departments */}
-          {!isCollapsed && (
-            <div className="pt-4">
-              <h3 className="text-xs font-semibold text-gray-600 font-arabic px-2 mb-2">
-                الأقسام
-              </h3>
-              
-              {departments
-                .filter(dept => dept.visible)
-                .map((dept) => {
-                  const Icon = dept.icon;
-                  const isOpen = openDepartments.includes(dept.id) || currentDept === dept.id;
-                  const hasAccessiblePages = dept.pages.some(page => hasAccess(page.page));
-                  
-                  if (!hasAccessiblePages && userRole !== 'admin') return null;
+          <div className="pt-4">
+            <h3 className="text-xs font-semibold text-gray-600 font-arabic px-2 mb-2">
+              الأقسام
+            </h3>
+            
+            {departments
+              .filter(dept => dept.visible)
+              .map((dept) => {
+                const Icon = dept.icon;
+                const isOpen = openDepartments.includes(dept.id) || currentDept === dept.id;
+                const hasAccessiblePages = dept.pages.some(page => hasAccess(page.page));
+                
+                if (!hasAccessiblePages && userRole !== 'admin') return null;
 
-                  return (
-                    <Collapsible key={dept.id} open={isOpen} onOpenChange={() => toggleDepartment(dept.id)}>
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant={currentDept === dept.id ? 'secondary' : 'ghost'}
-                          className={`w-full justify-start gap-3 mb-1 ${
-                            currentDept === dept.id 
-                              ? 'bg-gray-100 text-gray-900' 
-                              : 'text-gray-700 hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className={`p-1.5 rounded-md bg-gradient-to-r ${dept.color}`}>
-                            <Icon className="h-3.5 w-3.5 text-white" />
-                          </div>
-                          <span className="font-arabic text-sm flex-1 text-right">{dept.title}</span>
-                          {isOpen ? (
-                            <ChevronUp className="h-3 w-3" />
-                          ) : (
-                            <ChevronDown className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      
-                      <CollapsibleContent className="space-y-1">
-                        {dept.pages
-                          .filter(page => userRole === 'admin' || hasAccess(page.page))
-                          .map((page) => {
-                            const PageIcon = page.icon;
-                            return (
-                              <Button
-                                key={page.path}
-                                variant={location.pathname === page.path ? 'secondary' : 'ghost'}
-                                className={`w-full justify-start gap-3 mr-6 text-sm ${
-                                  location.pathname === page.path 
-                                    ? 'bg-primary/10 text-primary border-r-2 border-primary' 
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                }`}
-                                onClick={() => navigate(page.path)}
-                              >
-                                <PageIcon className="h-3.5 w-3.5" />
-                                <span className="font-arabic">{page.title}</span>
-                              </Button>
-                            );
-                          })}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  );
-                })}
-            </div>
-          )}
+                return (
+                  <Collapsible key={dept.id} open={isOpen} onOpenChange={() => toggleDepartment(dept.id)}>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant={currentDept === dept.id ? 'secondary' : 'ghost'}
+                        className={`w-full justify-start gap-3 mb-1 ${
+                          currentDept === dept.id 
+                            ? 'bg-gray-100 text-gray-900' 
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className={`p-1.5 rounded-md bg-gradient-to-r ${dept.color}`}>
+                          <Icon className="h-3.5 w-3.5 text-white" />
+                        </div>
+                        <span className="font-arabic text-sm flex-1 text-right">{dept.title}</span>
+                        {isOpen ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent className="space-y-1">
+                      {dept.pages
+                        .filter(page => userRole === 'admin' || hasAccess(page.page))
+                        .map((page) => {
+                          const PageIcon = page.icon;
+                          return (
+                            <Button
+                              key={page.path}
+                              variant={location.pathname === page.path ? 'secondary' : 'ghost'}
+                              className={`w-full justify-start gap-3 mr-6 text-sm ${
+                                location.pathname === page.path 
+                                  ? 'bg-primary/10 text-primary border-r-2 border-primary' 
+                                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                              }`}
+                              onClick={() => navigate(page.path)}
+                            >
+                              <PageIcon className="h-3.5 w-3.5" />
+                              <span className="font-arabic">{page.title}</span>
+                            </Button>
+                          );
+                        })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
+          </div>
 
           {/* Profile Link */}
           <div className="pt-4 border-t border-gray-200 mt-4">
             <Button
               variant={location.pathname === '/profile' ? 'default' : 'ghost'}
-              className={`w-full justify-start gap-3 ${isCollapsed ? 'px-2' : ''} ${
+              className={`w-full justify-start gap-3 ${
                 location.pathname === '/profile' 
                   ? 'bg-primary text-white hover:bg-primary/90' 
                   : 'text-gray-700 hover:bg-gray-100'
@@ -296,7 +305,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = () => {
               onClick={() => navigate('/profile')}
             >
               <Settings className="h-4 w-4 shrink-0" />
-              {!isCollapsed && <span className="font-arabic">الملف الشخصي</span>}
+              <span className="font-arabic">الملف الشخصي</span>
             </Button>
           </div>
         </div>

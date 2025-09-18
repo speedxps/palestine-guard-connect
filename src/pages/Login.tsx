@@ -199,12 +199,12 @@ const Login = () => {
         </div>
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col justify-center px-6">
-        {/* Header Section - No overlapping elements */}
-        <div className="text-center mb-12 animate-fade-in relative z-20">
-          <div className="relative mb-8">
+      <div className="relative z-10 min-h-screen flex flex-col justify-center px-4 sm:px-6">
+        {/* Header Section - Mobile Responsive */}
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in relative z-20">
+          <div className="relative mb-6 sm:mb-8">
             <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
-            <div className="relative mx-auto w-32 h-32 bg-white/90 backdrop-blur-sm rounded-full p-4 shadow-2xl border border-blue-200/30">
+            <div className="relative mx-auto w-24 h-24 sm:w-32 sm:h-32 bg-white/90 backdrop-blur-sm rounded-full p-3 sm:p-4 shadow-2xl border border-blue-200/30">
               <img 
                 src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                 alt="Palestinian Police Department Logo" 
@@ -212,21 +212,21 @@ const Login = () => {
               />
             </div>
           </div>
-          <h1 className="text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
+          <h1 className="text-2xl sm:text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
             الشرطة الفلسطينية
           </h1>
-          <p className="text-gray-600 font-inter text-sm relative z-30">Palestinian Police Department</p>
+          <p className="text-gray-600 font-inter text-xs sm:text-sm relative z-30">Palestinian Police Department</p>
         </div>
 
-        {/* Login Form - Elevated z-index */}
+        {/* Login Form - Mobile Responsive */}
         <div className="w-full max-w-sm mx-auto relative z-20">
-          <div className="bg-white/98 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-200/30 p-8 animate-scale-in">
-            <div className="text-center mb-8 relative z-30">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">تسجيل الدخول</h2>
-              <p className="text-gray-600 text-sm">أدخل بياناتك للوصول إلى النظام</p>
+          <div className="bg-white/98 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-blue-200/30 p-6 sm:p-8 animate-scale-in">
+            <div className="text-center mb-6 sm:mb-8 relative z-30">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">تسجيل الدخول</h2>
+              <p className="text-gray-600 text-xs sm:text-sm">أدخل بياناتك للوصول إلى النظام</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
               {/* Email Input */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -236,7 +236,7 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-base rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
+                  className="pl-12 h-12 sm:h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-sm sm:text-base rounded-xl sm:rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
                   placeholder="البريد الإلكتروني"
                   required
                 />
@@ -251,7 +251,7 @@ const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-14 h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-base rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
+                  className="pl-12 pr-14 h-12 sm:h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-sm sm:text-base rounded-xl sm:rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
                   placeholder="كلمة المرور"
                   required
                 />
@@ -296,7 +296,7 @@ const Login = () => {
                       setPassword(account.password);
                     }
                   }}>
-                    <SelectTrigger className="w-full h-12 bg-white border-2 border-blue-500 rounded-2xl text-gray-900">
+                    <SelectTrigger className="w-full h-10 sm:h-12 bg-white border-2 border-blue-500 rounded-xl sm:rounded-2xl text-gray-900 text-sm sm:text-base">
                       <SelectValue placeholder="اختر حساب تجريبي" />
                     </SelectTrigger>
                     <SelectContent>
@@ -318,17 +318,18 @@ const Login = () => {
                   variant="outline"
                   onClick={handleFaceRecognitionLogin}
                   disabled={isLoading}
-                  className="w-full h-12 bg-gradient-to-r from-purple-50/50 to-purple-100/50 border-purple-200/50 hover:from-purple-100/70 hover:to-purple-200/70 text-purple-700 font-semibold rounded-2xl transition-all duration-300 hover:scale-[1.02]"
+                  className="w-full h-10 sm:h-12 bg-gradient-to-r from-purple-50/50 to-purple-100/50 border-purple-200/50 hover:from-purple-100/70 hover:to-purple-200/70 text-purple-700 font-semibold rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-[1.02] text-sm sm:text-base"
                 >
-                  <Camera className="h-5 w-5 mr-2" />
-                  تسجيل الدخول بالتعرف على الوجه
+                  <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                  <span className="hidden sm:inline">تسجيل الدخول بالتعرف على الوجه</span>
+                  <span className="sm:hidden">التعرف على الوجه</span>
                 </Button>
               </div>
 
               {/* Login Button */}
               <Button
                 type="submit"
-                className="w-full h-14 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-white text-lg font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 mt-8"
+                className="w-full h-12 sm:h-14 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-white text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 mt-6 sm:mt-8"
                 disabled={isLoading}
               >
                 {isLoading ? (
