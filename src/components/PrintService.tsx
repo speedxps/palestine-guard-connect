@@ -214,7 +214,7 @@ export const PrintService: React.FC<PrintServiceProps> = ({
           <div class="header">
             <div class="logo-section">
               <div class="logo">
-                <img src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                <img src="/lovable-uploads/official-police-logo.png" 
                      alt="Palestinian Police Logo" 
                      style="width: 60px; height: 60px; object-fit: contain;" />
               </div>

@@ -206,7 +206,7 @@ const Login = () => {
             <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
             <div className="relative mx-auto w-32 h-32 bg-white/90 backdrop-blur-sm rounded-full p-4 shadow-2xl border border-blue-200/30">
               <img 
-                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                src="/lovable-uploads/official-police-logo.png" 
                 alt="Palestinian Police Department Logo" 
                 className="w-full h-full object-contain"
               />
