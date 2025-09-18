@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import VoiceAssistant from '@/components/VoiceAssistant';
+import PoliceNews from '@/components/dashboard/PoliceNews';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { 
   Crown, 
@@ -75,7 +76,11 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 rounded-xl bg-gradient-to-r from-primary to-primary-glow">
-              <Crown className="h-6 w-6 text-white" />
+              <img 
+                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                alt="Palestinian Police Logo" 
+                className="h-6 w-6 object-contain"
+              />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground font-arabic">
@@ -138,6 +143,14 @@ const Dashboard = () => {
           <Card className="p-4">
             <VoiceAssistant />
           </Card>
+        </div>
+
+        {/* Police News */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground font-arabic mb-4">
+            الأخبار الرسمية
+          </h2>
+          <PoliceNews />
         </div>
 
         {/* Recent Activity */}

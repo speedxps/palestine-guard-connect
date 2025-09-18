@@ -134,7 +134,11 @@ const ModernSidebar = () => {
           {!isCollapsed && (
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
-                <Crown className="h-5 w-5 text-white" />
+                <img 
+                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                  alt="Palestinian Police Logo" 
+                  className="h-5 w-5 object-contain"
+                />
               </div>
               <div>
                 <h2 className="font-bold text-sidebar-foreground font-arabic">نظام إدارة الشرطة</h2>
