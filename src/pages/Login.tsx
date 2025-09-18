@@ -204,7 +204,7 @@ const Login = () => {
         <div className="text-center mb-12 animate-fade-in relative z-20">
           <div className="relative mb-8">
             <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
-            <div className="relative mx-auto w-32 h-32 bg-white/90 backdrop-blur-sm rounded-full p-4 shadow-2xl border border-blue-200/30">
+            <div className="relative mx-auto w-40 h-40 bg-white/90 backdrop-blur-sm rounded-full p-6 shadow-2xl border border-blue-200/30">
               <img 
                 src="/lovable-uploads/official-police-logo.png" 
                 alt="Palestinian Police Department Logo" 
@@ -212,10 +212,20 @@ const Login = () => {
               />
             </div>
           </div>
-          <h1 className="text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
-            الشرطة الفلسطينية
-          </h1>
-          <p className="text-gray-600 font-inter text-sm relative z-30">Palestinian Police Department</p>
+          
+          {/* Welcome Message and Title */}
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
+              مرحباً، نور الدين خلاف
+            </h1>
+            <h2 className="text-2xl font-semibold font-arabic text-primary mb-2 drop-shadow-sm relative z-30">
+              مدير النظام
+            </h2>
+            <h3 className="text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
+              الشرطة الفلسطينية
+            </h3>
+            <p className="text-gray-600 font-inter text-sm relative z-30">Palestinian Police Department</p>
+          </div>
         </div>
 
         {/* Login Form - Elevated z-index */}
