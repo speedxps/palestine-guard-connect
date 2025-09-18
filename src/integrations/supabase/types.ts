@@ -976,6 +976,18 @@ export type Database = {
       }
     }
     Enums: {
+      app_role:
+        | "admin"
+        | "traffic_police"
+        | "cid"
+        | "special_police"
+        | "cybercrime"
+        | "officer"
+        | "user"
+        | "traffic_manager"
+        | "cid_manager"
+        | "special_manager"
+        | "cybercrime_manager"
       cybercrime_type:
         | "phishing"
         | "fraud"
@@ -1129,6 +1141,19 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: [
+        "admin",
+        "traffic_police",
+        "cid",
+        "special_police",
+        "cybercrime",
+        "officer",
+        "user",
+        "traffic_manager",
+        "cid_manager",
+        "special_manager",
+        "cybercrime_manager",
+      ],
       cybercrime_type: [
         "phishing",
         "fraud",

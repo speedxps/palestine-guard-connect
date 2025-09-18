@@ -210,17 +210,17 @@ export const UserManagement = () => {
 
       if (authData.user) {
         // Create profile manually
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            username: formData.username,
-            full_name: formData.full_name,
-            phone: formData.phone || null,
-            badge_number: formData.badge_number || null,
-            role: formData.role,
-            is_active: true
-          });
+         const { error: profileError } = await supabase
+           .from('profiles')
+           .insert({
+             user_id: authData.user.id,
+             username: formData.username,
+             full_name: formData.full_name,
+             phone: formData.phone || null,
+             badge_number: formData.badge_number || null,
+             role: formData.role as any,
+             is_active: true
+           });
 
         if (profileError) {
           console.warn('Profile might already exist from trigger:', profileError);
@@ -269,7 +269,7 @@ export const UserManagement = () => {
           full_name: formData.full_name,
           phone: formData.phone || null,
           badge_number: formData.badge_number || null,
-          role: formData.role,
+          role: formData.role as any,
         })
         .eq('id', editingProfile.id);
 

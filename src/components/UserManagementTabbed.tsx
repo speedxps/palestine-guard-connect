@@ -166,7 +166,7 @@ export const UserManagementTabbed = () => {
             full_name: formData.full_name,
             phone: formData.phone || null,
             badge_number: formData.badge_number || null,
-            role: formData.role,
+            role: formData.role as any,
             is_active: true
           });
 
@@ -217,7 +217,7 @@ export const UserManagementTabbed = () => {
           full_name: formData.full_name,
           phone: formData.phone || null,
           badge_number: formData.badge_number || null,
-          role: formData.role,
+          role: formData.role as any,
         })
         .eq('id', editingProfile.id);
 

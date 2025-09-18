@@ -35,6 +35,8 @@ import VehicleLookup from "./pages/VehicleLookup";
 import FaceRecognition from "./pages/FaceRecognition";
 import Reports from "./pages/Reports";
 import AdminPanel from "./pages/AdminPanel";
+import CybercrimeAdvanced from "./pages/CybercrimeAdvanced";
+import UserDashboard from "./pages/UserDashboard";
 import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
 
 const queryClient = new QueryClient();
@@ -183,6 +185,20 @@ const App = () => {
                   <RoleBasedRoute requiredPage="citizen-records">
                     <CitizenRecords />
                   </RoleBasedRoute>
+                } />
+                
+                {/* Advanced Cybercrime System */}
+                <Route path="/cybercrime-advanced" element={
+                  <RoleBasedRoute requiredPage="cybercrime-advanced">
+                    <CybercrimeAdvanced />
+                  </RoleBasedRoute>
+                } />
+                
+                {/* User Dashboard */}
+                <Route path="/user-dashboard" element={
+                  <ProtectedRoute>
+                    <UserDashboard />
+                  </ProtectedRoute>
                 } />
                 
                 <Route path="/access-denied" element={<AccessDenied />} />

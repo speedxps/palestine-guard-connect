@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import PoliceNews from '@/components/dashboard/PoliceNews';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
+import { useNavigate } from 'react-router-dom';
 import { 
   Crown, 
   Shield, 
@@ -20,6 +21,7 @@ import {
 const Dashboard = () => {
   const { user } = useAuth();
   const { userRole } = useRoleBasedAccess();
+  const navigate = useNavigate();
 
   const getRoleName = (role: string) => {
     const roleNames: Record<string, string> = {
@@ -112,6 +114,26 @@ const Dashboard = () => {
             إجراءات سريعة
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* User Dashboard Access */}
+            <Card 
+              className="p-4 hover:shadow-lg transition-shadow cursor-pointer" 
+              onClick={() => navigate('/user-dashboard')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600">
+                  <Shield className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground font-arabic text-sm">
+                    صلاحياتي
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-arabic">
+                    عرض الصفحات المسموح بالوصول إليها
+                  </p>
+                </div>
+              </div>
+            </Card>
+            
             {getQuickActions().map((action, index) => {
               const Icon = action.icon;
               return (
