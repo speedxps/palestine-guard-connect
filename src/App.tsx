@@ -30,13 +30,16 @@ import WantedPersonsTree from "./pages/WantedPersonsTree";
 import IncidentsManagement from "./pages/IncidentsManagement";
 import CitizenRecords from "./pages/CitizenRecords";
 import About from "./pages/About";
-
 import VehicleLookup from "./pages/VehicleLookup";
 import FaceRecognition from "./pages/FaceRecognition";
 import Reports from "./pages/Reports";
 import AdminPanel from "./pages/AdminPanel";
 import CybercrimeAdvanced from "./pages/CybercrimeAdvanced";
 import UserDashboard from "./pages/UserDashboard";
+import DailyStats from "./pages/DailyStats";
+import UrgentTasks from "./pages/UrgentTasks";
+import SchedulingPage from "./pages/SchedulingPage";
+import ActivityDetail from "./pages/ActivityDetail";
 import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
 
 const queryClient = new QueryClient();
