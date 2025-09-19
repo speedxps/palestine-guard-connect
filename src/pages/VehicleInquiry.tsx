@@ -1,0 +1,529 @@
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { Search, Car, User, AlertTriangle, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { PrintService } from '@/components/PrintService';
+import { BackButton } from '@/components/BackButton';
+
+interface VehicleData {
+  id: string;
+  plate_number: string;
+  vehicle_type: string;
+  color: string;
+  model: string;
+  year: number;
+  engine_number: string;
+  chassis_number: string;
+  registration_date: string;
+  status: string;
+}
+
+interface OwnerData {
+  id: string;
+  owner_name: string;
+  national_id: string;
+  phone: string;
+  address: string;
+  ownership_start_date: string;
+  ownership_end_date?: string;
+  is_current_owner: boolean;
+}
+
+interface ViolationData {
+  id: string;
+  violation_type: string;
+  violation_date: string;
+  location: string;
+  fine_amount: number;
+  status: string;
+  notes?: string;
+}
+
+export default function VehicleInquiry() {
+  const { toast } = useToast();
+  const [plateNumber, setPlateNumber] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [vehicleData, setVehicleData] = useState<VehicleData | null>(null);
+  const [owners, setOwners] = useState<OwnerData[]>([]);
+  const [violations, setViolations] = useState<ViolationData[]>([]);
+
+  const searchVehicle = async () => {
+    if (!plateNumber.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم المركبة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Fetch vehicle data
+      const { data: vehicleResponse, error: vehicleError } = await supabase
+        .from('vehicle_registrations')
+        .select('*')
+        .eq('plate_number', plateNumber.trim())
+        .single();
+
+      if (vehicleError) {
+        if (vehicleError.code === 'PGRST116') {
+          toast({
+            title: "غير موجود",
+            description: "لم يتم العثور على مركبة بهذا الرقم",
+            variant: "destructive",
+          });
+        } else {
+          throw vehicleError;
+        }
+        setVehicleData(null);
+        setOwners([]);
+        setViolations([]);
+        return;
+      }
+
+      setVehicleData(vehicleResponse);
+
+      // Fetch owners data
+      const { data: ownersResponse, error: ownersError } = await supabase
+        .from('vehicle_owners')
+        .select('*')
+        .eq('vehicle_id', vehicleResponse.id)
+        .order('ownership_start_date', { ascending: false });
+
+      if (ownersError) throw ownersError;
+      setOwners(ownersResponse || []);
+
+      // Fetch violations data
+      const { data: violationsResponse, error: violationsError } = await supabase
+        .from('vehicle_violations')
+        .select('*')
+        .eq('vehicle_id', vehicleResponse.id)
+        .order('violation_date', { ascending: false });
+
+      if (violationsError) throw violationsError;
+      setViolations(violationsResponse || []);
+
+      toast({
+        title: "تم العثور على المركبة",
+        description: `تم العثور على ${vehicleResponse.vehicle_type} رقم ${vehicleResponse.plate_number}`,
+      });
+
+    } catch (error) {
+      console.error('Error searching vehicle:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في البحث عن المركبة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const getViolationStatusColor = (status: string) => {
+    switch (status) {
+      case 'مدفوع': return 'bg-green-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'منتهي': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const currentOwner = owners.find(owner => owner.is_current_owner);
+  const previousOwners = owners.filter(owner => !owner.is_current_owner);
+  const pendingViolations = violations.filter(v => v.status === 'pending');
+
+  const generatePrintContent = () => {
+    if (!vehicleData) return '';
+    
+    return `
+      <div class="vehicle-inquiry-report">
+        <h2 class="text-center">تقرير استعلام مركبة</h2>
+        
+        <div class="vehicle-info section">
+          <h3>معلومات المركبة</h3>
+          <table class="info-table">
+            <tr><td><strong>رقم اللوحة:</strong></td><td>${vehicleData.plate_number}</td></tr>
+            <tr><td><strong>نوع المركبة:</strong></td><td>${vehicleData.vehicle_type}</td></tr>
+            <tr><td><strong>الطراز:</strong></td><td>${vehicleData.model}</td></tr>
+            <tr><td><strong>السنة:</strong></td><td>${vehicleData.year}</td></tr>
+            <tr><td><strong>اللون:</strong></td><td>${vehicleData.color}</td></tr>
+            <tr><td><strong>رقم المحرك:</strong></td><td>${vehicleData.engine_number || 'غير محدد'}</td></tr>
+            <tr><td><strong>رقم الشاصي:</strong></td><td>${vehicleData.chassis_number || 'غير محدد'}</td></tr>
+            <tr><td><strong>تاريخ الترخيص:</strong></td><td>${new Date(vehicleData.registration_date).toLocaleDateString('ar-SA')}</td></tr>
+            <tr><td><strong>الحالة:</strong></td><td>${vehicleData.status}</td></tr>
+          </table>
+        </div>
+
+        <div class="current-owner section">
+          <h3>المالك الحالي</h3>
+          ${currentOwner ? `
+            <table class="info-table">
+              <tr><td><strong>الاسم:</strong></td><td>${currentOwner.owner_name}</td></tr>
+              <tr><td><strong>رقم الهوية:</strong></td><td>${currentOwner.national_id}</td></tr>
+              <tr><td><strong>الهاتف:</strong></td><td>${currentOwner.phone || 'غير محدد'}</td></tr>
+              <tr><td><strong>العنوان:</strong></td><td>${currentOwner.address || 'غير محدد'}</td></tr>
+              <tr><td><strong>تاريخ بداية الملكية:</strong></td><td>${new Date(currentOwner.ownership_start_date).toLocaleDateString('ar-SA')}</td></tr>
+            </table>
+          ` : '<p>لا يوجد مالك مسجل حالياً</p>'}
+        </div>
+
+        ${previousOwners.length > 0 ? `
+          <div class="previous-owners section">
+            <h3>الملاك السابقين</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>رقم الهوية</th>
+                  <th>من تاريخ</th>
+                  <th>إلى تاريخ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${previousOwners.map(owner => `
+                  <tr>
+                    <td>${owner.owner_name}</td>
+                    <td>${owner.national_id}</td>
+                    <td>${new Date(owner.ownership_start_date).toLocaleDateString('ar-SA')}</td>
+                    <td>${owner.ownership_end_date ? new Date(owner.ownership_end_date).toLocaleDateString('ar-SA') : 'غير محدد'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+
+        <div class="violations section">
+          <h3>المخالفات</h3>
+          ${violations.length > 0 ? `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>نوع المخالفة</th>
+                  <th>التاريخ</th>
+                  <th>المكان</th>
+                  <th>الغرامة</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${violations.map(violation => `
+                  <tr>
+                    <td>${violation.violation_type}</td>
+                    <td>${new Date(violation.violation_date).toLocaleDateString('ar-SA')}</td>
+                    <td>${violation.location || 'غير محدد'}</td>
+                    <td>${violation.fine_amount} ش.ج</td>
+                    <td>${violation.status}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="summary">
+              <p><strong>إجمالي المخالفات:</strong> ${violations.length}</p>
+              <p><strong>المخالفات المعلقة:</strong> ${pendingViolations.length}</p>
+              <p><strong>إجمالي الغرامات المعلقة:</strong> ${pendingViolations.reduce((sum, v) => sum + v.fine_amount, 0)} ش.ج</p>
+            </div>
+          ` : '<p>لا توجد مخالفات مسجلة</p>'}
+        </div>
+      </div>
+    `;
+  };
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <h1 className="text-3xl font-bold text-foreground">استعلام أرقام المركبات</h1>
+        </div>
+      </div>
+
+      {/* Search Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            البحث عن مركبة
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="plateNumber">رقم المركبة</Label>
+            <div className="flex gap-2">
+              <Input
+                id="plateNumber"
+                value={plateNumber}
+                onChange={(e) => setPlateNumber(e.target.value)}
+                placeholder="أدخل رقم المركبة (مثال: H2001, 123456789, A5555)"
+                onKeyPress={(e) => e.key === 'Enter' && searchVehicle()}
+                className="flex-1"
+              />
+              <Button 
+                onClick={searchVehicle}
+                disabled={isSearching}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {isSearching ? 'جاري البحث...' : 'بحث'}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="text-sm text-muted-foreground">
+            <p><strong>أمثلة للتجربة:</strong> H2001, 123456789, A5555</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results Section */}
+      {vehicleData && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-semibold text-foreground">نتائج البحث</h2>
+            <PrintService
+              title={`تقرير استعلام مركبة رقم ${vehicleData.plate_number}`}
+              content={generatePrintContent()}
+              pageTitle="استعلام المركبات"
+              department="الشرطة الفلسطينية"
+              documentType="تقرير استعلام مركبة"
+            />
+          </div>
+
+          {/* Vehicle Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Car className="h-5 w-5" />
+                معلومات المركبة
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">رقم اللوحة</Label>
+                  <p className="text-lg font-semibold">{vehicleData.plate_number}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">نوع المركبة</Label>
+                  <p className="text-lg">{vehicleData.vehicle_type}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">الطراز</Label>
+                  <p className="text-lg">{vehicleData.model}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">السنة</Label>
+                  <p className="text-lg">{vehicleData.year}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">اللون</Label>
+                  <p className="text-lg">{vehicleData.color}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">الحالة</Label>
+                  <Badge variant={vehicleData.status === 'active' ? 'default' : 'secondary'}>
+                    {vehicleData.status === 'active' ? 'نشط' : vehicleData.status}
+                  </Badge>
+                </div>
+                {vehicleData.engine_number && (
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">رقم المحرك</Label>
+                    <p className="text-lg">{vehicleData.engine_number}</p>
+                  </div>
+                )}
+                {vehicleData.chassis_number && (
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">رقم الشاصي</Label>
+                    <p className="text-lg">{vehicleData.chassis_number}</p>
+                  </div>
+                )}
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">تاريخ الترخيص</Label>
+                  <p className="text-lg">{new Date(vehicleData.registration_date).toLocaleDateString('ar-SA')}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Owner */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                المالك الحالي
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {currentOwner ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">الاسم</Label>
+                    <p className="text-lg font-semibold">{currentOwner.owner_name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">رقم الهوية</Label>
+                    <p className="text-lg">{currentOwner.national_id}</p>
+                  </div>
+                  {currentOwner.phone && (
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">الهاتف</Label>
+                      <p className="text-lg">{currentOwner.phone}</p>
+                    </div>
+                  )}
+                  {currentOwner.address && (
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">العنوان</Label>
+                      <p className="text-lg">{currentOwner.address}</p>
+                    </div>
+                  )}
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">تاريخ بداية الملكية</Label>
+                    <p className="text-lg">{new Date(currentOwner.ownership_start_date).toLocaleDateString('ar-SA')}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">لا يوجد مالك مسجل حالياً</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Previous Owners */}
+          {previousOwners.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>الملاك السابقين</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {previousOwners.map((owner) => (
+                    <div key={owner.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">الاسم</Label>
+                          <p className="font-semibold">{owner.owner_name}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">رقم الهوية</Label>
+                          <p>{owner.national_id}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">فترة الملكية</Label>
+                          <p>
+                            من {new Date(owner.ownership_start_date).toLocaleDateString('ar-SA')} 
+                            {owner.ownership_end_date && ` إلى ${new Date(owner.ownership_end_date).toLocaleDateString('ar-SA')}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Violations */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                المخالفات
+                {pendingViolations.length > 0 && (
+                  <Badge variant="destructive">{pendingViolations.length} معلقة</Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {violations.length > 0 ? (
+                <div className="space-y-4">
+                  {pendingViolations.length > 0 && (
+                    <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <AlertTriangle className="h-5 w-5 text-red-400" />
+                        </div>
+                        <div className="mr-3">
+                          <p className="text-sm text-red-700">
+                            <strong>تحذير:</strong> توجد {pendingViolations.length} مخالفة معلقة بإجمالي {pendingViolations.reduce((sum, v) => sum + v.fine_amount, 0)} شيكل
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-3">
+                    {violations.map((violation) => (
+                      <div key={violation.id} className="border rounded-lg p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{violation.violation_type}</h4>
+                              <Badge className={getViolationStatusColor(violation.status)}>
+                                {violation.status === 'pending' ? 'معلقة' : violation.status}
+                              </Badge>
+                            </div>
+                            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <Label className="text-muted-foreground">التاريخ</Label>
+                                <p>{new Date(violation.violation_date).toLocaleDateString('ar-SA')}</p>
+                              </div>
+                              {violation.location && (
+                                <div>
+                                  <Label className="text-muted-foreground">المكان</Label>
+                                  <p>{violation.location}</p>
+                                </div>
+                              )}
+                              <div>
+                                <Label className="text-muted-foreground">الغرامة</Label>
+                                <p className="font-semibold">{violation.fine_amount} ش.ج</p>
+                              </div>
+                            </div>
+                            {violation.notes && (
+                              <div>
+                                <Label className="text-muted-foreground">ملاحظات</Label>
+                                <p className="text-sm">{violation.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="grid md:grid-cols-3 gap-4 text-center">
+                    <div className="bg-blue-50 p-3 rounded">
+                      <p className="text-sm text-muted-foreground">إجمالي المخالفات</p>
+                      <p className="text-2xl font-bold text-blue-600">{violations.length}</p>
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded">
+                      <p className="text-sm text-muted-foreground">المخالفات المعلقة</p>
+                      <p className="text-2xl font-bold text-yellow-600">{pendingViolations.length}</p>
+                    </div>
+                    <div className="bg-red-50 p-3 rounded">
+                      <p className="text-sm text-muted-foreground">إجمالي الغرامات المعلقة</p>
+                      <p className="text-2xl font-bold text-red-600">{pendingViolations.reduce((sum, v) => sum + v.fine_amount, 0)} ش.ج</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">لا توجد مخالفات</h3>
+                  <p className="text-muted-foreground">لا توجد مخالفات مسجلة لهذه المركبة</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -113,6 +113,51 @@ export type Database = {
         }
         Relationships: []
       }
+      cybercrime_cases: {
+        Row: {
+          assigned_officer_id: string | null
+          case_number: string
+          case_type: string
+          created_at: string
+          description: string
+          evidence_files: string[] | null
+          id: string
+          priority: string
+          reporter_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_officer_id?: string | null
+          case_number: string
+          case_type: string
+          created_at?: string
+          description: string
+          evidence_files?: string[] | null
+          id?: string
+          priority?: string
+          reporter_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_officer_id?: string | null
+          case_number?: string
+          case_type?: string
+          created_at?: string
+          description?: string
+          evidence_files?: string[] | null
+          id?: string
+          priority?: string
+          reporter_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cybercrime_comments: {
         Row: {
           attachment_type: string | null
@@ -155,6 +200,44 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      cybercrime_evidence: {
+        Row: {
+          case_id: string
+          collected_at: string
+          collected_by: string
+          description: string | null
+          evidence_type: string
+          file_url: string | null
+          id: string
+        }
+        Insert: {
+          case_id: string
+          collected_at?: string
+          collected_by: string
+          description?: string | null
+          evidence_type: string
+          file_url?: string | null
+          id?: string
+        }
+        Update: {
+          case_id?: string
+          collected_at?: string
+          collected_by?: string
+          description?: string | null
+          evidence_type?: string
+          file_url?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cybercrime_evidence_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cybercrime_cases"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -465,6 +548,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      internal_news: {
+        Row: {
+          author_id: string
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_published: boolean
+          privacy_level: string
+          target_groups: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          privacy_level?: string
+          target_groups?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          privacy_level?: string
+          target_groups?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       news: {
         Row: {
@@ -939,6 +1064,145 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      vehicle_owners: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          is_current_owner: boolean
+          national_id: string
+          owner_name: string
+          ownership_end_date: string | null
+          ownership_start_date: string
+          phone: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_current_owner?: boolean
+          national_id: string
+          owner_name: string
+          ownership_end_date?: string | null
+          ownership_start_date?: string
+          phone?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_current_owner?: boolean
+          national_id?: string
+          owner_name?: string
+          ownership_end_date?: string | null
+          ownership_start_date?: string
+          phone?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_owners_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_registrations: {
+        Row: {
+          chassis_number: string | null
+          color: string
+          created_at: string
+          engine_number: string | null
+          id: string
+          model: string
+          plate_number: string
+          registration_date: string
+          status: string
+          updated_at: string
+          vehicle_type: string
+          year: number
+        }
+        Insert: {
+          chassis_number?: string | null
+          color: string
+          created_at?: string
+          engine_number?: string | null
+          id?: string
+          model: string
+          plate_number: string
+          registration_date?: string
+          status?: string
+          updated_at?: string
+          vehicle_type: string
+          year: number
+        }
+        Update: {
+          chassis_number?: string | null
+          color?: string
+          created_at?: string
+          engine_number?: string | null
+          id?: string
+          model?: string
+          plate_number?: string
+          registration_date?: string
+          status?: string
+          updated_at?: string
+          vehicle_type?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      vehicle_violations: {
+        Row: {
+          created_at: string
+          fine_amount: number | null
+          id: string
+          location: string | null
+          notes: string | null
+          officer_id: string | null
+          status: string
+          vehicle_id: string
+          violation_date: string
+          violation_type: string
+        }
+        Insert: {
+          created_at?: string
+          fine_amount?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          officer_id?: string | null
+          status?: string
+          vehicle_id: string
+          violation_date: string
+          violation_type: string
+        }
+        Update: {
+          created_at?: string
+          fine_amount?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          officer_id?: string | null
+          status?: string
+          vehicle_id?: string
+          violation_date?: string
+          violation_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_violations_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles: {
         Row: {
