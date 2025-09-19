@@ -63,8 +63,8 @@ const PoliceNews = () => {
 
     fetchLatestPost();
     
-    // تحديث كل 10 دقائق
-    const interval = setInterval(fetchLatestPost, 10 * 60 * 1000);
+    // تحديث كل 10 ثواني للحصول على أحدث الأخبار
+    const interval = setInterval(fetchLatestPost, 10 * 1000);
     return () => clearInterval(interval);
   }, []);
 
