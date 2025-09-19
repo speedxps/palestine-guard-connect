@@ -284,7 +284,7 @@ const Login = () => {
                 </div>
 
                 {/* Demo Accounts Dropdown */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-sm font-medium text-gray-700 font-arabic">
                     الحسابات التجريبية
                   </Label>
@@ -296,15 +296,21 @@ const Login = () => {
                       setPassword(account.password);
                     }
                   }}>
-                    <SelectTrigger className="w-full h-10 sm:h-12 bg-white border-2 border-blue-500 rounded-xl sm:rounded-2xl text-gray-900 text-sm sm:text-base">
-                      <SelectValue placeholder="اختر حساب تجريبي" />
+                    <SelectTrigger className="w-full h-12 bg-white/95 backdrop-blur-sm border-2 border-blue-500 hover:border-blue-600 rounded-xl text-gray-900 text-sm font-medium shadow-sm transition-all duration-200">
+                      <SelectValue placeholder="اختر حساب تجريبي" className="text-gray-500" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-full max-w-sm">
                       {demoAccounts.map((account) => (
                         <SelectItem key={account.email} value={account.email}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{account.name}</span>
-                            <span className="text-xs text-muted-foreground">({account.department})</span>
+                          <div className="flex flex-col gap-1 py-1 w-full">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-900 dark:text-white">{account.name}</span>
+                              <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full">
+                                {account.role === 'admin' ? 'مدير' : 
+                                 account.role.includes('manager') ? 'مدير قسم' : 'موظف'}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic">{account.department}</span>
                           </div>
                         </SelectItem>
                       ))}
