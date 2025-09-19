@@ -19,7 +19,6 @@ import NewIncident from "./pages/NewIncident";
 import Profile from "./pages/Profile";
 import Cybercrime from "./pages/Cybercrime";
 import CybercrimeReports from "./pages/CybercrimeReports";
-import CybercrimeAccessManagement from "./components/CybercrimeAccessManagement";
 import Feed from "./pages/Feed";
 import Patrol from "./pages/Patrol";
 import NotFound from "./pages/NotFound";
@@ -30,17 +29,20 @@ import WantedPersonsTree from "./pages/WantedPersonsTree";
 import IncidentsManagement from "./pages/IncidentsManagement";
 import CitizenRecords from "./pages/CitizenRecords";
 import About from "./pages/About";
-import VehicleLookup from "./pages/VehicleLookup";
 import FaceRecognition from "./pages/FaceRecognition";
 import PoliceNews from "./pages/PoliceNews";
 import Reports from "./pages/Reports";
 import AdminPanel from "./pages/AdminPanel";
 import CybercrimeAdvanced from "./pages/CybercrimeAdvanced";
 import CybercrimeAdvancedDashboard from "./pages/CybercrimeAdvancedDashboard";
-import InternalNews from "./pages/InternalNews";
 import VehicleInquiry from "./pages/VehicleInquiry";
 import VehicleManagement from "./pages/VehicleManagement";
 import PatrolsManagement from "./pages/PatrolsManagement";
+import AdminDepartment from "./pages/AdminDepartment";
+import TrafficDepartment from "./pages/TrafficDepartment";
+import CIDDepartment from "./pages/CIDDepartment";
+import SpecialPoliceDepartment from "./pages/SpecialPoliceDepartment";
+import CybercrimeDepartment from "./pages/CybercrimeDepartment";
 import UserDashboard from "./pages/UserDashboard";
 import DailyStats from "./pages/DailyStats";
 import UrgentTasks from "./pages/UrgentTasks";
@@ -129,11 +131,6 @@ const App = () => {
                     <ViolationsAdmin />
                   </RoleBasedRoute>
                 } />
-                <Route path="/vehicle-lookup" element={
-                  <RoleBasedRoute requiredPage="vehicle-lookup">
-                    <VehicleLookup />
-                  </RoleBasedRoute>
-                } />
                 <Route path="/vehicle-inquiry" element={
                   <RoleBasedRoute requiredPage="vehicle-lookup">
                     <VehicleInquiry />
@@ -215,11 +212,6 @@ const App = () => {
                     <Reports />
                   </RoleBasedRoute>
                 } />
-                <Route path="/cybercrime-access" element={
-                  <RoleBasedRoute requiredPage="cybercrime">
-                    <CybercrimeAccessManagement />
-                  </RoleBasedRoute>
-                } />
                 
                 {/* Admin Only Routes */}
                 <Route path="/backup" element={
@@ -244,10 +236,32 @@ const App = () => {
                     <CybercrimeAdvancedDashboard />
                   </RoleBasedRoute>
                 } />
-                <Route path="/internal-news" element={
-                  <ProtectedRoute>
-                    <InternalNews />
-                  </ProtectedRoute>
+                
+                {/* Department Pages */}
+                <Route path="/department/admin" element={
+                  <RoleBasedRoute requiredPage="admin-panel">
+                    <AdminDepartment />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/traffic" element={
+                  <RoleBasedRoute requiredPage="violations">
+                    <TrafficDepartment />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/cid" element={
+                  <RoleBasedRoute requiredPage="incidents">
+                    <CIDDepartment />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/special" element={
+                  <RoleBasedRoute requiredPage="tasks">
+                    <SpecialPoliceDepartment />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/cybercrime" element={
+                  <RoleBasedRoute requiredPage="cybercrime">
+                    <CybercrimeDepartment />
+                  </RoleBasedRoute>
                 } />
                 
                 {/* User Dashboard */}

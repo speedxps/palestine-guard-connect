@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { UserManagementTabbed } from '@/components/UserManagementTabbed';
 import UserManagementProfessional from '@/components/UserManagementProfessional';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
-import CybercrimeAccessManagement from '@/components/CybercrimeAccessManagement';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Users, 
@@ -68,13 +67,6 @@ const AdminPanel = () => {
       description: 'إدارة المهام والدوريات',
       icon: Shield,
       color: 'from-purple-500 to-purple-600'
-    },
-    {
-      id: 'cybercrime-management',
-      title: 'إدارة الجرائم الإلكترونية',
-      description: 'منح الصلاحيات وإدارة التقارير',
-      icon: MessageCircle,
-      color: 'from-indigo-500 to-indigo-600'
     },
     {
       id: 'system-settings',
@@ -373,11 +365,6 @@ const AdminPanel = () => {
         </Card>
       </TabsContent>
 
-      <TabsContent value="cybercrime-management" className="space-y-6">
-        <Card className="p-1">
-          <CybercrimeAccessManagement />
-        </Card>
-      </TabsContent>
 
           <TabsContent value="user-management" className="space-y-6">
             <Card className="p-1">
@@ -475,11 +462,6 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="cybercrime-management" className="space-y-6">
-            <Card className="p-1">
-              <CybercrimeAccessManagement />
-            </Card>
-          </TabsContent>
 
           <TabsContent value="system-settings" className="space-y-6">
             {renderSystemSettings()}

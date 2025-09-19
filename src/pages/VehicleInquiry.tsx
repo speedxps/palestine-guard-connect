@@ -242,7 +242,7 @@ export default function VehicleInquiry() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <BackButton />
-          <h1 className="text-3xl font-bold text-foreground">استعلام أرقام المركبات</h1>
+          <h1 className="text-3xl font-bold text-foreground">الإستعلام عن المركبات</h1>
         </div>
       </div>
 
