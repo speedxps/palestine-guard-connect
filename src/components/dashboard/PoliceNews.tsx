@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Newspaper, ExternalLink, Calendar, Eye } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NewsPost {
   id: string;
@@ -18,29 +19,44 @@ const PoliceNews = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // جلب آخر منشور من صفحة الشرطة الفلسطينية على فيسبوك
     const fetchLatestPost = async () => {
       setLoading(true);
       
       try {
-        // محاكاة استدعاء Facebook Graph API
-        // في التطبيق الحقيقي، ستحتاج إلى Facebook App Token
+        // استدعاء Edge Function لجلب منشورات فيسبوك
+        const { data, error } = await supabase.functions.invoke('fetch-facebook-posts');
         
-        setTimeout(() => {
-          const mockPost: NewsPost = {
-            id: '1',
-            title: 'إعلان هام من الشرطة الفلسطينية',
-            content: 'تعلن قيادة الشرطة الفلسطينية عن تفعيل الخطة الأمنية الشاملة خلال الأيام القادمة، وذلك لضمان الأمن والسلامة العامة. نرجو من المواطنين التعاون مع رجال الأمن والإبلاغ عن أي أمور مشبوهة.',
-            publishedAt: new Date().toISOString(),
-            imageUrl: '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png',
-            link: 'https://www.facebook.com/Palestinianpolice1'
+        if (error) {
+          console.error('Error calling function:', error);
+          throw error;
+        }
+
+        if (data?.data && data.data.length > 0) {
+          const fbPost = data.data[0];
+          const post: NewsPost = {
+            id: fbPost.id,
+            title: 'آخر أخبار الشرطة الفلسطينية',
+            content: fbPost.message || fbPost.story || 'منشور جديد من الشرطة الفلسطينية',
+            publishedAt: fbPost.created_time,
+            imageUrl: fbPost.full_picture || '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png',
+            link: fbPost.permalink_url || 'https://www.facebook.com/Palestinianpolice1'
           };
           
-          setLatestPost(mockPost);
-          setLoading(false);
-        }, 800);
+          setLatestPost(post);
+        }
       } catch (error) {
         console.error('Error fetching Facebook post:', error);
+        // استخدام بيانات احتياطية في حالة الخطأ
+        const mockPost: NewsPost = {
+          id: 'fallback',
+          title: 'إعلان هام من الشرطة الفلسطينية',
+          content: 'تعلن قيادة الشرطة الفلسطينية عن تفعيل الخطة الأمنية الشاملة خلال الأيام القادمة، وذلك لضمان الأمن والسلامة العامة. نرجو من المواطنين التعاون مع رجال الأمن والإبلاغ عن أي أمور مشبوهة.',
+          publishedAt: new Date().toISOString(),
+          imageUrl: '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png',
+          link: 'https://www.facebook.com/Palestinianpolice1'
+        };
+        setLatestPost(mockPost);
+      } finally {
         setLoading(false);
       }
     };
@@ -148,13 +164,13 @@ const PoliceNews = () => {
               <span className="font-arabic">{formatDate(latestPost.publishedAt)}</span>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col gap-2">
               {latestPost.link && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => window.open(latestPost.link, '_blank')}
-                  className="flex items-center gap-2 font-arabic text-xs flex-1"
+                  className="flex items-center gap-2 font-arabic text-xs w-full"
                 >
                   <ExternalLink className="h-3 w-3" />
                   عرض على فيسبوك
@@ -164,7 +180,7 @@ const PoliceNews = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => window.open('https://www.facebook.com/Palestinianpolice1', '_blank')}
-                className="flex items-center gap-2 font-arabic text-xs flex-1"
+                className="flex items-center gap-2 font-arabic text-xs w-full"
               >
                 <ExternalLink className="h-3 w-3" />
                 زيارة الصفحة الرسمية

@@ -84,16 +84,39 @@ export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose,
     setStep('processing');
 
     try {
-      // حفظ البيانات محلياً حتى نضيف جدول قاعدة البيانات
-      const faceData = {
-        userId: user.id,
-        imageData: capturedImage,
-        timestamp: new Date().toISOString(),
-        isActive: true
-      };
+      // تحويل الصورة إلى base64 encoding للحفظ في قاعدة البيانات
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = capturedImage;
+      });
 
-      // حفظ البيانات في localStorage
-      localStorage.setItem('userFaceData', JSON.stringify(faceData));
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      
+      // استخراج الميزات من الصورة (في التطبيق الحقيقي، ستستخدم مكتبة للتعرف على الوجوه)
+      const faceEncoding = btoa(capturedImage); // تشفير مؤقت
+
+      // حفظ البيانات في قاعدة البيانات
+      const { error } = await supabase
+        .from('face_data')
+        .upsert({
+          user_id: user.id,
+          face_encoding: faceEncoding,
+          image_url: capturedImage,
+          is_active: true
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // حفظ في localStorage أيضاً للوصول السريع
       localStorage.setItem('faceLoginEnabled', 'true');
 
       toast({

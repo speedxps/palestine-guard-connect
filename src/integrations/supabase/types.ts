@@ -286,6 +286,36 @@ export type Database = {
           },
         ]
       }
+      face_data: {
+        Row: {
+          created_at: string
+          face_encoding: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          face_encoding: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          face_encoding?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       family_members: {
         Row: {
           created_at: string
@@ -435,6 +465,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      news: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
