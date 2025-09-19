@@ -155,7 +155,7 @@ const UserManagementProfessional = () => {
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/4"></div>
           <div className="h-12 bg-muted rounded"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="h-32 bg-muted rounded"></div>
             ))}
@@ -222,7 +222,7 @@ const UserManagementProfessional = () => {
       </Card>
 
       {/* Users Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {filteredUsers.map((user) => {
           const DepartmentIcon = getDepartmentIcon(user.role);
           return (

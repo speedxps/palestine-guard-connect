@@ -73,27 +73,27 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-white">
-        <div className="p-6 space-y-6" dir="rtl">
+      <div className="min-h-screen bg-white w-full overflow-x-hidden">
+        <div className="responsive-padding space-y-4 sm:space-y-6" dir="rtl">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-r from-primary to-primary-glow">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
+            <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-primary to-primary-glow flex-shrink-0">
               <img 
                 src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                 alt="Palestinian Police Logo" 
-                className="h-6 w-6 object-contain"
+                className="h-5 w-5 sm:h-6 sm:w-6 object-contain"
               />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 font-arabic">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 font-arabic break-words">
                 مرحباً، {user?.full_name || 'المستخدم'}
               </h1>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="font-arabic bg-primary/10 text-primary">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                <Badge variant="secondary" className="font-arabic bg-primary/10 text-primary text-xs w-fit">
                   {getRoleName(userRole || 'user')}
                 </Badge>
-                <span className="text-gray-600 font-arabic text-sm">
+                <span className="text-gray-600 font-arabic text-xs sm:text-sm">
                   الشرطة الفلسطينية
                 </span>
               </div>
@@ -102,33 +102,33 @@ const Dashboard = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
             الإحصائيات العامة
           </h2>
           <StatsCards />
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
             إجراءات سريعة
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {/* User Dashboard Access */}
             <Card 
-              className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200" 
+              className="p-3 sm:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer bg-white border border-gray-200 rounded-lg sm:rounded-xl" 
               onClick={() => navigate('/user-dashboard')}
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600">
-                  <Shield className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 flex-shrink-0">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 font-arabic text-sm">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 font-arabic text-xs sm:text-sm truncate">
                     صلاحياتي
                   </h3>
-                  <p className="text-xs text-gray-600 font-arabic">
+                  <p className="text-xs text-gray-600 font-arabic line-clamp-2">
                     عرض الصفحات المسموح بالوصول إليها
                   </p>
                 </div>
@@ -150,18 +150,18 @@ const Dashboard = () => {
               return (
                 <Card 
                   key={index} 
-                  className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200"
+                  className="p-3 sm:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer bg-white border border-gray-200 rounded-lg sm:rounded-xl"
                   onClick={() => navigate(getActionPath(action.title))}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg bg-gradient-to-r ${action.color}`}>
-                      <Icon className="h-5 w-5 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className={`p-2 rounded-lg bg-gradient-to-r ${action.color} flex-shrink-0`}>
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 font-arabic text-sm">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 font-arabic text-xs sm:text-sm truncate">
                         {action.title}
                       </h3>
-                      <p className="text-xs text-gray-600 font-arabic">
+                      <p className="text-xs text-gray-600 font-arabic line-clamp-2">
                         {action.description}
                       </p>
                     </div>
@@ -173,26 +173,26 @@ const Dashboard = () => {
         </div>
 
         {/* Voice Assistant */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
             المساعد الذكي
           </h2>
-          <Card className="p-4 bg-white border border-gray-200">
+          <Card className="p-3 sm:p-4 bg-white border border-gray-200 rounded-lg sm:rounded-xl">
             <VoiceAssistant />
           </Card>
         </div>
 
         {/* Police News */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
             الأخبار الرسمية
           </h2>
           <PoliceNews />
         </div>
 
         {/* Recent Activity */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 font-arabic mb-4">
+        <div className="pb-4">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
             النشاط الأخير
           </h2>
           <RecentActivity />

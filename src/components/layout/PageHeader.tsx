@@ -24,24 +24,24 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   className = ''
 }) => {
   return (
-    <header className={`bg-white border-b border-gray-200 px-6 py-4 ${className}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <header className={`bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 ${className}`}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {/* Police Logo */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow flex-shrink-0">
               <img 
                 src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                 alt="Palestinian Police Logo" 
-                className="h-6 w-6 object-contain"
+                className="h-4 w-4 sm:h-6 sm:w-6 object-contain"
               />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 font-arabic">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 font-arabic break-words">
                 {title}
               </h1>
               {description && (
-                <p className="text-sm text-gray-600 font-arabic">
+                <p className="text-xs sm:text-sm text-gray-600 font-arabic line-clamp-2">
                   {description}
                 </p>
               )}
@@ -49,7 +49,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {children}
           
           {showPrint && printContent && (

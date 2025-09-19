@@ -19,11 +19,11 @@ const StatsCards = () => {
 
   if (stats.isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[...Array(4)].map((_, i) => (
-          <Card key={i} className="p-6 animate-pulse bg-white border border-gray-200">
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+          <Card key={i} className="p-4 sm:p-6 animate-pulse bg-white border border-gray-200 rounded-lg sm:rounded-xl">
+            <div className="h-3 sm:h-4 bg-gray-200 rounded w-1/2 mb-3 sm:mb-4"></div>
+            <div className="h-6 sm:h-8 bg-gray-200 rounded w-3/4"></div>
           </Card>
         ))}
       </div>
@@ -157,25 +157,25 @@ const StatsCards = () => {
   const statsCards = getStatsForRole();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       {statsCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-300 bg-white border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600 font-arabic">
+          <Card key={index} className="p-4 sm:p-6 hover:shadow-lg transition-shadow duration-300 bg-white border border-gray-200 rounded-lg sm:rounded-xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-1 sm:space-y-2 flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 font-arabic">
                   {stat.title}
                 </p>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 break-words">
                   {stat.value}
                 </p>
-                <Badge variant="secondary" className="text-xs font-arabic bg-gray-100 text-gray-700">
+                <Badge variant="secondary" className="text-xs font-arabic bg-gray-100 text-gray-700 w-fit">
                   {stat.change}
                 </Badge>
               </div>
-              <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}>
-                <Icon className="h-6 w-6 text-white" />
+              <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r ${stat.color} shadow-lg flex-shrink-0`}>
+                <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
           </Card>

@@ -25,7 +25,7 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`min-h-screen bg-gray-50 ${className}`}>
+    <div className={`min-h-screen bg-gray-50 w-full overflow-x-hidden ${className}`}>
       <PageHeader
         title={title}
         description={description}
@@ -37,9 +37,13 @@ export const ProfessionalLayout: React.FC<ProfessionalLayoutProps> = ({
         {headerActions}
       </PageHeader>
       
-      <main className="container mx-auto px-6 py-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[calc(100vh-200px)]">
-          {children}
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="w-full max-w-7xl mx-auto">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 min-h-[calc(100vh-180px)] sm:min-h-[calc(100vh-200px)] overflow-hidden">
+            <div className="p-4 sm:p-6 lg:p-8 w-full">
+              {children}
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -811,9 +811,9 @@ export const UserManagementTabbed = () => {
 
       {/* Department Tabs */}
       <Tabs defaultValue="all" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 gap-2 h-auto p-1 bg-muted/50">
-          <TabsTrigger value="all" className="flex items-center gap-2 p-2 font-arabic">
-            <FileUser className="h-4 w-4" />
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1 sm:gap-2 h-auto p-1 bg-muted/50">
+          <TabsTrigger value="all" className="flex items-center gap-1 sm:gap-2 p-2 font-arabic text-xs sm:text-sm">
+            <FileUser className="h-3 w-3 sm:h-4 sm:w-4" />
             الكل ({profiles.length})
           </TabsTrigger>
           <TabsTrigger value="admin" className="flex items-center gap-2 p-2 font-arabic">

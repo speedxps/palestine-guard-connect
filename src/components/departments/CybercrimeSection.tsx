@@ -71,19 +71,19 @@ const CybercrimeSection = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {quickStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground font-arabic">{stat.label}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+            <Card key={index} className="rounded-lg sm:rounded-xl">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground font-arabic">{stat.label}</p>
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold break-words">{stat.value}</p>
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <Icon className="h-5 w-5 text-primary" />
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     <Badge variant={stat.trend.startsWith('+') ? 'default' : 'secondary'} className="text-xs">
                       {stat.trend}
                     </Badge>
@@ -101,13 +101,13 @@ const CybercrimeSection = () => {
           <CardTitle className="font-arabic">مستويات التهديد</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {threatLevels.map((threat, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 rounded-lg border">
-                <div className={`w-4 h-4 rounded-full ${threat.color}`}></div>
-                <div className="flex-1">
-                  <p className="font-medium font-arabic">{threat.level}</p>
-                  <p className="text-sm text-muted-foreground">{threat.count} قضية</p>
+              <div key={index} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border">
+                <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${threat.color} flex-shrink-0`}></div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium font-arabic text-sm">{threat.level}</p>
+                  <p className="text-xs text-muted-foreground">{threat.count} قضية</p>
                 </div>
               </div>
             ))}
@@ -116,7 +116,7 @@ const CybercrimeSection = () => {
       </Card>
 
       {/* Service Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {sections.map((section) => {
           const Icon = section.icon;
           return (
