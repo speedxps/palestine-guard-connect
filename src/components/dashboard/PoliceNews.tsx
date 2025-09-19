@@ -23,7 +23,7 @@ const PoliceNews = () => {
       setLoading(true);
       
       try {
-        // استدعاء Edge Function لجلب منشورات فيسبوك
+        // استدعاء Edge Function لجلب أحدث الأخبار من الموقع الرسمي
         const { data, error } = await supabase.functions.invoke('fetch-facebook-posts');
         
         if (error) {
@@ -39,13 +39,13 @@ const PoliceNews = () => {
             content: fbPost.message || fbPost.story || 'منشور جديد من الشرطة الفلسطينية',
             publishedAt: fbPost.created_time,
             imageUrl: fbPost.full_picture || '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png',
-            link: fbPost.permalink_url || 'https://www.facebook.com/Palestinianpolice1'
+            link: fbPost.permalink_url || 'https://www.palpolice.ps/'
           };
           
           setLatestPost(post);
         }
       } catch (error) {
-        console.error('Error fetching Facebook post:', error);
+        console.error('Error fetching police website news:', error);
         // استخدام بيانات احتياطية في حالة الخطأ
         const mockPost: NewsPost = {
           id: 'fallback',
@@ -53,7 +53,7 @@ const PoliceNews = () => {
           content: 'تعلن قيادة الشرطة الفلسطينية عن تفعيل الخطة الأمنية الشاملة خلال الأيام القادمة، وذلك لضمان الأمن والسلامة العامة. نرجو من المواطنين التعاون مع رجال الأمن والإبلاغ عن أي أمور مشبوهة.',
           publishedAt: new Date().toISOString(),
           imageUrl: '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png',
-          link: 'https://www.facebook.com/Palestinianpolice1'
+          link: 'https://www.palpolice.ps/'
         };
         setLatestPost(mockPost);
       } finally {
@@ -173,17 +173,17 @@ const PoliceNews = () => {
                   className="flex items-center gap-2 font-arabic text-xs w-full"
                 >
                   <ExternalLink className="h-3 w-3" />
-                  عرض على فيسبوك
+                  قراءة المقال كاملاً
                 </Button>
               )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open('https://www.facebook.com/Palestinianpolice1', '_blank')}
+                onClick={() => window.open('https://www.palpolice.ps/', '_blank')}
                 className="flex items-center gap-2 font-arabic text-xs w-full"
               >
                 <ExternalLink className="h-3 w-3" />
-                زيارة الصفحة الرسمية
+                الموقع الرسمي
               </Button>
             </div>
           </div>
