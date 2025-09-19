@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, Upload, Search, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFaceRecognition } from '@/hooks/useFaceRecognition';
+import { FaceEncryption } from '@/utils/faceEncryption';
 
 const FaceRecognition = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -14,6 +16,9 @@ const FaceRecognition = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  
+  // استخدام hook التعرف على الوجوه
+  const { generateFaceEmbedding } = useFaceRecognition();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -79,10 +84,6 @@ const FaceRecognition = () => {
         const imageData = e.target?.result as string;
         
         try {
-          // استخدام hook التعرف على الوجوه الموجود
-          const { useFaceRecognition } = await import('@/hooks/useFaceRecognition');
-          const { generateFaceEmbedding, verifyFace } = useFaceRecognition();
-          
           // توليد البصمة للصورة المرفوعة
           const faceResult = await generateFaceEmbedding(imageData);
           
@@ -110,7 +111,6 @@ const FaceRecognition = () => {
             for (const face of faceData) {
               try {
                 // فك تشفير البصمة المحفوظة
-                const { FaceEncryption } = await import('@/utils/faceEncryption');
                 const decryptedEmbedding = FaceEncryption.decrypt(face.face_encoding);
                 const storedEmbedding = new Float32Array(
                   new Uint8Array([...atob(decryptedEmbedding)].map(c => c.charCodeAt(0))).buffer
@@ -129,19 +129,25 @@ const FaceRecognition = () => {
             }
           }
 
-          // إذا تم العثور على تطابق، جلب بيانات المواطن
+          // إذا تم العثور على تطابق، جلب بيانات المواطن من جدول المستخدمين
           if (bestMatch) {
-            const { data: citizen, error: citizenError } = await supabase
-              .from('citizens')
-              .select('*')
-              .eq('id', bestMatch)
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, username, full_name, role, avatar_url')
+              .eq('user_id', bestMatch)
               .single();
 
-            if (citizenError) {
-              throw citizenError;
+            if (profileError) {
+              throw profileError;
             }
 
-            setResults([citizen]);
+            setResults([{
+              id: profile.id,
+              full_name: profile.full_name,
+              username: profile.username,
+              role: profile.role,
+              photo_url: profile.avatar_url
+            }]);
             toast.success(`تم العثور على تطابق بنسبة ${Math.round(bestSimilarity * 100)}%`);
           } else {
             setResults([]);
@@ -284,10 +290,8 @@ const FaceRecognition = () => {
                     )}
                     <div className="flex-1">
                       <h3 className="font-semibold">{person.full_name}</h3>
-                      <p className="text-sm text-muted-foreground">{person.national_id}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {person.gender === 'male' ? 'ذكر' : person.gender === 'female' ? 'أنثى' : 'غير محدد'}
-                      </p>
+                      <p className="text-sm text-muted-foreground">اسم المستخدم: {person.username}</p>
+                      <p className="text-sm text-muted-foreground">الدور: {person.role}</p>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       تطابق محتمل
