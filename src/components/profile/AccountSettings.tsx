@@ -28,11 +28,16 @@ export const AccountSettings = () => {
     if (!user) return;
     
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('full_name, phone, badge_number, avatar_url')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error loading profile:', error);
+        return;
+      }
         
       if (profile) {
         setFormData({
