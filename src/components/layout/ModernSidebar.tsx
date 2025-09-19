@@ -73,7 +73,10 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
         { title: 'المخالفات', path: '/violations', icon: FileText, page: 'violations' },
         { title: 'إدارة المخالفات', path: '/violations-admin', icon: Settings, page: 'violations-admin' },
         { title: 'البحث عن مركبة', path: '/vehicle-lookup', icon: Car, page: 'vehicle-lookup' },
-        { title: 'الدوريات', path: '/patrol', icon: Users, page: 'patrol' }
+        { title: 'استعلام السيارات', path: '/vehicle-inquiry', icon: Car, page: 'vehicle-lookup' },
+        { title: 'إدارة السيارات', path: '/vehicle-management', icon: Settings, page: 'violations-admin' },
+        { title: 'الدوريات', path: '/patrol', icon: Users, page: 'patrol' },
+        { title: 'إدارة الدوريات', path: '/patrols-management', icon: Settings, page: 'patrol' }
       ]
     },
     {
@@ -111,6 +114,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       visible: userRole === 'admin' || userRole === 'cybercrime',
       pages: [
         { title: 'الجرائم الإلكترونية', path: '/cybercrime', icon: Shield, page: 'cybercrime' },
+        { title: 'لوحة الجرائم المتقدمة', path: '/cybercrime-dashboard', icon: Computer, page: 'cybercrime' },
         { title: 'تقارير الجرائم', path: '/cybercrime-reports', icon: FileText, page: 'cybercrime-reports' },
         { title: 'التقارير والإحصائيات', path: '/reports', icon: BarChart3, page: 'reports' }
       ]
@@ -227,6 +231,20 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           >
             <Newspaper className="h-4 w-4 shrink-0" />
             <span className="font-arabic">أخبار الشرطة</span>
+          </Button>
+
+          {/* Internal News Link */}
+          <Button
+            variant={location.pathname === '/internal-news' ? 'default' : 'ghost'}
+            className={`w-full justify-start gap-3 ${
+              location.pathname === '/internal-news' 
+                ? 'bg-primary text-white hover:bg-primary/90' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+            onClick={() => navigate('/internal-news')}
+          >
+            <Newspaper className="h-4 w-4 shrink-0" />
+            <span className="font-arabic">الأخبار الداخلية</span>  
           </Button>
 
           {/* Departments */}

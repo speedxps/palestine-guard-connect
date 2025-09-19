@@ -36,6 +36,11 @@ import PoliceNews from "./pages/PoliceNews";
 import Reports from "./pages/Reports";
 import AdminPanel from "./pages/AdminPanel";
 import CybercrimeAdvanced from "./pages/CybercrimeAdvanced";
+import CybercrimeAdvancedDashboard from "./pages/CybercrimeAdvancedDashboard";
+import InternalNews from "./pages/InternalNews";
+import VehicleInquiry from "./pages/VehicleInquiry";
+import VehicleManagement from "./pages/VehicleManagement";
+import PatrolsManagement from "./pages/PatrolsManagement";
 import UserDashboard from "./pages/UserDashboard";
 import DailyStats from "./pages/DailyStats";
 import UrgentTasks from "./pages/UrgentTasks";
@@ -129,6 +134,21 @@ const App = () => {
                     <VehicleLookup />
                   </RoleBasedRoute>
                 } />
+                <Route path="/vehicle-inquiry" element={
+                  <RoleBasedRoute requiredPage="vehicle-lookup">
+                    <VehicleInquiry />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/vehicle-management" element={
+                  <RoleBasedRoute requiredPage="violations-admin">
+                    <VehicleManagement />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/patrols-management" element={
+                  <RoleBasedRoute requiredPage="patrol">
+                    <PatrolsManagement />
+                  </RoleBasedRoute>
+                } />
                 
                 {/* CID Routes */}
                 <Route path="/incidents" element={
@@ -218,6 +238,16 @@ const App = () => {
                   <RoleBasedRoute requiredPage="cybercrime-advanced">
                     <CybercrimeAdvanced />
                   </RoleBasedRoute>
+                } />
+                <Route path="/cybercrime-dashboard" element={
+                  <RoleBasedRoute requiredPage="cybercrime">
+                    <CybercrimeAdvancedDashboard />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/internal-news" element={
+                  <ProtectedRoute>
+                    <InternalNews />
+                  </ProtectedRoute>
                 } />
                 
                 {/* User Dashboard */}
