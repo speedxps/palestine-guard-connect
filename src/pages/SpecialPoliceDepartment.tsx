@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Shield, CheckSquare, Users, Rss, MessageCircle, Activity } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 
 const SpecialPoliceDepartment = () => {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ const SpecialPoliceDepartment = () => {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
+        <BackButton />
         <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
           <Shield className="h-8 w-8 text-white" />
         </div>

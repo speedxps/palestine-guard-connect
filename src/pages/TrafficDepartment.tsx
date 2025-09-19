@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Car, FileText, Settings, Users, Search, Activity } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 
 const TrafficDepartment = () => {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ const TrafficDepartment = () => {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
+        <BackButton />
         <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
           <Car className="h-8 w-8 text-white" />
         </div>

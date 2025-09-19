@@ -9,6 +9,7 @@ import { NotificationSettings } from '@/components/profile/NotificationSettings'
 import { SecuritySettings } from '@/components/profile/SecuritySettings';
 import { LanguageSettings } from '@/components/profile/LanguageSettings';
 import { PrivacySettings } from '@/components/profile/PrivacySettings';
+import { BackButton } from '@/components/BackButton';
 import { 
   ArrowLeft, 
   User, 

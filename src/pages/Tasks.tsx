@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BackButton } from '@/components/BackButton';
 import { 
   ArrowLeft, 
   Clock, 
@@ -203,6 +204,8 @@ const Tasks = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
+        <div className="flex items-center gap-4 mb-4">
+          <BackButton to="/dashboard" />
           <div>
             <h1 className="text-xl font-bold font-arabic">المهام والدوريات</h1>
             <p className="text-sm text-muted-foreground">Tasks & Patrols</p>

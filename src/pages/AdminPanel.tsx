@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { UserManagementTabbed } from '@/components/UserManagementTabbed';
 import UserManagementProfessional from '@/components/UserManagementProfessional';
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
+import { BackButton } from '@/components/BackButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Users, 
@@ -209,6 +210,7 @@ const AdminPanel = () => {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <BackButton to="/dashboard" />
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-md"></div>
                 <img 
