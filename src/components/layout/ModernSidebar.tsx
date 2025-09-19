@@ -151,11 +151,19 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       {/* User Info */}
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-primary font-semibold font-arabic">
-              {user?.full_name?.charAt(0) || 'م'}
-            </span>
-          </div>
+          {user?.avatar_url ? (
+            <img 
+              src={user.avatar_url} 
+              alt={user.full_name || 'مستخدم'}
+              className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="text-primary font-semibold font-arabic">
+                {user?.full_name?.charAt(0) || 'م'}
+              </span>
+            </div>
+          )}
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 font-arabic text-sm">
               {user?.full_name || 'مستخدم'}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ProfessionalLayout } from '@/components/layout/ProfessionalLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,9 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { BackButton } from '@/components/BackButton';
 import { 
-  ArrowLeft, 
   MapPin, 
   Clock, 
   Search, 
@@ -403,8 +401,42 @@ const Incidents = () => {
             <p className="text-muted-foreground">لا توجد بلاغات مطابقة للبحث</p>
           </div>
         )}
+  useEffect(() => {
+    fetchIncidents();
+  }, []);
+
+  const fetchIncidents = async () => {
+    try {
+      setLoading(true);
+      const { data: incidentsData } = await supabase
+        .from('incidents')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (incidentsData) {
+        const formatted = incidentsData.map(incident => ({
+          id: incident.id,
+          type: incident.incident_type || 'حادث عام',
+          title: incident.title,
+          description: incident.description,
+          location: incident.location_address || 'غير محدد',
+          date: new Date(incident.created_at).toLocaleDateString('ar'),
+          time: new Date(incident.created_at).toLocaleTimeString('ar'),
+          status: incident.status,
+          priority: 'medium' as const,
+          source: 'incident' as const
+        }));
+        setIncidents(formatted);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
       </div>
-    </div>
+    </ProfessionalLayout>
   );
 };
 

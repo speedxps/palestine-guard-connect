@@ -11,6 +11,7 @@ export interface User {
   name: string;
   role: UserRole;
   avatar?: string;
+  avatar_url?: string;
   full_name?: string; // Add this for profile updates
 }
 
@@ -60,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   ...basicUserData,
                   name: profile.full_name || basicUserData.name,
                   full_name: profile.full_name,
+                  avatar_url: profile.avatar_url,
                   role: profile.role || basicUserData.role,
                 });
                 console.log('Profile loaded:', profile);
@@ -127,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...prev,
           name: profile.full_name || prev.name,
           full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
           role: profile.role || prev.role,
         } : null);
       }

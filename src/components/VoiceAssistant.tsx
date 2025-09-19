@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Volume2, VolumeX, Send, Bot, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Send, Bot, MessageSquare, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SimpleAudioRecorder, blobToBase64 } from '@/utils/SimpleAudioRecorder';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import PoliceReportGenerator from '@/components/PoliceReportGenerator';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -25,6 +26,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ className }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [textInput, setTextInput] = useState('');
+  const [showReportGenerator, setShowReportGenerator] = useState(false);
   
   const audioRecorderRef = useRef<SimpleAudioRecorder | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -75,6 +77,18 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ className }) => {
     const userMessage: Message = { role: 'user', content: text };
     setMessages(prev => [...prev, userMessage]);
     setIsProcessing(true);
+
+    // تحقق من طلب إنشاء تقرير
+    if (text.includes('تقرير') || text.includes('إنشاء تقرير') || text.includes('كتابة تقرير')) {
+      setShowReportGenerator(true);
+      const reportMessage: Message = { 
+        role: 'assistant', 
+        content: 'سأساعدك في إنشاء تقرير شرطة. يرجى ملء النموذج أدناه بالبيانات المطلوبة.' 
+      };
+      setMessages(prev => [...prev, reportMessage]);
+      setIsProcessing(false);
+      return;
+    }
 
     try {
       // Get AI response
@@ -325,6 +339,22 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ className }) => {
             </div>
           )}
         </div>
+
+        {/* Report Generator */}
+        {showReportGenerator && (
+          <div className="mt-4">
+            <PoliceReportGenerator 
+              onReportGenerated={(report) => {
+                const reportMessage: Message = { 
+                  role: 'assistant', 
+                  content: 'تم إنشاء التقرير بنجاح! يمكنك طباعته أو نسخه.' 
+                };
+                setMessages(prev => [...prev, reportMessage]);
+                setShowReportGenerator(false);
+              }}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

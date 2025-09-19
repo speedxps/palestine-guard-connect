@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ProfessionalLayout } from '@/components/layout/ProfessionalLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BackButton } from '@/components/BackButton';
 import { 
-  ArrowLeft, 
   Clock, 
   MapPin,
   CheckCircle,
@@ -317,8 +315,27 @@ const Tasks = () => {
             <p className="text-muted-foreground">لا توجد مهام مطابقة للتصفية</p>
           </div>
         )}
+  const getPriorityText = (priority: string) => {
+    const priorities = {
+      low: 'منخفضة',
+      medium: 'متوسطة', 
+      high: 'عالية'
+    };
+    return priorities[priority] || priority;
+  };
+
+  const getStatusText = (status: string) => {
+    const statuses = {
+      pending: 'معلق',
+      'in-progress': 'قيد التنفيذ',
+      completed: 'مكتمل',
+      delayed: 'متأخر'
+    };
+    return statuses[status] || status;
+  };
+
       </div>
-    </div>
+    </ProfessionalLayout>
   );
 };
 

@@ -73,39 +73,114 @@ const FaceRecognition = () => {
 
     setLoading(true);
     try {
-      // رفع الصورة للتخزين
-      const fileExt = selectedImage.name.split('.').pop();
-      const fileName = `face-search-${Date.now()}.${fileExt}`;
+      // تحويل الصورة إلى base64 لإرسالها للـ AI
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageData = e.target?.result as string;
+        
+        try {
+          // استخدام hook التعرف على الوجوه الموجود
+          const { useFaceRecognition } = await import('@/hooks/useFaceRecognition');
+          const { generateFaceEmbedding, verifyFace } = useFaceRecognition();
+          
+          // توليد البصمة للصورة المرفوعة
+          const faceResult = await generateFaceEmbedding(imageData);
+          
+          if (!faceResult.success || !faceResult.embedding) {
+            toast.error('لم يتم العثور على وجه واضح في الصورة');
+            setLoading(false);
+            return;
+          }
+
+          // البحث في قاعدة البيانات عن المواطنين مع بيانات الوجه
+          const { data: faceData, error: faceError } = await supabase
+            .from('face_data')
+            .select('user_id, face_encoding');
+
+          if (faceError) {
+            throw faceError;
+          }
+
+          // مقارنة البصمات للعثور على أفضل تطابق
+          let bestMatch = null;
+          let bestSimilarity = 0;
+          const threshold = 0.7; // عتبة التطابق
+
+          if (faceData && faceData.length > 0) {
+            for (const face of faceData) {
+              try {
+                // فك تشفير البصمة المحفوظة
+                const { FaceEncryption } = await import('@/utils/faceEncryption');
+                const decryptedEmbedding = FaceEncryption.decrypt(face.face_encoding);
+                const storedEmbedding = new Float32Array(
+                  new Uint8Array([...atob(decryptedEmbedding)].map(c => c.charCodeAt(0))).buffer
+                );
+
+                // حساب التشابه
+                const similarity = cosineSimilarity(faceResult.embedding, storedEmbedding);
+                
+                if (similarity > bestSimilarity && similarity >= threshold) {
+                  bestSimilarity = similarity;
+                  bestMatch = face.user_id;
+                }
+              } catch (error) {
+                console.error('Error processing face data:', error);
+              }
+            }
+          }
+
+          // إذا تم العثور على تطابق، جلب بيانات المواطن
+          if (bestMatch) {
+            const { data: citizen, error: citizenError } = await supabase
+              .from('citizens')
+              .select('*')
+              .eq('id', bestMatch)
+              .single();
+
+            if (citizenError) {
+              throw citizenError;
+            }
+
+            setResults([citizen]);
+            toast.success(`تم العثور على تطابق بنسبة ${Math.round(bestSimilarity * 100)}%`);
+          } else {
+            setResults([]);
+            toast.error('لم يتم العثور على أي تطابق في قاعدة البيانات');
+          }
+          
+        } catch (error) {
+          console.error('Error in face recognition:', error);
+          toast.error('حدث خطأ في التعرف على الوجه');
+        } finally {
+          setLoading(false);
+        }
+      };
       
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('citizen-photos')
-        .upload(fileName, selectedImage);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // البحث في قاعدة البيانات عن الصور المشابهة
-      // هذا مثال بسيط - في التطبيق الحقيقي ستحتاج لخدمة AI للتعرف على الوجوه
-      const { data: citizens, error } = await supabase
-        .from('citizens')
-        .select('*')
-        .not('photo_url', 'is', null)
-        .limit(10);
-
-      if (error) {
-        throw error;
-      }
-
-      setResults(citizens || []);
-      toast.success(`تم العثور على ${citizens?.length || 0} نتيجة محتملة`);
+      reader.readAsDataURL(selectedImage);
       
     } catch (error) {
       console.error('Error searching faces:', error);
       toast.error('حدث خطأ أثناء البحث');
-    } finally {
       setLoading(false);
     }
+  };
+
+  // دالة حساب التشابه (cosine similarity)
+  const cosineSimilarity = (a: Float32Array, b: Float32Array): number => {
+    if (a.length !== b.length) return 0;
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < a.length; i++) {
+      dotProduct += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+    
+    const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
+    return magnitude === 0 ? 0 : dotProduct / magnitude;
   };
 
   return (

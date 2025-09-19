@@ -104,7 +104,26 @@ const DailyStats = () => {
       showBackButton={true}
       backTo="/dashboard"
       showPrint={true}
-      printContent="إحصائيات أداء اليوم"
+      printContent={`
+إحصائيات الأداء اليومي
+${new Date().toLocaleDateString('ar-PS', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',  
+  day: 'numeric'
+})}
+
+البلاغات اليوم: ${todayStats.totalIncidents}
+البلاغات المحلولة: ${todayStats.resolvedIncidents}
+المهام النشطة: ${todayStats.activeTasks}
+المهام المكتملة: ${todayStats.completedTasks}
+المخالفات المرورية: ${todayStats.trafficViolations}
+الجرائم الإلكترونية: ${todayStats.cybercrimeReports}
+
+معدل حل البلاغات: ${Math.round((todayStats.resolvedIncidents / todayStats.totalIncidents) * 100)}%
+معدل إنجاز المهام: ${Math.round((todayStats.completedTasks / (todayStats.completedTasks + todayStats.activeTasks)) * 100)}%
+الضباط النشطون: ${todayStats.activeOfficers}
+      `}
     >
       <div className="p-6 space-y-6">
         {/* Date Header */}
