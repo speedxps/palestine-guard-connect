@@ -9,17 +9,20 @@ import { useToast } from '@/hooks/use-toast';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
 import { TwoFactorSetupModal } from '@/components/TwoFactorSetupModal';
+import { FaceLoginSetup } from '@/components/FaceLoginSetup';
 import { supabase } from '@/integrations/supabase/client';
-import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode } from 'lucide-react';
+import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode, Camera } from 'lucide-react';
 
 export const SecuritySettings = () => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [showFaceSetup, setShowFaceSetup] = useState(false);
   const { isSupported: biometricSupported, isRegistered: biometricRegistered, authenticate: biometricAuth, register: biometricRegister } = useBiometricAuth();
   const { isEnabled: twoFactorEnabled, disable: disableTwoFactor } = useTwoFactorAuth();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [faceLoginEnabled, setFaceLoginEnabled] = useState(false);
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -33,7 +36,9 @@ export const SecuritySettings = () => {
   const loadSecuritySettings = () => {
     try {
       const biometricSetting = localStorage.getItem('biometricEnabled');
+      const faceSetting = localStorage.getItem('faceLoginEnabled');
       setBiometricEnabled(biometricSetting === 'true');
+      setFaceLoginEnabled(faceSetting === 'true');
     } catch (error) {
       console.error('Error loading security settings:', error);
     }
@@ -304,6 +309,48 @@ export const SecuritySettings = () => {
               </div>
             )}
 
+            {/* تسجيل الدخول بالوجه */}
+            <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-4 w-4 text-purple-400" />
+                  <Label className="font-arabic text-sm">تسجيل الدخول بالوجه</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  {!faceLoginEnabled ? (
+                    <Button
+                      size="sm"
+                      onClick={() => setShowFaceSetup(true)}
+                      className="text-xs bg-purple-500 hover:bg-purple-600"
+                    >
+                      إعداد
+                    </Button>
+                  ) : (
+                    <Switch
+                      checked={faceLoginEnabled}
+                      onCheckedChange={(enabled) => {
+                        localStorage.setItem('faceLoginEnabled', enabled.toString());
+                        setFaceLoginEnabled(enabled);
+                        toast({
+                          title: enabled ? "تم تفعيل تسجيل الدخول بالوجه" : "تم إلغاء تسجيل الدخول بالوجه",
+                          description: enabled ? "يمكنك الآن استخدام وجهك للدخول" : "تم إلغاء تفعيل تسجيل الدخول بالوجه",
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-purple-400/80 font-arabic mb-2">
+                استخدم التعرف على الوجه لتسجيل الدخول السريع والآمن
+              </p>
+              {faceLoginEnabled && (
+                <div className="flex items-center gap-1 text-xs text-green-400">
+                  <span>✓</span>
+                  <span className="font-arabic">مفعل - تم حفظ بيانات الوجه</span>
+                </div>
+              )}
+            </div>
+
             {/* المصادقة الثنائية */}
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
@@ -378,11 +425,20 @@ export const SecuritySettings = () => {
       </DialogContent>
       
       {/* Two-Factor Setup Modal */}
-      <TwoFactorSetupModal
-        isOpen={showTwoFactorSetup}
-        onClose={() => setShowTwoFactorSetup(false)}
-        onSuccess={handleTwoFactorSuccess}
-      />
+        <TwoFactorSetupModal
+          isOpen={showTwoFactorSetup}
+          onClose={() => setShowTwoFactorSetup(false)}
+          onSuccess={handleTwoFactorSuccess}
+        />
+        
+        <FaceLoginSetup
+          isOpen={showFaceSetup}
+          onClose={() => setShowFaceSetup(false)}
+          onSuccess={() => {
+            setFaceLoginEnabled(true);
+            loadSecuritySettings();
+          }}
+        />
     </Dialog>
   );
 };

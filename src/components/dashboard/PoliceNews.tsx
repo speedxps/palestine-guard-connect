@@ -148,15 +148,15 @@ const PoliceNews = () => {
               <span className="font-arabic">{formatDate(latestPost.publishedAt)}</span>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               {latestPost.link && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => window.open(latestPost.link, '_blank')}
-                  className="flex items-center gap-2 font-arabic"
+                  className="flex items-center gap-2 font-arabic text-xs flex-1"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-3 w-3" />
                   عرض على فيسبوك
                 </Button>
               )}
@@ -164,9 +164,9 @@ const PoliceNews = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => window.open('https://www.facebook.com/Palestinianpolice1', '_blank')}
-                className="flex items-center gap-2 font-arabic"
+                className="flex items-center gap-2 font-arabic text-xs flex-1"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-3 w-3" />
                 زيارة الصفحة الرسمية
               </Button>
             </div>

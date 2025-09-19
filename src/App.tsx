@@ -32,6 +32,7 @@ import CitizenRecords from "./pages/CitizenRecords";
 import About from "./pages/About";
 import VehicleLookup from "./pages/VehicleLookup";
 import FaceRecognition from "./pages/FaceRecognition";
+import PoliceNews from "./pages/PoliceNews";
 import Reports from "./pages/Reports";
 import AdminPanel from "./pages/AdminPanel";
 import CybercrimeAdvanced from "./pages/CybercrimeAdvanced";
@@ -77,6 +78,11 @@ const App = () => {
                 <Route path="/about" element={
                   <ProtectedRoute>
                     <About />
+                  </ProtectedRoute>
+                } />
+                <Route path="/police-news" element={
+                  <ProtectedRoute>
+                    <PoliceNews />
                   </ProtectedRoute>
                 } />
                 <Route path="/daily-stats" element={

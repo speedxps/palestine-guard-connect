@@ -24,7 +24,8 @@ import {
   Rss,
   MessageCircle,
   BarChart3,
-  Menu
+  Menu,
+  LogOut
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -306,6 +307,20 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
             >
               <Settings className="h-4 w-4 shrink-0" />
               <span className="font-arabic">الملف الشخصي</span>
+            </Button>
+            
+            {/* Logout Button */}
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-2"
+              onClick={() => {
+                const { logout } = require('@/contexts/AuthContext');
+                logout();
+                navigate('/login');
+              }}
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className="font-arabic">تسجيل الخروج</span>
             </Button>
           </div>
         </div>
