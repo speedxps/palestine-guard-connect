@@ -62,7 +62,7 @@ interface Evidence {
 export default function CybercrimeAdvancedDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { hasPermission } = useRoleBasedAccess();
+  const { hasAccess } = useRoleBasedAccess();
   
   const [cases, setCases] = useState<CybercrimeCase[]>([]);
   const [evidence, setEvidence] = useState<Evidence[]>([]);

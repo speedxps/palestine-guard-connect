@@ -55,7 +55,7 @@ interface ViolationData {
 export default function VehicleManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { hasPermission } = useRoleBasedAccess();
+  const { hasAccess } = useRoleBasedAccess();
   
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [owners, setOwners] = useState<OwnerData[]>([]);
