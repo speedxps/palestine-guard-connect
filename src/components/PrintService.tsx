@@ -293,15 +293,30 @@ export const PrintService: React.FC<PrintServiceProps> = ({
   };
 
   const handlePrint = () => {
+    if (!content || (typeof content === 'string' && content.trim() === '')) {
+      alert('لا توجد بيانات للطباعة. تأكد من وجود محتوى في التقرير.');
+      return;
+    }
+
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(generatePrintContent());
+      const printContent = generatePrintContent();
+      printWindow.document.write(printContent);
       printWindow.document.close();
       
-      // Wait for content to load then print
+      // Wait for images and content to load then print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 1000);
+      };
+      
+      // Fallback timeout
       setTimeout(() => {
         printWindow.print();
-      }, 500);
+      }, 1500);
+    } else {
+      alert('فشل في فتح نافذة الطباعة. تأكد من السماح بالنوافذ المنبثقة.');
     }
   };
 

@@ -196,15 +196,6 @@ const Tasks = () => {
       {/* Header */}
       <div className="page-header">
         <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/dashboard')}
-            className="text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        <div className="flex items-center gap-4 mb-4">
           <BackButton to="/dashboard" />
           <div>
             <h1 className="text-xl font-bold font-arabic">المهام والدوريات</h1>

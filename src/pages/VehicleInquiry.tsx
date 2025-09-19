@@ -141,97 +141,195 @@ export default function VehicleInquiry() {
   const pendingViolations = violations.filter(v => v.status === 'pending');
 
   const generatePrintContent = () => {
-    if (!vehicleData) return '';
+    if (!vehicleData) return 'لا توجد بيانات للطباعة';
+    
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
     
     return `
-      <div class="vehicle-inquiry-report">
-        <h2 class="text-center">تقرير استعلام مركبة</h2>
+      <div style="direction: rtl; font-family: 'Noto Sans Arabic', Arial, sans-serif; line-height: 1.6;">
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1e40af; padding-bottom: 20px;">
+          <h2 style="color: #1e40af; margin-bottom: 10px; font-size: 24px;">
+            تقرير استعلام مركبة رقم ${vehicleData.plate_number}
+          </h2>
+          <p style="color: #6b7280; font-size: 14px;">الشرطة الفلسطينية - نظام إدارة المركبات</p>
+          <p style="color: #6b7280; font-size: 12px;">تاريخ التقرير: ${currentDate}</p>
+        </div>
         
-        <div class="vehicle-info section">
-          <h3>معلومات المركبة</h3>
-          <table class="info-table">
-            <tr><td><strong>رقم اللوحة:</strong></td><td>${vehicleData.plate_number}</td></tr>
-            <tr><td><strong>نوع المركبة:</strong></td><td>${vehicleData.vehicle_type}</td></tr>
-            <tr><td><strong>الطراز:</strong></td><td>${vehicleData.model}</td></tr>
-            <tr><td><strong>السنة:</strong></td><td>${vehicleData.year}</td></tr>
-            <tr><td><strong>اللون:</strong></td><td>${vehicleData.color}</td></tr>
-            <tr><td><strong>رقم المحرك:</strong></td><td>${vehicleData.engine_number || 'غير محدد'}</td></tr>
-            <tr><td><strong>رقم الشاصي:</strong></td><td>${vehicleData.chassis_number || 'غير محدد'}</td></tr>
-            <tr><td><strong>تاريخ الترخيص:</strong></td><td>${new Date(vehicleData.registration_date).toLocaleDateString('ar-SA')}</td></tr>
-            <tr><td><strong>الحالة:</strong></td><td>${vehicleData.status}</td></tr>
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-right: 4px solid #1e40af;">
+          <h3 style="color: #1e40af; margin-bottom: 15px; font-size: 18px;">معلومات المركبة:</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; width: 35%; background: #f3f4f6;">رقم اللوحة:</td>
+              <td style="padding: 10px; color: #1e40af; font-weight: bold;">${vehicleData.plate_number}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">نوع المركبة:</td>
+              <td style="padding: 10px;">${vehicleData.vehicle_type}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">الطراز:</td>
+              <td style="padding: 10px;">${vehicleData.model}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">سنة الصنع:</td>
+              <td style="padding: 10px;">${vehicleData.year}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">اللون:</td>
+              <td style="padding: 10px;">${vehicleData.color}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">الحالة:</td>
+              <td style="padding: 10px;">
+                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; ${vehicleData.status === 'active' ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #dc2626;'}">
+                  ${vehicleData.status === 'active' ? 'نشط' : vehicleData.status}
+                </span>
+              </td>
+            </tr>
+            ${vehicleData.engine_number ? `
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">رقم المحرك:</td>
+              <td style="padding: 10px;">${vehicleData.engine_number}</td>
+            </tr>
+            ` : ''}
+            ${vehicleData.chassis_number ? `
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">رقم الشاصي:</td>
+              <td style="padding: 10px;">${vehicleData.chassis_number}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">تاريخ الترخيص:</td>
+              <td style="padding: 10px;">${new Date(vehicleData.registration_date).toLocaleDateString('ar-SA')}</td>
+            </tr>
           </table>
         </div>
-
-        <div class="current-owner section">
-          <h3>المالك الحالي</h3>
-          ${currentOwner ? `
-            <table class="info-table">
-              <tr><td><strong>الاسم:</strong></td><td>${currentOwner.owner_name}</td></tr>
-              <tr><td><strong>رقم الهوية:</strong></td><td>${currentOwner.national_id}</td></tr>
-              <tr><td><strong>الهاتف:</strong></td><td>${currentOwner.phone || 'غير محدد'}</td></tr>
-              <tr><td><strong>العنوان:</strong></td><td>${currentOwner.address || 'غير محدد'}</td></tr>
-              <tr><td><strong>تاريخ بداية الملكية:</strong></td><td>${new Date(currentOwner.ownership_start_date).toLocaleDateString('ar-SA')}</td></tr>
-            </table>
-          ` : '<p>لا يوجد مالك مسجل حالياً</p>'}
+        
+        ${currentOwner ? `
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-right: 4px solid #3b82f6;">
+          <h3 style="color: #1e40af; margin-bottom: 15px; font-size: 18px;">معلومات المالك الحالي:</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; width: 35%; background: #f3f4f6;">الاسم الكامل:</td>
+              <td style="padding: 10px; color: #1e40af; font-weight: bold;">${currentOwner.owner_name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">رقم الهوية:</td>
+              <td style="padding: 10px;">${currentOwner.national_id}</td>
+            </tr>
+            ${currentOwner.phone ? `
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">رقم الهاتف:</td>
+              <td style="padding: 10px;">${currentOwner.phone}</td>
+            </tr>
+            ` : ''}
+            ${currentOwner.address ? `
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">العنوان:</td>
+              <td style="padding: 10px;">${currentOwner.address}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">تاريخ بداية الملكية:</td>
+              <td style="padding: 10px;">${new Date(currentOwner.ownership_start_date).toLocaleDateString('ar-SA')}</td>
+            </tr>
+          </table>
         </div>
-
+        ` : '<div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;"><p style="color: #dc2626;">لا يوجد مالك مسجل حالياً لهذه المركبة</p></div>'}
+        
         ${previousOwners.length > 0 ? `
-          <div class="previous-owners section">
-            <h3>الملاك السابقين</h3>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>الاسم</th>
-                  <th>رقم الهوية</th>
-                  <th>من تاريخ</th>
-                  <th>إلى تاريخ</th>
+        <div style="background: #fefce8; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-right: 4px solid #eab308;">
+          <h3 style="color: #1e40af; margin-bottom: 15px; font-size: 18px;">تاريخ الملكية السابقة (${previousOwners.length} مالك):</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f3f4f6;">
+                <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">الاسم</th>
+                <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">رقم الهوية</th>
+                <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">من تاريخ</th>
+                <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">إلى تاريخ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${previousOwners.map((owner, index) => `
+                <tr style="background: ${index % 2 === 0 ? '#f9fafb' : 'white'};">
+                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${owner.owner_name}</td>
+                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${owner.national_id}</td>
+                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${new Date(owner.ownership_start_date).toLocaleDateString('ar-SA')}</td>
+                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${owner.ownership_end_date ? new Date(owner.ownership_end_date).toLocaleDateString('ar-SA') : 'مستمر'}</td>
                 </tr>
-              </thead>
-              <tbody>
-                ${previousOwners.map(owner => `
-                  <tr>
-                    <td>${owner.owner_name}</td>
-                    <td>${owner.national_id}</td>
-                    <td>${new Date(owner.ownership_start_date).toLocaleDateString('ar-SA')}</td>
-                    <td>${owner.ownership_end_date ? new Date(owner.ownership_end_date).toLocaleDateString('ar-SA') : 'غير محدد'}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
         ` : ''}
-
-        <div class="violations section">
-          <h3>المخالفات</h3>
+        
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-right: 4px solid #dc2626;">
+          <h3 style="color: #1e40af; margin-bottom: 15px; font-size: 18px;">سجل المخالفات:</h3>
           ${violations.length > 0 ? `
-            <table class="data-table">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
               <thead>
-                <tr>
-                  <th>نوع المخالفة</th>
-                  <th>التاريخ</th>
-                  <th>المكان</th>
-                  <th>الغرامة</th>
-                  <th>الحالة</th>
+                <tr style="background: #fee2e2;">
+                  <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">نوع المخالفة</th>
+                  <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">التاريخ</th>
+                  <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">المكان</th>
+                  <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">الغرامة</th>
+                  <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb; font-weight: bold;">الحالة</th>
                 </tr>
               </thead>
               <tbody>
-                ${violations.map(violation => `
-                  <tr>
-                    <td>${violation.violation_type}</td>
-                    <td>${new Date(violation.violation_date).toLocaleDateString('ar-SA')}</td>
-                    <td>${violation.location || 'غير محدد'}</td>
-                    <td>${violation.fine_amount} ش.ج</td>
-                    <td>${violation.status}</td>
+                ${violations.map((violation, index) => `
+                  <tr style="background: ${index % 2 === 0 ? '#fef2f2' : 'white'};">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${violation.violation_type}</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">${new Date(violation.violation_date).toLocaleDateString('ar-SA')}</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">${violation.location || 'غير محدد'}</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${violation.fine_amount || 0} ش.ج</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">
+                      <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; ${violation.status === 'pending' ? 'background: #fef3c7; color: #d97706;' : 'background: #dcfce7; color: #166534;'}">
+                        ${violation.status === 'pending' ? 'معلقة' : violation.status}
+                      </span>
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
-            <div class="summary">
-              <p><strong>إجمالي المخالفات:</strong> ${violations.length}</p>
-              <p><strong>المخالفات المعلقة:</strong> ${pendingViolations.length}</p>
-              <p><strong>إجمالي الغرامات المعلقة:</strong> ${pendingViolations.reduce((sum, v) => sum + v.fine_amount, 0)} ش.ج</p>
+            
+            <div style="background: #fee2e2; padding: 15px; border-radius: 8px; border: 1px solid #fecaca;">
+              <h4 style="color: #dc2626; margin-bottom: 10px; font-size: 16px;">ملخص إحصائي للمخالفات:</h4>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                <div style="background: white; padding: 10px; border-radius: 6px;">
+                  <div style="font-size: 24px; font-weight: bold; color: #dc2626;">${violations.length}</div>
+                  <div style="font-size: 12px; color: #6b7280;">إجمالي المخالفات</div>
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 6px;">
+                  <div style="font-size: 24px; font-weight: bold; color: #d97706;">${pendingViolations.length}</div>
+                  <div style="font-size: 12px; color: #6b7280;">المخالفات المعلقة</div>
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 6px;">
+                  <div style="font-size: 24px; font-weight: bold; color: #dc2626;">${pendingViolations.reduce((sum, v) => sum + (v.fine_amount || 0), 0)} ش.ج</div>
+                  <div style="font-size: 12px; color: #6b7280;">إجمالي الغرامات المعلقة</div>
+                </div>
+              </div>
             </div>
-          ` : '<p>لا توجد مخالفات مسجلة</p>'}
+          ` : '<div style="text-align: center; padding: 30px; background: #dcfce7; border-radius: 8px;"><p style="color: #166534; font-size: 16px;"><strong>✅ لا توجد مخالفات مسجلة</strong></p><p style="color: #6b7280; font-size: 14px; margin-top: 5px;">هذه المركبة لديها سجل نظيف</p></div>'}
+        </div>
+        
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center;">
+          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <h4 style="color: #1e40af; margin-bottom: 10px;">ملاحظات هامة:</h4>
+            <ul style="text-align: right; color: #6b7280; font-size: 14px; line-height: 1.8;">
+              <li>هذا التقرير يعكس حالة المركبة وقت الاستعلام فقط</li>
+              <li>يجب التأكد من تحديث بيانات المركبة دورياً</li>
+              <li>في حالة وجود مخالفات معلقة، يجب تسديدها لتجنب المضاعفات القانونية</li>
+              <li>هذا التقرير صالح لمدة 30 يوماً من تاريخ الإصدار</li>
+            </ul>
+          </div>
+          <p style="color: #6b7280; font-size: 12px; margin: 10px 0;">تم إنشاء هذا التقرير بتاريخ: ${currentDate}</p>
+          <p style="color: #6b7280; font-size: 12px;">الشرطة الفلسطينية - نظام إدارة المركبات الإلكتروني</p>
+          <p style="color: #6b7280; font-size: 10px; margin-top: 10px;">رقم التقرير: VR-${Date.now().toString().slice(-6)} | هذا تقرير رسمي</p>
         </div>
       </div>
     `;
