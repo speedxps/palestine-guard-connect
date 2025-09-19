@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, FileText, Download, BarChart3, Users, Car, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, FileText, Download, BarChart3, Users, Car, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { BackButton } from '@/components/BackButton';
 
 const Reports = () => {
   const [reportType, setReportType] = useState('');
@@ -139,8 +140,13 @@ const Reports = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-primary mb-2">التقارير والإحصائيات</h1>
-        <p className="text-muted-foreground">إنشاء تقارير شاملة لجميع بيانات النظام</p>
+        <div className="flex items-center gap-4 mb-4">
+          <BackButton />
+          <div>
+            <h1 className="text-3xl font-bold text-primary mb-2">التقارير والإحصائيات</h1>
+            <p className="text-muted-foreground">إنشاء تقارير شاملة لجميع بيانات النظام</p>
+          </div>
+        </div>
       </div>
 
       {/* إحصائيات سريعة */}

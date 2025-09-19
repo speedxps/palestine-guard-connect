@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Save, Edit } from 'lucide-react';
+import { Settings, Save, Edit, Camera, Upload } from 'lucide-react';
 
 export const AccountSettings = () => {
   const { user, refreshUser } = useAuth();
@@ -18,7 +19,10 @@ export const AccountSettings = () => {
     full_name: user?.name || '',
     phone: '',
     badge_number: '',
+    avatar_url: '',
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadUserProfile = async () => {
     if (!user) return;
@@ -26,7 +30,7 @@ export const AccountSettings = () => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, phone, badge_number')
+        .select('full_name, phone, badge_number, avatar_url')
         .eq('user_id', user.id)
         .single();
         
@@ -35,6 +39,7 @@ export const AccountSettings = () => {
           full_name: profile.full_name || '',
           phone: profile.phone || '',
           badge_number: profile.badge_number || '',
+          avatar_url: profile.avatar_url || '',
         });
       }
     } catch (error) {
@@ -69,6 +74,7 @@ export const AccountSettings = () => {
           full_name: formData.full_name,
           phone: formData.phone || null,
           badge_number: formData.badge_number || null,
+          avatar_url: formData.avatar_url || null,
         })
         .eq('user_id', user.id);
 
@@ -92,6 +98,68 @@ export const AccountSettings = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "❌ نوع ملف غير صحيح",
+        description: "يرجى اختيار صورة صالحة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "❌ الملف كبير جداً",
+        description: "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('citizen-photos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('citizen-photos')
+        .getPublicUrl(filePath);
+
+      // Update form data with new avatar URL
+      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+
+      toast({
+        title: "✅ تم رفع الصورة",
+        description: "تم رفع صورتك الشخصية بنجاح",
+      });
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "❌ خطأ في رفع الصورة",
+        description: error.message || "فشل في رفع الصورة",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -125,6 +193,47 @@ export const AccountSettings = () => {
         </DialogHeader>
         
         <div className="space-y-4">
+          {/* Profile Picture Section */}
+          <div className="space-y-4 text-center">
+            <div className="flex justify-center">
+              <div className="relative">
+                <Avatar className="w-24 h-24">
+                  <AvatarImage 
+                    src={formData.avatar_url} 
+                    alt="صورة شخصية"
+                  />
+                  <AvatarFallback className="text-2xl">
+                    {formData.full_name.charAt(0) || user?.email?.charAt(0) || '👤'}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="secondary"
+                  className="absolute -bottom-2 -right-2 rounded-full w-8 h-8"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                >
+                  {uploadingImage ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <p className="text-xs text-muted-foreground font-arabic">
+              انقر على أيقونة الكاميرا لتغيير صورتك الشخصية
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="full_name" className="font-arabic">الاسم الكامل</Label>
             <Input
