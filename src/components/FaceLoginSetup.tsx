@@ -2,10 +2,11 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Camera, Check, X, RefreshCw } from 'lucide-react';
+import { Camera, Check, X, RefreshCw, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useFaceRecognition } from '@/hooks/useFaceRecognition';
 
 interface FaceLoginSetupProps {
   isOpen: boolean;
@@ -16,12 +17,14 @@ interface FaceLoginSetupProps {
 export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { generateFaceEmbedding, saveFaceData, isLoading: faceRecognitionLoading } = useFaceRecognition();
   const [step, setStep] = useState<'capture' | 'confirm' | 'processing'>('capture');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startCamera = async () => {
     try {
@@ -77,61 +80,56 @@ export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose,
     startCamera();
   };
 
-  const saveFaceData = async () => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setCapturedImage(result);
+        setStep('confirm');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const processFaceData = async () => {
     if (!capturedImage || !user) return;
 
     setLoading(true);
     setStep('processing');
 
     try {
-      // تحويل الصورة إلى base64 encoding للحفظ في قاعدة البيانات
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
+      // Generate face embedding using AI
+      const embeddingResult = await generateFaceEmbedding(capturedImage);
       
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = capturedImage;
-      });
-
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx?.drawImage(img, 0, 0);
-      
-      // استخراج الميزات من الصورة (في التطبيق الحقيقي، ستستخدم مكتبة للتعرف على الوجوه)
-      const faceEncoding = btoa(capturedImage); // تشفير مؤقت
-
-      // حفظ البيانات في قاعدة البيانات
-      const { error } = await supabase
-        .from('face_data')
-        .upsert({
-          user_id: user.id,
-          face_encoding: faceEncoding,
-          image_url: capturedImage,
-          is_active: true
-        });
-
-      if (error) {
-        throw error;
+      if (!embeddingResult.success || !embeddingResult.embedding) {
+        throw new Error(embeddingResult.error || 'فشل في معالجة الصورة');
       }
 
-      // حفظ في localStorage أيضاً للوصول السريع
+      // Save face data with encryption
+      const saveResult = await saveFaceData(user.id, capturedImage, embeddingResult.embedding);
+      
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || 'فشل في حفظ البيانات');
+      }
+
+      // Save preference in localStorage
       localStorage.setItem('faceLoginEnabled', 'true');
 
       toast({
-        title: "تم حفظ بيانات الوجه",
-        description: "تم تسجيل وجهك بنجاح. يمكنك الآن استخدام تسجيل الدخول بالوجه.",
+        title: "✅ تم حفظ بيانات الوجه",
+        description: "تم تسجيل وجهك بنجاح باستخدام الذكاء الاصطناعي. يمكنك الآن استخدام تسجيل الدخول بالوجه.",
       });
 
       onSuccess();
       onClose();
 
     } catch (error) {
-      console.error('Error saving face data:', error);
+      console.error('Error processing face data:', error);
       toast({
-        title: "خطأ في حفظ البيانات",
-        description: "حدث خطأ أثناء حفظ بيانات الوجه. يرجى المحاولة مرة أخرى.",
+        title: "❌ خطأ في المعالجة",
+        description: error instanceof Error ? error.message : "حدث خطأ أثناء معالجة بيانات الوجه",
         variant: "destructive",
       });
       setStep('confirm');
@@ -159,31 +157,66 @@ export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose,
         <div className="space-y-4">
           {step === 'capture' && (
             <>
-              <div className="text-center space-y-2">
-                <Camera className="h-12 w-12 text-primary mx-auto" />
-                <h3 className="font-semibold font-arabic">التقط صورة واضحة لوجهك</h3>
+              <div className="text-center space-y-3">
+                <Camera className="h-16 w-16 text-primary mx-auto" />
+                <h3 className="font-semibold font-arabic text-lg">التقط صورة واضحة لوجهك</h3>
                 <p className="text-sm text-muted-foreground font-arabic">
-                  تأكد من أن وجهك مضاء جيداً وواضح في الكاميرا
+                  سيتم استخدام الذكاء الاصطناعي للتعرف على وجهك وحماية بياناتك
                 </p>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                  <p className="text-xs text-blue-400 font-arabic">
+                    ✓ تشفير متقدم للبيانات<br/>
+                    ✓ لا يتم حفظ الصور الأصلية<br/>
+                    ✓ معالجة آمنة بالذكاء الاصطناعي
+                  </p>
+                </div>
               </div>
 
               {cameraActive ? (
                 <div className="space-y-4">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full rounded-lg border"
-                  />
-                  <Button onClick={capturePhoto} className="w-full">
+                  <div className="relative">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full rounded-lg border shadow-lg"
+                    />
+                    <div className="absolute inset-0 border-2 border-primary/30 rounded-lg pointer-events-none">
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-64 border-2 border-primary rounded-lg opacity-50"></div>
+                    </div>
+                  </div>
+                  <Button onClick={capturePhoto} className="w-full" size="lg">
+                    <Camera className="h-4 w-4 mr-2" />
                     التقاط الصورة
                   </Button>
                 </div>
               ) : (
-                <Button onClick={startCamera} className="w-full">
-                  <Camera className="h-4 w-4 mr-2" />
-                  تشغيل الكاميرا
-                </Button>
+                <div className="space-y-3">
+                  <Button onClick={startCamera} className="w-full" size="lg">
+                    <Camera className="h-4 w-4 mr-2" />
+                    تشغيل الكاميرا الأمامية
+                  </Button>
+                  
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground font-arabic mb-2">أو</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      رفع صورة من المعرض
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
               )}
             </>
           )}
@@ -215,12 +248,12 @@ export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose,
                   إعادة التقاط
                 </Button>
                 <Button
-                  onClick={saveFaceData}
-                  disabled={loading}
+                  onClick={processFaceData}
+                  disabled={loading || faceRecognitionLoading}
                   className="flex-1"
                 >
                   <Check className="h-4 w-4 mr-2" />
-                  تأكيد وحفظ
+                  {loading || faceRecognitionLoading ? 'معالجة...' : 'تأكيد وحفظ'}
                 </Button>
               </div>
             </>
@@ -228,11 +261,19 @@ export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose,
 
           {step === 'processing' && (
             <div className="text-center space-y-4">
-              <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-              <h3 className="font-semibold font-arabic">جاري حفظ البيانات...</h3>
-              <p className="text-sm text-muted-foreground font-arabic">
-                يرجى الانتظار بينما نحفظ بيانات وجهك بأمان
-              </p>
+              <div className="animate-spin h-16 w-16 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+              <h3 className="font-semibold font-arabic text-lg">جاري معالجة بيانات الوجه...</h3>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground font-arabic">
+                  🤖 تشغيل نموذج الذكاء الاصطناعي
+                </p>
+                <p className="text-sm text-muted-foreground font-arabic">
+                  🔐 تشفير البيانات وحفظها بأمان
+                </p>
+                <p className="text-sm text-muted-foreground font-arabic">
+                  ⏳ يرجى الانتظار لحظات...
+                </p>
+              </div>
             </div>
           )}
 

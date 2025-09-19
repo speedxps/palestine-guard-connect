@@ -13,6 +13,7 @@ import { Eye, EyeOff, Mail, Lock, Save, Camera, ChevronDown } from 'lucide-react
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import genericPoliceLogo from '@/assets/generic-police-logo.png';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
+import { FaceLoginButton } from '@/components/FaceLoginButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -319,17 +320,16 @@ const Login = () => {
                 </div>
 
                 {/* Face Recognition Login */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleFaceRecognitionLogin}
-                  disabled={isLoading}
+                <FaceLoginButton 
+                  onSuccess={() => {
+                    toast({
+                      title: "✅ تسجيل دخول ناجح",
+                      description: "تم تسجيل الدخول بنجاح باستخدام التعرف على الوجه",
+                    });
+                    navigate('/dashboard');
+                  }}
                   className="w-full h-10 sm:h-12 bg-gradient-to-r from-purple-50/50 to-purple-100/50 border-purple-200/50 hover:from-purple-100/70 hover:to-purple-200/70 text-purple-700 font-semibold rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-[1.02] text-sm sm:text-base"
-                >
-                  <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                  <span className="hidden sm:inline">تسجيل الدخول بالتعرف على الوجه</span>
-                  <span className="sm:hidden">التعرف على الوجه</span>
-                </Button>
+                />
               </div>
 
               {/* Login Button */}
