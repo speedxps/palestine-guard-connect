@@ -12,37 +12,37 @@ const rolePages = {
   // مدراء الأقسام - صلاحيات إدارية لقسمهم
   traffic_manager: [
     'dashboard', 'profile', 'violations', 'violations-admin', 'vehicle-lookup', 
-    'patrol', 'police-news', 'admin-panel'
+    'patrol', 'police-news', 'admin-panel', 'feed'
   ],
   cid_manager: [
     'dashboard', 'profile', 'incidents', 'incidents-management', 'new-incident',
-    'wanted-persons-tree', 'face-recognition', 'police-news', 'admin-panel'
+    'wanted-persons-tree', 'face-recognition', 'police-news', 'admin-panel', 'feed'
   ],
   special_manager: [
     'dashboard', 'profile', 'tasks', 'patrol', 'patrol-old', 'feed', 'chat', 'police-news', 'admin-panel'
   ],
   cybercrime_manager: [
-    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'cybercrime-advanced', 'admin-panel'
+    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'cybercrime-advanced', 'admin-panel', 'feed'
   ],
   // موظفو الأقسام - صلاحيات محدودة
   traffic_police: [
-    'dashboard', 'profile', 'violations', 'vehicle-lookup', 'patrol', 'police-news'
+    'dashboard', 'profile', 'violations', 'vehicle-lookup', 'patrol', 'police-news', 'feed'
   ],
   cid: [
     'dashboard', 'profile', 'incidents', 'incidents-management', 'new-incident',
-    'wanted-persons-tree', 'face-recognition', 'police-news'
+    'wanted-persons-tree', 'face-recognition', 'police-news', 'feed'
   ],
   special_police: [
     'dashboard', 'profile', 'tasks', 'patrol', 'patrol-old', 'feed', 'chat', 'police-news'
   ],
   cybercrime: [
-    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news'
+    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'feed'
   ],
   officer: [
-    'dashboard', 'profile', 'police-news'
+    'dashboard', 'profile', 'police-news', 'feed'
   ],
   user: [
-    'dashboard', 'profile', 'police-news'
+    'dashboard', 'profile', 'police-news', 'feed'
   ]
 };
 
@@ -129,6 +129,11 @@ export const useRoleBasedAccess = () => {
           icon: 'Car'
         },
         {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
+        },
+        {
           title: 'إدارة القسم',
           path: '/admin-panel',
           icon: 'Settings'
@@ -151,6 +156,11 @@ export const useRoleBasedAccess = () => {
           icon: 'Users'
         },
         {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
+        },
+        {
           title: 'إدارة القسم',
           path: '/admin-panel',
           icon: 'Settings'
@@ -166,6 +176,11 @@ export const useRoleBasedAccess = () => {
           title: 'الدوريات',
           path: '/patrol',
           icon: 'Users'
+        },
+        {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
         },
         {
           title: 'المحادثات',
@@ -195,6 +210,11 @@ export const useRoleBasedAccess = () => {
           icon: 'BarChart3'
         },
         {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
+        },
+        {
           title: 'إدارة القسم',
           path: '/admin-panel',
           icon: 'Settings'
@@ -220,6 +240,11 @@ export const useRoleBasedAccess = () => {
           title: 'الدوريات',
           path: '/patrol',
           icon: 'Users'
+        },
+        {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
         }
       ],
       cid: [
@@ -247,6 +272,11 @@ export const useRoleBasedAccess = () => {
           title: 'التعرف على الوجوه',
           path: '/face-recognition',
           icon: 'Eye'
+        },
+        {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
         }
       ],
       special_police: [
@@ -286,10 +316,27 @@ export const useRoleBasedAccess = () => {
           title: 'التقارير',
           path: '/reports',
           icon: 'BarChart3'
+        },
+        {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
         }
       ],
-      officer: [],
-      user: []
+      officer: [
+        {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
+        }
+      ],
+      user: [
+        {
+          title: 'التغذية',
+          path: '/feed',
+          icon: 'Rss'
+        }
+      ]
     };
 
     return [...baseItems, ...(roleSpecificItems[role] || [])];

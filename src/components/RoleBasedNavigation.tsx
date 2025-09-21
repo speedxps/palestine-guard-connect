@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { 
   Home, Newspaper, Settings, AlertTriangle, Shield, FileText, 
-  CheckSquare, Users, Car, Plus, Eye, Rss, MessageCircle, BarChart3 
+  CheckSquare, Users, Car, Plus, Eye, Rss, MessageCircle, BarChart3, Computer 
 } from 'lucide-react';
 
 const iconMap = {
   Home, Newspaper, Settings, AlertTriangle, Shield, FileText,
-  CheckSquare, Users, Car, Plus, Eye, Rss, MessageCircle, BarChart3
+  CheckSquare, Users, Car, Plus, Eye, Rss, MessageCircle, BarChart3, Computer
 };
 
 export const RoleBasedNavigation = () => {
