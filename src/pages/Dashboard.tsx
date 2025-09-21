@@ -5,7 +5,6 @@ import RecentActivity from '@/components/dashboard/RecentActivity';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import VoiceAssistant from '@/components/VoiceAssistant';
 import PoliceNews from '@/components/dashboard/PoliceNews';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { useNavigate } from 'react-router-dom';
@@ -179,16 +178,6 @@ const Dashboard = () => {
               );
             })}
           </div>
-        </div>
-
-        {/* Voice Assistant */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
-            المساعد الذكي
-          </h2>
-          <Card className="p-3 sm:p-4 bg-white border border-gray-200 rounded-lg sm:rounded-xl">
-            <VoiceAssistant />
-          </Card>
         </div>
 
         {/* Police News */}
