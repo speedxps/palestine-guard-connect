@@ -48,6 +48,7 @@ import DailyStats from "./pages/DailyStats";
 import UrgentTasks from "./pages/UrgentTasks";
 import SchedulingPage from "./pages/SchedulingPage";
 import ActivityDetail from "./pages/ActivityDetail";
+import PoliceAssistant from "./pages/PoliceAssistant";
 import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
 
 const queryClient = new QueryClient();
@@ -268,6 +269,13 @@ const App = () => {
                 <Route path="/user-dashboard" element={
                   <ProtectedRoute>
                     <UserDashboard />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Police Assistant */}
+                <Route path="/police-assistant" element={
+                  <ProtectedRoute>
+                    <PoliceAssistant />
                   </ProtectedRoute>
                 } />
                 
