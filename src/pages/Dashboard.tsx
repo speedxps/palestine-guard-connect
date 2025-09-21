@@ -15,7 +15,8 @@ import {
   Clock,
   TrendingUp,
   Calendar,
-  Users
+  Users,
+  Bot
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -38,6 +39,13 @@ const Dashboard = () => {
 
   const getQuickActions = () => {
     const quickActions = [
+      {
+        title: 'المساعد الذكي للشرطة',
+        description: 'محادثة ذكية مع المساعد',
+        icon: Bot,
+        color: 'from-violet-500 to-violet-600',
+        path: '/police-assistant'
+      },
       {
         title: 'الإحصائيات اليومية',
         description: 'عرض أداء اليوم',
@@ -139,6 +147,7 @@ const Dashboard = () => {
               const Icon = action.icon;
               const getActionPath = (title: string) => {
                 switch (title) {
+                  case 'المساعد الذكي للشرطة': return '/police-assistant';
                   case 'الإحصائيات اليومية': return '/daily-stats';
                   case 'المهام العاجلة': return '/urgent-tasks';
                   case 'الجدولة': return '/scheduling';
@@ -151,7 +160,7 @@ const Dashboard = () => {
                 <Card 
                   key={index} 
                   className="p-3 sm:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer bg-white border border-gray-200 rounded-lg sm:rounded-xl"
-                  onClick={() => navigate(getActionPath(action.title))}
+                  onClick={() => navigate(action.path || getActionPath(action.title))}
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className={`p-2 rounded-lg bg-gradient-to-r ${action.color} flex-shrink-0`}>

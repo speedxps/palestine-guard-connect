@@ -25,7 +25,8 @@ import {
   MessageCircle,
   BarChart3,
   Menu,
-  LogOut
+  LogOut,
+  Bot
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -210,6 +211,20 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
           >
             <Newspaper className="h-4 w-4 shrink-0" />
             <span className="font-arabic">أخبار الشرطة</span>
+          </Button>
+
+          {/* Police Assistant Link */}
+          <Button
+            variant={location.pathname === '/police-assistant' ? 'default' : 'ghost'}
+            className={`w-full justify-start gap-3 ${
+              location.pathname === '/police-assistant' 
+                ? 'bg-primary text-white hover:bg-primary/90' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+            onClick={() => navigate('/police-assistant')}
+          >
+            <Bot className="h-4 w-4 shrink-0" />
+            <span className="font-arabic">المساعد الذكي</span>
           </Button>
 
 
