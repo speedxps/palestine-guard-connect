@@ -35,7 +35,7 @@ interface ModernSidebarProps {
 const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { userRole, hasAccess } = useRoleBasedAccess();
   
   const [openDepartments, setOpenDepartments] = useState<string[]>(['current']);
@@ -262,9 +262,8 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-2"
-              onClick={() => {
-                const { logout } = require('@/contexts/AuthContext');
-                logout();
+              onClick={async () => {
+                await logout();
                 navigate('/login');
               }}
             >
