@@ -93,6 +93,11 @@ const App = () => {
                     <PoliceNews />
                   </ProtectedRoute>
                 } />
+                <Route path="/activity/:id/:type" element={
+                  <ProtectedRoute>
+                    <ActivityDetail />
+                  </ProtectedRoute>
+                } />
                 <Route path="/daily-stats" element={
                   <ProtectedRoute>
                     <DailyStats />

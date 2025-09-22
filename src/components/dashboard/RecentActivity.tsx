@@ -31,33 +31,109 @@ const RecentActivity = () => {
       try {
         setIsLoading(true);
         
-        // Fetch recent incidents
-        const { data: incidents } = await supabase
+        // Get current user info
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Get user profile with role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        const userRole = profile?.role;
+
+        // Admins can see all activities
+        const canSeeAll = userRole === 'admin';
+
+        // Build queries based on role
+        let incidentsQuery = supabase
           .from('incidents')
-          .select('id, title, description, created_at, status')
+          .select('id, title, description, created_at, status, reporter_id, assigned_to')
           .order('created_at', { ascending: false })
           .limit(3);
 
-        // Fetch recent tasks
-        const { data: tasks } = await supabase
+        let tasksQuery = supabase
           .from('tasks')
-          .select('id, title, description, created_at, status')
+          .select('id, title, description, created_at, status, assigned_to, assigned_by')
           .order('created_at', { ascending: false })
           .limit(3);
 
-        // Fetch recent violations
-        const { data: violations } = await supabase
+        let violationsQuery = supabase
           .from('traffic_records')
           .select('id, citizen_name, details, created_at, is_resolved')
           .order('created_at', { ascending: false })
           .limit(3);
 
-        // Fetch recent cybercrime reports
-        const { data: cybercrimeReports } = await supabase
+        let cybercrimeQuery = supabase
           .from('cybercrime_reports')
-          .select('id, description, created_at, status')
+          .select('id, description, created_at, status, reporter_id, assigned_to')
           .order('created_at', { ascending: false })
           .limit(3);
+
+        // Get current user profile id for filtering
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        const profileId = currentProfile?.id;
+
+        // Apply role-based filtering
+        if (!canSeeAll && profileId) {
+          // CID department - only incidents and cybercrime
+          if (userRole === 'cid') {
+            incidentsQuery = incidentsQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            cybercrimeQuery = cybercrimeQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            tasksQuery = tasksQuery.eq('assigned_to', profileId);
+            // No traffic violations access
+            violationsQuery = violationsQuery.limit(0);
+          }
+          // Traffic police - only violations and patrols
+          else if (userRole === 'traffic_police') {
+            violationsQuery = violationsQuery; // Can see all violations
+            // Limited access to other activities
+            incidentsQuery = incidentsQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            tasksQuery = tasksQuery.eq('assigned_to', profileId);
+            cybercrimeQuery = cybercrimeQuery.limit(0);
+          }
+          // Special police - only tasks and assigned activities
+          else if (userRole === 'special_police') {
+            tasksQuery = tasksQuery.or(`assigned_to.eq.${profileId},assigned_by.eq.${profileId}`);
+            incidentsQuery = incidentsQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            violationsQuery = violationsQuery.limit(0);
+            cybercrimeQuery = cybercrimeQuery.limit(0);
+          }
+          // Cybercrime - only cybercrime related
+          else if (userRole === 'cybercrime') {
+            cybercrimeQuery = cybercrimeQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            incidentsQuery = incidentsQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            tasksQuery = tasksQuery.eq('assigned_to', profileId);
+            violationsQuery = violationsQuery.limit(0);
+          }
+          // Officers and regular users - only their own activities
+          else {
+            incidentsQuery = incidentsQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            tasksQuery = tasksQuery.eq('assigned_to', profileId);
+            cybercrimeQuery = cybercrimeQuery.or(`reporter_id.eq.${profileId},assigned_to.eq.${profileId}`);
+            violationsQuery = violationsQuery.limit(0);
+          }
+        }
+
+        // Execute queries
+        const [
+          { data: incidents },
+          { data: tasks },
+          { data: violations },
+          { data: cybercrimeReports }
+        ] = await Promise.all([
+          incidentsQuery,
+          tasksQuery,
+          violationsQuery,
+          cybercrimeQuery
+        ]);
 
         // Combine and format all activities
         const allActivities: ActivityItem[] = [

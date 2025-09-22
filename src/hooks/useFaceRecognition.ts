@@ -33,19 +33,18 @@ export const useFaceRecognition = () => {
     try {
       setIsLoading(true);
       
-      // Load face recognition model
-      const faceRecognizer = await pipeline(
+      // Use a simpler approach - just generate embeddings directly
+      const embedder = await pipeline(
         'feature-extraction',
-        'Xenova/clip-vit-base-patch32',
+        'Xenova/clip-vit-base-patch16',
         { 
           device: 'webgpu'
         }
       );
+      // Process the image with the embedder
+      const result = await embedder(imageData);
       
       setIsModelLoaded(true);
-
-      // Process the image
-      const result = await faceRecognizer(imageData);
       
       // Convert to Float32Array for consistent storage
       const embedding = new Float32Array(result.data);
