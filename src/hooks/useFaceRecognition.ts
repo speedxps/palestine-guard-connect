@@ -1,254 +1,173 @@
-import { useState, useCallback } from 'react';
-import { pipeline, env } from '@huggingface/transformers';
-import { supabase } from '@/integrations/supabase/client';
-import { FaceEncryption } from '@/utils/faceEncryption';
+import React, { useState, useCallback } from "react";
+import { pipeline, env } from "@huggingface/transformers";
+import { supabase } from "@/integrations/supabase/client";
+import { FaceEncryption } from "@/utils/faceEncryption";
 
-// Configure transformers to use CDN for models
+// إعداد transformers
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
 interface FaceMatch {
   id: string;
   name: string;
-  nationalId?: string;
-  photo_url?: string;
-  similarity: number;
-  source: 'wanted_person' | 'police_officer';
-  role?: string;
+  photoUrl: string;
 }
 
-interface FaceRecognitionResult {
-  success: boolean;
-  embedding?: Float32Array;
-  error?: string;
-}
+const FaceRecognitionApp: React.FC = () => {
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState<FaceMatch | null>(null);
+  const [error, setError] = useState("");
 
-interface SaveFaceDataResult {
-  success: boolean;
-  error?: string;
-}
+  // صور للعرض أثناء البحث
+  const imagesForAnimation = [
+    "/animations/img1.png",
+    "/animations/img2.png",
+    "/animations/img3.png",
+  ];
 
-interface VerifyFaceResult {
-  success: boolean;
-  similarity?: number;
-  error?: string;
-}
-
-interface FaceSearchResult {
-  success: boolean;
-  matches?: FaceMatch[];
-  error?: string;
-}
-
-export const useFaceRecognition = (matchThreshold = 0.7, searchThreshold = 0.5) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModelLoaded, setIsModelLoaded] = useState(false);
-
-  // ======= Image Preprocessing =======
-  const preprocessImage = useCallback(async (imageData: string): Promise<string> => {
-    try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-
-      return new Promise((resolve) => {
-        img.onload = () => {
-          const maxSize = 512;
-          let { width, height } = img;
-          if (width > maxSize || height > maxSize) {
-            if (width > height) {
-              height = (height * maxSize) / width;
-              width = maxSize;
-            } else {
-              width = (width * maxSize) / height;
-              height = maxSize;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          if (ctx) {
-            ctx.filter = 'contrast(1.2) brightness(1.1)';
-            ctx.drawImage(img, 0, 0, width, height);
-          }
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.src = imageData;
-      });
-    } catch (error) {
-      console.error('Preprocessing error:', error);
-      return imageData;
+  // رفع الصورة
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploadedImage(e.target.files[0]);
+      setResult(null);
+      setError("");
     }
-  }, []);
+  };
 
-  // ======= Face Detection =======
-  const detectFaces = useCallback(async (imageData: string): Promise<boolean> => {
+  // البحث عن الوجه
+  const startSearch = useCallback(async () => {
+    if (!uploadedImage) {
+      setError("يرجى رفع صورة أولاً!");
+      return;
+    }
+
+    setSearching(true);
+    setProgress(0);
+    setResult(null);
+    setError("");
+
+    // بدء الانيميشن والعداد
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % imagesForAnimation.length);
+      setProgress((prev) => Math.min(prev + 1, 100));
+    }, 100);
+
     try {
-      const detector = await pipeline('object-detection', 'Xenova/yolov8n-face', { device: 'webgpu' });
-      const result = await detector(imageData, { threshold: 0.3 });
-      return Array.isArray(result) && result.length > 0;
-    } catch (error) {
-      console.warn('Primary detection failed, using fallback:', error);
-      try {
-        const fallback = await pipeline('object-detection', 'Xenova/detr-resnet-50', { device: 'webgpu' });
-        const result = await fallback(imageData);
-        return result.some((d: any) => d.label?.toLowerCase().includes('person') && d.score > 0.2);
-      } catch (fallbackError) {
-        console.error('Fallback detection failed:', fallbackError);
-        return true; // Assume face exists if detection fails
+      // تحويل الصورة إلى base64
+      const reader = new FileReader();
+      reader.readAsDataURL(uploadedImage);
+      const imageBase64: string = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+      });
+
+      // فك تشفير الصورة إذا كان مشفر
+      const decodedImage = FaceEncryption ? FaceEncryption.decrypt(imageBase64) : imageBase64;
+
+      // إعداد pipeline التعرف على الوجه
+      const facePipeline = await pipeline("face-recognition");
+
+      const detectedFaces = await facePipeline(decodedImage);
+
+      if (!detectedFaces || detectedFaces.length === 0) {
+        throw new Error("لم يتم العثور على وجه في الصورة");
       }
-    }
-  }, []);
 
-  // ======= Generate Face Embedding =======
-  const generateFaceEmbedding = useCallback(async (imageData: string): Promise<FaceRecognitionResult> => {
-    try {
-      setIsLoading(true);
-      const processedImage = await preprocessImage(imageData);
-      const hasFace = await detectFaces(processedImage);
-      if (!hasFace) return { success: false, error: 'لم يتم العثور على وجه في الصورة' };
+      // جلب جميع صور المطلوبين من Supabase
+      const { data: facesData, error: supabaseError } = await supabase
+        .from("wanted_faces")
+        .select("*");
 
-      const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { device: 'webgpu' });
-      const result = await embedder(processedImage);
-      setIsModelLoaded(true);
+      if (supabaseError) throw supabaseError;
 
-      const embedding = new Float32Array(result.data);
-      return { success: true, embedding };
-    } catch (error) {
-      console.error('Embedding generation error:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'فشل في معالجة الصورة' };
-    } finally {
-      setIsLoading(false);
-    }
-  }, [preprocessImage, detectFaces]);
-
-  // ======= Save Face Data =======
-  const saveFaceData = useCallback(async (userId: string, imageData: string, embedding: Float32Array): Promise<SaveFaceDataResult> => {
-    try {
-      const embeddingBase64 = btoa(String.fromCharCode(...new Uint8Array(embedding.buffer)));
-      const encryptedEmbedding = FaceEncryption.encrypt(embeddingBase64);
-      const fileName = `face-${userId}-${Date.now()}.jpg`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('citizen-photos')
-        .upload(fileName, dataURLtoBlob(imageData), { contentType: 'image/jpeg', upsert: true });
-      if (uploadError) console.warn('Image upload failed:', uploadError);
-
-      const { error } = await supabase.from('face_data').upsert({
-        user_id: userId,
-        face_encoding: encryptedEmbedding,
-        image_url: null,
-        is_active: true
-      });
-
-      if (error) throw error;
-      return { success: true };
-    } catch (error) {
-      console.error('Save face error:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'فشل في حفظ بيانات الوجه' };
-    }
-  }, []);
-
-  // ======= Verify Face =======
-  const verifyFace = useCallback(async (userId: string, imageData: string): Promise<VerifyFaceResult> => {
-    try {
-      setIsLoading(true);
-      const currentFace = await generateFaceEmbedding(imageData);
-      if (!currentFace.success || !currentFace.embedding) return { success: false, error: 'فشل في معالجة الصورة الحالية' };
-
-      const { data: storedFace, error } = await supabase
-        .from('face_data')
-        .select('face_encoding')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .single();
-
-      if (error || !storedFace) return { success: false, error: 'لم يتم العثور على بيانات الوجه المحفوظة' };
-
-      const decrypted = FaceEncryption.decrypt(storedFace.face_encoding);
-      const storedEmbedding = new Float32Array(new Uint8Array([...atob(decrypted)].map(c => c.charCodeAt(0))).buffer);
-
-      const similarity = cosineSimilarity(currentFace.embedding, storedEmbedding);
-      const isMatch = similarity >= matchThreshold;
-
-      return { success: isMatch, similarity, error: isMatch ? undefined : 'الوجه غير متطابق مع البيانات المحفوظة' };
-    } catch (error) {
-      console.error('Verify face error:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'فشل في التحقق من الوجه' };
-    } finally {
-      setIsLoading(false);
-    }
-  }, [generateFaceEmbedding, matchThreshold]);
-
-  // ======= Search Faces =======
-  const searchFaces = useCallback(async (imageData: string): Promise<FaceSearchResult> => {
-    try {
-      setIsLoading(true);
-      const faceResult = await generateFaceEmbedding(imageData);
-      if (!faceResult.success || !faceResult.embedding) return { success: false, error: faceResult.error || 'فشل في معالجة الصورة' };
-
-      const matches: FaceMatch[] = [];
-
-      // Police officers
-      const { data: faceData } = await supabase.from('face_data').select('user_id, face_encoding');
-      if (faceData) {
-        for (const face of faceData) {
-          try {
-            const decrypted = FaceEncryption.decrypt(face.face_encoding);
-            const storedEmbedding = new Float32Array(new Uint8Array([...atob(decrypted)].map(c => c.charCodeAt(0))).buffer);
-            const similarity = cosineSimilarity(faceResult.embedding, storedEmbedding);
-            if (similarity >= searchThreshold) {
-              const { data: profile } = await supabase.from('profiles').select('id, full_name, role, avatar_url').eq('user_id', face.user_id).single();
-              if (profile) {
-                matches.push({ id: profile.id, name: profile.full_name, photo_url: profile.avatar_url, similarity, source: 'police_officer', role: profile.role });
-              }
-            }
-          } catch (error) {
-            console.error('Police face processing error:', error);
-          }
+      // مقارنة الـ embeddings
+      let match: FaceMatch | null = null;
+      for (const face of facesData) {
+        const storedEmbedding = face.embedding; // مفترض أن كل وجه مخزن مع embedding
+        const score = await compareFaces(detectedFaces[0].embedding, storedEmbedding);
+        if (score > 0.8) {
+          match = {
+            id: face.id,
+            name: face.name,
+            photoUrl: face.photoUrl,
+          };
+          break;
         }
       }
 
-      // Citizens (wanted persons)
-      const { data: citizensData } = await supabase.from('citizens').select('id, full_name, national_id, photo_url, wanted_persons(id, is_active, reason)');
-      if (citizensData) {
-        for (const citizen of citizensData) {
-          if (citizen.photo_url && citizen.wanted_persons?.some((wp: any) => wp.is_active)) {
-            matches.push({ id: citizen.id, name: citizen.full_name, nationalId: citizen.national_id, photo_url: citizen.photo_url, similarity: 0.6, source: 'wanted_person' });
-          }
-        }
-      }
-
-      const topMatches = matches.sort((a, b) => b.similarity - a.similarity).slice(0, 3).filter(m => m.similarity >= matchThreshold);
-      return { success: true, matches: topMatches };
-    } catch (error) {
-      console.error('Face search error:', error);
-      return { success: false, error: 'حدث خطأ أثناء البحث' };
+      setResult(match || null);
+    } catch (err: any) {
+      setError(err.message || "حدث خطأ أثناء البحث");
     } finally {
-      setIsLoading(false);
+      clearInterval(interval);
+      setSearching(false);
+      setProgress(100);
     }
-  }, [generateFaceEmbedding, matchThreshold, searchThreshold]);
+  }, [uploadedImage]);
 
-  return { isLoading, isModelLoaded, generateFaceEmbedding, saveFaceData, verifyFace, searchFaces, preprocessImage, detectFaces };
+  // دالة افتراضية لمقارنة embeddings
+  const compareFaces = async (emb1: number[], emb2: number[]) => {
+    if (emb1.length !== emb2.length) return 0;
+    let sum = 0;
+    for (let i = 0; i < emb1.length; i++) {
+      sum += (emb1[i] - emb2[i]) ** 2;
+    }
+    return 1 / (1 + Math.sqrt(sum)); // يحول المسافة إلى تشابه
+  };
+
+  return (
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h2>نظام التعرف على الوجوه</h2>
+
+      <input type="file" accept="image/*" onChange={handleUpload} />
+      <button onClick={startSearch} disabled={searching} style={{ marginLeft: "10px" }}>
+        {searching ? "جارٍ البحث..." : "ابحث عن الوجه"}
+      </button>
+
+      {uploadedImage && (
+        <div style={{ marginTop: "20px" }}>
+          <h4>الصورة المرفوعة:</h4>
+          <img
+            src={URL.createObjectURL(uploadedImage)}
+            alt="Uploaded"
+            style={{ width: "200px", border: "1px solid #ccc", padding: "5px" }}
+          />
+        </div>
+      )}
+
+      {searching && (
+        <div style={{ marginTop: "20px" }}>
+          <h4>البحث جارٍ...</h4>
+          <img
+            src={imagesForAnimation[currentImageIndex]}
+            alt="Animation"
+            style={{ width: "150px", border: "1px solid #ccc", padding: "5px" }}
+          />
+          <div style={{ marginTop: "10px" }}>
+            <progress value={progress} max={100} style={{ width: "200px" }} />
+            <span> {progress}%</span>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div style={{ marginTop: "20px" }}>
+          <h4>تم العثور على الوجه:</h4>
+          <p>الاسم: {result.name}</p>
+          <img src={result.photoUrl} alt={result.name} style={{ width: "200px" }} />
+        </div>
+      )}
+
+      {error && (
+        <div style={{ marginTop: "20px", color: "red" }}>
+          <p>{error}</p>
+        </div>
+      )}
+    </div>
+  );
 };
 
-// ======= Helpers =======
-function cosineSimilarity(a: Float32Array, b: Float32Array): number {
-  if (a.length !== b.length) return 0;
-  let dot = 0, normA = 0, normB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] ** 2;
-    normB += b[i] ** 2;
-  }
-  const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
-  return magnitude === 0 ? 0 : dot / magnitude;
-}
-
-function dataURLtoBlob(dataurl: string): Blob {
-  const arr = dataurl.split(',');
-  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
-  const bstr = atob(arr[1]);
-  const u8arr = new Uint8Array(bstr.length);
-  for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
-  return new Blob([u8arr], { type: mime });
-    }
+export default FaceRecognitionApp;
