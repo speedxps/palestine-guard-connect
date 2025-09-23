@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useFaceRecognition } from "@/hooks/useFaceRecognition";
-import "./FaceRecognitionUI.css"; // تأكد من وجود هذا الملف
+import "./FaceRecognitionUI.css";
 
 const animationImages = [
   "/animations/img1.png",
