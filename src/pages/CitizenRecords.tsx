@@ -40,7 +40,6 @@ interface CitizenRecord {
   cybercrime_reports: CybercrimeReport[];
   incidents: Incident[];
   wanted_status?: WantedPerson;
-  vehicles?: Vehicle[]; // إضافة معلومات المركبات
 }
 
 interface TrafficViolation {
@@ -71,28 +70,12 @@ interface Incident {
   created_at: string;
 }
 
-interface Vehicle {
-  id: string;
-  plate_number: string;
-  vehicle_type?: string;
-  color?: string;
-  purchase_date?: string;
-}
-
 interface WantedPerson {
   id: string;
   reason?: string;
   monitor_start_date: string;
   monitor_end_date?: string;
   is_active: boolean;
-}
-
-interface Vehicle {
-  id: string;
-  plate_number: string;
-  vehicle_type?: string;
-  color?: string;
-  purchase_date?: string;
 }
 
 const CitizenRecords: React.FC = () => {
@@ -177,12 +160,6 @@ const CitizenRecords: React.FC = () => {
           .eq('is_active', true)
           .limit(1);
 
-        // جلب معلومات المركبات
-        const { data: vehicles } = await supabase
-          .from('vehicles')
-          .select('*')
-          .eq('owner_id', citizen.id);
-
         // إضافة المواطن للقائمة إذا كان لديه أي سجلات
         const hasRecords = 
           (violations && violations.length > 0) ||
@@ -196,8 +173,7 @@ const CitizenRecords: React.FC = () => {
             traffic_violations: violations || [],
             cybercrime_reports: cybercrimeReports,
             incidents: incidents,
-            wanted_status: wanted && wanted.length > 0 ? wanted[0] : undefined,
-            vehicles: vehicles || []
+            wanted_status: wanted && wanted.length > 0 ? wanted[0] : undefined
           });
         }
       }
@@ -555,30 +531,6 @@ const CitizenRecords: React.FC = () => {
                                 <label className="text-sm font-arabic text-muted-foreground">يملك مركبة</label>
                                 <p className="font-arabic text-sm">{selectedRecord.has_vehicle ? 'نعم' : 'لا'}</p>
                               </div>
-                              
-                              {/* عرض معلومات المركبات إن وجدت */}
-                              {selectedRecord.vehicles && selectedRecord.vehicles.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-arabic text-muted-foreground">المركبات المملوكة</label>
-                                  <div className="space-y-2 mt-1">
-                                    {selectedRecord.vehicles.map((vehicle) => (
-                                      <div key={vehicle.id} className="p-2 bg-blue-50 rounded border text-sm">
-                                        <div className="flex items-center justify-between">
-                                          <span className="font-semibold">{vehicle.plate_number}</span>
-                                          {vehicle.vehicle_type && (
-                                            <span className="text-muted-foreground">{vehicle.vehicle_type}</span>
-                                          )}
-                                        </div>
-                                        {vehicle.color && (
-                                          <div className="text-xs text-muted-foreground">
-                                            اللون: {vehicle.color}
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
                             </div>
                             
                             {selectedRecord.wanted_status && (
