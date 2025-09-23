@@ -1,81 +1,52 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-// دالة لحساب التشابه الكوني بين متجهين
-function cosineSimilarity(a: Float32Array, b: Float32Array): number {
-  if (a.length !== b.length) return 0;
+const supabaseUrl = "https://ldhgwqeuvbvlmvyywmaf.supabase.co";
+const supabaseKey = "sbp_4cd798cf114e280f789cd6cb6913145723542280"; // حط مفتاح Supabase الخاص بك هنا
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-// مثال لدالة توليد الـembedding للوجه (تستبدل بالـAPI الحقيقي أو النموذج)
-async function generateFaceEmbedding(base64Image: string): Promise<Float32Array> {
-  // محاكاة: استرجاع مصفوفة أرقام عشوائية كمثال
-  return new Float32Array(Array.from({ length: 128 }, () => Math.random()));
-}
-
-// قاعدة بيانات وهمية للوجوه للتجربة
-const faceDatabase: {
-  id: string;
+export interface Citizen {
+  id: number;
   name: string;
   nationalId?: string;
   role?: string;
-  embedding: Float32Array;
-  photo_url?: string;
-}[] = [
-  {
-    id: "1",
-    name: "Noor Irjan",
-    nationalId: "123456789",
-    role: "Officer",
-    embedding: new Float32Array(Array.from({ length: 128 }, () => Math.random())),
-    photo_url: "/faces/noor.png",
-  },
-  {
-    id: "2",
-    name: "Ahmad Ali",
-    nationalId: "987654321",
-    role: "Detective",
-    embedding: new Float32Array(Array.from({ length: 128 }, () => Math.random())),
-    photo_url: "/faces/ahmad.png",
-  },
-];
+  photo_url: string;
+  embedding?: number[];
+}
 
 export function useFaceRecognition() {
-  const [matches, setMatches] = useState<any[]>([]);
+  const [citizens, setCitizens] = useState<Citizen[]>([]);
 
-  const searchFaces = useCallback(async (base64Image: string) => {
-    try {
-      const queryEmbedding = await generateFaceEmbedding(base64Image);
+  // جلب البيانات من Supabase
+  const fetchCitizens = async () => {
+    const { data, error } = await supabase
+      .from("citizens")
+      .select("*");
+    if (error) throw new Error(error.message);
+    setCitizens(data as Citizen[]);
+  };
 
-      // البحث في قاعدة البيانات
-      const results = faceDatabase.map((entry) => {
-        const similarity = cosineSimilarity(queryEmbedding, entry.embedding);
-        return { ...entry, similarity };
-      });
+  // مقارنة الوجوه (نفترض هنا دالة وهمية للمثال)
+  const searchFaces = async (uploadedImageBase64: string) => {
+    // لاحظ: هنا تحتاج تولد embeddings حقيقية للصور
+    // مثال وهمي: يقارن فقط أول صورتين
+    if (citizens.length === 0) await fetchCitizens();
 
-      // ترتيب حسب التشابه الأعلى
-      results.sort((a, b) => b.similarity - a.similarity);
+    // dummy similarity: لو كان الرفع أي صورة، نرجع أول شخصين
+    const matches = citizens.slice(0, 2).map(c => ({
+      ...c,
+      similarity: Math.random() * 0.3 + 0.7 // رقم وهمي للتشابه
+    }));
 
-      // إعادة الوجوه التي التشابه أكبر من 0.7
-      const matched = results.filter((r) => r.similarity > 0.7);
+    return {
+      success: matches.length > 0,
+      matches
+    };
+  };
 
-      setMatches(matched);
-
-      return { success: true, matches: matched };
-    } catch (err: any) {
-      return { success: false, matches: [], error: err.message || "Error" };
-    }
-  }, []);
-
-  return { matches, searchFaces };
+  return {
+    citizens,
+    fetchCitizens,
+    searchFaces,
+  };
 }
