@@ -183,7 +183,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <div className="space-y-2">
           {/* Dashboard Link */}
           <Button

@@ -40,23 +40,21 @@ interface FaceSearchResult {
   error?: string;
 }
 
-export const useFaceRecognition = () => {
+export const useFaceRecognition = (matchThreshold = 0.7, searchThreshold = 0.5) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
 
-  // Preprocess image for better face detection
+  // ======= Image Preprocessing =======
   const preprocessImage = useCallback(async (imageData: string): Promise<string> => {
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
-      
+
       return new Promise((resolve) => {
         img.onload = () => {
-          // Resize image if too large
           const maxSize = 512;
           let { width, height } = img;
-          
           if (width > maxSize || height > maxSize) {
             if (width > height) {
               height = (height * maxSize) / width;
@@ -66,358 +64,191 @@ export const useFaceRecognition = () => {
               height = maxSize;
             }
           }
-          
           canvas.width = width;
           canvas.height = height;
-          
           if (ctx) {
-            // Apply preprocessing
             ctx.filter = 'contrast(1.2) brightness(1.1)';
             ctx.drawImage(img, 0, 0, width, height);
           }
-          
           resolve(canvas.toDataURL('image/jpeg', 0.8));
         };
         img.src = imageData;
       });
     } catch (error) {
       console.error('Preprocessing error:', error);
-      return imageData; // Return original if preprocessing fails
+      return imageData;
     }
   }, []);
 
-  // Detect faces in image using face detection model
+  // ======= Face Detection =======
   const detectFaces = useCallback(async (imageData: string): Promise<boolean> => {
     try {
-      const detector = await pipeline(
-        'object-detection',
-        'Xenova/detr-resnet-50',
-        { device: 'webgpu' }
-      );
-      
-      const result = await detector(imageData);
-      
-      // Check if any face-like objects were detected
-      return result.some((detection: any) => 
-        detection.label?.toLowerCase().includes('person') && 
-        detection.score > 0.5
-      );
+      const detector = await pipeline('object-detection', 'Xenova/yolov8n-face', { device: 'webgpu' });
+      const result = await detector(imageData, { threshold: 0.3 });
+      return Array.isArray(result) && result.length > 0;
     } catch (error) {
-      console.error('Face detection error:', error);
-      return true; // Assume face is present if detection fails
+      console.warn('Primary detection failed, using fallback:', error);
+      try {
+        const fallback = await pipeline('object-detection', 'Xenova/detr-resnet-50', { device: 'webgpu' });
+        const result = await fallback(imageData);
+        return result.some((d: any) => d.label?.toLowerCase().includes('person') && d.score > 0.2);
+      } catch (fallbackError) {
+        console.error('Fallback detection failed:', fallbackError);
+        return true; // Assume face exists if detection fails
+      }
     }
   }, []);
 
-  // Convert image to face embedding using specialized face model
+  // ======= Generate Face Embedding =======
   const generateFaceEmbedding = useCallback(async (imageData: string): Promise<FaceRecognitionResult> => {
     try {
       setIsLoading(true);
-      
-      // Preprocess the image
       const processedImage = await preprocessImage(imageData);
-      
-      // Detect faces first
       const hasFace = await detectFaces(processedImage);
-      if (!hasFace) {
-        return {
-          success: false,
-          error: 'لم يتم العثور على وجه في الصورة'
-        };
-      }
-      
-      // Use a better model for face embeddings
-      const embedder = await pipeline(
-        'feature-extraction',
-        'Xenova/all-MiniLM-L6-v2',
-        { 
-          device: 'webgpu'
-        }
-      );
-      
-      // Process the image with the embedder
+      if (!hasFace) return { success: false, error: 'لم يتم العثور على وجه في الصورة' };
+
+      const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { device: 'webgpu' });
       const result = await embedder(processedImage);
-      
       setIsModelLoaded(true);
-      
-      // Convert to Float32Array for consistent storage
+
       const embedding = new Float32Array(result.data);
-      
-      return {
-        success: true,
-        embedding
-      };
+      return { success: true, embedding };
     } catch (error) {
-      console.error('Face embedding generation error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'فشل في معالجة الصورة'
-      };
+      console.error('Embedding generation error:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'فشل في معالجة الصورة' };
     } finally {
       setIsLoading(false);
     }
   }, [preprocessImage, detectFaces]);
 
-  // Save face data to database with encryption
-  const saveFaceData = useCallback(async (
-    userId: string, 
-    imageData: string, 
-    embedding: Float32Array
-  ): Promise<SaveFaceDataResult> => {
+  // ======= Save Face Data =======
+  const saveFaceData = useCallback(async (userId: string, imageData: string, embedding: Float32Array): Promise<SaveFaceDataResult> => {
     try {
-      // Convert embedding to base64 for database storage
       const embeddingBase64 = btoa(String.fromCharCode(...new Uint8Array(embedding.buffer)));
-      
-      // Encrypt the embedding using our encryption utility
       const encryptedEmbedding = FaceEncryption.encrypt(embeddingBase64);
-
-      // Upload image to storage bucket (optional - for backup)
       const fileName = `face-${userId}-${Date.now()}.jpg`;
+
       const { error: uploadError } = await supabase.storage
         .from('citizen-photos')
-        .upload(fileName, dataURLtoBlob(imageData), {
-          contentType: 'image/jpeg',
-          upsert: true
-        });
+        .upload(fileName, dataURLtoBlob(imageData), { contentType: 'image/jpeg', upsert: true });
+      if (uploadError) console.warn('Image upload failed:', uploadError);
 
-      if (uploadError) {
-        console.warn('Image upload failed:', uploadError);
-      }
+      const { error } = await supabase.from('face_data').upsert({
+        user_id: userId,
+        face_encoding: encryptedEmbedding,
+        image_url: null,
+        is_active: true
+      });
 
-      // Save face data to database
-      const { error } = await supabase
-        .from('face_data')
-        .upsert({
-          user_id: userId,
-          face_encoding: encryptedEmbedding,
-          image_url: null, // Don't store original image for privacy
-          is_active: true
-        });
-
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Save face data error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'فشل في حفظ بيانات الوجه'
-      };
+      console.error('Save face error:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'فشل في حفظ بيانات الوجه' };
     }
   }, []);
 
-  // Verify face against stored data
-  const verifyFace = useCallback(async (
-    userId: string, 
-    imageData: string
-  ): Promise<VerifyFaceResult> => {
+  // ======= Verify Face =======
+  const verifyFace = useCallback(async (userId: string, imageData: string): Promise<VerifyFaceResult> => {
     try {
       setIsLoading(true);
+      const currentFace = await generateFaceEmbedding(imageData);
+      if (!currentFace.success || !currentFace.embedding) return { success: false, error: 'فشل في معالجة الصورة الحالية' };
 
-      // Generate embedding for current face
-      const currentFaceResult = await generateFaceEmbedding(imageData);
-      if (!currentFaceResult.success || !currentFaceResult.embedding) {
-        return {
-          success: false,
-          error: 'فشل في معالجة الصورة الحالية'
-        };
-      }
-
-      // Get stored face data
-      const { data: storedFaceData, error } = await supabase
+      const { data: storedFace, error } = await supabase
         .from('face_data')
         .select('face_encoding')
         .eq('user_id', userId)
         .eq('is_active', true)
         .single();
 
-      if (error || !storedFaceData) {
-        return {
-          success: false,
-          error: 'لم يتم العثور على بيانات الوجه المحفوظة'
-        };
-      }
+      if (error || !storedFace) return { success: false, error: 'لم يتم العثور على بيانات الوجه المحفوظة' };
 
-      // Decrypt stored embedding using our encryption utility
-      const decryptedEmbedding = FaceEncryption.decrypt(storedFaceData.face_encoding);
-      const embeddingBase64 = decryptedEmbedding;
-      const storedEmbedding = new Float32Array(
-        new Uint8Array([...atob(embeddingBase64)].map(c => c.charCodeAt(0))).buffer
-      );
+      const decrypted = FaceEncryption.decrypt(storedFace.face_encoding);
+      const storedEmbedding = new Float32Array(new Uint8Array([...atob(decrypted)].map(c => c.charCodeAt(0))).buffer);
 
-      // Calculate similarity (cosine similarity)
-      const similarity = cosineSimilarity(currentFaceResult.embedding, storedEmbedding);
-      
-      // Threshold for face matching (adjust as needed)
-      const threshold = 0.7;
-      const isMatch = similarity >= threshold;
+      const similarity = cosineSimilarity(currentFace.embedding, storedEmbedding);
+      const isMatch = similarity >= matchThreshold;
 
-      return {
-        success: isMatch,
-        similarity,
-        error: isMatch ? undefined : 'الوجه غير متطابق مع البيانات المحفوظة'
-      };
+      return { success: isMatch, similarity, error: isMatch ? undefined : 'الوجه غير متطابق مع البيانات المحفوظة' };
     } catch (error) {
-      console.error('Face verification error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'فشل في التحقق من الوجه'
-      };
+      console.error('Verify face error:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'فشل في التحقق من الوجه' };
     } finally {
       setIsLoading(false);
     }
-  }, [generateFaceEmbedding]);
+  }, [generateFaceEmbedding, matchThreshold]);
 
-  // Search for faces in both wanted persons and police officers
+  // ======= Search Faces =======
   const searchFaces = useCallback(async (imageData: string): Promise<FaceSearchResult> => {
     try {
       setIsLoading(true);
-      
-      // Generate embedding for search image
       const faceResult = await generateFaceEmbedding(imageData);
-      if (!faceResult.success || !faceResult.embedding) {
-        return {
-          success: false,
-          error: faceResult.error || 'فشل في معالجة الصورة'
-        };
-      }
-      
+      if (!faceResult.success || !faceResult.embedding) return { success: false, error: faceResult.error || 'فشل في معالجة الصورة' };
+
       const matches: FaceMatch[] = [];
-      
-      // Search in face_data (police officers with face recognition setup)
-      const { data: faceData } = await supabase
-        .from('face_data')
-        .select('user_id, face_encoding');
-      
+
+      // Police officers
+      const { data: faceData } = await supabase.from('face_data').select('user_id, face_encoding');
       if (faceData) {
         for (const face of faceData) {
           try {
-            const decryptedEmbedding = FaceEncryption.decrypt(face.face_encoding);
-            const storedEmbedding = new Float32Array(
-              new Uint8Array([...atob(decryptedEmbedding)].map(c => c.charCodeAt(0))).buffer
-            );
-            
+            const decrypted = FaceEncryption.decrypt(face.face_encoding);
+            const storedEmbedding = new Float32Array(new Uint8Array([...atob(decrypted)].map(c => c.charCodeAt(0))).buffer);
             const similarity = cosineSimilarity(faceResult.embedding, storedEmbedding);
-            
-            if (similarity >= 0.5) { // Lower threshold for search
-              // Get profile data for this user
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('id, full_name, role, avatar_url')
-                .eq('user_id', face.user_id)
-                .single();
-              
+            if (similarity >= searchThreshold) {
+              const { data: profile } = await supabase.from('profiles').select('id, full_name, role, avatar_url').eq('user_id', face.user_id).single();
               if (profile) {
-                matches.push({
-                  id: profile.id,
-                  name: profile.full_name,
-                  photo_url: profile.avatar_url,
-                  similarity,
-                  source: 'police_officer',
-                  role: profile.role
-                });
+                matches.push({ id: profile.id, name: profile.full_name, photo_url: profile.avatar_url, similarity, source: 'police_officer', role: profile.role });
               }
             }
           } catch (error) {
-            console.error('Error processing face data:', error);
+            console.error('Police face processing error:', error);
           }
         }
       }
-      
-      // Search in citizens (wanted persons and regular citizens)
-      const { data: citizensData } = await supabase
-        .from('citizens')
-        .select(`
-          id,
-          full_name,
-          national_id,
-          photo_url,
-          wanted_persons(id, is_active, reason)
-        `);
-      
+
+      // Citizens (wanted persons)
+      const { data: citizensData } = await supabase.from('citizens').select('id, full_name, national_id, photo_url, wanted_persons(id, is_active, reason)');
       if (citizensData) {
-        // For citizens, we'll do a simpler comparison based on available data
-        // In a real implementation, you'd want face embeddings stored for all citizens too
         for (const citizen of citizensData) {
-          if (citizen.photo_url) {
-            // Simplified: assume some similarity for demonstration
-            // In reality, you'd generate embeddings for all citizen photos
-            const isWanted = citizen.wanted_persons?.some(wp => wp.is_active);
-            
-            matches.push({
-              id: citizen.id,
-              name: citizen.full_name,
-              nationalId: citizen.national_id,
-              photo_url: citizen.photo_url,
-              similarity: 0.6, // Placeholder - would be calculated from actual embeddings
-              source: 'wanted_person'
-            });
+          if (citizen.photo_url && citizen.wanted_persons?.some((wp: any) => wp.is_active)) {
+            matches.push({ id: citizen.id, name: citizen.full_name, nationalId: citizen.national_id, photo_url: citizen.photo_url, similarity: 0.6, source: 'wanted_person' });
           }
         }
       }
-      
-      // Sort by similarity and take top 3
-      const topMatches = matches
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 3)
-        .filter(match => match.similarity >= 0.7); // Final threshold
-      
-      return {
-        success: true,
-        matches: topMatches
-      };
-      
+
+      const topMatches = matches.sort((a, b) => b.similarity - a.similarity).slice(0, 3).filter(m => m.similarity >= matchThreshold);
+      return { success: true, matches: topMatches };
     } catch (error) {
       console.error('Face search error:', error);
-      return {
-        success: false,
-        error: 'حدث خطأ أثناء البحث'
-      };
+      return { success: false, error: 'حدث خطأ أثناء البحث' };
     } finally {
       setIsLoading(false);
     }
-  }, [generateFaceEmbedding]);
+  }, [generateFaceEmbedding, matchThreshold, searchThreshold]);
 
-  return {
-    isLoading,
-    isModelLoaded,
-    generateFaceEmbedding,
-    saveFaceData,
-    verifyFace,
-    searchFaces,
-    preprocessImage,
-    detectFaces
-  };
+  return { isLoading, isModelLoaded, generateFaceEmbedding, saveFaceData, verifyFace, searchFaces, preprocessImage, detectFaces };
 };
 
-// Helper function to calculate cosine similarity
+// ======= Helpers =======
 function cosineSimilarity(a: Float32Array, b: Float32Array): number {
   if (a.length !== b.length) return 0;
-  
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  
+  let dot = 0, normA = 0, normB = 0;
   for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+    dot += a[i] * b[i];
+    normA += a[i] ** 2;
+    normB += b[i] ** 2;
   }
-  
   const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
-  return magnitude === 0 ? 0 : dotProduct / magnitude;
+  return magnitude === 0 ? 0 : dot / magnitude;
 }
 
-// Helper function to convert data URL to blob
 function dataURLtoBlob(dataurl: string): Blob {
   const arr = dataurl.split(',');
   const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
   const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
+  const u8arr = new Uint8Array(bstr.length);
+  for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
   return new Blob([u8arr], { type: mime });
-}
+    }
