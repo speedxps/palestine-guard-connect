@@ -147,7 +147,7 @@ const UserDashboard = () => {
       { 
         name: 'vehicle-lookup', 
         title: 'البحث عن مركبة', 
-        path: '/vehicle-lookup', 
+        path: '/vehicle-inquiry', 
         icon: Car, 
         color: 'from-blue-400 to-blue-500',
         description: 'البحث في قاعدة بيانات المركبات'
