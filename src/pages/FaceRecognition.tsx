@@ -5,7 +5,6 @@ import { Camera, Upload, Search, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useFaceRecognition } from '@/hooks/useFaceRecognition';
-import { FaceEncryption } from '@/utils/faceEncryption';
 
 const FaceRecognition = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -18,7 +17,7 @@ const FaceRecognition = () => {
   const [cameraActive, setCameraActive] = useState(false);
   
   // استخدام hook التعرف على الوجوه
-  const { generateFaceEmbedding } = useFaceRecognition();
+  const { searchFaces, isLoading: faceLoading } = useFaceRecognition();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -84,74 +83,32 @@ const FaceRecognition = () => {
         const imageData = e.target?.result as string;
         
         try {
-          // توليد البصمة للصورة المرفوعة
-          const faceResult = await generateFaceEmbedding(imageData);
+          // البحث باستخدام النظام المحسن
+          const searchResult = await searchFaces(imageData);
           
-          if (!faceResult.success || !faceResult.embedding) {
-            toast.error('لم يتم العثور على وجه واضح في الصورة');
+          if (!searchResult.success) {
+            toast.error(searchResult.error || 'فشل في البحث');
             setLoading(false);
             return;
           }
 
-          // البحث في قاعدة البيانات عن المواطنين مع بيانات الوجه
-          const { data: faceData, error: faceError } = await supabase
-            .from('face_data')
-            .select('user_id, face_encoding');
-
-          if (faceError) {
-            throw faceError;
-          }
-
-          // مقارنة البصمات للعثور على أفضل تطابق
-          let bestMatch = null;
-          let bestSimilarity = 0;
-          const threshold = 0.7; // عتبة التطابق
-
-          if (faceData && faceData.length > 0) {
-            for (const face of faceData) {
-              try {
-                // فك تشفير البصمة المحفوظة
-                const decryptedEmbedding = FaceEncryption.decrypt(face.face_encoding);
-                const storedEmbedding = new Float32Array(
-                  new Uint8Array([...atob(decryptedEmbedding)].map(c => c.charCodeAt(0))).buffer
-                );
-
-                // حساب التشابه
-                const similarity = cosineSimilarity(faceResult.embedding, storedEmbedding);
-                
-                if (similarity > bestSimilarity && similarity >= threshold) {
-                  bestSimilarity = similarity;
-                  bestMatch = face.user_id;
-                }
-              } catch (error) {
-                console.error('Error processing face data:', error);
-              }
-            }
-          }
-
-          // إذا تم العثور على تطابق، جلب بيانات المواطن من جدول المستخدمين
-          if (bestMatch) {
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('id, username, full_name, role, avatar_url')
-              .eq('user_id', bestMatch)
-              .single();
-
-            if (profileError) {
-              throw profileError;
-            }
-
-            setResults([{
-              id: profile.id,
-              full_name: profile.full_name,
-              username: profile.username,
-              role: profile.role,
-              photo_url: profile.avatar_url
-            }]);
-            toast.success(`تم العثور على تطابق بنسبة ${Math.round(bestSimilarity * 100)}%`);
+          if (searchResult.matches && searchResult.matches.length > 0) {
+            // تحويل النتائج للتنسيق المطلوب
+            const formattedResults = searchResult.matches.map(match => ({
+              id: match.id,
+              full_name: match.name,
+              national_id: match.nationalId,
+              photo_url: match.photo_url,
+              similarity: match.similarity,
+              source: match.source,
+              role: match.role
+            }));
+            
+            setResults(formattedResults);
+            toast.success(`تم العثور على ${formattedResults.length} تطابق محتمل`);
           } else {
             setResults([]);
-            toast.error('لم يتم العثور على أي تطابق في قاعدة البيانات');
+            toast.error('لا يوجد تطابق أعلى من 70%');
           }
           
         } catch (error) {
@@ -256,10 +213,10 @@ const FaceRecognition = () => {
                 />
                 <Button
                   onClick={searchSimilarFaces}
-                  disabled={loading}
+                  disabled={loading || faceLoading}
                   className="w-full"
                 >
-                  {loading ? 'جاري البحث...' : 'البحث عن وجوه مشابهة'}
+                  {loading || faceLoading ? 'جاري البحث...' : 'البحث عن وجوه مشابهة'}
                   <Search className="h-4 w-4 mr-2" />
                 </Button>
               </div>
@@ -279,22 +236,56 @@ const FaceRecognition = () => {
           <CardContent>
             {results.length > 0 ? (
               <div className="space-y-4">
-                {results.map((person) => (
-                  <div key={person.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                    {person.photo_url && (
-                      <img
-                        src={person.photo_url}
-                        alt={person.full_name}
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{person.full_name}</h3>
-                      <p className="text-sm text-muted-foreground">اسم المستخدم: {person.username}</p>
-                      <p className="text-sm text-muted-foreground">الدور: {person.role}</p>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      تطابق محتمل
+                <div className="text-sm text-muted-foreground mb-4">
+                  أفضل {results.length} تطابق (الحد الأدنى 70%)
+                </div>
+                {results.map((person, index) => (
+                  <div key={person.id} className="border rounded-lg overflow-hidden">
+                    <div className="flex items-center gap-4 p-4">
+                      {person.photo_url ? (
+                        <img
+                          src={person.photo_url}
+                          alt={person.full_name}
+                          className="w-20 h-20 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
+                          <User className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-lg">{person.full_name}</h3>
+                          <span className="text-sm px-2 py-1 rounded text-white bg-primary">
+                            #{index + 1}
+                          </span>
+                        </div>
+                        {person.national_id && (
+                          <p className="text-sm text-muted-foreground">
+                            الهوية: {person.national_id}
+                          </p>
+                        )}
+                        {person.role && (
+                          <p className="text-sm text-muted-foreground">
+                            الدور: {person.role}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className={`text-sm px-2 py-1 rounded text-white ${
+                            person.source === 'wanted_person' 
+                              ? 'bg-destructive' 
+                              : 'bg-blue-600'
+                          }`}>
+                            {person.source === 'wanted_person' 
+                              ? 'مطلوب/قضية' 
+                              : 'ضابط شرطة'
+                            }
+                          </span>
+                          <span className="text-sm font-medium text-green-600">
+                            تطابق: {Math.round(person.similarity * 100)}%
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
