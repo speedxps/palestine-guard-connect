@@ -90,84 +90,99 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8">
-        <h1 className="text-center text-3xl font-bold mb-2">الشرطة الفلسطينية</h1>
-        <p className="text-center text-sm text-gray-600 mb-6">Palestinian Police Department</p>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 flex items-center justify-center px-4">
+      {/* Geometric Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-1/4 right-16 w-24 h-24 bg-indigo-200/15 rounded-lg rotate-45 animate-bounce"></div>
+        <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-blue-100/20 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-20 right-12 w-20 h-20 bg-indigo-300/25 rounded-full animate-pulse"></div>
+      </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          {/* Email */}
-          <div className="relative">
-            <Mail className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="البريد الإلكتروني"
-              required
-              className="pl-12 h-12 rounded-xl border border-blue-500 focus:border-blue-600"
-            />
+      <div className="relative z-10 w-full max-w-md">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 animate-scale-in">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold mb-1">الشرطة الفلسطينية</h1>
+            <p className="text-gray-600 text-sm">Palestinian Police Department</p>
           </div>
 
-          {/* Password */}
-          <div className="relative">
-            <Lock className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="كلمة المرور"
-              required
-              className="pl-12 pr-12 h-12 rounded-xl border border-blue-500 focus:border-blue-600"
-            />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            </button>
-          </div>
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* Email */}
+            <div className="relative">
+              <Mail className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="البريد الإلكتروني"
+                required
+                className="pl-12 h-12 rounded-xl border border-blue-500 focus:border-blue-600"
+              />
+            </div>
 
-          {/* Remember Me */}
-          <div className="flex items-center gap-2">
-            <Checkbox checked={rememberMe} onCheckedChange={(checked) => setRememberMe(checked === true)} />
-            <Label className="text-sm flex items-center gap-1">
-              <Save className="w-4 h-4" /> حفظ تسجيل الدخول
-            </Label>
-          </div>
+            {/* Password */}
+            <div className="relative">
+              <Lock className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="كلمة المرور"
+                required
+                className="pl-12 pr-12 h-12 rounded-xl border border-blue-500 focus:border-blue-600"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
 
-          {/* Demo Accounts */}
-          <Select value={selectedDemo} onValueChange={(value) => {
-            setSelectedDemo(value);
-            const account = demoAccounts.find(acc => acc.email === value);
-            if (account) {
-              setEmail(account.email);
-              setPassword(account.password);
-            }
-          }}>
-            <SelectTrigger className="w-full h-12 rounded-xl border border-blue-500 focus:border-blue-600">
-              <SelectValue placeholder="اختر حساب تجريبي" />
-            </SelectTrigger>
-            <SelectContent>
-              {demoAccounts.map(acc => (
-                <SelectItem key={acc.email} value={acc.email}>
-                  {acc.name} - {acc.role === 'admin' ? 'مدير' : 'موظف'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {/* Remember Me */}
+            <div className="flex items-center gap-2">
+              <Checkbox checked={rememberMe} onCheckedChange={(checked) => setRememberMe(checked === true)} />
+              <Label className="text-sm flex items-center gap-1">
+                <Save className="w-4 h-4" /> حفظ تسجيل الدخول
+              </Label>
+            </div>
 
-          {/* Face Login */}
-          <FaceLoginButton onSuccess={handleFaceLogin} className="w-full h-12 rounded-xl bg-purple-100 text-purple-700 font-semibold" />
+            {/* Demo Accounts */}
+            <Select value={selectedDemo} onValueChange={(value) => {
+              setSelectedDemo(value);
+              const account = demoAccounts.find(acc => acc.email === value);
+              if (account) {
+                setEmail(account.email);
+                setPassword(account.password);
+              }
+            }}>
+              <SelectTrigger className="w-full h-12 rounded-xl border border-blue-500 focus:border-blue-600">
+                <SelectValue placeholder="اختر حساب تجريبي" />
+              </SelectTrigger>
+              <SelectContent>
+                {demoAccounts.map(acc => (
+                  <SelectItem key={acc.email} value={acc.email}>
+                    {acc.name} - {acc.role === 'admin' ? 'مدير' : 'موظف'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          {/* Submit */}
-          <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-xl bg-blue-600 text-white font-bold">
-            {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
-          </Button>
+            {/* Face Login */}
+            <FaceLoginButton onSuccess={handleFaceLogin} className="w-full h-12 rounded-xl bg-purple-100 text-purple-700 font-semibold" />
 
-          <div className="text-center pt-2">
-            <button type="button" onClick={() => setShowForgotPassword(true)} className="text-sm text-gray-600 hover:text-blue-600">
-              نسيت كلمة المرور؟
-            </button>
-          </div>
-        </form>
+            {/* Submit */}
+            <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-xl bg-blue-600 text-white font-bold">
+              {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+            </Button>
+
+            {/* Forgot Password */}
+            <div className="text-center pt-2">
+              <button type="button" onClick={() => setShowForgotPassword(true)} className="text-sm text-gray-600 hover:text-blue-600">
+                نسيت كلمة المرور؟
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       {/* Forgot Password Modal */}
