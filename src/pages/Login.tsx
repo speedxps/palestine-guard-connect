@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock, Save } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
-import { FaceLoginButton } from '@/components/FaceLoginButton';
+import FaceLoginButton from '@/components/FaceLoginButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -20,7 +20,7 @@ const Login = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [selectedDemo, setSelectedDemo] = useState('');
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
