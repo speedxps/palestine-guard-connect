@@ -182,14 +182,14 @@ const CivilRegistry = () => {
     const reportContent = `
       تقرير مواطن
       ===========
-      
+
       الاسم الكامل: ${citizen.full_name}
       الرقم الوطني: ${citizen.national_id}
       تاريخ الميلاد: ${citizen.date_of_birth || 'غير محدد'}
       الجنس: ${citizen.gender || 'غير محدد'}
       الهاتف: ${citizen.phone || 'غير محدد'}
       العنوان: ${citizen.address || 'غير محدد'}
-      
+
       تاريخ التسجيل: ${new Date(citizen.created_at).toLocaleDateString('ar')}
       آخر تحديث: ${new Date(citizen.updated_at).toLocaleDateString('ar')}
     `;
