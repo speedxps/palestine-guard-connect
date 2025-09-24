@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, Upload, Search, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFaceRecognition } from '@/hooks/useFaceRecognition';
 
 const FaceRecognition = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -11,106 +12,292 @@ const FaceRecognition = () => {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  
+  // استخدام hook التعرف على الوجوه
+  const { searchFaces, isLoading: faceLoading } = useFaceRecognition();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedImage(file);
       const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target?.result as string);
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
       reader.readAsDataURL(file);
     }
   };
 
-  const searchFaces = async () => {
-    if (!selectedImage) return toast.error('يرجى اختيار صورة أولاً');
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setCameraActive(true);
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast.error('فشل في الوصول للكاميرا');
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      const video = videoRef.current;
+      
+      canvasRef.current.width = video.videoWidth;
+      canvasRef.current.height = video.videoHeight;
+      
+      context?.drawImage(video, 0, 0);
+      
+      canvasRef.current.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], 'captured-photo.jpg', { type: 'image/jpeg' });
+          setSelectedImage(file);
+          setImagePreview(URL.createObjectURL(blob));
+          
+          // Stop camera
+          const stream = video.srcObject as MediaStream;
+          stream?.getTracks().forEach(track => track.stop());
+          setCameraActive(false);
+        }
+      }, 'image/jpeg', 0.8);
+    }
+  };
+
+  const searchSimilarFaces = async () => {
+    if (!selectedImage) {
+      toast.error('يرجى اختيار صورة أولاً');
+      return;
+    }
+
     setLoading(true);
     try {
-      // رفع الصورة أولاً
-      const fileExt = selectedImage.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `face-search/${fileName}`;
-      const { error: uploadError } = await supabase.storage
-        .from('face-search')
-        .upload(filePath, selectedImage);
-      if (uploadError) throw uploadError;
+      // تحويل الصورة إلى base64 لإرسالها للـ AI
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageData = e.target?.result as string;
+        
+        try {
+          // البحث باستخدام النظام المحسن
+          const searchResult = await searchFaces(imageData);
+          
+          if (!searchResult.success) {
+            toast.error(searchResult.error || 'فشل في البحث');
+            setLoading(false);
+            return;
+          }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('face-search')
-        .getPublicUrl(filePath);
-
-      // البحث عن تطابق مع السجلات
-      const { data: citizens, error } = await supabase
-        .from('citizens')
-        .select('*');
-      if (error) throw error;
-
-      // مقارنة بسيطة باستخدام اسم الصورة فقط (يمكن تطويرها لاحقاً)
-      const matches = citizens.filter(c =>
-        c.photo_url && c.photo_url === publicUrl
-      );
-
-      if (matches.length > 0) {
-        setResults(matches);
-        toast.success(`تم العثور على ${matches.length} تطابق محتمل`);
-      } else {
-        setResults([]);
-        toast.error('لا يوجد تطابق');
-      }
-    } catch (err) {
-      console.error(err);
+          if (searchResult.matches && searchResult.matches.length > 0) {
+            // تحويل النتائج للتنسيق المطلوب
+            const formattedResults = searchResult.matches.map(match => ({
+              id: match.id,
+              full_name: match.name,
+              national_id: match.nationalId,
+              photo_url: match.photo_url,
+              similarity: match.similarity,
+              source: match.source,
+              role: match.role
+            }));
+            
+            setResults(formattedResults);
+            toast.success(`تم العثور على ${formattedResults.length} تطابق محتمل`);
+          } else {
+            setResults([]);
+            toast.error('لا يوجد تطابق أعلى من 70%');
+          }
+          
+        } catch (error) {
+          console.error('Error in face recognition:', error);
+          toast.error('حدث خطأ في التعرف على الوجه');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      reader.readAsDataURL(selectedImage);
+      
+    } catch (error) {
+      console.error('Error searching faces:', error);
       toast.error('حدث خطأ أثناء البحث');
-    } finally {
       setLoading(false);
     }
   };
 
+  // دالة حساب التشابه (cosine similarity)
+  const cosineSimilarity = (a: Float32Array, b: Float32Array): number => {
+    if (a.length !== b.length) return 0;
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < a.length; i++) {
+      dotProduct += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+    
+    const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
+    return magnitude === 0 ? 0 : dotProduct / magnitude;
+  };
+
   return (
     <div className="container mx-auto p-6">
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5" />
-            التعرف على الوجه
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 mb-4">
-            <Button onClick={() => fileInputRef.current?.click()} variant="outline">
-              <Upload className="h-4 w-4 mr-2" /> رفع صورة
-            </Button>
-            <Button onClick={searchFaces} variant="primary" disabled={loading}>
-              {loading ? 'جاري البحث...' : 'البحث عن تطابق'}
-              <Search className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-          {imagePreview && <img src={imagePreview} alt="صورة" className="w-64 h-64 object-cover rounded-lg" />}
-        </CardContent>
-      </Card>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-primary mb-2">التعرف على الأشخاص</h1>
+        <p className="text-muted-foreground">البحث عن أشخاص مشابهين في قاعدة البيانات باستخدام الصور</p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>النتائج المحتملة</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {results.length > 0 ? (
-            <div className="space-y-4">
-              {results.map((c) => (
-                <div key={c.id} className="flex items-center gap-4 border p-2 rounded-lg">
-                  <img src={c.photo_url} alt={c.full_name} className="w-16 h-16 rounded-full object-cover" />
-                  <div>
-                    <p className="font-semibold">{c.full_name}</p>
-                    <p className="text-sm text-muted-foreground">الهوية: {c.national_id}</p>
-                  </div>
-                </div>
-              ))}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              رفع أو التقاط صورة
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                className="flex-1"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                رفع صورة
+              </Button>
+              <Button
+                onClick={startCamera}
+                variant="outline"
+                className="flex-1"
+                disabled={cameraActive}
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                التقاط صورة
+              </Button>
             </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-4">لا توجد نتائج بعد.</p>
-          )}
-        </CardContent>
-      </Card>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            {cameraActive && (
+              <div className="space-y-4">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full rounded-lg"
+                />
+                <Button onClick={capturePhoto} className="w-full">
+                  التقاط الصورة
+                </Button>
+              </div>
+            )}
+
+            {imagePreview && (
+              <div className="space-y-4">
+                <img
+                  src={imagePreview}
+                  alt="الصورة المختارة"
+                  className="w-full max-w-md mx-auto rounded-lg"
+                />
+                <Button
+                  onClick={searchSimilarFaces}
+                  disabled={loading || faceLoading}
+                  className="w-full"
+                >
+                  {loading || faceLoading ? 'جاري البحث...' : 'البحث عن وجوه مشابهة'}
+                  <Search className="h-4 w-4 mr-2" />
+                </Button>
+              </div>
+            )}
+
+            <canvas ref={canvasRef} className="hidden" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              النتائج المحتملة
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {results.length > 0 ? (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground mb-4">
+                  أفضل {results.length} تطابق (الحد الأدنى 70%)
+                </div>
+                {results.map((person, index) => (
+                  <div key={person.id} className="border rounded-lg overflow-hidden">
+                    <div className="flex items-center gap-4 p-4">
+                      {person.photo_url ? (
+                        <img
+                          src={person.photo_url}
+                          alt={person.full_name}
+                          className="w-20 h-20 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
+                          <User className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-lg">{person.full_name}</h3>
+                          <span className="text-sm px-2 py-1 rounded text-white bg-primary">
+                            #{index + 1}
+                          </span>
+                        </div>
+                        {person.national_id && (
+                          <p className="text-sm text-muted-foreground">
+                            الهوية: {person.national_id}
+                          </p>
+                        )}
+                        {person.role && (
+                          <p className="text-sm text-muted-foreground">
+                            الدور: {person.role}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className={`text-sm px-2 py-1 rounded text-white ${
+                            person.source === 'wanted_person' 
+                              ? 'bg-destructive' 
+                              : 'bg-blue-600'
+                          }`}>
+                            {person.source === 'wanted_person' 
+                              ? 'مطلوب/قضية' 
+                              : 'ضابط شرطة'
+                            }
+                          </span>
+                          <span className="text-sm font-medium text-green-600">
+                            تطابق: {Math.round(person.similarity * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                لا توجد نتائج بعد. يرجى رفع صورة والبحث.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
