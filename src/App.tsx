@@ -49,6 +49,7 @@ import UrgentTasks from "./pages/UrgentTasks";
 import SchedulingPage from "./pages/SchedulingPage";
 import ActivityDetail from "./pages/ActivityDetail";
 import PoliceAssistant from "./pages/PoliceAssistant";
+import CivilRegistry from "./pages/CivilRegistry";
 import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
 
 const queryClient = new QueryClient();
@@ -174,11 +175,16 @@ const App = () => {
                     <WantedPersonsTree />
                   </RoleBasedRoute>
                 } />
-                <Route path="/face-recognition" element={
-                  <RoleBasedRoute requiredPage="face-recognition">
-                    <FaceRecognition />
-                  </RoleBasedRoute>
-                } />
+        <Route path="/civil-registry" element={
+          <ProtectedRoute>
+            <CivilRegistry />
+          </ProtectedRoute>
+        } />
+        <Route path="/face-recognition" element={
+          <ProtectedRoute>
+            <FaceRecognition />
+          </ProtectedRoute>
+        } />
                 
                 {/* Special Police Routes */}
                 <Route path="/tasks" element={
