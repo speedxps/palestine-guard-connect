@@ -53,38 +53,168 @@ export type Database = {
           },
         ]
       }
+      citizen_audit_log: {
+        Row: {
+          action_type: string
+          changed_fields: string[] | null
+          citizen_id: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          performed_at: string
+          performed_by: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          changed_fields?: string[] | null
+          citizen_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_at?: string
+          performed_by?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          changed_fields?: string[] | null
+          citizen_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_at?: string
+          performed_by?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "citizen_audit_log_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      citizen_properties: {
+        Row: {
+          citizen_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          property_description: string
+          property_details: Json | null
+          property_type: string
+          registration_number: string | null
+          status: string | null
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          citizen_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          property_description: string
+          property_details?: Json | null
+          property_type: string
+          registration_number?: string | null
+          status?: string | null
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          citizen_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          property_description?: string
+          property_details?: Json | null
+          property_type?: string
+          registration_number?: string | null
+          status?: string | null
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "citizen_properties_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       citizens: {
         Row: {
+          address: string | null
           created_at: string
+          created_by: string | null
           date_of_birth: string | null
+          face_embedding: string | null
+          family_name: string | null
+          father_name: string | null
+          first_name: string | null
           full_name: string
           gender: string | null
           has_vehicle: boolean
           id: string
+          last_modified_at: string | null
+          last_modified_by: string | null
           national_id: string
+          phone: string | null
           photo_url: string | null
+          second_name: string | null
+          third_name: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
+          created_by?: string | null
           date_of_birth?: string | null
+          face_embedding?: string | null
+          family_name?: string | null
+          father_name?: string | null
+          first_name?: string | null
           full_name: string
           gender?: string | null
           has_vehicle?: boolean
           id?: string
+          last_modified_at?: string | null
+          last_modified_by?: string | null
           national_id: string
+          phone?: string | null
           photo_url?: string | null
+          second_name?: string | null
+          third_name?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           created_at?: string
+          created_by?: string | null
           date_of_birth?: string | null
+          face_embedding?: string | null
+          family_name?: string | null
+          father_name?: string | null
+          first_name?: string | null
           full_name?: string
           gender?: string | null
           has_vehicle?: boolean
           id?: string
+          last_modified_at?: string | null
+          last_modified_by?: string | null
           national_id?: string
+          phone?: string | null
           photo_url?: string | null
+          second_name?: string | null
+          third_name?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -398,6 +528,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      face_embeddings: {
+        Row: {
+          citizen_id: string
+          confidence_score: number | null
+          created_at: string
+          embedding_vector: number[] | null
+          extraction_method: string | null
+          id: string
+          image_url: string | null
+          is_primary: boolean | null
+        }
+        Insert: {
+          citizen_id: string
+          confidence_score?: number | null
+          created_at?: string
+          embedding_vector?: number[] | null
+          extraction_method?: string | null
+          id?: string
+          image_url?: string | null
+          is_primary?: boolean | null
+        }
+        Update: {
+          citizen_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          embedding_vector?: number[] | null
+          extraction_method?: string | null
+          id?: string
+          image_url?: string | null
+          is_primary?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "face_embeddings_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       family_members: {
         Row: {
