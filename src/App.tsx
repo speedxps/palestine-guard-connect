@@ -50,6 +50,8 @@ import SchedulingPage from "./pages/SchedulingPage";
 import ActivityDetail from "./pages/ActivityDetail";
 import PoliceAssistant from "./pages/PoliceAssistant";
 import CivilRegistry from "./pages/CivilRegistry";
+import SmartCivilRegistry from "./pages/SmartCivilRegistry";
+import AdvancedFaceRecognition from "./pages/AdvancedFaceRecognition";
 import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
 
 const queryClient = new QueryClient();
@@ -179,6 +181,16 @@ const App = () => {
           <ProtectedRoute>
             <CivilRegistry />
           </ProtectedRoute>
+        } />
+        <Route path="/smart-civil-registry" element={
+          <RoleBasedRoute requiredPage="citizen-records">
+            <SmartCivilRegistry />
+          </RoleBasedRoute>
+        } />
+        <Route path="/advanced-face-recognition" element={
+          <RoleBasedRoute requiredPage="citizen-records">
+            <AdvancedFaceRecognition />
+          </RoleBasedRoute>
         } />
         <Route path="/face-recognition" element={
           <ProtectedRoute>

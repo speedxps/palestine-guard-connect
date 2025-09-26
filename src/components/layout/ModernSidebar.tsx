@@ -26,7 +26,8 @@ import {
   BarChart3,
   Menu,
   LogOut,
-  Bot
+  Bot,
+  UserCheck
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -226,6 +227,22 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
             <Bot className="h-4 w-4 shrink-0" />
             <span className="font-arabic">المساعد الذكي</span>
           </Button>
+
+          {/* Smart Civil Registry Link - Admin Only */}
+          {userRole === 'admin' && (
+            <Button
+              variant={location.pathname === '/smart-civil-registry' ? 'default' : 'ghost'}
+              className={`w-full justify-start gap-3 ${
+                location.pathname === '/smart-civil-registry' 
+                  ? 'bg-primary text-white hover:bg-primary/90' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              onClick={() => navigate('/smart-civil-registry')}
+            >
+              <UserCheck className="h-4 w-4 shrink-0" />
+              <span className="font-arabic">السجل المدني الذكي</span>
+            </Button>
+          )}
 
 
           {/* Departments */}
