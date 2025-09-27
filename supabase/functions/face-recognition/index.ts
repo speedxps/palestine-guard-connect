@@ -46,35 +46,35 @@ serve(async (req) => {
     // Extract image data (remove data:image/...;base64, prefix if present)
     const base64Image = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
 
-    // Generate face embedding using OpenAI Vision API
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Analyze this face image and return a detailed description of facial features for recognition purposes. Focus on distinctive features like eye shape, nose structure, jawline, etc. Return only the facial feature description as a single string.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
+          // Generate face embedding using OpenAI Vision API with much more detailed description
+          const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openaiApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Analyze this face image and provide a very detailed description of DISTINCTIVE facial features for precise recognition. Include specific details about: 1) Eye shape (round/almond/hooded), eye color, eyebrow thickness and arch 2) Nose shape (straight/curved/wide/narrow), nostril size 3) Face shape (oval/round/square/heart), jawline definition 4) Mouth size and lip thickness 5) Cheek structure and cheekbones 6) Skin tone and texture 7) Any distinctive marks, scars, or unique features 8) Hair color and hairline 9) Facial symmetry. Be extremely specific and detailed to enable precise facial matching. Return only the detailed facial analysis.'
+                    },
+                    {
+                      type: 'image_url',
+                      image_url: {
+                        url: `data:image/jpeg;base64,${base64Image}`
+                      }
+                    }
+                  ]
                 }
-              }
-            ]
-          }
-        ],
-        max_tokens: 500
-      })
-    })
+              ],
+              max_tokens: 1000
+            })
+          })
 
     if (!openaiResponse.ok) {
       const errorData = await openaiResponse.text()
@@ -108,16 +108,18 @@ serve(async (req) => {
       )
     }
 
-    // Find the best match by comparing face descriptions
+    // Find the best match by comparing face descriptions with enhanced similarity
     let bestMatch = null
     let highestSimilarity = 0
 
     for (const citizen of citizens) {
       if (citizen.face_embedding) {
-        // Simple text similarity comparison
-        const similarity = calculateTextSimilarity(faceDescription, citizen.face_embedding)
+        // Enhanced similarity calculation with multiple methods
+        const similarity = calculateEnhancedSimilarity(faceDescription, citizen.face_embedding)
         
-        if (similarity > highestSimilarity && similarity > 0.3) { // 30% threshold
+        console.log(`Comparing with ${citizen.full_name}: ${similarity.toFixed(3)} similarity`)
+        
+        if (similarity > highestSimilarity && similarity > 0.4) { // Lower threshold for better matching
           highestSimilarity = similarity
           bestMatch = {
             id: citizen.id,
@@ -165,10 +167,11 @@ serve(async (req) => {
   }
 })
 
-// Simple text similarity function
-function calculateTextSimilarity(text1: string, text2: string): number {
-  const words1 = text1.toLowerCase().split(/\s+/)
-  const words2 = text2.toLowerCase().split(/\s+/)
+// Enhanced similarity function with multiple comparison methods
+function calculateEnhancedSimilarity(text1: string, text2: string): number {
+  // Method 1: Word overlap similarity
+  const words1 = text1.toLowerCase().split(/\s+/).filter(w => w.length > 2)
+  const words2 = text2.toLowerCase().split(/\s+/).filter(w => w.length > 2)
   
   const set1 = new Set(words1)
   const set2 = new Set(words2)
@@ -176,5 +179,47 @@ function calculateTextSimilarity(text1: string, text2: string): number {
   const intersection = new Set([...set1].filter(x => set2.has(x)))
   const union = new Set([...set1, ...set2])
   
-  return intersection.size / union.size
+  const wordSimilarity = intersection.size / union.size
+
+  // Method 2: Phrase similarity (longer common phrases)
+  const phrases1 = []
+  const phrases2 = []
+  
+  for (let i = 0; i < words1.length - 1; i++) {
+    phrases1.push(`${words1[i]} ${words1[i + 1]}`)
+  }
+  for (let i = 0; i < words2.length - 1; i++) {
+    phrases2.push(`${words2[i]} ${words2[i + 1]}`)
+  }
+  
+  const phraseSet1 = new Set(phrases1)
+  const phraseSet2 = new Set(phrases2)
+  const phraseIntersection = new Set([...phraseSet1].filter(x => phraseSet2.has(x)))
+  const phraseUnion = new Set([...phraseSet1, ...phraseSet2])
+  
+  const phraseSimilarity = phraseUnion.size > 0 ? phraseIntersection.size / phraseUnion.size : 0
+
+  // Method 3: Character n-gram similarity for spelling variations
+  const ngrams1 = generateNgrams(text1.toLowerCase(), 3)
+  const ngrams2 = generateNgrams(text2.toLowerCase(), 3)
+  
+  const ngramSet1 = new Set(ngrams1)
+  const ngramSet2 = new Set(ngrams2)
+  const ngramIntersection = new Set([...ngramSet1].filter(x => ngramSet2.has(x)))
+  const ngramUnion = new Set([...ngramSet1, ...ngramSet2])
+  
+  const ngramSimilarity = ngramUnion.size > 0 ? ngramIntersection.size / ngramUnion.size : 0
+
+  // Weighted combination of all methods
+  const finalSimilarity = (wordSimilarity * 0.5) + (phraseSimilarity * 0.3) + (ngramSimilarity * 0.2)
+  
+  return finalSimilarity
+}
+
+function generateNgrams(text: string, n: number): string[] {
+  const ngrams = []
+  for (let i = 0; i <= text.length - n; i++) {
+    ngrams.push(text.substring(i, i + n))
+  }
+  return ngrams
 }

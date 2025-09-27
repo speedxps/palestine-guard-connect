@@ -33,6 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import BatchProcessEmbeddings from '@/components/BatchProcessEmbeddings';
 
 interface Citizen {
   id: string;
@@ -233,21 +234,62 @@ const SmartCivilRegistry: React.FC = () => {
         last_modified_at: new Date().toISOString()
       };
 
+      let citizenResult;
       if (editingCitizen) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('citizens')
           .update(citizenData)
-          .eq('id', editingCitizen.id);
+          .eq('id', editingCitizen.id)
+          .select()
+          .single();
         
         if (error) throw error;
+        citizenResult = data;
         toast.success('تم تحديث بيانات المواطن بنجاح');
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('citizens')
-          .insert([citizenData]);
+          .insert([citizenData])
+          .select()
+          .single();
         
         if (error) throw error;
+        citizenResult = data;
         toast.success('تم إضافة المواطن بنجاح');
+      }
+
+      // إذا تم رفع صورة جديدة، قم بتوليد face embedding
+      if (imageFile && photoUrl && citizenResult) {
+        try {
+          console.log('بدء توليد face embedding للمواطن:', citizenResult.full_name);
+          
+          // تحويل الصورة إلى base64
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const base64Image = reader.result as string;
+              const { data: embeddingData, error: embeddingError } = await supabase.functions.invoke('generate-face-embedding', {
+                body: { 
+                  citizenId: citizenResult.id, 
+                  imageBase64: base64Image 
+                }
+              });
+
+              if (embeddingError) {
+                console.error('خطأ في توليد face embedding:', embeddingError);
+                toast.warning('تم حفظ البيانات ولكن فشل في توليد الوصف الذكي للوجه');
+              } else {
+                console.log('تم توليد face embedding بنجاح');
+                toast.success('تم حفظ البيانات وتوليد الوصف الذكي للوجه');
+              }
+            } catch (error) {
+              console.error('خطأ في معالجة face embedding:', error);
+            }
+          };
+          reader.readAsDataURL(imageFile);
+        } catch (error) {
+          console.error('خطأ في توليد face embedding:', error);
+        }
       }
 
       setIsDialogOpen(false);
@@ -554,6 +596,9 @@ ${properties.map(p => `- ${p.property_description} (${p.property_type})`).join('
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* مكون معالجة الصور بالذكاء الاصطناعي */}
+        <BatchProcessEmbeddings />
 
         {/* شريط البحث */}
         <Card>

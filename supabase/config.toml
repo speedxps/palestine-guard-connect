@@ -45,6 +45,9 @@ verify_jwt = false
 [functions.ai-chat]
 verify_jwt = false
 
+[functions.batch-generate-embeddings]
+verify_jwt = true
+
 [functions.face-recognition]
 verify_jwt = true
 
