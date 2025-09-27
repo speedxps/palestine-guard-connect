@@ -3,10 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -16,12 +14,10 @@ const MAX_IMAGE_SIZE_MB = 5;
 
 const SmartCivilRegistry: React.FC = () => {
   const { user } = useAuth();
-  const [citizens, setCitizens] = useState([]);
-  const [filteredCitizens, setFilteredCitizens] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [citizens, setCitizens] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCitizen, setEditingCitizen] = useState(null);
+  const [editingCitizen, setEditingCitizen] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -40,44 +36,16 @@ const SmartCivilRegistry: React.FC = () => {
     has_vehicle: false
   });
 
-  useEffect(() => {
-    fetchCitizens();
-  }, []);
-
-  useEffect(() => {
-    // فلترة بسيطة بدون كسر البيانات القديمة
-    if (!searchTerm.trim()) {
-      setFilteredCitizens(citizens);
-    } else {
-      const term = searchTerm.toLowerCase();
-      const filtered = citizens.filter(cit => {
-        // تحقق من جميع الحقول المتاحة
-        const fullName = `${cit.first_name || ''} ${cit.second_name || ''} ${cit.third_name || ''} ${cit.family_name || ''}`.toLowerCase();
-        return (
-          (cit.national_id?.toLowerCase().includes(term)) ||
-          (cit.father_name?.toLowerCase().includes(term)) ||
-          fullName.includes(term)
-        );
-      });
-      setFilteredCitizens(filtered);
-    }
-  }, [searchTerm, citizens]);
+  useEffect(() => { fetchCitizens(); }, []);
 
   const fetchCitizens = async () => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('citizens')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('citizens').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setCitizens(data || []);
-      setFilteredCitizens(data || []);
     } catch (error) {
       console.error(error);
       toast.error('فشل في جلب بيانات المواطنين');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -111,14 +79,10 @@ const SmartCivilRegistry: React.FC = () => {
       if (imageFile) photoUrl = await handleImageUpload(imageFile);
       if (imageFile && !photoUrl) return;
 
-      const citizenData = {
-        ...formData,
-        full_name: `${formData.first_name} ${formData.second_name || ''} ${formData.third_name || ''} ${formData.family_name}`.replace(/\s+/g, ' ').trim(),
-        photo_url: photoUrl || editingCitizen?.photo_url || null,
-        created_by: user?.id,
-        last_modified_by: user?.id,
-        last_modified_at: new Date().toISOString()
-      };
+      // دمج البيانات القديمة مع الجديدة لتجنب الحذف
+      const citizenData = editingCitizen
+        ? { ...editingCitizen, ...formData, photo_url: photoUrl || editingCitizen.photo_url, last_modified_by: user?.id, last_modified_at: new Date().toISOString() }
+        : { ...formData, full_name: `${formData.first_name} ${formData.second_name || ''} ${formData.third_name || ''} ${formData.family_name}`.trim(), photo_url: photoUrl || null, created_by: user?.id, last_modified_by: user?.id, last_modified_at: new Date().toISOString() };
 
       let citizenResult;
       if (editingCitizen) {
@@ -157,13 +121,12 @@ const SmartCivilRegistry: React.FC = () => {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 ml-2" /> إضافة مواطن جديد
+                إضافة مواطن جديد
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editingCitizen ? 'تعديل بيانات المواطن' : 'إضافة مواطن جديد'}</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* يمكنك إضافة الحقول هنا كما تريد */}
                 <div>
                   <Label htmlFor="photo">الصورة الشخصية</Label>
                   <Input id="photo" type="file" accept="image/*" onChange={(e) => {
@@ -175,7 +138,11 @@ const SmartCivilRegistry: React.FC = () => {
                       reader.readAsDataURL(file);
                     }
                   }} />
-                  {imagePreview && <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg mt-2" />}
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg hover:scale-105 transition-transform" />
+                    </div>
+                  )}
                   {uploading && <p className="text-sm text-muted-foreground">جاري رفع الصورة...</p>}
                 </div>
                 <div className="flex justify-end space-x-2 pt-4">
@@ -186,35 +153,6 @@ const SmartCivilRegistry: React.FC = () => {
             </DialogContent>
           </Dialog>
         </div>
-
-        {/* جدول عرض المواطنين */}
-        <Card>
-          <CardHeader><CardTitle>قائمة المواطنين</CardTitle></CardHeader>
-          <CardContent className="overflow-x-auto">
-            <Input placeholder="ابحث باسم المواطن أو رقم الهوية..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="mb-4" />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>الصورة</TableHead>
-                  <TableHead>الاسم الكامل</TableHead>
-                  <TableHead>رقم الهوية</TableHead>
-                  <TableHead>رقم الهاتف</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCitizens.map(cit => (
-                  <TableRow key={cit.id}>
-                    <TableCell>{cit.photo_url ? <img src={cit.photo_url} alt="Photo" className="w-12 h-12 object-cover rounded-full" /> : '—'}</TableCell>
-                    <TableCell>{cit.full_name || `${cit.first_name} ${cit.second_name || ''} ${cit.third_name || ''} ${cit.family_name}`}</TableCell>
-                    <TableCell>{cit.national_id}</TableCell>
-                    <TableCell>{cit.phone || '—'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
         <BatchProcessEmbeddings />
       </div>
     </DashboardLayout>
