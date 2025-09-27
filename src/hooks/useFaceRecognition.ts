@@ -1,17 +1,12 @@
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = "https://ldhgwqeuvbvlmvyywmaf.supabase.co";
-const supabaseKey = "sbp_4cd798cf114e280f789cd6cb6913145723542280"; // حط مفتاح Supabase الخاص بك هنا
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Citizen {
-  id: number;
-  name: string;
-  nationalId?: string;
-  role?: string;
+  id: string;
+  national_id: string;
+  full_name: string;
   photo_url: string;
-  embedding?: number[];
+  similarity?: number;
 }
 
 export function useFaceRecognition() {
@@ -27,14 +22,38 @@ export function useFaceRecognition() {
     setCitizens(data as Citizen[]);
   };
 
-  // توليد embedding للوجه
+  // توليد face embedding (للتوافق مع الكود القديم)
   const generateFaceEmbedding = async (imageBase64: string) => {
     try {
-      // محاكاة توليد embedding
-      const randomEmbedding = Array.from({ length: 128 }, () => Math.random());
+      // محاكاة بسيطة للتوافق مع الكود القديم
       return {
         success: true,
-        embedding: randomEmbedding,
+        embedding: Array.from({ length: 128 }, () => Math.random()),
+        error: null
+      };
+    } catch (error) {
+      console.error('Error generating face embedding:', error);
+      return {
+        success: false,
+        embedding: null,
+        error: error instanceof Error ? error.message : 'خطأ في توليد embedding'
+      };
+    }
+  };
+
+  // توليد face embedding وحفظه
+  const generateAndSaveFaceEmbedding = async (citizenId: string, imageBase64: string) => {
+    try {
+      // استخدام OpenAI لتحليل الوجه
+      const { data, error } = await supabase.functions.invoke('generate-face-embedding', {
+        body: { imageBase64, citizenId }
+      });
+      
+      if (error) throw error;
+      
+      return {
+        success: true,
+        embedding: data.embedding,
         error: null
       };
     } catch (error) {
@@ -83,39 +102,39 @@ export function useFaceRecognition() {
     }
   };
 
-  // البحث عن الوجوه
+  // البحث عن الوجوه باستخدام AI حقيقي
   const searchFaces = async (uploadedImageBase64: string) => {
     setIsLoading(true);
+    console.log('بدء البحث عن الوجه...');
+    
     try {
-      if (citizens.length === 0) await fetchCitizens();
+      // استدعاء edge function للتعرف على الوجه
+      const { data, error } = await supabase.functions.invoke('face-recognition', {
+        body: { imageBase64: uploadedImageBase64 }
+      });
 
-      // البحث عن الوجوه المحفوظة في قاعدة البيانات المدنية
-      const result = {
-        success: true,
-        matches: citizens.slice(0, 3).map(c => ({
-          ...c,
-          similarity: Math.random() * 0.4 + 0.6, // نسبة تشابه بين 60-100%
-          source: 'civil_registry' // مصدر البيانات
-        })),
-        error: null
-      };
-
-      // تحقق من وجود تطابق مع درجة ثقة عالية (أكثر من 70%)
-      if (result.success && result.matches.length > 0) {
-        const filteredMatches = result.matches.filter(match => match.similarity >= 0.7);
-        return {
-          success: filteredMatches.length > 0,
-          matches: filteredMatches,
-          error: null
-        };
+      if (error) {
+        console.error('خطأ في استدعاء face-recognition function:', error);
+        throw error;
       }
 
-      return {
-        success: false,
-        matches: [],
-        error: 'لم يتم العثور على تطابق كافٍ'
-      };
+      console.log('نتيجة البحث:', data);
+
+      if (data.success && data.matches && data.matches.length > 0) {
+        return {
+          success: true,
+          matches: data.matches,
+          error: null
+        };
+      } else {
+        return {
+          success: false,
+          matches: [],
+          error: data.error || 'لم يتم العثور على تطابق كافٍ'
+        };
+      }
     } catch (error) {
+      console.error('خطأ في البحث عن الوجه:', error);
       return {
         success: false,
         matches: [],
@@ -132,6 +151,7 @@ export function useFaceRecognition() {
     fetchCitizens,
     searchFaces,
     generateFaceEmbedding,
+    generateAndSaveFaceEmbedding,
     saveFaceData,
     verifyFace,
   };

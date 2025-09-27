@@ -55,7 +55,7 @@ serve(async (req: Request) => {
       "OpenAI-Beta": headers["OpenAI-Beta"]
     });
     
-    openaiWs = new WebSocket(openaiUrl, [], { headers });
+    openaiWs = new WebSocket(openaiUrl);
 
     openaiWs.onopen = () => {
       console.log("Connected to OpenAI Realtime API");

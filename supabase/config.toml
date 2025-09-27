@@ -44,3 +44,15 @@ verify_jwt = false
 
 [functions.ai-chat]
 verify_jwt = false
+
+[functions.face-recognition]
+verify_jwt = true
+
+[functions.generate-face-embedding]
+verify_jwt = true
+
+[functions.face-verification]
+verify_jwt = true
+
+[functions.fetch-facebook-posts]
+verify_jwt = false
