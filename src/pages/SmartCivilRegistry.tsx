@@ -3,50 +3,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import BatchProcessEmbeddings from '@/components/BatchProcessEmbeddings';
 
 const MAX_IMAGE_SIZE_MB = 5;
 
 const SmartCivilRegistry: React.FC = () => {
   const { user } = useAuth();
   const [citizens, setCitizens] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCitizen, setEditingCitizen] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [report, setReport] = useState<any | null>(null);
 
   const [formData, setFormData] = useState({
     national_id: '',
     first_name: '',
-    second_name: '',
-    third_name: '',
-    family_name: '',
-    father_name: '',
-    date_of_birth: '',
-    gender: '',
-    phone: '',
-    address: '',
-    has_vehicle: false
+    family_name: ''
   });
 
   useEffect(() => { fetchCitizens(); }, []);
 
   const fetchCitizens = async () => {
-    try {
-      const { data, error } = await supabase.from('citizens').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      setCitizens(data || []);
-    } catch (error) {
-      console.error(error);
-      toast.error('فشل في جلب بيانات المواطنين');
-    }
+    const { data, error } = await supabase.from('citizens').select('*').order('created_at', { ascending: false });
+    if (!error) setCitizens(data || []);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -64,11 +49,22 @@ const SmartCivilRegistry: React.FC = () => {
       const { data: { publicUrl } } = supabase.storage.from('citizen-photos').getPublicUrl(filePath);
       return publicUrl;
     } catch (error) {
-      console.error(error);
       toast.error('فشل في رفع الصورة');
       return null;
     } finally {
       setUploading(false);
+    }
+  };
+
+  const analyzeFace = async (citizenId: string, imageBase64: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-face', {
+        body: { citizenId, imageBase64 }
+      });
+      if (error) throw error;
+      setReport(data);
+    } catch (err) {
+      toast.error("فشل تحليل الصورة");
     }
   };
 
@@ -79,38 +75,39 @@ const SmartCivilRegistry: React.FC = () => {
       if (imageFile) photoUrl = await handleImageUpload(imageFile);
       if (imageFile && !photoUrl) return;
 
-      // دمج البيانات القديمة مع الجديدة لتجنب الحذف
-      const citizenData = editingCitizen
-        ? { ...editingCitizen, ...formData, photo_url: photoUrl || editingCitizen.photo_url, last_modified_by: user?.id, last_modified_at: new Date().toISOString() }
-        : { ...formData, full_name: `${formData.first_name} ${formData.second_name || ''} ${formData.third_name || ''} ${formData.family_name}`.trim(), photo_url: photoUrl || null, created_by: user?.id, last_modified_by: user?.id, last_modified_at: new Date().toISOString() };
+      const citizenData = {
+        ...formData,
+        full_name: `${formData.first_name} ${formData.family_name}`.trim(),
+        photo_url: photoUrl,
+        created_by: user?.id,
+        last_modified_by: user?.id,
+        last_modified_at: new Date().toISOString()
+      };
 
-      let citizenResult;
-      if (editingCitizen) {
-        const { data, error } = await supabase.from('citizens').update(citizenData).eq('id', editingCitizen.id).select().single();
-        if (error) throw error;
-        citizenResult = data;
-        toast.success('تم تحديث بيانات المواطن بنجاح');
-      } else {
-        const { data, error } = await supabase.from('citizens').insert([citizenData]).select().single();
-        if (error) throw error;
-        citizenResult = data;
-        toast.success('تم إضافة المواطن بنجاح');
+      const { data, error } = await supabase.from('citizens').insert([citizenData]).select().single();
+      if (error) throw error;
+
+      toast.success("تم إضافة المواطن بنجاح");
+
+      // لو في صورة -> نحللها
+      if (imageFile && photoUrl && data) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64Image = reader.result;
+          if (typeof base64Image === "string") {
+            await analyzeFace(data.id, base64Image);
+          }
+        };
+        reader.readAsDataURL(imageFile);
       }
 
       setIsDialogOpen(false);
-      setEditingCitizen(null);
-      resetForm();
+      setImageFile(null);
+      setImagePreview(null);
       fetchCitizens();
-    } catch (error) {
-      console.error(error);
-      toast.error('فشل في حفظ البيانات');
+    } catch (err) {
+      toast.error("فشل في حفظ البيانات");
     }
-  };
-
-  const resetForm = () => {
-    setFormData({ national_id: '', first_name: '', second_name: '', third_name: '', family_name: '', father_name: '', date_of_birth: '', gender: '', phone: '', address: '', has_vehicle: false });
-    setImageFile(null);
-    setImagePreview(null);
   };
 
   return (
@@ -120,13 +117,19 @@ const SmartCivilRegistry: React.FC = () => {
           <h1 className="text-3xl font-bold text-foreground">السجل المدني الفلسطيني الذكي</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
-                إضافة مواطن جديد
-              </Button>
+              <Button onClick={() => setReport(null)}>إضافة مواطن جديد</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>{editingCitizen ? 'تعديل بيانات المواطن' : 'إضافة مواطن جديد'}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>إضافة مواطن جديد</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label>الاسم الأول</Label>
+                  <Input value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} />
+                </div>
+                <div>
+                  <Label>اسم العائلة</Label>
+                  <Input value={formData.family_name} onChange={(e) => setFormData({ ...formData, family_name: e.target.value })} />
+                </div>
                 <div>
                   <Label htmlFor="photo">الصورة الشخصية</Label>
                   <Input id="photo" type="file" accept="image/*" onChange={(e) => {
@@ -140,20 +143,57 @@ const SmartCivilRegistry: React.FC = () => {
                   }} />
                   {imagePreview && (
                     <div className="mt-2">
-                      <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg hover:scale-105 transition-transform" />
+                      <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg" />
                     </div>
                   )}
-                  {uploading && <p className="text-sm text-muted-foreground">جاري رفع الصورة...</p>}
                 </div>
+                {uploading && <p className="text-sm text-muted-foreground">جاري رفع الصورة...</p>}
                 <div className="flex justify-end space-x-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>إلغاء</Button>
-                  <Button type="submit">{editingCitizen ? 'تحديث' : 'إضافة'}</Button>
+                  <Button type="submit">إضافة</Button>
                 </div>
               </form>
+
+              {report && (
+                <div className="mt-6 space-y-4">
+                  <Card>
+                    <CardHeader><CardTitle>📋 تقرير تحليل الوجه</CardTitle></CardHeader>
+                    <CardContent>
+                      <p>👤 العمر التقريبي: {report.age}</p>
+                      <p>🚻 الجنس: {report.gender}</p>
+                      <p>👥 عدد الوجوه: {report.faces_detected}</p>
+                      <p>🌟 جودة الصورة: {Math.round(report.quality_score * 100)}%</p>
+                      <p>🔢 درجة الثقة: {Math.round(report.confidence * 100)}%</p>
+                    </CardContent>
+                  </Card>
+
+                  {report.similar_faces?.length > 0 && (
+                    <Card>
+                      <CardHeader><CardTitle>🔍 أقرب الوجوه</CardTitle></CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>الاسم</TableHead>
+                              <TableHead>النسبة</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {report.similar_faces.map((f: any, idx: number) => (
+                              <TableRow key={idx}>
+                                <TableCell>{f.full_name}</TableCell>
+                                <TableCell>{Math.round(f.similarity * 100)}%</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </div>
-        <BatchProcessEmbeddings />
       </div>
     </DashboardLayout>
   );
