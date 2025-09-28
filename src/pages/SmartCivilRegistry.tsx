@@ -280,7 +280,7 @@ const SmartCivilRegistry: React.FC = () => {
                 toast.warning('تم حفظ البيانات ولكن فشل في توليد الوصف الذكي للوجه');
               } else {
                 console.log('تم توليد face embedding بنجاح');
-                toast.success('تم حفظ البيانات وتوليد الوصف الذكي للوجه');
+                toast.success('تم حفظ البيانات وتوليد الوصف الذكي للوجه بنجاح');
               }
             } catch (error) {
               console.error('خطأ في معالجة face embedding:', error);
@@ -710,6 +710,9 @@ ${properties.map(p => `- ${p.property_description} (${p.property_type})`).join('
             )}
           </CardContent>
         </Card>
+
+        {/* مكون معالجة صور المواطنين بالذكاء الاصطناعي */}
+        <BatchProcessEmbeddings />
 
         {/* نافذة تفاصيل المواطن */}
         {selectedCitizen && (

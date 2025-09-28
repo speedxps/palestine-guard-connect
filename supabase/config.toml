@@ -45,14 +45,14 @@ verify_jwt = false
 [functions.ai-chat]
 verify_jwt = false
 
-[functions.batch-generate-embeddings]
-verify_jwt = true
+[functions.generate-face-embedding]
+verify_jwt = false
 
 [functions.face-recognition]
-verify_jwt = true
+verify_jwt = false
 
-[functions.generate-face-embedding]
-verify_jwt = true
+[functions.batch-generate-embeddings]
+verify_jwt = false
 
 [functions.face-verification]
 verify_jwt = true

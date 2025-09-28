@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,12 +24,10 @@ serve(async (req) => {
       )
     }
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get OpenAI API key
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     
     if (!openaiApiKey) {
@@ -43,10 +40,8 @@ serve(async (req) => {
       )
     }
 
-    // Extract image data (remove data:image/...;base64, prefix if present)
     const base64Image = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
 
-    // Generate face embedding using OpenAI Vision API
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -61,7 +56,7 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: 'Analyze this face image and provide a detailed description of facial features for recognition purposes. Focus on distinctive features like eye shape, nose structure, jawline, facial proportions, etc. Return only the facial feature description as a single detailed string.'
+                text: 'حلل هذه الصورة للوجه وقدم وصفاً تفصيلياً للملامح المميزة للتعرف على الوجه. ركز على الملامح المميزة مثل شكل العين وبنية الأنف وخط الفك ونسب الوجه وما إلى ذلك. أرجع فقط وصف الملامح الوجهية كنص تفصيلي واحد بالعربية.'
               },
               {
                 type: 'image_url',
@@ -91,7 +86,6 @@ serve(async (req) => {
     const aiResult = await openaiResponse.json()
     const faceEmbedding = aiResult.choices[0]?.message?.content || ''
 
-    // Save the face embedding to the citizen record
     const { error: updateError } = await supabase
       .from('citizens')
       .update({ face_embedding: faceEmbedding })

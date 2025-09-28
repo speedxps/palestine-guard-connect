@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,12 +24,10 @@ serve(async (req) => {
       )
     }
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get OpenAI API key
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     
     if (!openaiApiKey) {
@@ -43,38 +40,36 @@ serve(async (req) => {
       )
     }
 
-    // Extract image data (remove data:image/...;base64, prefix if present)
     const base64Image = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
 
-          // Generate face embedding using OpenAI Vision API with much more detailed description
-          const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openaiApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [
-                {
-                  role: 'user',
-                  content: [
-                    {
-                      type: 'text',
-                      text: 'Analyze this face image and provide a very detailed description of DISTINCTIVE facial features for precise recognition. Include specific details about: 1) Eye shape (round/almond/hooded), eye color, eyebrow thickness and arch 2) Nose shape (straight/curved/wide/narrow), nostril size 3) Face shape (oval/round/square/heart), jawline definition 4) Mouth size and lip thickness 5) Cheek structure and cheekbones 6) Skin tone and texture 7) Any distinctive marks, scars, or unique features 8) Hair color and hairline 9) Facial symmetry. Be extremely specific and detailed to enable precise facial matching. Return only the detailed facial analysis.'
-                    },
-                    {
-                      type: 'image_url',
-                      image_url: {
-                        url: `data:image/jpeg;base64,${base64Image}`
-                      }
-                    }
-                  ]
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'حلل هذه الصورة للوجه بدقة عالية وقدم وصفاً شاملاً ومفصلاً للملامح المميزة للوجه للتعرف الدقيق عليه. يجب أن يشمل التحليل: 1) شكل ولون العين وسماكة الحاجبين وقوس الحاجب 2) شكل وحجم الأنف وفتحات الأنف 3) شكل الوجه (بيضاوي/دائري/مربع/قلب) وتعريف خط الفك 4) حجم الفم وسماكة الشفاه 5) بنية الخدين وعظام الوجنتين 6) لون ونسيج البشرة 7) أي علامات مميزة أو ندوب أو خصائص فريدة 8) لون الشعر وخط الشعر 9) تماثل الوجه. كن محدداً جداً ومفصلاً لتمكين المطابقة الدقيقة للوجه. أرجع فقط التحليل التفصيلي للوجه بالعربية.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${base64Image}`
                 }
-              ],
-              max_tokens: 1000
-            })
-          })
+              }
+            ]
+          }
+        ],
+        max_tokens: 1000
+      })
+    })
 
     if (!openaiResponse.ok) {
       const errorData = await openaiResponse.text()
@@ -91,7 +86,6 @@ serve(async (req) => {
     const aiResult = await openaiResponse.json()
     const faceDescription = aiResult.choices[0]?.message?.content || ''
 
-    // Get all citizens from database with their face embeddings
     const { data: citizens, error: citizensError } = await supabase
       .from('citizens')
       .select('id, national_id, full_name, photo_url, face_embedding')
@@ -108,23 +102,21 @@ serve(async (req) => {
       )
     }
 
-    // Find the best match by comparing face descriptions with enhanced similarity
     let bestMatch = null
     let highestSimilarity = 0
 
     for (const citizen of citizens) {
       if (citizen.face_embedding) {
-        // Enhanced similarity calculation with multiple methods
         const similarity = calculateEnhancedSimilarity(faceDescription, citizen.face_embedding)
         
         console.log(`Comparing with ${citizen.full_name}: ${similarity.toFixed(3)} similarity`)
         
-        if (similarity > highestSimilarity && similarity > 0.4) { // Lower threshold for better matching
+        if (similarity > highestSimilarity && similarity > 0.35) {
           highestSimilarity = similarity
           bestMatch = {
             id: citizen.id,
             national_id: citizen.national_id,
-            full_name: citizen.full_name,
+            name: citizen.full_name,
             photo_url: citizen.photo_url,
             similarity: similarity
           }
@@ -167,9 +159,7 @@ serve(async (req) => {
   }
 })
 
-// Enhanced similarity function with multiple comparison methods
 function calculateEnhancedSimilarity(text1: string, text2: string): number {
-  // Method 1: Word overlap similarity
   const words1 = text1.toLowerCase().split(/\s+/).filter(w => w.length > 2)
   const words2 = text2.toLowerCase().split(/\s+/).filter(w => w.length > 2)
   
@@ -181,7 +171,6 @@ function calculateEnhancedSimilarity(text1: string, text2: string): number {
   
   const wordSimilarity = intersection.size / union.size
 
-  // Method 2: Phrase similarity (longer common phrases)
   const phrases1 = []
   const phrases2 = []
   
@@ -199,7 +188,6 @@ function calculateEnhancedSimilarity(text1: string, text2: string): number {
   
   const phraseSimilarity = phraseUnion.size > 0 ? phraseIntersection.size / phraseUnion.size : 0
 
-  // Method 3: Character n-gram similarity for spelling variations
   const ngrams1 = generateNgrams(text1.toLowerCase(), 3)
   const ngrams2 = generateNgrams(text2.toLowerCase(), 3)
   
@@ -210,7 +198,6 @@ function calculateEnhancedSimilarity(text1: string, text2: string): number {
   
   const ngramSimilarity = ngramUnion.size > 0 ? ngramIntersection.size / ngramUnion.size : 0
 
-  // Weighted combination of all methods
   const finalSimilarity = (wordSimilarity * 0.5) + (phraseSimilarity * 0.3) + (ngramSimilarity * 0.2)
   
   return finalSimilarity

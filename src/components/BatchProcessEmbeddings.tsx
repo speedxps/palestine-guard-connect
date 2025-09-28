@@ -37,7 +37,6 @@ const BatchProcessEmbeddings: React.FC = () => {
     setResults(null);
 
     try {
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 90) {
