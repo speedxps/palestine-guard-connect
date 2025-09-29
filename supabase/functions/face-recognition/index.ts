@@ -42,34 +42,34 @@ serve(async (req) => {
 
     const base64Image = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
 
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'حلل هذه الصورة للوجه بدقة عالية وقدم وصفاً شاملاً ومفصلاً للملامح المميزة للوجه للتعرف الدقيق عليه. يجب أن يشمل التحليل: 1) شكل ولون العين وسماكة الحاجبين وقوس الحاجب 2) شكل وحجم الأنف وفتحات الأنف 3) شكل الوجه (بيضاوي/دائري/مربع/قلب) وتعريف خط الفك 4) حجم الفم وسماكة الشفاه 5) بنية الخدين وعظام الوجنتين 6) لون ونسيج البشرة 7) أي علامات مميزة أو ندوب أو خصائص فريدة 8) لون الشعر وخط الشعر 9) تماثل الوجه. كن محدداً جداً ومفصلاً لتمكين المطابقة الدقيقة للوجه. أرجع فقط التحليل التفصيلي للوجه بالعربية.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
+  const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'حلل هذه الصورة وقدم وصفاً دقيقاً ومفصلاً للوجه باللغة العربية. ركز على: العيون (الشكل واللون والحجم), الأنف (الشكل والحجم), الفم والشفاه, شكل الوجه العام, الحاجبين, الخدين, خط الفك, لون البشرة, الشعر, أي علامات مميزة. استخدم مفردات عربية واضحة ومفصلة لكل ملمح. اجعل الوصف شاملاً ودقيقاً للغاية.'
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
               }
-            ]
-          }
-        ],
-        max_tokens: 1000
-      })
+            }
+          ]
+        }
+      ],
+      max_tokens: 1000
     })
+  })
 
     if (!openaiResponse.ok) {
       const errorData = await openaiResponse.text()
@@ -129,7 +129,7 @@ serve(async (req) => {
         
         console.log(`Comparing with ${citizen.full_name}: ${similarity.toFixed(3)} similarity`)
         
-        if (similarity > highestSimilarity && similarity > 0.35) {
+        if (similarity > highestSimilarity && similarity > 0.25) {
           highestSimilarity = similarity
           bestMatch = {
             id: citizen.id,
@@ -178,8 +178,19 @@ serve(async (req) => {
 })
 
 function calculateEnhancedSimilarity(text1: string, text2: string): number {
-  const words1 = text1.toLowerCase().split(/\s+/).filter(w => w.length > 2)
-  const words2 = text2.toLowerCase().split(/\s+/).filter(w => w.length > 2)
+  // تنظيف النصوص وإزالة الرموز الزائدة
+  const cleanText = (text: string) => text
+    .toLowerCase()
+    .replace(/[^\u0600-\u06FF\u0750-\u077F\s]/g, ' ') // إبقاء الأحرف العربية فقط
+    .replace(/\s+/g, ' ')
+    .trim()
+  
+  const cleanText1 = cleanText(text1)
+  const cleanText2 = cleanText(text2)
+  
+  // تحليل الكلمات المفردة
+  const words1 = cleanText1.split(/\s+/).filter(w => w.length > 1)
+  const words2 = cleanText2.split(/\s+/).filter(w => w.length > 1)
   
   const set1 = new Set(words1)
   const set2 = new Set(words2)
@@ -187,8 +198,9 @@ function calculateEnhancedSimilarity(text1: string, text2: string): number {
   const intersection = new Set([...set1].filter(x => set2.has(x)))
   const union = new Set([...set1, ...set2])
   
-  const wordSimilarity = intersection.size / union.size
+  const wordSimilarity = union.size > 0 ? intersection.size / union.size : 0
 
+  // تحليل العبارات (كلمتين متتاليتين)
   const phrases1 = []
   const phrases2 = []
   
@@ -206,8 +218,9 @@ function calculateEnhancedSimilarity(text1: string, text2: string): number {
   
   const phraseSimilarity = phraseUnion.size > 0 ? phraseIntersection.size / phraseUnion.size : 0
 
-  const ngrams1 = generateNgrams(text1.toLowerCase(), 3)
-  const ngrams2 = generateNgrams(text2.toLowerCase(), 3)
+  // تحليل الأحرف المتتالية (تسلسل 4 أحرف)
+  const ngrams1 = generateNgrams(cleanText1, 4)
+  const ngrams2 = generateNgrams(cleanText2, 4)
   
   const ngramSet1 = new Set(ngrams1)
   const ngramSet2 = new Set(ngrams2)
@@ -216,9 +229,31 @@ function calculateEnhancedSimilarity(text1: string, text2: string): number {
   
   const ngramSimilarity = ngramUnion.size > 0 ? ngramIntersection.size / ngramUnion.size : 0
 
-  const finalSimilarity = (wordSimilarity * 0.5) + (phraseSimilarity * 0.3) + (ngramSimilarity * 0.2)
+  // تحليل الكلمات المفتاحية المهمة
+  const keyFeatures = [
+    'عيون', 'عين', 'أنف', 'فم', 'شفاه', 'وجه', 'حاجب', 'خد', 'فك', 'بشرة', 'شعر',
+    'دائري', 'بيضاوي', 'مربع', 'طويل', 'قصير', 'عريض', 'ضيق', 'كبير', 'صغير',
+    'أسود', 'بني', 'أزرق', 'أخضر', 'رمادي', 'أبيض', 'أحمر', 'أشقر', 'داكن', 'فاتح'
+  ]
   
-  return finalSimilarity
+  let keywordMatches = 0
+  let totalKeywords = 0
+  
+  for (const keyword of keyFeatures) {
+    if (cleanText1.includes(keyword) || cleanText2.includes(keyword)) {
+      totalKeywords++
+      if (cleanText1.includes(keyword) && cleanText2.includes(keyword)) {
+        keywordMatches++
+      }
+    }
+  }
+  
+  const keywordSimilarity = totalKeywords > 0 ? keywordMatches / totalKeywords : 0
+
+  // حساب النتيجة النهائية مع أوزان محسنة
+  const finalSimilarity = (wordSimilarity * 0.4) + (phraseSimilarity * 0.3) + (ngramSimilarity * 0.15) + (keywordSimilarity * 0.15)
+  
+  return Math.min(finalSimilarity, 1.0)
 }
 
 function generateNgrams(text: string, n: number): string[] {

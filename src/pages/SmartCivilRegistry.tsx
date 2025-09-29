@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import BatchProcessEmbeddings from '@/components/BatchProcessEmbeddings';
+import { RoleProtectedRoute } from '@/components/RoleProtectedRoute';
 
 interface Citizen {
   id: string;
@@ -440,7 +441,11 @@ ${properties.map(p => `- ${p.property_description} (${p.property_type})`).join('
   };
 
   return (
-    <DashboardLayout>
+    <RoleProtectedRoute 
+      requiredPage="smart-civil-registry"
+      fallbackMessage="هذه الصفحة مخصصة للضباط المعتمدين في أقسام الأمن والتحقيقات والجرائم الإلكترونية فقط"
+    >
+      <DashboardLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -933,7 +938,8 @@ ${properties.map(p => `- ${p.property_description} (${p.property_type})`).join('
           </Dialog>
         )}
       </div>
-    </DashboardLayout>
+      </DashboardLayout>
+    </RoleProtectedRoute>
   );
 };
 

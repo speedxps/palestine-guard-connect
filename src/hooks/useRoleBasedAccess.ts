@@ -7,7 +7,7 @@ const rolePages = {
     'new-incident', 'cybercrime', 'cybercrime-reports', 'reports', 'violations', 
     'violations-admin', 'vehicle-lookup', 'tasks', 'patrol', 'patrol-old', 'feed', 
     'chat', 'wanted-persons-tree', 'face-recognition', 'police-news', 'backup',
-    'citizen-records', 'about', 'cybercrime-advanced'
+    'citizen-records', 'about', 'cybercrime-advanced', 'smart-civil-registry'
   ],
   // مدراء الأقسام - صلاحيات إدارية لقسمهم
   traffic_manager: [
@@ -16,13 +16,13 @@ const rolePages = {
   ],
   cid_manager: [
     'dashboard', 'profile', 'incidents', 'incidents-management', 'new-incident',
-    'wanted-persons-tree', 'face-recognition', 'police-news', 'admin-panel', 'feed'
+    'wanted-persons-tree', 'face-recognition', 'police-news', 'admin-panel', 'feed', 'smart-civil-registry'
   ],
   special_manager: [
     'dashboard', 'profile', 'tasks', 'patrol', 'patrol-old', 'feed', 'chat', 'police-news', 'admin-panel'
   ],
   cybercrime_manager: [
-    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'cybercrime-advanced', 'admin-panel', 'feed'
+    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'cybercrime-advanced', 'admin-panel', 'feed', 'smart-civil-registry'
   ],
   // موظفو الأقسام - صلاحيات محدودة
   traffic_police: [
@@ -30,13 +30,13 @@ const rolePages = {
   ],
   cid: [
     'dashboard', 'profile', 'incidents', 'incidents-management', 'new-incident',
-    'wanted-persons-tree', 'face-recognition', 'police-news', 'feed'
+    'wanted-persons-tree', 'face-recognition', 'police-news', 'feed', 'smart-civil-registry'
   ],
   special_police: [
     'dashboard', 'profile', 'tasks', 'patrol', 'patrol-old', 'feed', 'chat', 'police-news'
   ],
   cybercrime: [
-    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'feed'
+    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'feed', 'smart-civil-registry'
   ],
   officer: [
     'dashboard', 'profile', 'police-news', 'feed'
