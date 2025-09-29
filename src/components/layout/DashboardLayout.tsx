@@ -13,7 +13,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-screen bg-white" dir="rtl">
+    <div className="flex h-screen bg-white overflow-hidden" dir="rtl">
       {/* Mobile Menu Button */}
       {isMobile && (
         <Button
@@ -45,13 +45,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </>
       ) : (
         /* Desktop Sidebar */
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 h-screen">
           <ModernSidebar />
         </div>
       )}
 
       {/* Main Content */}
-      <main className={`flex-1 overflow-auto bg-gray-50 min-h-screen ${
+      <main className={`flex-1 overflow-auto bg-gray-50 h-screen ${
         isMobile ? 'w-full' : ''
       }`}>
         {children}

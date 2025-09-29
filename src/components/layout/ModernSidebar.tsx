@@ -107,7 +107,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
   const currentDept = getCurrentDepartment();
 
   return (
-    <div className="h-screen bg-white border-r border-gray-200 transition-all duration-300 shadow-sm w-72">
+    <div className="h-screen bg-white border-r border-gray-200 transition-all duration-300 shadow-sm w-72 flex flex-col">
       {/* Close button for mobile */}
       {onClose && (
         <div className="p-4 border-b border-gray-200 flex justify-end">
@@ -184,8 +184,8 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-2">
+      <div className="flex-1 overflow-y-auto sidebar-scroll">
+        <div className="p-4 space-y-2">
           {/* Dashboard Link */}
           <Button
             variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}

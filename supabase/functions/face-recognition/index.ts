@@ -74,8 +74,26 @@ serve(async (req) => {
     if (!openaiResponse.ok) {
       const errorData = await openaiResponse.text()
       console.error('OpenAI API Error:', errorData)
+      
+      // Parse the error to provide better user feedback
+      let errorMessage = 'Failed to analyze face image'
+      try {
+        const parsedError = JSON.parse(errorData)
+        if (parsedError.error?.code === 'rate_limit_exceeded') {
+          errorMessage = 'تم تجاوز الحد المسموح من استخدام خدمة التحليل. يرجى المحاولة لاحقاً'
+        } else if (parsedError.error?.message) {
+          errorMessage = 'خطأ في خدمة التحليل'
+        }
+      } catch (e) {
+        // Keep default error message
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Failed to analyze face image' }),
+        JSON.stringify({ 
+          success: false,
+          error: errorMessage,
+          matches: []
+        }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
