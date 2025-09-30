@@ -75,6 +75,11 @@ export const useRoleBasedAccess = () => {
         title: 'الأخبار',
         path: '/police-news', 
         icon: 'Newspaper'
+      },
+      {
+        title: 'التقارير والإحصائيات',
+        path: '/reports-management',
+        icon: 'BarChart3'
       }
     ];
 

@@ -1143,6 +1143,104 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          date_from: string | null
+          date_to: string | null
+          file_url: string | null
+          generated_at: string
+          generated_by: string
+          id: string
+          report_data: Json
+          report_type: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_from?: string | null
+          date_to?: string | null
+          file_url?: string | null
+          generated_at?: string
+          generated_by: string
+          id?: string
+          report_data: Json
+          report_type: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_from?: string | null
+          date_to?: string | null
+          file_url?: string | null
+          generated_at?: string
+          generated_by?: string
+          id?: string
+          report_data?: Json
+          report_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      statistics_snapshots: {
+        Row: {
+          additional_metrics: Json | null
+          created_at: string
+          id: string
+          incidents_by_status: Json | null
+          incidents_by_type: Json | null
+          snapshot_date: string
+          snapshot_type: string
+          tasks_by_status: Json | null
+          total_incidents: number | null
+          total_patrols: number | null
+          total_tasks: number | null
+          total_violations: number | null
+        }
+        Insert: {
+          additional_metrics?: Json | null
+          created_at?: string
+          id?: string
+          incidents_by_status?: Json | null
+          incidents_by_type?: Json | null
+          snapshot_date: string
+          snapshot_type: string
+          tasks_by_status?: Json | null
+          total_incidents?: number | null
+          total_patrols?: number | null
+          total_tasks?: number | null
+          total_violations?: number | null
+        }
+        Update: {
+          additional_metrics?: Json | null
+          created_at?: string
+          id?: string
+          incidents_by_status?: Json | null
+          incidents_by_type?: Json | null
+          snapshot_date?: string
+          snapshot_type?: string
+          tasks_by_status?: Json | null
+          total_incidents?: number | null
+          total_patrols?: number | null
+          total_tasks?: number | null
+          total_violations?: number | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_by: string

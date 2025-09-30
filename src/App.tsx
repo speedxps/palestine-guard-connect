@@ -32,6 +32,7 @@ import About from "./pages/About";
 import FaceRecognition from "./pages/FaceRecognition";
 import PoliceNews from "./pages/PoliceNews";
 import Reports from "./pages/Reports";
+import ReportsManagement from "./pages/ReportsManagement";
 import AdminPanel from "./pages/AdminPanel";
 import CybercrimeAdvanced from "./pages/CybercrimeAdvanced";
 import CybercrimeAdvancedDashboard from "./pages/CybercrimeAdvancedDashboard";
@@ -235,6 +236,11 @@ const App = () => {
                   <RoleBasedRoute requiredPage="reports">
                     <Reports />
                   </RoleBasedRoute>
+                } />
+                <Route path="/reports-management" element={
+                  <ProtectedRoute>
+                    <ReportsManagement />
+                  </ProtectedRoute>
                 } />
                 
                 {/* Admin Only Routes */}
