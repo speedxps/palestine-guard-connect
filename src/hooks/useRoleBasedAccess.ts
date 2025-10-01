@@ -7,22 +7,22 @@ const rolePages = {
     'new-incident', 'cybercrime', 'cybercrime-reports', 'reports', 'violations', 
     'violations-admin', 'vehicle-lookup', 'tasks', 'patrol', 'patrol-old', 'feed', 
     'chat', 'wanted-persons-tree', 'face-recognition', 'police-news', 'backup',
-    'citizen-records', 'about', 'cybercrime-advanced', 'smart-civil-registry'
+    'citizen-records', 'about', 'cybercrime-advanced', 'smart-civil-registry', 'overview'
   ],
   // مدراء الأقسام - صلاحيات إدارية لقسمهم
   traffic_manager: [
     'dashboard', 'profile', 'violations', 'violations-admin', 'vehicle-lookup', 
-    'patrol', 'police-news', 'admin-panel', 'feed'
+    'patrol', 'police-news', 'admin-panel', 'feed', 'overview'
   ],
   cid_manager: [
     'dashboard', 'profile', 'incidents', 'incidents-management', 'new-incident',
-    'wanted-persons-tree', 'face-recognition', 'police-news', 'admin-panel', 'feed', 'smart-civil-registry'
+    'wanted-persons-tree', 'face-recognition', 'police-news', 'admin-panel', 'feed', 'smart-civil-registry', 'overview'
   ],
   special_manager: [
-    'dashboard', 'profile', 'tasks', 'patrol', 'patrol-old', 'feed', 'chat', 'police-news', 'admin-panel'
+    'dashboard', 'profile', 'tasks', 'patrol', 'patrol-old', 'feed', 'chat', 'police-news', 'admin-panel', 'overview'
   ],
   cybercrime_manager: [
-    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'cybercrime-advanced', 'admin-panel', 'feed', 'smart-civil-registry'
+    'dashboard', 'profile', 'cybercrime', 'cybercrime-reports', 'reports', 'police-news', 'cybercrime-advanced', 'admin-panel', 'feed', 'smart-civil-registry', 'overview'
   ],
   // موظفو الأقسام - صلاحيات محدودة
   traffic_police: [

@@ -147,10 +147,18 @@ const Dashboard = () => {
               const getActionPath = (title: string) => {
                 switch (title) {
                   case 'المساعد الذكي للشرطة': return '/police-assistant';
-                  case 'الإحصائيات اليومية': return '/daily-stats';
+                  case 'الإحصائيات اليومية': return '/overview';
                   case 'المهام العاجلة': return '/urgent-tasks';
                   case 'الجدولة': return '/scheduling';
-                  case 'إدارة المستخدمين': return '/user-management';
+                  case 'إدارة المستخدمين': {
+                    // حسب الدور، الانتقال لصفحة الإدارة المناسبة
+                    if (userRole === 'admin') return '/admin-panel';
+                    if (userRole === 'traffic_manager') return '/department-users/traffic';
+                    if (userRole === 'cid_manager') return '/department-users/cid';
+                    if (userRole === 'special_manager') return '/department-users/special';
+                    if (userRole === 'cybercrime_manager') return '/department-users/cybercrime';
+                    return '/dashboard';
+                  }
                   default: return '/dashboard';
                 }
               };

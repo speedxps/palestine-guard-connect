@@ -33,7 +33,15 @@ import FaceRecognition from "./pages/FaceRecognition";
 import PoliceNews from "./pages/PoliceNews";
 import Reports from "./pages/Reports";
 import ReportsManagement from "./pages/ReportsManagement";
+import OverviewPage from './pages/OverviewPage';
+import DepartmentUserManagement from './pages/DepartmentUserManagement';
 import AdminPanel from "./pages/AdminPanel";
+
+// Department user management wrappers
+const DepartmentUserManagementTraffic = () => <DepartmentUserManagement department="traffic" />;
+const DepartmentUserManagementCID = () => <DepartmentUserManagement department="cid" />;
+const DepartmentUserManagementSpecial = () => <DepartmentUserManagement department="special" />;
+const DepartmentUserManagementCybercrime = () => <DepartmentUserManagement department="cybercrime" />;
 import CybercrimeAdvanced from "./pages/CybercrimeAdvanced";
 import CybercrimeAdvancedDashboard from "./pages/CybercrimeAdvancedDashboard";
 import VehicleInquiry from "./pages/VehicleInquiry";
@@ -241,6 +249,31 @@ const App = () => {
                   <ProtectedRoute>
                     <ReportsManagement />
                   </ProtectedRoute>
+                } />
+                <Route path="/overview" element={
+                  <RoleBasedRoute requiredPage="overview">
+                    <OverviewPage />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department-users/traffic" element={
+                  <RoleBasedRoute requiredPage="admin-panel">
+                    <DepartmentUserManagementTraffic />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department-users/cid" element={
+                  <RoleBasedRoute requiredPage="admin-panel">
+                    <DepartmentUserManagementCID />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department-users/special" element={
+                  <RoleBasedRoute requiredPage="admin-panel">
+                    <DepartmentUserManagementSpecial />
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department-users/cybercrime" element={
+                  <RoleBasedRoute requiredPage="admin-panel">
+                    <DepartmentUserManagementCybercrime />
+                  </RoleBasedRoute>
                 } />
                 
                 {/* Admin Only Routes */}

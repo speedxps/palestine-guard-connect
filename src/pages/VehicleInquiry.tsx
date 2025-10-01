@@ -48,57 +48,159 @@ interface ViolationData {
 export default function VehicleInquiry() {
   const { toast } = useToast();
   const [plateNumber, setPlateNumber] = useState('');
+  const [ownerNationalId, setOwnerNationalId] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [searchType, setSearchType] = useState<'plate' | 'national_id' | 'name'>('plate');
   const [isSearching, setIsSearching] = useState(false);
   const [vehicleData, setVehicleData] = useState<VehicleData | null>(null);
   const [owners, setOwners] = useState<OwnerData[]>([]);
   const [violations, setViolations] = useState<ViolationData[]>([]);
 
   const searchVehicle = async () => {
-    if (!plateNumber.trim()) {
+    // Validation based on search type
+    if (searchType === 'plate' && !plateNumber.trim()) {
       toast({
         title: "خطأ",
         description: "يرجى إدخال رقم المركبة",
-        variant: "destructive",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (searchType === 'national_id' && !ownerNationalId.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم هوية المالك",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (searchType === 'name' && !ownerName.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال اسم المالك",
+        variant: "destructive"
       });
       return;
     }
 
     setIsSearching(true);
     try {
-      // Fetch vehicle data
-      const { data: vehicleResponse, error: vehicleError } = await supabase
-        .from('vehicle_registrations')
-        .select('*')
-        .eq('plate_number', plateNumber.trim())
-        .single();
+      let vehicleResponse: any = null;
+      let ownersResponse: any[] = [];
 
-      if (vehicleError) {
-        if (vehicleError.code === 'PGRST116') {
+      if (searchType === 'plate') {
+        // البحث برقم المركبة
+        const { data, error } = await supabase
+          .from('vehicle_registrations')
+          .select('*')
+          .eq('plate_number', plateNumber.trim())
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
           toast({
             title: "غير موجود",
             description: "لم يتم العثور على مركبة بهذا الرقم",
-            variant: "destructive",
+            variant: "destructive"
           });
-        } else {
-          throw vehicleError;
+          setVehicleData(null);
+          setOwners([]);
+          setViolations([]);
+          setIsSearching(false);
+          return;
         }
-        setVehicleData(null);
-        setOwners([]);
-        setViolations([]);
-        return;
+        vehicleResponse = data;
+      } else if (searchType === 'national_id') {
+        // البحث برقم هوية المالك
+        // 1. البحث عن المالك برقم الهوية
+        const { data: ownerData, error: ownerError } = await supabase
+          .from('vehicle_owners')
+          .select('vehicle_id, *')
+          .eq('national_id', ownerNationalId.trim())
+          .eq('is_current_owner', true);
+
+        if (ownerError) throw ownerError;
+        if (!ownerData || ownerData.length === 0) {
+          toast({
+            title: "غير موجود",
+            description: "لم يتم العثور على مركبة مسجلة بهذا الرقم الوطني",
+            variant: "destructive"
+          });
+          setVehicleData(null);
+          setOwners([]);
+          setViolations([]);
+          setIsSearching(false);
+          return;
+        }
+
+        // 2. جلب بيانات المركبة
+        const { data: vehicleData, error: vehicleError } = await supabase
+          .from('vehicle_registrations')
+          .select('*')
+          .eq('id', ownerData[0].vehicle_id)
+          .single();
+
+        if (vehicleError) throw vehicleError;
+        vehicleResponse = vehicleData;
+        ownersResponse = ownerData;
+      } else if (searchType === 'name') {
+        // البحث باسم المالك
+        // 1. البحث عن المالك بالاسم
+        const { data: ownerData, error: ownerError } = await supabase
+          .from('vehicle_owners')
+          .select('vehicle_id, *')
+          .ilike('owner_name', `%${ownerName.trim()}%`)
+          .eq('is_current_owner', true);
+
+        if (ownerError) throw ownerError;
+        if (!ownerData || ownerData.length === 0) {
+          toast({
+            title: "غير موجود",
+            description: "لم يتم العثور على مركبة مسجلة بهذا الاسم",
+            variant: "destructive"
+          });
+          setVehicleData(null);
+          setOwners([]);
+          setViolations([]);
+          setIsSearching(false);
+          return;
+        }
+
+        // 2. جلب بيانات المركبة
+        const { data: vehicleData, error: vehicleError } = await supabase
+          .from('vehicle_registrations')
+          .select('*')
+          .eq('id', ownerData[0].vehicle_id)
+          .single();
+
+        if (vehicleError) throw vehicleError;
+        vehicleResponse = vehicleData;
+        ownersResponse = ownerData;
       }
 
       setVehicleData(vehicleResponse);
 
-      // Fetch owners data
-      const { data: ownersResponse, error: ownersError } = await supabase
-        .from('vehicle_owners')
-        .select('*')
-        .eq('vehicle_id', vehicleResponse.id)
-        .order('ownership_start_date', { ascending: false });
+      // Fetch owners data if not already loaded
+      if (ownersResponse.length === 0) {
+        const { data: allOwners, error: ownersError } = await supabase
+          .from('vehicle_owners')
+          .select('*')
+          .eq('vehicle_id', vehicleResponse.id)
+          .order('ownership_start_date', { ascending: false });
 
-      if (ownersError) throw ownersError;
-      setOwners(ownersResponse || []);
+        if (ownersError) throw ownersError;
+        setOwners(allOwners || []);
+      } else {
+        // إذا كانت البيانات محملة من البحث، جلب باقي المالكين
+        const { data: allOwners, error: ownersError } = await supabase
+          .from('vehicle_owners')
+          .select('*')
+          .eq('vehicle_id', vehicleResponse.id)
+          .order('ownership_start_date', { ascending: false });
+
+        if (ownersError) throw ownersError;
+        setOwners(allOwners || []);
+      }
 
       // Fetch violations data
       const { data: violationsResponse, error: violationsError } = await supabase

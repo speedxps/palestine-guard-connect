@@ -69,6 +69,7 @@ export default function ViolationsAdmin() {
   const [type, setType] = useState<EntryType>("violation");
   const [date, setDate] = useState("");
   const [details, setDetails] = useState("");
+  const [isLoadingCitizen, setIsLoadingCitizen] = useState(false);
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<"all" | EntryType>("all");
@@ -136,6 +137,44 @@ export default function ViolationsAdmin() {
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch citizen data from Smart Civil Registry
+  const fetchCitizenByNationalId = async (nationalIdValue: string) => {
+    if (!nationalIdValue || nationalIdValue.length < 9) return;
+    
+    setIsLoadingCitizen(true);
+    try {
+      const { data, error } = await supabase
+        .from('citizens')
+        .select('full_name, first_name, second_name, third_name, family_name, phone, address, date_of_birth')
+        .eq('national_id', nationalIdValue)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching citizen:', error);
+        return;
+      }
+
+      if (data) {
+        // Auto-fill the name field
+        setName(data.full_name || `${data.first_name || ''} ${data.second_name || ''} ${data.third_name || ''} ${data.family_name || ''}`.trim());
+        toast({
+          title: "تم العثور على المواطن",
+          description: `تم جلب بيانات ${data.full_name} من السجل المدني`,
+        });
+      } else {
+        toast({
+          title: "تنبيه",
+          description: "رقم الهوية غير موجود في السجل المدني",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsLoadingCitizen(false);
+    }
+  };
 
   const addRecord = async () => {
     if (!nationalId || !name || !date) {
@@ -343,7 +382,28 @@ export default function ViolationsAdmin() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="nid">رقم الهوية</Label>
-              <Input id="nid" inputMode="numeric" value={nationalId} onChange={(e) => setNationalId(e.target.value.replace(/[^0-9]/g, ""))} placeholder="مثال: 401234567" />
+              <div className="relative">
+                <Input 
+                  id="nid" 
+                  inputMode="numeric" 
+                  value={nationalId} 
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    setNationalId(value);
+                    if (value.length === 9) {
+                      fetchCitizenByNationalId(value);
+                    }
+                  }}
+                  placeholder="مثال: 401234567"
+                  disabled={isLoadingCitizen}
+                />
+                {isLoadingCitizen && (
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">سيتم جلب البيانات تلقائياً من السجل المدني</p>
             </div>
             <div>
               <Label htmlFor="name">الاسم</Label>
