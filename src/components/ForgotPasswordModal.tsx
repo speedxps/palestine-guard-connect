@@ -38,6 +38,22 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordProps> = ({ isOpen, onC
 
       if (error) throw error;
 
+      // Log password reset request activity
+      try {
+        await supabase.from('activity_logs').insert({
+          user_id: null, // No user_id since they can't login
+          activity_type: 'password_reset_request',
+          activity_description: `طلب إعادة تعيين كلمة مرور: ${formData.email}`,
+          metadata: { 
+            email: formData.email,
+            requested_by: formData.requestedBy,
+            reason: formData.reason
+          }
+        });
+      } catch (logError) {
+        console.error('Error logging activity:', logError);
+      }
+
       toast({
         title: "تم إرسال الطلب",
         description: "تم إرسال طلب إعادة تعيين كلمة المرور للإدارة للمراجعة",

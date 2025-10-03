@@ -116,6 +116,22 @@ const NewIncident = () => {
         await uploadFiles(incident.id, profile.id);
       }
 
+      // Log incident creation activity
+      try {
+        await supabase.from('activity_logs').insert({
+          user_id: profile.id,
+          activity_type: 'incident_created',
+          activity_description: `إنشاء بلاغ جديد: ${formData.title}`,
+          metadata: { 
+            incident_id: incident.id,
+            incident_type: formData.type,
+            title: formData.title
+          }
+        });
+      } catch (logError) {
+        console.error('Error logging activity:', logError);
+      }
+
       toast({
         title: "تم إرسال البلاغ بنجاح",
         description: "سيتم مراجعة بلاغك والرد عليك قريباً",

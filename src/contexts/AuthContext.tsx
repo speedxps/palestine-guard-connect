@@ -104,6 +104,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data.user) {
         console.log('AuthContext: Login successful');
+        
+        // Log login activity
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', data.user.id)
+            .single();
+          
+          if (profile) {
+            await supabase.from('activity_logs').insert({
+              user_id: profile.id,
+              activity_type: 'login',
+              activity_description: `تسجيل دخول المستخدم ${email}`,
+              metadata: { email, timestamp: new Date().toISOString() }
+            });
+          }
+        } catch (logError) {
+          console.error('Error logging activity:', logError);
+        }
+        
         return true;
       }
       
