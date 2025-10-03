@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -38,7 +37,6 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { userRole, hasAccess } = useRoleBasedAccess();
   
   const [openDepartments, setOpenDepartments] = useState<string[]>(['current']);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -57,7 +55,6 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       title: 'الإدارة العامة',
       icon: Crown,
       color: 'from-yellow-500 to-yellow-600',
-      visible: userRole === 'admin',
       path: '/department/admin'
     },
     {
@@ -65,7 +62,6 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       title: 'شرطة المرور',
       icon: Car,
       color: 'from-blue-500 to-blue-600',
-      visible: userRole === 'admin' || userRole === 'traffic_police' || userRole === 'traffic_manager',
       path: '/department/traffic'
     },
     {
@@ -73,7 +69,6 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       title: 'المباحث الجنائية',
       icon: ShieldCheck,
       color: 'from-red-500 to-red-600',
-      visible: userRole === 'admin' || userRole === 'cid' || userRole === 'cid_manager',
       path: '/department/cid'
     },
     {
@@ -81,7 +76,6 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       title: 'الشرطة الخاصة',
       icon: Shield,
       color: 'from-purple-500 to-purple-600',
-      visible: userRole === 'admin' || userRole === 'special_police' || userRole === 'special_manager',
       path: '/department/special'
     },
     {
@@ -89,7 +83,6 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       title: 'الجرائم الإلكترونية',
       icon: Computer,
       color: 'from-indigo-500 to-indigo-600',
-      visible: userRole === 'admin' || userRole === 'cybercrime' || userRole === 'cybercrime_manager',
       path: '/department/cybercrime'
     }
   ];
@@ -171,13 +164,13 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
               {user?.full_name || 'مستخدم'}
             </h3>
             <Badge variant="secondary" className="text-xs bg-white text-gray-700">
-              {userRole === 'admin' && 'مدير النظام'}
-              {userRole === 'traffic_police' && 'شرطة المرور'}
-              {userRole === 'cid' && 'مباحث جنائية'}
-              {userRole === 'special_police' && 'شرطة خاصة'}
-              {userRole === 'cybercrime' && 'جرائم إلكترونية'}
-              {userRole === 'officer' && 'ضابط'}
-              {userRole === 'user' && 'مستخدم'}
+              {user?.role === 'admin' && 'مدير النظام'}
+              {user?.role === 'traffic_police' && 'شرطة المرور'}
+              {user?.role === 'cid' && 'مباحث جنائية'}
+              {user?.role === 'special_police' && 'شرطة خاصة'}
+              {user?.role === 'cybercrime' && 'جرائم إلكترونية'}
+              {user?.role === 'officer' && 'ضابط'}
+              {user?.role === 'user' && 'مستخدم'}
             </Badge>
           </div>
         </div>
@@ -228,21 +221,19 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
             <span className="font-arabic">المساعد الذكي</span>
           </Button>
 
-          {/* Smart Civil Registry Link - Admin Only */}
-          {userRole === 'admin' && (
-            <Button
-              variant={location.pathname === '/smart-civil-registry' ? 'default' : 'ghost'}
-              className={`w-full justify-start gap-3 ${
-                location.pathname === '/smart-civil-registry' 
-                  ? 'bg-primary text-white hover:bg-primary/90' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-              onClick={() => navigate('/smart-civil-registry')}
-            >
-              <UserCheck className="h-4 w-4 shrink-0" />
-              <span className="font-arabic">السجل المدني الذكي</span>
-            </Button>
-          )}
+          {/* Smart Civil Registry Link */}
+          <Button
+            variant={location.pathname === '/smart-civil-registry' ? 'default' : 'ghost'}
+            className={`w-full justify-start gap-3 ${
+              location.pathname === '/smart-civil-registry' 
+                ? 'bg-primary text-white hover:bg-primary/90' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+            onClick={() => navigate('/smart-civil-registry')}
+          >
+            <UserCheck className="h-4 w-4 shrink-0" />
+            <span className="font-arabic">السجل المدني الذكي</span>
+          </Button>
 
 
           {/* Departments */}
@@ -251,9 +242,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
               الأقسام
             </h3>
             
-            {departments
-              .filter(dept => dept.visible)
-              .map((dept) => {
+            {departments.map((dept) => {
                 const Icon = dept.icon;
                 return (
                   <Button

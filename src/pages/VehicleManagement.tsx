@@ -13,8 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Car, Users, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
-import AccessDenied from '@/components/AccessDenied';
 
 interface VehicleData {
   id: string;
@@ -55,7 +53,6 @@ interface ViolationData {
 export default function VehicleManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { hasAccess } = useRoleBasedAccess();
   
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [owners, setOwners] = useState<OwnerData[]>([]);
@@ -97,11 +94,6 @@ export default function VehicleManagement() {
     status: 'pending',
     notes: ''
   });
-
-  // Check permissions
-  if (!hasAccess('admin')) {
-    return <AccessDenied />;
-  }
 
   useEffect(() => {
     fetchData();

@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import PoliceNews from '@/components/dashboard/PoliceNews';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { useNavigate } from 'react-router-dom';
 import { 
   Crown, 
@@ -20,8 +19,8 @@ import {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { userRole } = useRoleBasedAccess();
   const navigate = useNavigate();
+  const userRole = user?.role;
 
   const getRoleName = (role: string) => {
     const roleNames: Record<string, string> = {

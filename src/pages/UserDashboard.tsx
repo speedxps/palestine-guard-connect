@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +26,7 @@ import {
 const UserDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { userRole, getAllowedPages, hasAccess } = useRoleBasedAccess();
+  const userRole = user?.role;
 
   const getRoleName = (role: string) => {
     const roleNames: Record<string, string> = {
@@ -210,11 +209,10 @@ const UserDashboard = () => {
       }
     ];
   };
-
-  const allowedPages = getAllowedPages();
-  const allPages = getAllPages();
   
-  const accessiblePages = allPages.filter(page => allowedPages.includes(page.name));
+  // جميع الصفحات متاحة الآن للمستخدمين المسجلين
+  const allPages = getAllPages();
+  const accessiblePages = allPages;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" dir="rtl">

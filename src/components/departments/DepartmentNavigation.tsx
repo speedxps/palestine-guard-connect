@@ -3,8 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
-import { 
+import { useAuth } from '@/contexts/AuthContext';
+import {
   Home, 
   Newspaper, 
   Settings, 
@@ -19,7 +19,8 @@ import {
 export const DepartmentNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole, hasAccess } = useRoleBasedAccess();
+  const { user } = useAuth();
+  const userRole = user?.role;
 
   const departments = [
     {
@@ -112,10 +113,7 @@ export const DepartmentNavigation = () => {
         
         {departments.map((dept) => {
           const Icon = dept.icon;
-          const hasAccessToDept = userRole === 'admin' || userRole === dept.id || 
-            dept.pages.some(page => hasAccess(page));
-
-          if (!hasAccessToDept) return null;
+          // جميع الأقسام متاحة للمستخدمين المسجلين
 
           const isActiveDepartment = dept.pages.some(page => {
             const pagePath = `/${page.replace(/-/g, '-')}`;
@@ -129,10 +127,10 @@ export const DepartmentNavigation = () => {
                 isActiveDepartment ? 'border-primary bg-primary/5' : ''
               }`}
               onClick={() => {
-                // Navigate to first available page in department
-                const firstAvailablePage = dept.pages.find(page => hasAccess(page));
-                if (firstAvailablePage) {
-                  navigate(`/${firstAvailablePage.replace(/-/g, '-')}`);
+                // Navigate to first page in department
+                const firstPage = dept.pages[0];
+                if (firstPage) {
+                  navigate(`/${firstPage.replace(/-/g, '-')}`);
                 }
               }}
             >

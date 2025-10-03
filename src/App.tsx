@@ -7,8 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { RoleBasedRoute } from "@/components/RoleBasedRoute";
-import AccessDenied from "@/components/AccessDenied";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
@@ -133,58 +131,58 @@ const App = () => {
                 
                 {/* Admin Panel */}
                 <Route path="/admin-panel" element={
-                  <RoleBasedRoute requiredPage="admin-panel">
+                  <ProtectedRoute>
                     <AdminPanel />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 {/* Traffic Police Routes */}
                 <Route path="/violations" element={
-                  <RoleBasedRoute requiredPage="violations">
+                  <ProtectedRoute>
                     <Violations />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/violations-admin" element={
-                  <RoleBasedRoute requiredPage="violations-admin">
+                  <ProtectedRoute>
                     <ViolationsAdmin />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/vehicle-inquiry" element={
-                  <RoleBasedRoute requiredPage="vehicle-lookup">
+                  <ProtectedRoute>
                     <VehicleInquiry />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/vehicle-management" element={
-                  <RoleBasedRoute requiredPage="violations-admin">
+                  <ProtectedRoute>
                     <VehicleManagement />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/patrols-management" element={
-                  <RoleBasedRoute requiredPage="patrol">
+                  <ProtectedRoute>
                     <PatrolsManagement />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 {/* CID Routes */}
                 <Route path="/incidents" element={
-                  <RoleBasedRoute requiredPage="incidents">
+                  <ProtectedRoute>
                     <Incidents />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/incidents-management" element={
-                  <RoleBasedRoute requiredPage="incidents-management">
+                  <ProtectedRoute>
                     <IncidentsManagement />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/new-incident" element={
-                  <RoleBasedRoute requiredPage="new-incident">
+                  <ProtectedRoute>
                     <NewIncident />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/wanted-persons-tree" element={
-                  <RoleBasedRoute requiredPage="wanted-persons-tree">
+                  <ProtectedRoute>
                     <WantedPersonsTree />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
         <Route path="/civil-registry" element={
           <ProtectedRoute>
@@ -192,14 +190,14 @@ const App = () => {
           </ProtectedRoute>
         } />
         <Route path="/smart-civil-registry" element={
-          <RoleBasedRoute requiredPage="citizen-records">
+          <ProtectedRoute>
             <SmartCivilRegistry />
-          </RoleBasedRoute>
+          </ProtectedRoute>
         } />
         <Route path="/advanced-face-recognition" element={
-          <RoleBasedRoute requiredPage="citizen-records">
+          <ProtectedRoute>
             <AdvancedFaceRecognition />
-          </RoleBasedRoute>
+          </ProtectedRoute>
         } />
         <Route path="/face-recognition" element={
           <ProtectedRoute>
@@ -209,41 +207,41 @@ const App = () => {
                 
                 {/* Special Police Routes */}
                 <Route path="/tasks" element={
-                  <RoleBasedRoute requiredPage="tasks">
+                  <ProtectedRoute>
                     <Tasks />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/patrol" element={
-                  <RoleBasedRoute requiredPage="patrol">
+                  <ProtectedRoute>
                     <Patrol />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/feed" element={
-                  <RoleBasedRoute requiredPage="feed">
+                  <ProtectedRoute>
                     <Feed />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/chat" element={
-                  <RoleBasedRoute requiredPage="chat">
+                  <ProtectedRoute>
                     <Chat />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 {/* Cybercrime Routes */}
                 <Route path="/cybercrime" element={
-                  <RoleBasedRoute requiredPage="cybercrime">
+                  <ProtectedRoute>
                     <Cybercrime />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/cybercrime-reports" element={
-                  <RoleBasedRoute requiredPage="cybercrime-reports">
+                  <ProtectedRoute>
                     <CybercrimeReports />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/reports" element={
-                  <RoleBasedRoute requiredPage="reports">
+                  <ProtectedRoute>
                     <Reports />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/reports-management" element={
                   <ProtectedRoute>
@@ -251,80 +249,80 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/overview" element={
-                  <RoleBasedRoute requiredPage="overview">
+                  <ProtectedRoute>
                     <OverviewPage />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department-users/traffic" element={
-                  <RoleBasedRoute requiredPage="admin-panel">
+                  <ProtectedRoute>
                     <DepartmentUserManagementTraffic />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department-users/cid" element={
-                  <RoleBasedRoute requiredPage="admin-panel">
+                  <ProtectedRoute>
                     <DepartmentUserManagementCID />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department-users/special" element={
-                  <RoleBasedRoute requiredPage="admin-panel">
+                  <ProtectedRoute>
                     <DepartmentUserManagementSpecial />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department-users/cybercrime" element={
-                  <RoleBasedRoute requiredPage="admin-panel">
+                  <ProtectedRoute>
                     <DepartmentUserManagementCybercrime />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 {/* Admin Only Routes */}
                 <Route path="/backup" element={
-                  <RoleBasedRoute requiredPage="backup">
+                  <ProtectedRoute>
                     <Backup />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/citizen-records" element={
-                  <RoleBasedRoute requiredPage="citizen-records">
+                  <ProtectedRoute>
                     <CitizenRecords />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 {/* Advanced Cybercrime System */}
                 <Route path="/cybercrime-advanced" element={
-                  <RoleBasedRoute requiredPage="cybercrime-advanced">
+                  <ProtectedRoute>
                     <CybercrimeAdvanced />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/cybercrime-dashboard" element={
-                  <RoleBasedRoute requiredPage="cybercrime">
+                  <ProtectedRoute>
                     <CybercrimeAdvancedDashboard />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 {/* Department Pages */}
                 <Route path="/department/admin" element={
-                  <RoleBasedRoute requiredPage="admin-panel">
+                  <ProtectedRoute>
                     <AdminDepartment />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department/traffic" element={
-                  <RoleBasedRoute requiredPage="violations">
+                  <ProtectedRoute>
                     <TrafficDepartment />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department/cid" element={
-                  <RoleBasedRoute requiredPage="incidents">
+                  <ProtectedRoute>
                     <CIDDepartment />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department/special" element={
-                  <RoleBasedRoute requiredPage="tasks">
+                  <ProtectedRoute>
                     <SpecialPoliceDepartment />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/department/cybercrime" element={
-                  <RoleBasedRoute requiredPage="cybercrime">
+                  <ProtectedRoute>
                     <CybercrimeDepartment />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 {/* User Dashboard */}
@@ -341,7 +339,6 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <EmergencyNotificationSystem />

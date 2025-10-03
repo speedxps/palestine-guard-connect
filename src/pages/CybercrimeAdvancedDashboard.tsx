@@ -31,8 +31,6 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
-import AccessDenied from '@/components/AccessDenied';
 
 interface CybercrimeCase {
   id: string;
@@ -62,7 +60,6 @@ interface Evidence {
 export default function CybercrimeAdvancedDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { hasAccess } = useRoleBasedAccess();
   
   const [cases, setCases] = useState<CybercrimeCase[]>([]);
   const [evidence, setEvidence] = useState<Evidence[]>([]);
@@ -86,11 +83,6 @@ export default function CybercrimeAdvancedDashboard() {
     description: '',
     file_url: ''
   });
-
-  // Check if user has cybercrime access
-  if (!hasAccess('cybercrime') && !hasAccess('admin')) {
-    return <AccessDenied />;
-  }
 
   useEffect(() => {
     fetchData();

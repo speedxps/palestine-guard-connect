@@ -2,8 +2,8 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
-import { 
+import { useAuth } from '@/contexts/AuthContext';
+import {
   Users, 
   Car, 
   AlertTriangle, 
@@ -14,8 +14,9 @@ import {
 } from 'lucide-react';
 
 const StatsCards = () => {
-  const { userRole } = useRoleBasedAccess();
+  const { user } = useAuth();
   const stats = useDashboardStats();
+  const userRole = user?.role;
 
   if (stats.isLoading) {
     return (
