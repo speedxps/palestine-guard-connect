@@ -103,29 +103,12 @@ export default function DepartmentUserManagement({ department }: DepartmentUserM
 
       if (error) throw error;
 
-      // Filter by department roles
+      // Filter by department roles and set profiles directly
       const filteredData = data?.filter(profile => 
         config.roles.includes(profile.role as UserRole)
       ) || [];
 
-      // Get auth users for emails
-      let authUsers = null;
-      try {
-        const { data: authUsersData } = await supabase.auth.admin.listUsers();
-        authUsers = authUsersData;
-      } catch (error) {
-        console.warn('Could not fetch auth users:', error);
-      }
-
-      const enrichedProfiles = filteredData.map((profile: any) => {
-        const authUser = authUsers?.users?.find((u: any) => u.id === profile.user_id);
-        return {
-          ...profile,
-          email: authUser?.email || 'غير متوفر'
-        };
-      });
-
-      setProfiles(enrichedProfiles);
+      setProfiles(filteredData as Profile[]);
     } catch (error: any) {
       console.error('Error fetching profiles:', error);
       toast({
@@ -174,6 +157,7 @@ export default function DepartmentUserManagement({ department }: DepartmentUserM
             user_id: authData.user.id,
             username: formData.username,
             full_name: formData.full_name,
+            email: formData.email,
             phone: formData.phone || null,
             badge_number: formData.badge_number || null,
             role: formData.role as any,
@@ -183,6 +167,18 @@ export default function DepartmentUserManagement({ department }: DepartmentUserM
         if (profileError) {
           console.warn('Profile might already exist:', profileError);
         }
+        
+        // Log user creation activity
+        await supabase.from('activity_logs').insert({
+          user_id: null,
+          activity_type: 'user_created',
+          activity_description: `إنشاء مستخدم جديد: ${formData.full_name} (${formData.email})`,
+          metadata: { 
+            email: formData.email,
+            role: formData.role,
+            department 
+          }
+        });
       }
 
       toast({
