@@ -32,6 +32,7 @@ interface UserProfile {
   phone?: string;
   is_active: boolean;
   created_at: string;
+  has_cybercrime_access?: boolean;
 }
 
 const UserManagementProfessional = () => {
@@ -72,7 +73,7 @@ const UserManagementProfessional = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: profilesData, error } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -86,7 +87,22 @@ const UserManagementProfessional = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+
+      // Fetch cybercrime access for all users
+      const { data: cybercrimeData } = await supabase
+        .from('cybercrime_access')
+        .select('user_id, is_active')
+        .eq('is_active', true);
+
+      // Map cybercrime access to users
+      const usersWithAccess = profilesData?.map(user => ({
+        ...user,
+        has_cybercrime_access: cybercrimeData?.some(
+          access => access.user_id === user.user_id && access.is_active
+        ) || false
+      })) || [];
+
+      setUsers(usersWithAccess);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('فشل في جلب بيانات المستخدمين');
@@ -146,6 +162,59 @@ const UserManagementProfessional = () => {
     } catch (error) {
       console.error('Error updating user role:', error);
       toast.error('فشل في تحديث قسم المستخدم');
+    }
+  };
+
+  const toggleCybercrimeAccess = async (userId: string, currentAccess: boolean) => {
+    try {
+      if (currentAccess) {
+        // Remove cybercrime access
+        const { error } = await supabase
+          .from('cybercrime_access')
+          .update({ is_active: false })
+          .eq('user_id', userId);
+
+        if (error) throw error;
+        toast.success('تم إلغاء صلاحية الوصول للجرائم الإلكترونية');
+      } else {
+        // Grant cybercrime access
+        const { data: currentUser } = await supabase.auth.getUser();
+        
+        // Check if access record exists
+        const { data: existingAccess } = await supabase
+          .from('cybercrime_access')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        if (existingAccess) {
+          // Update existing record
+          const { error } = await supabase
+            .from('cybercrime_access')
+            .update({ is_active: true })
+            .eq('user_id', userId);
+
+          if (error) throw error;
+        } else {
+          // Create new access record
+          const { error } = await supabase
+            .from('cybercrime_access')
+            .insert({
+              user_id: userId,
+              granted_by: currentUser.user?.id,
+              is_active: true
+            });
+
+          if (error) throw error;
+        }
+
+        toast.success('تم منح صلاحية الوصول للجرائم الإلكترونية');
+      }
+      
+      fetchUsers();
+    } catch (error) {
+      console.error('Error toggling cybercrime access:', error);
+      toast.error('فشل في تحديث صلاحيات الجرائم الإلكترونية');
     }
   };
 
@@ -301,6 +370,12 @@ const UserManagementProfessional = () => {
                               </Badge>
                             </div>
                             <div className="flex justify-between">
+                              <span className="font-medium font-arabic">صلاحية الجرائم الإلكترونية:</span>
+                              <Badge variant={selectedUser.has_cybercrime_access ? "default" : "outline"}>
+                                {selectedUser.has_cybercrime_access ? 'مفعّل' : 'غير مفعّل'}
+                              </Badge>
+                            </div>
+                            <div className="flex justify-between">
                               <span className="font-medium font-arabic">تاريخ التسجيل:</span>
                               <span>{new Date(selectedUser.created_at).toLocaleDateString('ar-PS')}</span>
                             </div>
@@ -328,6 +403,15 @@ const UserManagementProfessional = () => {
                                 })}
                               </SelectContent>
                             </Select>
+                            
+                            <Button
+                              variant={selectedUser.has_cybercrime_access ? "outline" : "default"}
+                              className="w-full font-arabic"
+                              onClick={() => toggleCybercrimeAccess(selectedUser.user_id, selectedUser.has_cybercrime_access || false)}
+                            >
+                              <Computer className="h-4 w-4 mr-2" />
+                              {selectedUser.has_cybercrime_access ? 'إلغاء صلاحية الجرائم الإلكترونية' : 'منح صلاحية الجرائم الإلكترونية'}
+                            </Button>
                             
                             <Button
                               variant={selectedUser.is_active ? "destructive" : "default"}
