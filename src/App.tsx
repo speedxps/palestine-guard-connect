@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import RoleBasedRoute from "@/components/RoleBasedRoute";
+import AccessDenied from "@/pages/AccessDenied";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
@@ -83,6 +85,7 @@ const App = () => {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
+                <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
@@ -131,9 +134,9 @@ const App = () => {
                 
                 {/* Admin Panel */}
                 <Route path="/admin-panel" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin']}>
                     <AdminPanel />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 
                 {/* Traffic Police Routes */}
@@ -143,9 +146,9 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/violations-admin" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'traffic_police']}>
                     <ViolationsAdmin />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/vehicle-inquiry" element={
                   <ProtectedRoute>
@@ -153,9 +156,9 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/vehicle-management" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'traffic_police']}>
                     <VehicleManagement />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/patrols-management" element={
                   <ProtectedRoute>
@@ -180,9 +183,9 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="/wanted-persons-tree" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cid', 'cybercrime']}>
                     <WantedPersonsTree />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
         <Route path="/civil-registry" element={
           <ProtectedRoute>
@@ -190,19 +193,19 @@ const App = () => {
           </ProtectedRoute>
         } />
         <Route path="/smart-civil-registry" element={
-          <ProtectedRoute>
+          <RoleBasedRoute allowedRoles={['admin']}>
             <SmartCivilRegistry />
-          </ProtectedRoute>
+          </RoleBasedRoute>
         } />
         <Route path="/advanced-face-recognition" element={
-          <ProtectedRoute>
+          <RoleBasedRoute allowedRoles={['admin', 'cid', 'cybercrime']}>
             <AdvancedFaceRecognition />
-          </ProtectedRoute>
+          </RoleBasedRoute>
         } />
         <Route path="/face-recognition" element={
-          <ProtectedRoute>
+          <RoleBasedRoute allowedRoles={['admin', 'cid', 'cybercrime']}>
             <FaceRecognition />
-          </ProtectedRoute>
+          </RoleBasedRoute>
         } />
                 
                 {/* Special Police Routes */}
@@ -229,14 +232,14 @@ const App = () => {
                 
                 {/* Cybercrime Routes */}
                 <Route path="/cybercrime" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cybercrime']}>
                     <Cybercrime />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/cybercrime-reports" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cybercrime']}>
                     <CybercrimeReports />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/reports" element={
                   <ProtectedRoute>
@@ -276,53 +279,53 @@ const App = () => {
                 
                 {/* Admin Only Routes */}
                 <Route path="/backup" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin']}>
                     <Backup />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/citizen-records" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cid', 'cybercrime']}>
                     <CitizenRecords />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 
                 {/* Advanced Cybercrime System */}
                 <Route path="/cybercrime-advanced" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cybercrime']}>
                     <CybercrimeAdvanced />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/cybercrime-dashboard" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cybercrime']}>
                     <CybercrimeAdvancedDashboard />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 
                 {/* Department Pages */}
                 <Route path="/department/admin" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin']}>
                     <AdminDepartment />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/department/traffic" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'traffic_police']}>
                     <TrafficDepartment />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/department/cid" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cid']}>
                     <CIDDepartment />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/department/special" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'special_police']}>
                     <SpecialPoliceDepartment />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 <Route path="/department/cybercrime" element={
-                  <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={['admin', 'cybercrime']}>
                     <CybercrimeDepartment />
-                  </ProtectedRoute>
+                  </RoleBasedRoute>
                 } />
                 
                 {/* User Dashboard */}
