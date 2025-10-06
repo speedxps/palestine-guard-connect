@@ -43,6 +43,14 @@ const CybercrimeDepartment = () => {
       icon: Activity,
       path: '/cybercrime-advanced',
       color: 'from-indigo-500 to-indigo-600'
+    },
+    {
+      title: 'مستخدمي القسم',
+      description: 'إدارة المستخدمين والصلاحيات',
+      icon: Users,
+      path: '/department/cybercrime/users',
+      color: 'from-pink-500 to-pink-600',
+      adminOnly: true
     }
   ];
 
