@@ -1375,39 +1375,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_page_permissions: {
-        Row: {
-          created_at: string
-          department: string
-          granted_by: string
-          id: string
-          is_allowed: boolean
-          page_path: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          department: string
-          granted_by: string
-          id?: string
-          is_allowed?: boolean
-          page_path: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          department?: string
-          granted_by?: string
-          id?: string
-          is_allowed?: boolean
-          page_path?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       vehicle_owners: {
         Row: {
           address: string | null
@@ -1638,10 +1605,6 @@ export type Database = {
       }
       has_cybercrime_access: {
         Args: { user_id: string }
-        Returns: boolean
-      }
-      has_page_permission: {
-        Args: { _page_path: string; _user_id: string }
         Returns: boolean
       }
       is_admin: {
