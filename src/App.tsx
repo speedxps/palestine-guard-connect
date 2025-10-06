@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoleBasedRoute from "@/components/RoleBasedRoute";
+import PagePermissionRoute from "@/components/PagePermissionRoute";
 import AccessDenied from "@/pages/AccessDenied";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -35,6 +36,7 @@ import Reports from "./pages/Reports";
 import ReportsManagement from "./pages/ReportsManagement";
 import OverviewPage from './pages/OverviewPage';
 import DepartmentUserManagement from './pages/DepartmentUserManagement';
+import DepartmentUsersManagement from './pages/DepartmentUsersManagement';
 import AdminPanel from "./pages/AdminPanel";
 
 // Department user management wrappers
@@ -309,22 +311,50 @@ const App = () => {
                 } />
                 <Route path="/department/traffic" element={
                   <RoleBasedRoute allowedRoles={['admin', 'traffic_police']}>
-                    <TrafficDepartment />
+                    <PagePermissionRoute>
+                      <TrafficDepartment />
+                    </PagePermissionRoute>
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/traffic/users" element={
+                  <RoleBasedRoute allowedRoles={['admin']}>
+                    <DepartmentUsersManagement department="traffic" />
                   </RoleBasedRoute>
                 } />
                 <Route path="/department/cid" element={
                   <RoleBasedRoute allowedRoles={['admin', 'cid']}>
-                    <CIDDepartment />
+                    <PagePermissionRoute>
+                      <CIDDepartment />
+                    </PagePermissionRoute>
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/cid/users" element={
+                  <RoleBasedRoute allowedRoles={['admin']}>
+                    <DepartmentUsersManagement department="cid" />
                   </RoleBasedRoute>
                 } />
                 <Route path="/department/special" element={
                   <RoleBasedRoute allowedRoles={['admin', 'special_police']}>
-                    <SpecialPoliceDepartment />
+                    <PagePermissionRoute>
+                      <SpecialPoliceDepartment />
+                    </PagePermissionRoute>
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/special/users" element={
+                  <RoleBasedRoute allowedRoles={['admin']}>
+                    <DepartmentUsersManagement department="special" />
                   </RoleBasedRoute>
                 } />
                 <Route path="/department/cybercrime" element={
                   <RoleBasedRoute allowedRoles={['admin', 'cybercrime']}>
-                    <CybercrimeDepartment />
+                    <PagePermissionRoute>
+                      <CybercrimeDepartment />
+                    </PagePermissionRoute>
+                  </RoleBasedRoute>
+                } />
+                <Route path="/department/cybercrime/users" element={
+                  <RoleBasedRoute allowedRoles={['admin']}>
+                    <DepartmentUsersManagement department="cybercrime" />
                   </RoleBasedRoute>
                 } />
                 
