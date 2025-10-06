@@ -43,14 +43,6 @@ const CIDDepartment = () => {
       icon: Eye,
       path: '/face-recognition',
       color: 'from-purple-500 to-purple-600'
-    },
-    {
-      title: 'مستخدمي القسم',
-      description: 'إدارة المستخدمين والصلاحيات',
-      icon: Users,
-      path: '/department/cid/users',
-      color: 'from-indigo-500 to-indigo-600',
-      adminOnly: true
     }
   ];
 
