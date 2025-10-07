@@ -64,6 +64,11 @@ import CivilRegistry from "./pages/CivilRegistry";
 import SmartCivilRegistry from "./pages/SmartCivilRegistry";
 import AdvancedFaceRecognition from "./pages/AdvancedFaceRecognition";
 import EmergencyNotificationSystem from "./components/EmergencyNotificationSystem";
+import ForensicLabs from "./pages/ForensicLabs";
+import JudicialCaseManagement from "./pages/JudicialCaseManagement";
+import JudicialCommunications from "./pages/JudicialCommunications";
+import JudicialTracking from "./pages/JudicialTracking";
+import JudicialPoliceDepartment from "./pages/JudicialPoliceDepartment";
 
 const queryClient = new QueryClient();
 
@@ -333,6 +338,33 @@ const App = () => {
                     <DepartmentUsersManagement department="cid" />
                   </RoleBasedRoute>
                 } />
+                <Route path="/department/cid/forensic-labs" element={
+                  <RoleBasedRoute allowedRoles={['admin', 'cid']}>
+                    <ForensicLabs />
+                  </RoleBasedRoute>
+                } />
+                
+                <Route path="/department/judicial" element={
+                  <ProtectedRoute>
+                    <JudicialPoliceDepartment />
+                  </ProtectedRoute>
+                } />
+                <Route path="/department/judicial/cases" element={
+                  <ProtectedRoute>
+                    <JudicialCaseManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/department/judicial/communications" element={
+                  <ProtectedRoute>
+                    <JudicialCommunications />
+                  </ProtectedRoute>
+                } />
+                <Route path="/department/judicial/tracking" element={
+                  <ProtectedRoute>
+                    <JudicialTracking />
+                  </ProtectedRoute>
+                } />
+                
                 <Route path="/department/special" element={
                   <RoleBasedRoute allowedRoles={['admin', 'special_police']}>
                     <PagePermissionRoute>
