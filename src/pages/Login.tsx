@@ -179,186 +179,121 @@ const Login = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden login-page">
-      {/* Bright Professional Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 z-0">
-        {/* Professional Geometric Elements */}
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute top-1/4 right-16 w-24 h-24 bg-indigo-200/15 rounded-lg rotate-45 animate-bounce" style={{ animationDelay: '1s', animationDuration: '3s' }}></div>
-          <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-blue-100/20 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-20 right-12 w-20 h-20 bg-indigo-300/25 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
-        </div>
-        
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="grid grid-cols-6 gap-4 h-full p-4">
-            {Array.from({ length: 24 }, (_, i) => (
-              <div key={i} className="border border-blue-300/30 rounded-lg"></div>
-            ))}
-          </div>
+    <div className="min-h-screen relative overflow-hidden bg-white">
+      {/* Header with Logo */}
+      <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-blue-400 to-blue-500 rounded-br-[80px]">
+        <div className="flex items-center gap-3 p-4">
+          <img 
+            src={genericPoliceLogo} 
+            alt="Police Logo" 
+            className="h-16 w-16 object-contain bg-white rounded-full p-2"
+          />
+          <span className="text-white text-lg font-semibold italic">Police Ops</span>
         </div>
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col justify-center px-4 sm:px-6">
-        {/* Header Section - Mobile Responsive */}
-        <div className="text-center mb-8 sm:mb-12 animate-fade-in relative z-20">
-          <div className="relative mb-6 sm:mb-8">
-            <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
-            <div className="relative mx-auto w-24 h-24 sm:w-32 sm:h-32 bg-white/90 backdrop-blur-sm rounded-full p-3 sm:p-4 shadow-2xl border border-blue-200/30">
-              <img 
-                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
-                alt="Palestinian Police Department Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
-            الشرطة الفلسطينية
-          </h1>
-          <p className="text-gray-600 font-inter text-xs sm:text-sm relative z-30">Palestinian Police Department</p>
-        </div>
-
-        {/* Login Form - Mobile Responsive */}
-        <div className="w-full max-w-sm mx-auto relative z-20">
-          <div className="bg-white/98 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-blue-200/30 p-6 sm:p-8 animate-scale-in">
-            <div className="text-center mb-6 sm:mb-8 relative z-30">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">تسجيل الدخول</h2>
-              <p className="text-gray-600 text-xs sm:text-sm">أدخل بياناتك للوصول إلى النظام</p>
+      {/* Login Card */}
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-6 sm:px-6 lg:px-8 pt-24">
+        <Card className="w-full max-w-md bg-white shadow-xl border border-gray-100">
+          <div className="p-8 sm:p-12">
+            {/* Title */}
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-bold text-blue-600 mb-2" style={{ fontStyle: 'italic' }}>
+                الشرطة الفلسطينية
+              </h2>
+              <h3 className="text-4xl font-bold text-blue-500 mb-3" style={{ fontStyle: 'italic' }}>
+                PoliceOps
+              </h3>
+              <p className="text-lg text-blue-500 font-semibold" style={{ fontStyle: 'italic' }}>
+                Palestinian Police Operations Center
+              </p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
-              {/* Email Input */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
-                </div>
+            {/* Login Form */}
+            <form onSubmit={handleLogin} className="space-y-6">
+              {/* Username Field */}
+              <div className="space-y-2">
                 <Input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 sm:h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-sm sm:text-base rounded-xl sm:rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
-                  placeholder="البريد الإلكتروني"
+                  className="h-12 bg-gray-100 border-0 font-arabic text-base rounded-lg"
+                  placeholder="Username"
                   required
                 />
               </div>
 
-              {/* Password Input */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors duration-300" />
-                </div>
+              {/* Password Field */}
+              <div className="space-y-2">
                 <Input
-                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-14 h-12 sm:h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-sm sm:text-base rounded-xl sm:rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
-                  placeholder="كلمة المرور"
+                  className="h-12 bg-gray-100 border-0 font-arabic text-base rounded-lg"
+                  placeholder="Password"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-primary transition-colors duration-300"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
               </div>
 
-              {/* Login Options */}
-              <div className="space-y-4">
-                {/* Remember Me */}
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <Checkbox 
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                  <Label 
-                    htmlFor="rememberMe" 
-                    className="text-sm text-gray-600 cursor-pointer font-arabic flex items-center gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    حفظ تسجيل الدخول
-                  </Label>
-                </div>
-
-                {/* Demo Accounts Dropdown */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-gray-700 font-arabic">
-                    الحسابات التجريبية
-                  </Label>
-                  <Select value={selectedDemo} onValueChange={(value) => {
-                    setSelectedDemo(value);
-                    const account = demoAccounts.find(acc => acc.email === value);
-                    if (account) {
-                      setEmail(account.email);
-                      setPassword(account.password);
-                    }
-                  }}>
-                    <SelectTrigger className="w-full h-12 bg-white/95 backdrop-blur-sm border-2 border-blue-500 hover:border-blue-600 rounded-xl text-gray-900 text-sm font-medium shadow-sm transition-all duration-200">
-                      <SelectValue placeholder="اختر حساب تجريبي" className="text-gray-500" />
-                    </SelectTrigger>
-                    <SelectContent className="w-full max-w-sm">
-                      {demoAccounts.map((account) => (
-                        <SelectItem key={account.email} value={account.email}>
-                          <div className="flex flex-col gap-1 py-1 w-full">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-900 dark:text-white">{account.name}</span>
-                              <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full">
-                                {account.role === 'admin' ? 'مدير' : 
-                                 account.role.includes('manager') ? 'مدير قسم' : 'موظف'}
-                              </span>
-                            </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic">{account.department}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Face Recognition Login */}
-                <FaceLoginButton 
-                  onSuccess={() => {
-                    toast({
-                      title: "✅ تسجيل دخول ناجح",
-                      description: "تم تسجيل الدخول بنجاح باستخدام التعرف على الوجه",
-                    });
-                    navigate('/dashboard');
-                  }}
+              {/* Remember Me */}
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="remember" 
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  className="border-gray-400"
                 />
+                <Label 
+                  htmlFor="remember" 
+                  className="font-arabic text-gray-700 cursor-pointer text-base"
+                >
+                  Remember me
+                </Label>
               </div>
 
               {/* Login Button */}
-              <Button
-                type="submit"
-                className="w-full h-12 sm:h-14 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-white text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 mt-6 sm:mt-8"
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg rounded-lg shadow-md transition-all"
                 disabled={isLoading}
+                style={{ fontStyle: 'italic' }}
               >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    جاري تسجيل الدخول...
-                  </div>
-                ) : 'تسجيل الدخول'}
+                {isLoading ? "جاري تسجيل الدخول..." : "Login"}
               </Button>
-
-              {/* Forgot Password */}
-              <div className="text-center pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium text-sm"
-                >
-                  نسيت كلمة المرور؟
-                </button>
-              </div>
             </form>
-          </div>
 
-        </div>
+            {/* Demo Accounts Section */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <Label className="font-arabic text-gray-700 text-sm mb-2 block">
+                حسابات تجريبية سريعة
+              </Label>
+              <Select value={selectedDemo} onValueChange={(value) => {
+                setSelectedDemo(value);
+                const account = demoAccounts.find(acc => acc.email === value);
+                if (account) {
+                  setEmail(account.email);
+                  setPassword(account.password);
+                }
+              }}>
+                <SelectTrigger className="w-full font-arabic bg-gray-50 border-gray-200">
+                  <SelectValue placeholder="اختر حساب تجريبي" />
+                </SelectTrigger>
+                <SelectContent className="font-arabic max-h-[300px]">
+                  {demoAccounts.map((account, index) => (
+                    <SelectItem key={index} value={account.email}>
+                      <div className="flex flex-col text-right">
+                        <span className="font-semibold">{account.name}</span>
+                        <span className="text-xs text-gray-500">{account.department}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Forgot Password Modal */}
