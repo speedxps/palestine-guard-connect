@@ -86,6 +86,13 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       icon: Computer,
       color: 'from-indigo-500 to-indigo-600',
       path: '/department/cybercrime'
+    },
+    {
+      id: 'judicial_police',
+      title: 'الشرطة القضائية',
+      icon: FileText,
+      color: 'from-emerald-500 to-emerald-600',
+      path: '/department/judicial-police'
     }
   ];
 

@@ -39,6 +39,12 @@ export const departments: Department[] = [
     title: 'الجرائم الإلكترونية',
     roles: ['admin', 'cybercrime'],
     path: '/department/cybercrime'
+  },
+  {
+    id: 'judicial_police',
+    title: 'الشرطة القضائية',
+    roles: ['admin', 'officer'],
+    path: '/department/judicial-police'
   }
 ];
 
