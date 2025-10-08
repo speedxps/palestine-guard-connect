@@ -48,7 +48,7 @@ const CIDDepartment = () => {
       title: 'المختبرات والأدلة الجنائية',
       description: 'إدارة الأدلة الجنائية وتقارير المختبرات',
       icon: Microscope,
-      path: '/department/cid/forensic-labs',
+      path: '/forensic-labs',
       color: 'from-cyan-500 to-cyan-600'
     },
     {

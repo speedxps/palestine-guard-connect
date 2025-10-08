@@ -338,28 +338,28 @@ const App = () => {
                     <DepartmentUsersManagement department="cid" />
                   </RoleBasedRoute>
                 } />
-                <Route path="/department/cid/forensic-labs" element={
+                <Route path="/forensic-labs" element={
                   <RoleBasedRoute allowedRoles={['admin', 'cid']}>
                     <ForensicLabs />
                   </RoleBasedRoute>
                 } />
                 
-                <Route path="/department/judicial" element={
+                <Route path="/department/judicial-police" element={
                   <ProtectedRoute>
                     <JudicialPoliceDepartment />
                   </ProtectedRoute>
                 } />
-                <Route path="/department/judicial/cases" element={
+                <Route path="/judicial-case-management" element={
                   <ProtectedRoute>
                     <JudicialCaseManagement />
                   </ProtectedRoute>
                 } />
-                <Route path="/department/judicial/communications" element={
+                <Route path="/judicial-communications" element={
                   <ProtectedRoute>
                     <JudicialCommunications />
                   </ProtectedRoute>
                 } />
-                <Route path="/department/judicial/tracking" element={
+                <Route path="/judicial-tracking" element={
                   <ProtectedRoute>
                     <JudicialTracking />
                   </ProtectedRoute>

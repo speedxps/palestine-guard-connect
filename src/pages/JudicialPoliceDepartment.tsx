@@ -12,21 +12,21 @@ const JudicialPoliceDepartment = () => {
       title: 'إدارة القضايا القضائية',
       description: 'إنشاء ومتابعة القضايا وإرسالها للمحكمة أو النيابة',
       icon: Scale,
-      path: '/department/judicial/cases',
+      path: '/judicial-case-management',
       color: 'from-blue-500 to-blue-600'
     },
     {
       title: 'التواصل الرسمي',
       description: 'التواصل مع المحاكم والنيابة العامة',
       icon: MessageSquare,
-      path: '/department/judicial/communications',
+      path: '/judicial-communications',
       color: 'from-green-500 to-green-600'
     },
     {
       title: 'تتبع القضايا',
       description: 'متابعة حالة القضايا المحالة',
       icon: TrendingUp,
-      path: '/department/judicial/tracking',
+      path: '/judicial-tracking',
       color: 'from-purple-500 to-purple-600'
     }
   ];
