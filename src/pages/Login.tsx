@@ -179,122 +179,144 @@ const Login = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white">
-      {/* Header with Logo */}
-      <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-blue-400 to-blue-500 rounded-br-[80px]">
-        <div className="flex items-center gap-3 p-4">
-          <img 
-            src={genericPoliceLogo} 
-            alt="Police Logo" 
-            className="h-16 w-16 object-contain bg-white rounded-full p-2"
-          />
-          <span className="text-white text-lg font-semibold italic">Police Ops</span>
-        </div>
-      </div>
-
-      {/* Login Card */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-6 sm:px-6 lg:px-8 pt-24">
-        <Card className="w-full max-w-md bg-white shadow-xl border border-gray-100">
-          <div className="p-8 sm:p-12">
-            {/* Title */}
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-bold text-blue-600 mb-2" style={{ fontStyle: 'italic' }}>
-                الشرطة الفلسطينية
-              </h2>
-              <h3 className="text-4xl font-bold text-blue-500 mb-3" style={{ fontStyle: 'italic' }}>
-                PoliceOps
-              </h3>
-              <p className="text-lg text-blue-500 font-semibold" style={{ fontStyle: 'italic' }}>
-                Palestinian Police Operations Center
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white shadow-2xl rounded-3xl overflow-hidden">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-green-500 to-green-600 p-8 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="bg-white rounded-full p-4 shadow-lg">
+              <img 
+                src={genericPoliceLogo} 
+                alt="Police Logo" 
+                className="h-20 w-20 object-contain"
+              />
             </div>
+          </div>
+          <h1 className="text-white text-2xl font-bold mb-2">
+            Police Operations
+          </h1>
+          <p className="text-green-100 text-sm">
+            Palestinian Police System
+          </p>
+        </div>
 
-            {/* Login Form */}
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Username Field */}
-              <div className="space-y-2">
+        {/* Login Form */}
+        <div className="p-8">
+          <h2 className="text-2xl font-bold text-center text-green-600 mb-6">
+            تسجيل الدخول
+          </h2>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Username Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700 font-medium">
+                اسم المستخدم
+              </Label>
+              <div className="relative">
+                <Mail className="absolute right-3 top-3 h-5 w-5 text-green-500" />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 bg-gray-100 border-0 font-arabic text-base rounded-lg"
-                  placeholder="Username"
+                  className="h-12 pr-10 border-2 border-gray-200 focus:border-green-500 rounded-xl"
+                  placeholder="أدخل البريد الإلكتروني"
                   required
                 />
               </div>
+            </div>
 
-              {/* Password Field */}
-              <div className="space-y-2">
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-700 font-medium">
+                كلمة المرور
+              </Label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-3 h-5 w-5 text-green-500" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 bg-gray-100 border-0 font-arabic text-base rounded-lg"
-                  placeholder="Password"
+                  className="h-12 pr-10 pl-10 border-2 border-gray-200 focus:border-green-500 rounded-xl"
+                  placeholder="أدخل كلمة المرور"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-3 text-gray-400 hover:text-green-500"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
+            </div>
 
-              {/* Remember Me */}
+            {/* Remember Me */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Checkbox 
                   id="remember" 
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                  className="border-gray-400"
+                  className="border-green-500 data-[state=checked]:bg-green-500"
                 />
                 <Label 
                   htmlFor="remember" 
-                  className="font-arabic text-gray-700 cursor-pointer text-base"
+                  className="text-gray-700 cursor-pointer text-sm"
                 >
-                  Remember me
+                  تذكرني
                 </Label>
               </div>
-
-              {/* Login Button */}
-              <Button 
-                type="submit" 
-                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg rounded-lg shadow-md transition-all"
-                disabled={isLoading}
-                style={{ fontStyle: 'italic' }}
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-green-600 hover:text-green-700 font-medium"
               >
-                {isLoading ? "جاري تسجيل الدخول..." : "Login"}
-              </Button>
-            </form>
-
-            {/* Demo Accounts Section */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <Label className="font-arabic text-gray-700 text-sm mb-2 block">
-                حسابات تجريبية سريعة
-              </Label>
-              <Select value={selectedDemo} onValueChange={(value) => {
-                setSelectedDemo(value);
-                const account = demoAccounts.find(acc => acc.email === value);
-                if (account) {
-                  setEmail(account.email);
-                  setPassword(account.password);
-                }
-              }}>
-                <SelectTrigger className="w-full font-arabic bg-gray-50 border-gray-200">
-                  <SelectValue placeholder="اختر حساب تجريبي" />
-                </SelectTrigger>
-                <SelectContent className="font-arabic max-h-[300px]">
-                  {demoAccounts.map((account, index) => (
-                    <SelectItem key={index} value={account.email}>
-                      <div className="flex flex-col text-right">
-                        <span className="font-semibold">{account.name}</span>
-                        <span className="text-xs text-gray-500">{account.department}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                نسيت كلمة المرور؟
+              </button>
             </div>
+
+            {/* Login Button */}
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all transform hover:scale-[1.02]"
+              disabled={isLoading}
+            >
+              {isLoading ? "جاري تسجيل الدخول..." : "دخول"}
+            </Button>
+          </form>
+
+          {/* Demo Accounts Section */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <Label className="text-gray-700 text-sm mb-3 block text-center font-medium">
+              حسابات تجريبية
+            </Label>
+            <Select value={selectedDemo} onValueChange={(value) => {
+              setSelectedDemo(value);
+              const account = demoAccounts.find(acc => acc.email === value);
+              if (account) {
+                setEmail(account.email);
+                setPassword(account.password);
+              }
+            }}>
+              <SelectTrigger className="w-full bg-gray-50 border-2 border-gray-200 focus:border-green-500 rounded-xl h-11">
+                <SelectValue placeholder="اختر حساب تجريبي" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px] rounded-xl">
+                {demoAccounts.map((account, index) => (
+                  <SelectItem key={index} value={account.email} className="cursor-pointer">
+                    <div className="flex flex-col text-right py-1">
+                      <span className="font-semibold text-green-700">{account.name}</span>
+                      <span className="text-xs text-gray-500">{account.department}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       {/* Forgot Password Modal */}
       <ForgotPasswordModal 
