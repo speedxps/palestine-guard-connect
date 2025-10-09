@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { Eye, EyeOff, Mail, Lock, Save, Camera, ChevronDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import genericPoliceLogo from '@/assets/generic-police-logo.png';
+import policeLogo from '@/assets/police-logo.png';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 import FaceLoginButton from '@/components/FaceLoginButton';
 
@@ -186,7 +186,7 @@ const Login = () => {
           <div className="flex justify-center mb-4">
             <div className="bg-white rounded-full p-4 shadow-lg">
               <img 
-                src={genericPoliceLogo} 
+                src={policeLogo} 
                 alt="Police Logo" 
                 className="h-20 w-20 object-contain"
               />
