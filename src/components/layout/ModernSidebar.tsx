@@ -103,70 +103,58 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
 
 
   return (
-    <div className="h-screen bg-white border-r border-gray-200 transition-all duration-300 shadow-sm w-72 flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 border-r border-gray-200 transition-all duration-300 shadow-lg w-72 flex flex-col">
       {/* Close button for mobile */}
       {onClose && (
-        <div className="p-4 border-b border-gray-200 flex justify-end">
+        <div className="p-4 flex justify-end">
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="hover:bg-primary/10 text-primary"
+            className="hover:bg-green-50 text-green-600"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-5 w-5" />
           </Button>
         </div>
       )}
-      {/* Header with Integrated Logo & Menu */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-primary-glow">
-              <img 
-                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
-                alt="Palestinian Police Logo" 
-                className="h-5 w-5 object-contain"
-              />
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-900 font-arabic">نظام إدارة الشرطة</h2>
-              <p className="text-xs text-gray-600 font-arabic">فلسطين - Palestine</p>
-            </div>
+      
+      {/* Header with Green Theme */}
+      <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center">
+        <div className="flex justify-center mb-3">
+          <div className="bg-white rounded-full p-1 shadow-xl">
+            <img 
+              src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+              alt="Palestinian Police Logo" 
+              className="h-16 w-16 rounded-full object-cover border-2 border-white"
+            />
           </div>
-          {!onClose && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="shrink-0 hover:bg-primary/10 text-primary"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          )}
         </div>
+        <h2 className="text-white text-xl font-bold mb-1 font-arabic">نظام إدارة الشرطة</h2>
+        <p className="text-green-100 text-sm font-arabic">فلسطين - Palestine</p>
       </div>
 
       {/* User Info */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <div className="p-4 bg-white mx-3 mt-3 rounded-xl shadow-md">
         <div className="flex items-center gap-3">
           {user?.avatar_url ? (
             <img 
               src={user.avatar_url} 
               alt={user.full_name || 'مستخدم'}
-              className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+              className="w-12 h-12 rounded-full object-cover border-2 border-green-200"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-semibold font-arabic">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+              <span className="text-green-600 font-bold font-arabic text-lg">
                 {user?.full_name?.charAt(0) || 'م'}
               </span>
             </div>
           )}
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 font-arabic text-sm">
+            <h3 className="font-bold text-gray-900 font-arabic">
               {user?.full_name || 'مستخدم'}
             </h3>
-            <Badge variant="secondary" className="text-xs bg-white text-gray-700">
+            <p className="text-xs text-gray-600 font-arabic">{user?.email}</p>
+            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 mt-1">
               {userRole === 'admin' && 'مدير النظام'}
               {userRole === 'traffic_police' && 'شرطة المرور'}
               {userRole === 'cid' && 'مباحث جنائية'}
@@ -180,120 +168,137 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ onClose }) => {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto sidebar-scroll">
-        <div className="p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto sidebar-scroll p-3">
+        <div className="space-y-1">
           {/* Dashboard Link */}
           <Button
-            variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
-            className={`w-full justify-start gap-3 ${
+            variant="ghost"
+            className={`w-full justify-start gap-3 rounded-xl ${
               location.pathname === '/dashboard' 
-                ? 'bg-primary text-white hover:bg-primary/90' 
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-green-100 text-green-700 font-semibold' 
+                : 'text-gray-700 hover:bg-white'
             }`}
             onClick={() => navigate('/dashboard')}
           >
-            <Crown className="h-4 w-4 shrink-0" />
+            <Crown className="h-5 w-5 shrink-0" />
             <span className="font-arabic">الرئيسية</span>
-          </Button>
-
-          {/* Police News Link */}
-          <Button
-            variant={location.pathname === '/police-news' ? 'default' : 'ghost'}
-            className={`w-full justify-start gap-3 ${
-              location.pathname === '/police-news' 
-                ? 'bg-primary text-white hover:bg-primary/90' 
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
-            onClick={() => navigate('/police-news')}
-          >
-            <Newspaper className="h-4 w-4 shrink-0" />
-            <span className="font-arabic">أخبار الشرطة</span>
           </Button>
 
           {/* Police Assistant Link */}
           <Button
-            variant={location.pathname === '/police-assistant' ? 'default' : 'ghost'}
-            className={`w-full justify-start gap-3 ${
+            variant="ghost"
+            className={`w-full justify-start gap-3 rounded-xl ${
               location.pathname === '/police-assistant' 
-                ? 'bg-primary text-white hover:bg-primary/90' 
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-green-100 text-green-700 font-semibold' 
+                : 'text-gray-700 hover:bg-white'
             }`}
             onClick={() => navigate('/police-assistant')}
           >
-            <Bot className="h-4 w-4 shrink-0" />
+            <Bot className="h-5 w-5 shrink-0" />
             <span className="font-arabic">المساعد الذكي</span>
           </Button>
 
           {/* Smart Civil Registry Link - Admin Only */}
           {userRole === 'admin' && (
             <Button
-              variant={location.pathname === '/smart-civil-registry' ? 'default' : 'ghost'}
-              className={`w-full justify-start gap-3 ${
+              variant="ghost"
+              className={`w-full justify-start gap-3 rounded-xl ${
                 location.pathname === '/smart-civil-registry' 
-                  ? 'bg-primary text-white hover:bg-primary/90' 
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-green-100 text-green-700 font-semibold' 
+                  : 'text-gray-700 hover:bg-white'
               }`}
               onClick={() => navigate('/smart-civil-registry')}
             >
-              <UserCheck className="h-4 w-4 shrink-0" />
+              <UserCheck className="h-5 w-5 shrink-0" />
               <span className="font-arabic">السجل المدني الذكي</span>
             </Button>
           )}
 
+          {userRole === 'admin' && (
+            <Button
+              variant="ghost"
+              className={`w-full justify-start gap-3 rounded-xl ${
+                location.pathname === '/user-dashboard' 
+                  ? 'bg-green-100 text-green-700 font-semibold' 
+                  : 'text-gray-700 hover:bg-white'
+              }`}
+              onClick={() => navigate('/user-dashboard')}
+            >
+              <Computer className="h-5 w-5 shrink-0" />
+              <span className="font-arabic">الأجهزة</span>
+            </Button>
+          )}
+
+          {userRole === 'admin' && (
+            <Button
+              variant="ghost"
+              className={`w-full justify-start gap-3 rounded-xl ${
+                location.pathname === '/admin-panel' 
+                  ? 'bg-green-100 text-green-700 font-semibold' 
+                  : 'text-gray-700 hover:bg-white'
+              }`}
+              onClick={() => navigate('/admin-panel')}
+            >
+              <Users className="h-5 w-5 shrink-0" />
+              <span className="font-arabic">إدارة المستخدمين</span>
+            </Button>
+          )}
 
           {/* Departments */}
-          <div className="pt-4">
-            <h3 className="text-xs font-semibold text-gray-600 font-arabic px-2 mb-2">
-              الأقسام
-            </h3>
-            
-            {departments.map((dept) => {
-                const Icon = dept.icon;
-                return (
-                  <Button
-                    key={dept.id}
-                    variant={location.pathname === dept.path ? 'secondary' : 'ghost'}
-                    className={`w-full justify-start gap-3 mb-1 ${
-                      location.pathname === dept.path 
-                        ? 'bg-gray-100 text-gray-900' 
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                    onClick={() => navigate(dept.path)}
-                  >
-                    <div className={`p-1.5 rounded-md bg-gradient-to-r ${dept.color}`}>
-                      <Icon className="h-3.5 w-3.5 text-white" />
-                    </div>
-                    <span className="font-arabic text-sm flex-1 text-right">{dept.title}</span>
-                  </Button>
-                );
-              })}
-          </div>
+          {departments.length > 0 && (
+            <div className="pt-3">
+              <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2">
+                الأقسام
+              </h3>
+              
+              {departments.map((dept) => {
+                  const Icon = dept.icon;
+                  return (
+                    <Button
+                      key={dept.id}
+                      variant="ghost"
+                      className={`w-full justify-start gap-3 mb-1 rounded-xl ${
+                        location.pathname === dept.path 
+                          ? 'bg-green-100 text-green-700 font-semibold' 
+                          : 'text-gray-700 hover:bg-white'
+                      }`}
+                      onClick={() => navigate(dept.path)}
+                    >
+                      <div className={`p-2 rounded-lg bg-gradient-to-r ${dept.color}`}>
+                        <Icon className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-arabic text-sm flex-1 text-right">{dept.title}</span>
+                    </Button>
+                  );
+                })}
+            </div>
+          )}
 
           {/* Profile Link */}
-          <div className="pt-4 border-t border-gray-200 mt-4">
+          <div className="pt-3 border-t border-gray-200 mt-3">
             <Button
-              variant={location.pathname === '/profile' ? 'default' : 'ghost'}
-              className={`w-full justify-start gap-3 ${
+              variant="ghost"
+              className={`w-full justify-start gap-3 rounded-xl ${
                 location.pathname === '/profile' 
-                  ? 'bg-primary text-white hover:bg-primary/90' 
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-green-100 text-green-700 font-semibold' 
+                  : 'text-gray-700 hover:bg-white'
               }`}
               onClick={() => navigate('/profile')}
             >
-              <Settings className="h-4 w-4 shrink-0" />
+              <Settings className="h-5 w-5 shrink-0" />
               <span className="font-arabic">الملف الشخصي</span>
             </Button>
             
             {/* Logout Button */}
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-2"
+              className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-1 rounded-xl"
               onClick={async () => {
                 await logout();
                 navigate('/login');
               }}
             >
-              <LogOut className="h-4 w-4 shrink-0" />
+              <LogOut className="h-5 w-5 shrink-0" />
               <span className="font-arabic">تسجيل الخروج</span>
             </Button>
           </div>

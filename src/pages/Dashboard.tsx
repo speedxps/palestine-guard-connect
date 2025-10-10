@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { Card } from '@/components/ui/card';
 import PoliceNews from '@/components/dashboard/PoliceNews';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { 
   Crown, 
   Shield, 
@@ -20,13 +22,34 @@ import {
   Laptop
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import policeLogo from '@/assets/police-logo.png';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { getAccessibleDepartments, userRole, hasAccess } = useRoleBasedAccess();
   const navigate = useNavigate();
   const [isNewsOpen, setIsNewsOpen] = useState(false);
+
+  const handleRefresh = async () => {
+    try {
+      await refreshUser();
+      toast.success('تم تحديث البيانات بنجاح');
+    } catch (error) {
+      toast.error('فشل تحديث البيانات');
+    }
+  };
+
+  const handleCall = () => {
+    window.location.href = 'tel:100';
+  };
+
+  const handleNotifications = () => {
+    toast.info('لا توجد إشعارات جديدة');
+  };
+
+  // Get accessible departments
+  const accessibleDepartments = getAccessibleDepartments();
 
   return (
     <DashboardLayout>
@@ -39,6 +62,7 @@ const Dashboard = () => {
               <Button
                 size="sm"
                 variant="ghost"
+                onClick={handleRefresh}
                 className="bg-white/20 hover:bg-white/30 text-white rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0"
               >
                 <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -46,6 +70,7 @@ const Dashboard = () => {
               <Button
                 size="sm"
                 variant="ghost"
+                onClick={handleCall}
                 className="bg-white/20 hover:bg-white/30 text-white rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0"
               >
                 <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -53,6 +78,7 @@ const Dashboard = () => {
               <Button
                 size="sm"
                 variant="ghost"
+                onClick={handleNotifications}
                 className="bg-white/20 hover:bg-white/30 text-white rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0"
               >
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -76,14 +102,26 @@ const Dashboard = () => {
             </h1>
             
             <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-3 sm:mt-4">
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-                <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                <span className="text-white text-sm sm:text-base font-medium">0594606294</span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-                <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                <span className="text-white text-sm sm:text-base font-medium">police@ps.gov</span>
-              </div>
+              {user?.email && (
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
+                  <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <span className="text-white text-sm sm:text-base font-medium">{user.email}</span>
+                </div>
+              )}
+              {user?.role && (
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
+                  <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <span className="text-white text-sm sm:text-base font-medium">
+                    {user.role === 'admin' && 'مدير النظام'}
+                    {user.role === 'traffic_police' && 'شرطة المرور'}
+                    {user.role === 'cid' && 'مباحث جنائية'}
+                    {user.role === 'special_police' && 'شرطة خاصة'}
+                    {user.role === 'cybercrime' && 'جرائم إلكترونية'}
+                    {user.role === 'officer' && 'ضابط'}
+                    {user.role === 'user' && 'مستخدم'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </Card>
@@ -96,96 +134,108 @@ const Dashboard = () => {
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Traffic Police */}
-            <Card
-              onClick={() => navigate('/department/traffic')}
-              className="bg-gradient-to-br from-blue-400 to-blue-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Car className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
+            {accessibleDepartments.some(d => d.id === 'traffic_police') && (
+              <Card
+                onClick={() => navigate('/department/traffic')}
+                className="bg-gradient-to-br from-blue-400 to-blue-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Car className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
+                  </div>
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    شرطة المرور
+                  </h3>
                 </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  شرطة المرور
-                </h3>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Special Police */}
-            <Card
-              onClick={() => navigate('/department/special-police')}
-              className="bg-gradient-to-br from-purple-400 to-purple-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
+            {accessibleDepartments.some(d => d.id === 'special_police') && (
+              <Card
+                onClick={() => navigate('/department/special-police')}
+                className="bg-gradient-to-br from-purple-400 to-purple-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
+                  </div>
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    الشرطة الخاصة
+                  </h3>
                 </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  الشرطة الخاصة
-                </h3>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Judicial Police */}
-            <Card
-              onClick={() => navigate('/department/judicial-police')}
-              className="bg-gradient-to-br from-green-400 to-green-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
+            {accessibleDepartments.some(d => d.id === 'judicial_police') && (
+              <Card
+                onClick={() => navigate('/department/judicial-police')}
+                className="bg-gradient-to-br from-green-400 to-green-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
+                  </div>
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    الشرطة القضائية
+                  </h3>
                 </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  الشرطة القضائية
-                </h3>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Admin Department */}
-            <Card
-              onClick={() => navigate('/department/admin')}
-              className="bg-gradient-to-br from-yellow-400 to-yellow-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
+            {accessibleDepartments.some(d => d.id === 'admin') && (
+              <Card
+                onClick={() => navigate('/department/admin')}
+                className="bg-gradient-to-br from-yellow-400 to-yellow-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
+                  </div>
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    الإدارة العامة
+                  </h3>
                 </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  الإدارة العامة
-                </h3>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* CID */}
-            <Card
-              onClick={() => navigate('/department/cid')}
-              className="bg-gradient-to-br from-red-400 to-red-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
+            {accessibleDepartments.some(d => d.id === 'cid') && (
+              <Card
+                onClick={() => navigate('/department/cid')}
+                className="bg-gradient-to-br from-red-400 to-red-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
+                  </div>
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    المباحث الجنائية
+                  </h3>
                 </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  المباحث الجنائية
-                </h3>
-              </div>
-            </Card>
+              </Card>
+            )}
 
             {/* Cybercrime */}
-            <Card
-              onClick={() => navigate('/department/cybercrime')}
-              className="bg-gradient-to-br from-indigo-400 to-indigo-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-500" />
+            {accessibleDepartments.some(d => d.id === 'cybercrime') && (
+              <Card
+                onClick={() => navigate('/department/cybercrime')}
+                className="bg-gradient-to-br from-indigo-400 to-indigo-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-500" />
+                  </div>
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    الجرائم الإلكترونية
+                  </h3>
                 </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  الجرائم الإلكترونية
-                </h3>
-              </div>
-            </Card>
+              </Card>
+            )}
 
-            {/* Police Tech */}
+            {/* Police Assistant - Available to all */}
             <Card
               onClick={() => navigate('/police-assistant')}
               className="bg-gradient-to-br from-pink-400 to-pink-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
@@ -200,63 +250,84 @@ const Dashboard = () => {
               </div>
             </Card>
 
-            {/* News - Now with bottom sheet */}
-            <Sheet open={isNewsOpen} onOpenChange={setIsNewsOpen}>
-              <SheetTrigger asChild>
-                <Card className="bg-gradient-to-br from-teal-400 to-teal-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0">
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                    <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                      <Newspaper className="h-6 w-6 sm:h-8 sm:w-8 text-teal-500" />
-                    </div>
-                    <h3 className="text-white font-bold text-sm sm:text-lg">
-                      الأخبار
-                    </h3>
+            {/* Devices - Admin only */}
+            {hasAccess(['admin']) && (
+              <Card
+                onClick={() => navigate('/user-dashboard')}
+                className="bg-gradient-to-br from-lime-400 to-lime-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-lime-500" />
                   </div>
-                </Card>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh] overflow-y-auto" dir="rtl">
-                <SheetHeader>
-                  <SheetTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <Newspaper className="h-7 w-7 text-green-600" />
-                    آخر الأخبار
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  <PoliceNews />
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    الأجهزة
+                  </h3>
                 </div>
-              </SheetContent>
-            </Sheet>
+              </Card>
+            )}
 
-            {/* Devices */}
-            <Card
-              onClick={() => navigate('/user-dashboard')}
-              className="bg-gradient-to-br from-lime-400 to-lime-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-lime-500" />
+            {/* Users Management - Admin only */}
+            {hasAccess(['admin']) && (
+              <Card
+                onClick={() => navigate('/admin-panel')}
+                className="bg-gradient-to-br from-violet-400 to-violet-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
+              >
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
+                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-violet-500" />
+                  </div>
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
+                    إدارة المستخدمين
+                  </h3>
                 </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  الأجهزة
-                </h3>
-              </div>
-            </Card>
-
-            {/* Users Management */}
-            <Card
-              onClick={() => navigate('/admin-panel')}
-              className="bg-gradient-to-br from-violet-400 to-violet-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-violet-500" />
-                </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  إدارة المستخدمين
-                </h3>
-              </div>
-            </Card>
+              </Card>
+            )}
           </div>
+        </div>
+
+        {/* News Drawer from Bottom */}
+        <Drawer open={isNewsOpen} onOpenChange={setIsNewsOpen}>
+          <DrawerTrigger asChild>
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-500 to-teal-600 p-2 cursor-pointer hover:from-teal-600 hover:to-teal-700 transition-all">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-1 bg-white/50 rounded-full mb-1"></div>
+                <div className="flex items-center gap-2 text-white">
+                  <Newspaper className="h-5 w-5" />
+                  <span className="font-bold text-sm">آخر الأخبار</span>
+                </div>
+              </div>
+            </div>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[85vh]" dir="rtl">
+            <DrawerHeader>
+              <DrawerTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2 justify-center">
+                <Newspaper className="h-7 w-7 text-green-600" />
+                آخر الأخبار
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="overflow-y-auto p-4">
+              <PoliceNews />
+            </div>
+          </DrawerContent>
+        </Drawer>
+
+        {/* Map Section */}
+        <div className="mb-20">
+          <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+            <MapPin className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
+            الخريطة التفاعلية
+          </h3>
+          <Card className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-[300px] sm:h-[400px]">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+            />
+          </Card>
         </div>
 
         {/* Map Section */}
