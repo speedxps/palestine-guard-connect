@@ -28,13 +28,6 @@ const JudicialPoliceDepartment = () => {
       icon: TrendingUp,
       path: '/judicial-tracking',
       color: 'from-purple-500 to-purple-600'
-    },
-    {
-      title: 'إدارة مستخدمي القسم',
-      description: 'إضافة وإدارة مستخدمي الشرطة القضائية',
-      icon: Shield,
-      path: '/department/judicial-police/users',
-      color: 'from-orange-500 to-orange-600'
     }
   ];
 
@@ -66,7 +59,7 @@ const JudicialPoliceDepartment = () => {
         </Card>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {tools.map((tool) => (
             <Card
               key={tool.path}

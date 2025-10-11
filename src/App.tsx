@@ -69,9 +69,6 @@ import JudicialCaseManagement from "./pages/JudicialCaseManagement";
 import JudicialCommunications from "./pages/JudicialCommunications";
 import JudicialTracking from "./pages/JudicialTracking";
 import JudicialPoliceDepartment from "./pages/JudicialPoliceDepartment";
-import JudicialPoliceUsers from "./pages/JudicialPoliceUsers";
-import NotificationManagement from "./pages/NotificationManagement";
-import UserPermissions from "./pages/UserPermissions";
 
 const queryClient = new QueryClient();
 
@@ -348,43 +345,24 @@ const App = () => {
                 } />
                 
                 <Route path="/department/judicial-police" element={
-                  <RoleBasedRoute allowedRoles={['admin', 'judicial_police']}>
+                  <ProtectedRoute>
                     <JudicialPoliceDepartment />
-                  </RoleBasedRoute>
-                } />
-                <Route path="/department/judicial-police/users" element={
-                  <RoleBasedRoute allowedRoles={['admin', 'judicial_police']}>
-                    <JudicialPoliceUsers />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/judicial-case-management" element={
-                  <RoleBasedRoute allowedRoles={['admin', 'judicial_police']}>
+                  <ProtectedRoute>
                     <JudicialCaseManagement />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/judicial-communications" element={
-                  <RoleBasedRoute allowedRoles={['admin', 'judicial_police']}>
+                  <ProtectedRoute>
                     <JudicialCommunications />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 <Route path="/judicial-tracking" element={
-                  <RoleBasedRoute allowedRoles={['admin', 'judicial_police']}>
+                  <ProtectedRoute>
                     <JudicialTracking />
-                  </RoleBasedRoute>
-                } />
-                
-                {/* Notification Management */}
-                <Route path="/notification-management" element={
-                  <RoleBasedRoute allowedRoles={['admin']}>
-                    <NotificationManagement />
-                  </RoleBasedRoute>
-                } />
-                
-                {/* User Permissions */}
-                <Route path="/user-permissions" element={
-                  <RoleBasedRoute allowedRoles={['admin']}>
-                    <UserPermissions />
-                  </RoleBasedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 <Route path="/department/special" element={
