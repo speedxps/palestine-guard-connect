@@ -17,13 +17,6 @@ const AdminDepartment = () => {
       color: 'from-blue-500 to-blue-600'
     },
     {
-      title: 'إدارة الإشعارات',
-      description: 'إرسال إشعارات للأقسام والمستخدمين',
-      icon: Shield,
-      path: '/notification-management',
-      color: 'from-orange-500 to-orange-600'
-    },
-    {
       title: 'النسخ الاحتياطي',
       description: 'نسخ احتياطي للبيانات والاستعادة',
       icon: Database,
@@ -38,10 +31,10 @@ const AdminDepartment = () => {
       color: 'from-purple-500 to-purple-600'
     },
     {
-      title: 'صلاحيات المستخدم',
-      description: 'إدارة صلاحيات وحالات المستخدمين',
+      title: 'إعدادات النظام',
+      description: 'إعدادات النظام والصلاحيات',
       icon: Settings,
-      path: '/user-permissions',
+      path: '/admin-panel',
       color: 'from-gray-500 to-gray-600'
     }
   ];

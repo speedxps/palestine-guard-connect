@@ -1044,37 +1044,28 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          is_system_wide: boolean | null
           message: string
-          priority: string | null
           recipient_id: string | null
           sender_id: string
           status: Database["public"]["Enums"]["notification_status"]
-          target_departments: string[] | null
           title: string
         }
         Insert: {
           created_at?: string
           id?: string
-          is_system_wide?: boolean | null
           message: string
-          priority?: string | null
           recipient_id?: string | null
           sender_id: string
           status?: Database["public"]["Enums"]["notification_status"]
-          target_departments?: string[] | null
           title: string
         }
         Update: {
           created_at?: string
           id?: string
-          is_system_wide?: boolean | null
           message?: string
-          priority?: string | null
           recipient_id?: string | null
           sender_id?: string
           status?: Database["public"]["Enums"]["notification_status"]
-          target_departments?: string[] | null
           title?: string
         }
         Relationships: [
@@ -1627,30 +1618,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          granted_by: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          granted_by?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          granted_by?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       vehicle_owners: {
         Row: {
           address: string | null
@@ -1879,10 +1846,6 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
-      get_user_roles: {
-        Args: { _user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"][]
-      }
       has_cybercrime_access: {
         Args: { user_id: string }
         Returns: boolean
@@ -1891,19 +1854,8 @@ export type Database = {
         Args: { _page_path: string; _user_id: string }
         Returns: boolean
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       is_admin: {
         Args: { user_id: string }
-        Returns: boolean
-      }
-      is_admin_role: {
-        Args: { _user_id: string }
         Returns: boolean
       }
     }
@@ -1920,7 +1872,6 @@ export type Database = {
         | "cid_manager"
         | "special_manager"
         | "cybercrime_manager"
-        | "judicial_police"
       case_status:
         | "open"
         | "under_investigation"
@@ -2106,7 +2057,6 @@ export const Constants = {
         "cid_manager",
         "special_manager",
         "cybercrime_manager",
-        "judicial_police",
       ],
       case_status: [
         "open",
