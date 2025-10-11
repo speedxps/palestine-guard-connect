@@ -153,7 +153,7 @@ const Dashboard = () => {
             {/* Special Police */}
             {accessibleDepartments.some(d => d.id === 'special_police') && (
               <Card
-                onClick={() => navigate('/department/special-police')}
+                onClick={() => navigate('/department/special')}
                 className="bg-gradient-to-br from-purple-400 to-purple-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
               >
                 <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
@@ -250,10 +250,10 @@ const Dashboard = () => {
               </div>
             </Card>
 
-            {/* Devices - Admin only */}
+            {/* User Permissions - Admin only */}
             {hasAccess(['admin']) && (
               <Card
-                onClick={() => navigate('/user-dashboard')}
+                onClick={() => navigate('/user-permissions')}
                 className="bg-gradient-to-br from-lime-400 to-lime-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
               >
                 <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
@@ -261,7 +261,7 @@ const Dashboard = () => {
                     <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-lime-500" />
                   </div>
                   <h3 className="text-white font-bold text-sm sm:text-lg">
-                    الأجهزة
+                    صلاحيات المستخدم
                   </h3>
                 </div>
               </Card>
@@ -318,25 +318,7 @@ const Dashboard = () => {
             <MapPin className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
             الخريطة التفاعلية
           </h3>
-          <Card className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-[300px] sm:h-[400px]">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-            />
-          </Card>
-        </div>
-
-        {/* Map Section */}
-        <div>
-          <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
-            <MapPin className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
-            الخريطة التفاعلية
-          </h3>
-          <Card className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-[300px] sm:h-[400px]">
+          <Card className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-[350px] sm:h-[500px]">
             <iframe 
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
               width="100%"
