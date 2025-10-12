@@ -17,7 +17,6 @@ const Dashboard = () => {
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
 
-  // هنا المصفوفة النهائية للتذاكر — الأسماء الحقيقية كما في كودك
   const tickets = [
     {
       title: "الإدارة العامة",
@@ -151,7 +150,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Welcome section with logo */}
+      {/* Welcome section */}
       <div className="px-6 pt-4 pb-2 flex items-center justify-between">
         <h1 className="text-2xl font-normal text-gray-800"> Welcome {user?.full_name || "Mr. Noor Arjan"} </h1>
         <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center border-4 border-white shadow-lg relative -top-2">
@@ -159,32 +158,29 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Tickets section */}
+      {/* Tickets section (شبكي ومرتّب) */}
       <div className="px-6 pb-6">
-        <h2 className="text-4xl font-bold text-[#7CB342] mb-4">Tickets</h2>
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {tickets.map((ticket, index) => {
-            // إذا أردت تطبيق صلاحيات عرض معينة يمكنك استخدام hasAccess هنا قبل العرض
-            // if (ticket.roles.length > 0 && !hasAccess(ticket.roles)) return null;
-
-            return (
-              <div
-                key={index}
-                onClick={() => navigate(ticket.path)}
-                className={`${ticket.color} text-white rounded-xl p-3 flex flex-col items-end gap-1 min-h-[90px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
-              >
-                <ticket.icon className="w-10 h-10 mb-1" strokeWidth={2} />
-                <div className="text-right">
-                  <h3 className="font-bold text-base leading-tight">{ticket.title}</h3>
-                  {ticket.subtitle && <p className="text-xs opacity-90 mt-0.5 leading-tight">{ticket.subtitle}</p>}
-                </div>
+        <h2 className="text-2xl font-bold text-[#7CB342] mb-4">التذاكر</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {tickets.map((ticket, index) => (
+            <div
+              key={index}
+              onClick={() => navigate(ticket.path)}
+              className={`${ticket.color} text-white rounded-xl p-3 flex flex-col items-end gap-1 min-h-[80px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
+            >
+              <ticket.icon className="w-8 h-8 mb-1" strokeWidth={2} />
+              <div className="text-right">
+                <h3 className="font-semibold text-sm leading-tight">{ticket.title}</h3>
+                {ticket.subtitle && <p className="text-xs opacity-90 mt-0.5 leading-tight">{ticket.subtitle}</p>}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Patrol toggle */}
-        <div className="bg-white border-2 border-gray-300 rounded-2xl p-4 flex items-center justify-between mb-6">
+      {/* Patrol toggle */}
+      <div className="px-6 mb-6">
+        <div className="bg-white border-2 border-gray-300 rounded-2xl p-4 flex items-center justify-between">
           <Switch
             checked={patrolActive}
             onCheckedChange={setPatrolActive}
@@ -192,9 +188,11 @@ const Dashboard = () => {
           />
           <span className="text-xl font-medium text-[#7CB342]"> تفعيل/إيقاف عمل الدورية </span>
         </div>
+      </div>
 
-        {/* Google Maps */}
-        <div className="bg-gray-200 rounded-2xl overflow-hidden mb-4 h-[450px] relative">
+      {/* Google Maps */}
+      <div className="px-6 mb-4">
+        <div className="bg-gray-200 rounded-2xl overflow-hidden h-[450px] relative">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
             className="w-full h-full"
@@ -203,13 +201,15 @@ const Dashboard = () => {
             allowFullScreen
           />
         </div>
+      </div>
 
-        {/* News button */}
+      {/* News button */}
+      <div className="px-6 mb-6">
         <button
           onClick={() => setNewsDrawerOpen(true)}
           className="bg-[#2B9BF4] text-white rounded-t-2xl p-4 w-full text-center hover:bg-[#2B9BF4]/90 transition-colors"
         >
-          <h2 className="text-3xl font-bold">News</h2>
+          <h2 className="text-2xl font-bold">الأخبار</h2>
         </button>
       </div>
 
