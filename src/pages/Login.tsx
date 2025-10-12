@@ -16,7 +16,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Load saved credentials if Remember Me was enabled
   useEffect(() => {
     const savedCred = localStorage.getItem("savedCredentials");
     if (savedCred) {
@@ -32,7 +31,6 @@ const Login = () => {
     }
   }, []);
 
-  // Handle login submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -81,26 +79,26 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-start pt-10">
-      {/* Header Section */}
-      <div className="w-full flex items-center">
-        <div className="bg-[#2B9BF4] text-white px-6 py-3 rounded-tr-full rounded-br-full flex items-center gap-4">
-          <img src={policeLogo} alt="Police Logo" className="w-20 h-20 object-contain" />
-          <p className="italic text-lg font-light">Police Ops</p>
+    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-start overflow-hidden">
+      {/* Blue Header */}
+      <div className="relative w-full flex justify-start">
+        <div className="bg-[#2B9BF4] rounded-br-[120px] flex items-center gap-4 px-5 py-4 w-[80%] sm:w-[60%] md:w-[45%] shadow-sm">
+          <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
+          <p className="italic text-white text-lg font-light">Police Ops</p>
         </div>
       </div>
 
       {/* Titles */}
-      <div className="text-center mt-10">
-        <h2 className="text-[#2B9BF4] text-2xl mb-2" style={{ direction: "rtl" }}>
+      <div className="text-center mt-8 px-4">
+        <h2 className="text-[#2B9BF4] text-2xl mb-2 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
         </h2>
-        <h1 className="text-[#2B9BF4] text-5xl font-extrabold italic mb-2">PoliceOps</h1>
-        <p className="text-[#2B9BF4] text-md italic font-semibold">Palestinian Police Operations Center</p>
+        <h1 className="text-[#2B9BF4] text-5xl font-extrabold italic mb-2 leading-tight">PoliceOps</h1>
+        <p className="text-[#2B9BF4] text-base italic font-semibold">Palestinian Police Operations Center</p>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="w-full max-w-sm mt-10 space-y-4">
+      {/* Login Form */}
+      <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm mt-10 space-y-4 px-6">
         <Input
           type="text"
           placeholder="Username"
@@ -134,7 +132,7 @@ const Login = () => {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 bg-[#2B9BF4] text-white italic text-lg rounded-none mt-2"
+          className="w-full h-12 bg-[#2B9BF4] text-white italic text-lg rounded-none mt-3 transition-all duration-150 active:scale-[0.98]"
         >
           {isLoading ? "Loading..." : "Login"}
         </Button>
