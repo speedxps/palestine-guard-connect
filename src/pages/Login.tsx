@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import policeLogo from "@/assets/police-logo.png";
+import newLogo from "@/assets/new-logo.png"; // الشعار الجديد
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -16,7 +17,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // State للتحكم في تأثير التحريك
   const [animateHeader, setAnimateHeader] = useState(false);
 
   useEffect(() => {
@@ -32,8 +32,6 @@ const Login = () => {
         console.error("Error loading credentials:", error);
       }
     }
-
-    // تفعيل التحريك بعد تحميل الصفحة
     setTimeout(() => setAnimateHeader(true), 100);
   }, []);
 
@@ -85,29 +83,33 @@ const Login = () => {
   };
 
   return (
-    <div className="w-screen h-screen bg-white flex flex-col justify-between items-center overflow-hidden">
+    <div className="w-screen h-screen bg-white flex flex-col justify-start items-center overflow-hidden relative">
       {/* Blue Header */}
       <div className="w-full flex justify-end">
         <div
           className={`bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 mt-4 shadow-sm transform transition-all duration-500 ease-in-out
-            ${animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"}
-            hover:translate-y-[-4px] hover:shadow-lg`}
+            ${animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"}`}
           style={{
-            width: "60%", // أقصر من النسخة السابقة
-            maxWidth: "350px", // أقصر على الشاشات الكبيرة
-            borderTopRightRadius: "120px", // نصف دائرة طبيعي
+            width: "60%",
+            maxWidth: "350px",
+            borderTopRightRadius: "120px",
             borderBottomRightRadius: "120px",
-            borderTopLeftRadius: "0", // خط مستقيم من الجهة اليسرى
+            borderTopLeftRadius: "0",
             borderBottomLeftRadius: "0",
+            boxShadow: "2px 2px 8px rgba(0,0,0,0.15)",
           }}
         >
-          <img src={policeLogo} alt="Police Logo" className="w-14 h-14 object-contain" />
           <p className="italic text-white text-lg font-light">Police Ops</p>
         </div>
       </div>
 
+      {/* الشعار الجديد يظهر في الفراغ بين الشريط والنص الرئيسي */}
+      <div className="absolute top-[140px] flex justify-center w-full">
+        <img src={newLogo} alt="New Logo" className="w-24 h-24 object-contain shadow-lg rounded-full bg-white p-2" />
+      </div>
+
       {/* Centered Content */}
-      <div className="flex flex-col items-center justify-center w-full px-6 -mt-10 flex-grow">
+      <div className="flex flex-col items-center justify-center w-full px-6 mt-[220px] flex-grow">
         <h2 className="text-[#2B9BF4] text-2xl mb-2 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
         </h2>
