@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import policeLogo from "@/assets/police-logo.png"; // نفس الصورة
+import policeLogo from "@/assets/police-logo.png";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -82,9 +82,17 @@ const Login = () => {
   };
 
   return (
-    <div className="w-screen h-screen bg-white flex flex-col justify-start items-center overflow-hidden relative">
+    <div
+      className="w-screen h-screen relative flex flex-col justify-start items-center overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, #2B9BF4 0%, #6EC1E4 100%)",
+      }}
+    >
+      {/* Overlay خطوط خفيفة */}
+      <div className="absolute inset-0 bg-[url('/assets/lines-pattern.svg')] opacity-10 pointer-events-none"></div>
+
       {/* Blue Header */}
-      <div className="w-full flex justify-end">
+      <div className="w-full flex justify-end relative z-10">
         <div
           className={`bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 mt-4 shadow-sm transform transition-all duration-500 ease-in-out
             ${animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"}`}
@@ -104,21 +112,17 @@ const Login = () => {
       </div>
 
       {/* الشعار الكبير في منتصف الصفحة */}
-      <div className="absolute top-[100px] flex justify-center w-full">
-        <img
-          src={policeLogo}
-          alt="Police Logo Floating"
-          className="w-52 h-52 object-contain" // حجم كبير
-        />
+      <div className="absolute top-[100px] flex justify-center w-full z-10">
+        <img src={policeLogo} alt="Police Logo Floating" className="w-52 h-52 object-contain" />
       </div>
 
       {/* Centered Content */}
-      <div className="flex flex-col items-center justify-center w-full px-6 mt-[100px] flex-grow">
-        <h2 className="text-[#2B9BF4] text-2xl mb-1 font-semibold" style={{ direction: "rtl" }}>
+      <div className="flex flex-col items-center justify-center w-full px-6 mt-[100px] flex-grow relative z-10">
+        <h2 className="text-white text-2xl mb-1 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
         </h2>
-        <h1 className="text-[#2B9BF4] text-5xl font-extrabold italic mb-1 leading-tight">PoliceOps</h1>
-        <p className="text-[#2B9BF4] text-base italic font-semibold mb-3">Palestinian Police Operations Center</p>
+        <h1 className="text-white text-5xl font-extrabold italic mb-1 leading-tight">PoliceOps</h1>
+        <p className="text-white text-base italic font-semibold mb-3">Palestinian Police Operations Center</p>
 
         <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm space-y-4">
           <Input
@@ -126,7 +130,7 @@ const Login = () => {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
+            className="h-12 bg-white/20 border-0 rounded-xl text-white placeholder:text-white/70 px-4 backdrop-blur-sm"
             required
           />
 
@@ -135,18 +139,18 @@ const Login = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
+            className="h-12 bg-white/20 border-0 rounded-xl text-white placeholder:text-white/70 px-4 backdrop-blur-sm"
             required
           />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-white">
             <Checkbox
               id="remember"
               checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              className="w-5 h-5 border-gray-400"
+              className="w-5 h-5 border-white"
             />
-            <label htmlFor="remember" className="text-gray-700 text-sm cursor-pointer">
+            <label htmlFor="remember" className="text-sm cursor-pointer">
               Remember me
             </label>
           </div>
@@ -154,7 +158,7 @@ const Login = () => {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-12 bg-[#2B9BF4] text-white italic text-lg rounded-none mt-3 transition-all duration-150 active:scale-[0.98]"
+            className="w-full h-12 bg-white/30 text-white italic text-lg rounded-none mt-3 transition-all duration-150 active:scale-[0.98] backdrop-blur-sm"
           >
             {isLoading ? "Loading..." : "Login"}
           </Button>
