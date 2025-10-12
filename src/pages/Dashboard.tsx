@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
-import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Menu, RotateCw, Phone, Bell, Crown, Car, Shield, Scale, Laptop, Bot, Users, Calendar } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
@@ -158,21 +156,18 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Tickets section (شبكي ومرتّب) */}
-      <div className="px-6 pb-6">
-        <h2 className="text-2xl font-bold text-[#7CB342] mb-4">التذاكر</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* Tickets section – شكل مبنى/عمارة */}
+      <div className="px-4 pb-6">
+        <h2 className="text-lg font-bold text-[#7CB342] mb-2">التذاكر</h2>
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1">
           {tickets.map((ticket, index) => (
             <div
               key={index}
               onClick={() => navigate(ticket.path)}
-              className={`${ticket.color} text-white rounded-xl p-3 flex flex-col items-end gap-1 min-h-[80px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
+              className={`${ticket.color} text-white rounded-sm p-1 flex flex-col items-center justify-center h-20 shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
             >
-              <ticket.icon className="w-8 h-8 mb-1" strokeWidth={2} />
-              <div className="text-right">
-                <h3 className="font-semibold text-sm leading-tight">{ticket.title}</h3>
-                {ticket.subtitle && <p className="text-xs opacity-90 mt-0.5 leading-tight">{ticket.subtitle}</p>}
-              </div>
+              <ticket.icon className="w-5 h-5 mb-1" strokeWidth={2} />
+              <h3 className="font-semibold text-[10px] text-center leading-tight">{ticket.title}</h3>
             </div>
           ))}
         </div>
