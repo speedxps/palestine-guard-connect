@@ -83,17 +83,18 @@ const Login = () => {
       {/* Blue Header */}
       <div className="w-full flex justify-end">
         <div
-          className="bg-[#2B9BF4] flex items-center gap-4 px-5 py-5 shadow-md mt-4"
+          className="bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 mt-4 shadow-sm"
           style={{
-            width: "75%", // عرض الشريط
-            maxWidth: "450px", // أقصى عرض للشاشات الكبيرة
-            borderTopRightRadius: "150px", // انحناء واسع وطبيعي
-            borderBottomRightRadius: "150px",
+            width: "60%", // أقصر من النسخة السابقة
+            maxWidth: "350px", // أقصر على الشاشات الكبيرة
+            borderTopRightRadius: "120px", // انحناء نصف دائرة طبيعي
+            borderBottomRightRadius: "120px",
             borderTopLeftRadius: "0", // خط مستقيم من الجهة اليسرى
             borderBottomLeftRadius: "0",
+            boxShadow: "2px 2px 8px rgba(0,0,0,0.15)", // ظل خفيف
           }}
         >
-          <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
+          <img src={policeLogo} alt="Police Logo" className="w-14 h-14 object-contain" />
           <p className="italic text-white text-lg font-light">Police Ops</p>
         </div>
       </div>
