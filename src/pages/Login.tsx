@@ -103,17 +103,17 @@ const Login = () => {
         </div>
       </div>
 
-      {/* الشعار الكبير في منتصف الصفحة */}
-      <div className="absolute top-[120px] flex justify-center w-full">
+      {/* الشعار الأكبر في منتصف الصفحة */}
+      <div className="absolute top-[110px] flex justify-center w-full">
         <img
           src={policeLogo}
           alt="Police Logo Floating"
-          className="w-40 h-40 object-contain" // حجم أكبر
+          className="w-52 h-52 object-contain" // حجم أكبر
         />
       </div>
 
       {/* Centered Content */}
-      <div className="flex flex-col items-center justify-center w-full px-6 mt-[200px] flex-grow">
+      <div className="flex flex-col items-center justify-center w-full px-6 mt-[230px] flex-grow">
         <h2 className="text-[#2B9BF4] text-2xl mb-1 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
         </h2>
