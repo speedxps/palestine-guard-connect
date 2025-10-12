@@ -85,10 +85,10 @@ const Login = () => {
         <div
           className="bg-[#2B9BF4] flex items-center gap-4 px-5 py-5 shadow-md mt-4"
           style={{
-            width: "80%",
-            maxWidth: "400px",
-            borderTopRightRadius: "50% 50%", // نصف دائرة من الأعلى اليمنى
-            borderBottomRightRadius: "50% 50%", // نصف دائرة من الأسفل اليمنى
+            width: "75%", // عرض الشريط
+            maxWidth: "450px", // أقصى عرض للشاشات الكبيرة
+            borderTopRightRadius: "150px", // انحناء واسع وطبيعي
+            borderBottomRightRadius: "150px",
             borderTopLeftRadius: "0", // خط مستقيم من الجهة اليسرى
             borderBottomLeftRadius: "0",
           }}
