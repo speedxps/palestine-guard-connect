@@ -113,8 +113,8 @@ const Dashboard = () => {
         <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
         <div className="grid grid-cols-2 gap-2 mb-5">
           {tickets.map((ticket, index) => {
-            const roles = Array.isArray(ticket.roles) ? ticket.roles : [];
-            if (roles.length > 0 && !roles.some((role) => hasAccess(role) === true)) return null;
+            // تحقق من صلاحية الأدوار
+            if (ticket.roles.length > 0 && !ticket.roles.some((role) => hasAccess([role]))) return null;
 
             return (
               <div
@@ -139,7 +139,7 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Google Map */}
+        {/* Map */}
         <div className="bg-gray-200 rounded-2xl overflow-hidden mb-3 h-[350px]">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
@@ -162,7 +162,6 @@ const Dashboard = () => {
             <DrawerHeader className="border-b">
               <DrawerTitle className="text-2xl font-bold text-[#2B9BF4]">الأخبار</DrawerTitle>
             </DrawerHeader>
-
             <div className="p-6 overflow-y-auto">
               <div className="space-y-4">
                 {newsItems.map((item, index) => (
