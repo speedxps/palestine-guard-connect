@@ -1,337 +1,247 @@
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { Card } from '@/components/ui/card';
-import PoliceNews from '@/components/dashboard/PoliceNews';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { 
-  Crown, 
-  Shield, 
-  Users,
-  Bot,
-  RefreshCw,
-  Phone,
-  Bell,
-  MapPin,
-  Mail,
-  Newspaper,
-  Car,
-  Scale,
-  Laptop
-} from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Menu, RotateCw, Phone, Bell, Crown, Car, Shield, Scale, Laptop, Bot, Users, Calendar } from 'lucide-react';
 import policeLogo from '@/assets/police-logo.png';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
-  const { user, refreshUser } = useAuth();
-  const { getAccessibleDepartments, userRole, hasAccess } = useRoleBasedAccess();
+  const { user } = useAuth();
+  const { hasAccess } = useRoleBasedAccess();
   const navigate = useNavigate();
-  const [isNewsOpen, setIsNewsOpen] = useState(false);
+  const [patrolActive, setPatrolActive] = useState(false);
+  const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
 
-  const handleRefresh = async () => {
-    try {
-      await refreshUser();
-      toast.success('تم تحديث البيانات بنجاح');
-    } catch (error) {
-      toast.error('فشل تحديث البيانات');
+  const tickets = [
+    {
+      title: "الإدارة العامة",
+      subtitle: "لوحات الإدارة والتحكم في النظام",
+      icon: Crown,
+      color: "bg-[#F5A623]",
+      path: "/department/admin",
+      roles: ['admin']
+    },
+    {
+      title: "شرطة المرور",
+      subtitle: "إدارة حركة المرور والمخالفات",
+      icon: Car,
+      color: "bg-[#2B9BF4]",
+      path: "/department/traffic",
+      roles: ['admin', 'traffic_police']
+    },
+    {
+      title: "الشرطة الخاصة",
+      subtitle: "العمليات الخاصة والأمنية",
+      icon: Shield,
+      color: "bg-[#9B59B6]",
+      path: "/department/special",
+      roles: ['admin', 'special_police']
+    },
+    {
+      title: "المباحث الجنائية",
+      subtitle: "التحقيق في الجرائم ومعالجة الأدلة",
+      icon: Shield,
+      color: "bg-[#E74C3C]",
+      path: "/department/cid",
+      roles: ['admin', 'cid']
+    },
+    {
+      title: "الشرطة القضائية",
+      subtitle: "الشؤون القضائية والقانونية",
+      icon: Scale,
+      color: "bg-[#27AE60]",
+      path: "/department/judicial-police",
+      roles: ['admin', 'judicial_police']
+    },
+    {
+      title: "الجرائم الإلكترونية",
+      subtitle: "مكافحة الجرائم الإلكترونية والأمن السيبراني",
+      icon: Laptop,
+      color: "bg-[#2B9BF4]",
+      path: "/department/cybercrime",
+      roles: ['admin', 'cybercrime']
+    },
+    {
+      title: "المساعد الذكي",
+      subtitle: "مساعد ذكي للاستفسارات والدعم",
+      icon: Bot,
+      color: "bg-[#9B59B6]",
+      path: "/police-assistant",
+      roles: []
+    },
+    {
+      title: "صلاحيات المستخدم",
+      subtitle: "إدارة صلاحيات المستخدمين",
+      icon: Shield,
+      color: "bg-[#27AE60]",
+      path: "/user-permissions",
+      roles: ['admin']
+    },
+    {
+      title: "إدارة المستخدمين",
+      subtitle: "إدارة حسابات المستخدمين",
+      icon: Users,
+      color: "bg-[#9B59B6]",
+      path: "/admin-panel",
+      roles: ['admin']
+    },
+    {
+      title: "جدولة",
+      subtitle: "جدولة المواعيد والمهام",
+      icon: Calendar,
+      color: "bg-[#27AE60]",
+      path: "/scheduling",
+      roles: []
     }
-  };
+  ];
 
-  const handleCall = () => {
-    window.location.href = 'tel:100';
-  };
-
-  const handleNotifications = () => {
-    toast.info('لا توجد إشعارات جديدة');
-  };
-
-  // Get accessible departments
-  const accessibleDepartments = getAccessibleDepartments();
+  const newsItems = [
+    {
+      title: "إطلاق حملة مرورية جديدة في المدينة",
+      description: "تفاصيل وجدول الحملة المرورية الجديدة للحد من المخالفات...",
+      time: "منذ 10 دقائق"
+    },
+    {
+      title: "تحديث: نظام التعرف على الوجه",
+      description: "تم تحديث نظام التعرف على الوجه بأحدث تقنيات الذكاء الاصطناعي...",
+      time: "منذ ساعة"
+    },
+    {
+      title: "اجتماع تنسيقي بين الأقسام",
+      description: "اجتماع دوري لتنسيق العمل بين جميع أقسام الشرطة غداً الساعة 10 صباحاً...",
+      time: "منذ ساعتين"
+    },
+    {
+      title: "تدريب جديد على نظام PoliceOps",
+      description: "سيتم عقد دورة تدريبية شاملة على استخدام نظام PoliceOps الأسبوع القادم...",
+      time: "منذ 3 ساعات"
+    },
+    {
+      title: "إنجازات القسم لهذا الشهر",
+      description: "تقرير شامل بالإنجازات والإحصائيات الشهرية لجميع الأقسام...",
+      time: "منذ 5 ساعات"
+    }
+  ];
 
   return (
-    <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-6">
-        <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto" dir="rtl">
-        {/* Profile Header Section */}
-        <Card className="bg-white rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 sm:p-6 text-center relative">
-            <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex gap-1.5 sm:gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleRefresh}
-                className="bg-white/20 hover:bg-white/30 text-white rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0"
-              >
-                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleCall}
-                className="bg-white/20 hover:bg-white/30 text-white rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0"
-              >
-                <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleNotifications}
-                className="bg-white/20 hover:bg-white/30 text-white rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0"
-              >
-                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-            </div>
-
-            <h2 className="text-green-100 text-sm sm:text-lg mb-2">ملف المستخدم</h2>
-            
-            <div className="flex justify-center mb-3 sm:mb-4">
-              <div className="bg-white rounded-full p-1 shadow-xl">
-                <img 
-                  src={policeLogo} 
-                  alt="Profile" 
-                  className="h-20 w-20 sm:h-32 sm:w-32 rounded-full object-cover border-2 sm:border-4 border-white"
-                />
-              </div>
-            </div>
-
-            <h1 className="text-white text-xl sm:text-3xl font-bold mb-2">
-              {user?.full_name || 'مستخدم'}
-            </h1>
-            
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-3 sm:mt-4">
-              {user?.email && (
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-                  <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                  <span className="text-white text-sm sm:text-base font-medium">{user.email}</span>
-                </div>
-              )}
-              {user?.role && (
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-                  <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                  <span className="text-white text-sm sm:text-base font-medium">
-                    {user.role === 'admin' && 'مدير النظام'}
-                    {user.role === 'traffic_police' && 'شرطة المرور'}
-                    {user.role === 'cid' && 'مباحث جنائية'}
-                    {user.role === 'special_police' && 'شرطة خاصة'}
-                    {user.role === 'cybercrime' && 'جرائم إلكترونية'}
-                    {user.role === 'officer' && 'ضابط'}
-                    {user.role === 'user' && 'مستخدم'}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Tickets/Departments Section */}
-        <div>
-          <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
-            <Shield className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
-            الأقسام والخدمات
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {/* Traffic Police */}
-            {accessibleDepartments.some(d => d.id === 'traffic_police') && (
-              <Card
-                onClick={() => navigate('/department/traffic')}
-                className="bg-gradient-to-br from-blue-400 to-blue-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Car className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    شرطة المرور
-                  </h3>
-                </div>
-              </Card>
-            )}
-
-            {/* Special Police */}
-            {accessibleDepartments.some(d => d.id === 'special_police') && (
-              <Card
-                onClick={() => navigate('/department/special')}
-                className="bg-gradient-to-br from-purple-400 to-purple-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    الشرطة الخاصة
-                  </h3>
-                </div>
-              </Card>
-            )}
-
-            {/* Judicial Police */}
-            {accessibleDepartments.some(d => d.id === 'judicial_police') && (
-              <Card
-                onClick={() => navigate('/department/judicial-police')}
-                className="bg-gradient-to-br from-green-400 to-green-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    الشرطة القضائية
-                  </h3>
-                </div>
-              </Card>
-            )}
-
-            {/* Admin Department */}
-            {accessibleDepartments.some(d => d.id === 'admin') && (
-              <Card
-                onClick={() => navigate('/department/admin')}
-                className="bg-gradient-to-br from-yellow-400 to-yellow-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    الإدارة العامة
-                  </h3>
-                </div>
-              </Card>
-            )}
-
-            {/* CID */}
-            {accessibleDepartments.some(d => d.id === 'cid') && (
-              <Card
-                onClick={() => navigate('/department/cid')}
-                className="bg-gradient-to-br from-red-400 to-red-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    المباحث الجنائية
-                  </h3>
-                </div>
-              </Card>
-            )}
-
-            {/* Cybercrime */}
-            {accessibleDepartments.some(d => d.id === 'cybercrime') && (
-              <Card
-                onClick={() => navigate('/department/cybercrime')}
-                className="bg-gradient-to-br from-indigo-400 to-indigo-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    الجرائم الإلكترونية
-                  </h3>
-                </div>
-              </Card>
-            )}
-
-            {/* Police Assistant - Available to all */}
-            <Card
-              onClick={() => navigate('/police-assistant')}
-              className="bg-gradient-to-br from-pink-400 to-pink-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-            >
-              <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                  <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-pink-500" />
-                </div>
-                <h3 className="text-white font-bold text-sm sm:text-lg">
-                  المساعد الذكي
-                </h3>
-              </div>
-            </Card>
-
-            {/* User Permissions - Admin only */}
-            {hasAccess(['admin']) && (
-              <Card
-                onClick={() => navigate('/user-permissions')}
-                className="bg-gradient-to-br from-lime-400 to-lime-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Laptop className="h-6 w-6 sm:h-8 sm:w-8 text-lime-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    صلاحيات المستخدم
-                  </h3>
-                </div>
-              </Card>
-            )}
-
-            {/* Users Management - Admin only */}
-            {hasAccess(['admin']) && (
-              <Card
-                onClick={() => navigate('/admin-panel')}
-                className="bg-gradient-to-br from-violet-400 to-violet-500 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg cursor-pointer transform transition-all active:scale-95 sm:hover:scale-105 hover:shadow-xl border-0"
-              >
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="bg-white/90 rounded-full p-2.5 sm:p-4 shadow-md">
-                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-violet-500" />
-                  </div>
-                  <h3 className="text-white font-bold text-sm sm:text-lg">
-                    إدارة المستخدمين
-                  </h3>
-                </div>
-              </Card>
-            )}
-          </div>
+    <div className="min-h-screen bg-white" style={{ direction: 'rtl' }}>
+      {/* Header */}
+      <header className="bg-white p-4 flex items-center justify-between border-b">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/profile')}>
+            <Menu className="w-8 h-8 text-gray-800" />
+          </button>
         </div>
+        <div className="flex items-center gap-6">
+          <button onClick={() => toast.info('لا توجد إشعارات جديدة')}>
+            <Bell className="w-8 h-8 text-[#7CB342]" />
+          </button>
+          <button onClick={() => window.location.href = "tel:100"}>
+            <Phone className="w-8 h-8 text-[#7CB342]" />
+          </button>
+          <button onClick={() => window.location.reload()}>
+            <RotateCw className="w-8 h-8 text-[#7CB342]" />
+          </button>
+        </div>
+      </header>
 
-        {/* News Drawer from Bottom */}
-        <Drawer open={isNewsOpen} onOpenChange={setIsNewsOpen}>
-          <DrawerTrigger asChild>
-            <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-500 to-teal-600 p-2 cursor-pointer hover:from-teal-600 hover:to-teal-700 transition-all">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-1 bg-white/50 rounded-full mb-1"></div>
-                <div className="flex items-center gap-2 text-white">
-                  <Newspaper className="h-5 w-5" />
-                  <span className="font-bold text-sm">آخر الأخبار</span>
-                </div>
-              </div>
-            </div>
-          </DrawerTrigger>
-          <DrawerContent className="max-h-[85vh]" dir="rtl">
-            <DrawerHeader>
-              <DrawerTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2 justify-center">
-                <Newspaper className="h-7 w-7 text-green-600" />
-                آخر الأخبار
-              </DrawerTitle>
-            </DrawerHeader>
-            <div className="overflow-y-auto p-4">
-              <PoliceNews />
-            </div>
-          </DrawerContent>
-        </Drawer>
-
-        {/* Map Section */}
-        <div className="mb-20">
-          <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
-            <MapPin className="h-5 w-5 sm:h-7 sm:w-7 text-green-600" />
-            الخريطة التفاعلية
-          </h3>
-          <Card className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-[350px] sm:h-[500px]">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-            />
-          </Card>
+      {/* Welcome section with logo */}
+      <div className="px-6 pt-4 pb-2 flex items-center justify-between">
+        <h1 className="text-2xl font-normal text-gray-800">
+          Welcome {user?.full_name || 'Mr. Noor Arjan'}
+        </h1>
+        <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center border-4 border-white shadow-lg relative -top-2">
+          <img 
+            src={policeLogo} 
+            alt="Palestinian Police" 
+            className="w-28 h-28 object-contain"
+          />
         </div>
       </div>
+
+      {/* Tickets section */}
+      <div className="px-6 pb-6">
+        <h2 className="text-4xl font-bold text-[#7CB342] mb-4">Tickets</h2>
+        
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {tickets.map((ticket, index) => (
+              <div
+                key={index}
+                onClick={() => navigate(ticket.path)}
+                className={`${ticket.color} text-white rounded-xl p-3 flex flex-col items-end gap-1 min-h-[90px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
+              >
+                <ticket.icon className="w-10 h-10 mb-1" strokeWidth={2} />
+                <div className="text-right">
+                  <h3 className="font-bold text-base leading-tight">{ticket.title}</h3>
+                  {ticket.subtitle && (
+                    <p className="text-xs opacity-90 mt-0.5 leading-tight">{ticket.subtitle}</p>
+                  )}
+                </div>
+              </div>
+          ))}
+        </div>
+
+        {/* Patrol toggle */}
+        <div className="bg-white border-2 border-gray-300 rounded-2xl p-4 flex items-center justify-between mb-6">
+          <Switch
+            checked={patrolActive}
+            onCheckedChange={setPatrolActive}
+            className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-gray-400"
+          />
+          <span className="text-xl font-medium text-[#7CB342]">
+            تفعيل/إيقاف عمل الدورية
+          </span>
+        </div>
+
+        {/* Google Maps */}
+        <div className="bg-gray-200 rounded-2xl overflow-hidden mb-4 h-[450px] relative">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
+            className="w-full h-full"
+            style={{ border: 0, filter: 'grayscale(0.3)' }}
+            loading="lazy"
+            allowFullScreen
+          />
+        </div>
+
+        {/* News button */}
+        <button
+          onClick={() => setNewsDrawerOpen(true)}
+          className="bg-[#2B9BF4] text-white rounded-t-2xl p-4 w-full text-center hover:bg-[#2B9BF4]/90 transition-colors"
+        >
+          <h2 className="text-3xl font-bold">News</h2>
+        </button>
       </div>
-    </DashboardLayout>
+
+      {/* News Drawer */}
+      <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
+        <DrawerContent className="max-h-[80vh]" style={{ direction: 'rtl' }}>
+          <DrawerHeader className="border-b">
+            <DrawerTitle className="text-2xl font-bold text-[#2B9BF4]">الأخبار</DrawerTitle>
+          </DrawerHeader>
+          
+          <div className="p-6 overflow-y-auto">
+            <div className="space-y-4">
+              {newsItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <h3 className="font-bold text-lg text-gray-800 mb-2">{item.title}</h3>
+                  <p className="text-gray-600 text-sm mb-3 leading-relaxed">{item.description}</p>
+                  <div className="text-xs text-gray-500">{item.time}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </div>
   );
 };
 

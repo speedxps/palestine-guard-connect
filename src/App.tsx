@@ -96,6 +96,34 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
+                
+                {/* Judicial Police Routes */}
+                <Route path="/department/judicial-police/users" element={
+                  <ProtectedRoute>
+                    <RoleBasedRoute allowedRoles={['admin', 'judicial_police']}>
+                      <JudicialPoliceUsers />
+                    </RoleBasedRoute>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Notification Management - Admin Only */}
+                <Route path="/notification-management" element={
+                  <ProtectedRoute>
+                    <RoleBasedRoute allowedRoles={['admin']}>
+                      <NotificationManagement />
+                    </RoleBasedRoute>
+                  </ProtectedRoute>
+                } />
+                
+                {/* User Permissions - Admin Only */}
+                <Route path="/user-permissions" element={
+                  <ProtectedRoute>
+                    <RoleBasedRoute allowedRoles={['admin']}>
+                      <UserPermissions />
+                    </RoleBasedRoute>
+                  </ProtectedRoute>
+                } />
+                
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />

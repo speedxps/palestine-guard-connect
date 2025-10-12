@@ -7,21 +7,26 @@
 
 @layer base {
   :root {
-    /* Light Theme Police Color System - Updated for login design */
+    /* Light Theme - Police Design System */
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 0 0% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 0 0% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 0 0% 20%;
 
-    /* Police blue primary - matches design */
-    --primary: 220 91% 15%;
+    /* Police blue primary - #2B9BF4 */
+    --primary: 207 90% 54%;
     --primary-foreground: 0 0% 98%;
-    --primary-glow: 220 91% 25%;
-    --primary-light: 217 91% 60%;
+    --primary-glow: 207 90% 64%;
+    
+    /* Police colors */
+    --police-yellow: 45 100% 51%;
+    --police-green: 142 71% 45%;
+    --police-red: 0 84% 60%;
+    --police-purple: 262 83% 58%;
     
     /* Login gradient background */
     --login-bg-start: 220 91% 15%;
