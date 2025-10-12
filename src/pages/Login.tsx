@@ -79,64 +79,63 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-start overflow-hidden">
+    <div className="w-screen h-screen bg-white flex flex-col justify-between items-center overflow-hidden">
       {/* Blue Header */}
-      <div className="relative w-full flex justify-start">
-        <div className="bg-[#2B9BF4] rounded-br-[120px] flex items-center gap-4 px-5 py-4 w-[80%] sm:w-[60%] md:w-[45%] shadow-sm">
+      <div className="w-full flex justify-start">
+        <div className="bg-[#2B9BF4] rounded-br-[120px] flex items-center gap-4 px-5 py-5 w-[80%] sm:w-[60%] shadow-md">
           <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
           <p className="italic text-white text-lg font-light">Police Ops</p>
         </div>
       </div>
 
-      {/* Titles */}
-      <div className="text-center mt-8 px-4">
+      {/* Centered Content */}
+      <div className="flex flex-col items-center justify-center w-full px-6 -mt-10 flex-grow">
         <h2 className="text-[#2B9BF4] text-2xl mb-2 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
         </h2>
         <h1 className="text-[#2B9BF4] text-5xl font-extrabold italic mb-2 leading-tight">PoliceOps</h1>
-        <p className="text-[#2B9BF4] text-base italic font-semibold">Palestinian Police Operations Center</p>
-      </div>
+        <p className="text-[#2B9BF4] text-base italic font-semibold mb-6">Palestinian Police Operations Center</p>
 
-      {/* Login Form */}
-      <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm mt-10 space-y-4 px-6">
-        <Input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
-          required
-        />
-
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
-          required
-        />
-
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="remember"
-            checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-            className="w-5 h-5 border-gray-400"
+        <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm space-y-4">
+          <Input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
+            required
           />
-          <label htmlFor="remember" className="text-gray-700 text-sm cursor-pointer">
-            Remember me
-          </label>
-        </div>
 
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full h-12 bg-[#2B9BF4] text-white italic text-lg rounded-none mt-3 transition-all duration-150 active:scale-[0.98]"
-        >
-          {isLoading ? "Loading..." : "Login"}
-        </Button>
-      </form>
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
+            required
+          />
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="remember"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              className="w-5 h-5 border-gray-400"
+            />
+            <label htmlFor="remember" className="text-gray-700 text-sm cursor-pointer">
+              Remember me
+            </label>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-12 bg-[#2B9BF4] text-white italic text-lg rounded-none mt-3 transition-all duration-150 active:scale-[0.98]"
+          >
+            {isLoading ? "Loading..." : "Login"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 };
