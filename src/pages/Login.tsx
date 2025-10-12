@@ -16,6 +16,9 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // State للتحكم في تأثير التحريك
+  const [animateHeader, setAnimateHeader] = useState(false);
+
   useEffect(() => {
     const savedCred = localStorage.getItem("savedCredentials");
     if (savedCred) {
@@ -29,6 +32,9 @@ const Login = () => {
         console.error("Error loading credentials:", error);
       }
     }
+
+    // تفعيل التحريك بعد تحميل الصفحة
+    setTimeout(() => setAnimateHeader(true), 100);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,11 +89,13 @@ const Login = () => {
       {/* Blue Header */}
       <div className="w-full flex justify-end">
         <div
-          className="bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 mt-4 shadow-sm"
+          className={`bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 shadow-sm mt-4 transform transition-all duration-700 ${
+            animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"
+          }`}
           style={{
             width: "60%", // أقصر من النسخة السابقة
             maxWidth: "350px", // أقصر على الشاشات الكبيرة
-            borderTopRightRadius: "120px", // انحناء نصف دائرة طبيعي
+            borderTopRightRadius: "120px", // نصف دائرة طبيعي
             borderBottomRightRadius: "120px",
             borderTopLeftRadius: "0", // خط مستقيم من الجهة اليسرى
             borderBottomLeftRadius: "0",
