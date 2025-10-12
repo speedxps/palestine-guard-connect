@@ -81,8 +81,8 @@ const Login = () => {
   return (
     <div className="w-screen h-screen bg-white flex flex-col justify-between items-center overflow-hidden">
       {/* Blue Header */}
-      <div className="w-full flex justify-start">
-        <div className="bg-[#2B9BF4] rounded-br-[120px] flex items-center gap-4 px-5 py-5 w-[80%] sm:w-[60%] shadow-md">
+      <div className="w-full flex justify-end">
+        <div className="bg-[#2B9BF4] rounded-br-[120px] flex items-center gap-4 px-5 py-5 w-[80%] sm:w-[60%] shadow-md mt-4 mr-2">
           <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
           <p className="italic text-white text-lg font-light">Police Ops</p>
         </div>
