@@ -15,34 +15,41 @@ const Dashboard = () => {
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
 
-  // Tickets section (design based on screenshot)
+  // Tickets section with Police System sections
   const tickets = [
-    { title: "BSA", subtitle: "0 Tickets", color: "bg-[#2B9BF4]", path: "/department/admin", roles: ["admin"] },
-    { title: "FixedLine", subtitle: "0 Tickets", color: "bg-[#E91E63]", path: "/department/fixedline", roles: [] },
-    { title: "Installation", subtitle: "0 Tickets", color: "bg-[#4CAF50]", path: "/department/install", roles: [] },
-    { title: "Disconnection", subtitle: "0 Tickets", color: "bg-[#9E9E9E]", path: "/department/disconnect", roles: [] },
-    { title: "Ftth Installation", subtitle: "1 Tickets", color: "bg-[#03A9F4]", path: "/department/ftth", roles: [] },
+    { title: "شرطة المرور", subtitle: "0 Tickets", color: "bg-[#2B9BF4]", path: "/department/traffic", roles: [] },
+    { title: "الشرطة الخاصة", subtitle: "0 Tickets", color: "bg-[#E91E63]", path: "/department/special", roles: [] },
+    { title: "الشرطة القضائية", subtitle: "0 Tickets", color: "bg-[#4CAF50]", path: "/department/judicial", roles: [] },
+    { title: "الإدارة العامة", subtitle: "0 Tickets", color: "bg-[#9E9E9E]", path: "/department/general", roles: [] },
     {
-      title: "Ftth T-Tickets",
+      title: "المباحث الجنائية",
+      subtitle: "0 Tickets",
+      color: "bg-[#03A9F4]",
+      path: "/department/criminal-investigation",
+      roles: [],
+    },
+    {
+      title: "الجرائم الإلكترونية",
       subtitle: "0 Tickets",
       color: "bg-[#00BCD4]",
-      path: "/department/ftth-tickets",
-      roles: [],
-    },
-    { title: "Flite Installation", subtitle: "0 Tickets", color: "bg-[#9C27B0]", path: "/department/flite", roles: [] },
-    {
-      title: "Flite T-Tickets",
-      subtitle: "0 Tickets",
-      color: "bg-[#FF9800]",
-      path: "/department/flite-tickets",
+      path: "/department/cyber-crime",
       roles: [],
     },
     {
-      title: "Migrate Installation",
+      title: "المساعد الذكي",
       subtitle: "0 Tickets",
-      color: "bg-[#8BC34A]",
-      path: "/department/migrate",
+      color: "bg-[#9C27B0]",
+      path: "/department/ai-assistant",
       roles: [],
+    },
+    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/department/news", roles: [] },
+    { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/department/permissions", roles: [] },
+    {
+      title: "إدارة المستخدمين",
+      subtitle: "0 Tickets",
+      color: "bg-[#FF5722]",
+      path: "/department/users",
+      roles: ["admin"],
     },
   ];
 
