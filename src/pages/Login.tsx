@@ -103,7 +103,7 @@ const Login = () => {
         </div>
       </div>
 
-      {/* الشعار الأكبر في منتصف الصفحة */}
+      {/* الشعار الكبير في منتصف الصفحة */}
       <div className="absolute top-[110px] flex justify-center w-full">
         <img
           src={policeLogo}
@@ -113,12 +113,12 @@ const Login = () => {
       </div>
 
       {/* Centered Content */}
-      <div className="flex flex-col items-center justify-center w-full px-6 mt-[230px] flex-grow">
+      <div className="flex flex-col items-center justify-center w-full px-6 mt-[180px] flex-grow">
         <h2 className="text-[#2B9BF4] text-2xl mb-1 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
         </h2>
         <h1 className="text-[#2B9BF4] text-5xl font-extrabold italic mb-1 leading-tight">PoliceOps</h1>
-        <p className="text-[#2B9BF4] text-base italic font-semibold mb-4">Palestinian Police Operations Center</p>
+        <p className="text-[#2B9BF4] text-base italic font-semibold mb-3">Palestinian Police Operations Center</p>
 
         <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm space-y-4">
           <Input
