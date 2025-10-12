@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
 import { Switch } from "@/components/ui/switch";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Menu, RotateCw, Phone, Bell } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ const Dashboard = () => {
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
 
-  // Tickets section (based on image layout)
+  // Tickets section (design based on screenshot)
   const tickets = [
     { title: "BSA", subtitle: "0 Tickets", color: "bg-[#2B9BF4]", path: "/department/admin", roles: ["admin"] },
     { title: "FixedLine", subtitle: "0 Tickets", color: "bg-[#E91E63]", path: "/department/fixedline", roles: [] },
@@ -139,38 +139,36 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* News button */}
-        <button
-          onClick={() => setNewsDrawerOpen(true)}
-          className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors"
-        >
-          <h2 className="text-2xl font-bold">News</h2>
-        </button>
-      </div>
+        {/* Drawer Trigger (News Button) */}
+        <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
+          <DrawerTrigger asChild>
+            <button className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors">
+              <h2 className="text-2xl font-bold">News</h2>
+            </button>
+          </DrawerTrigger>
 
-      {/* Drawer for News */}
-      <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
-        <DrawerContent className="max-h-[80vh]" style={{ direction: "rtl" }}>
-          <DrawerHeader className="border-b">
-            <DrawerTitle className="text-2xl font-bold text-[#2B9BF4]">الأخبار</DrawerTitle>
-          </DrawerHeader>
+          <DrawerContent className="max-h-[80vh] rounded-t-3xl" style={{ direction: "rtl" }}>
+            <DrawerHeader className="border-b">
+              <DrawerTitle className="text-2xl font-bold text-[#2B9BF4]">الأخبار</DrawerTitle>
+            </DrawerHeader>
 
-          <div className="p-6 overflow-y-auto">
-            <div className="space-y-4">
-              {newsItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <h3 className="font-bold text-lg text-gray-800 mb-2">{item.title}</h3>
-                  <p className="text-gray-600 text-sm mb-3 leading-relaxed">{item.description}</p>
-                  <div className="text-xs text-gray-500">{item.time}</div>
-                </div>
-              ))}
+            <div className="p-6 overflow-y-auto">
+              <div className="space-y-4">
+                {newsItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <h3 className="font-bold text-lg text-gray-800 mb-2">{item.title}</h3>
+                    <p className="text-gray-600 text-sm mb-3 leading-relaxed">{item.description}</p>
+                    <div className="text-xs text-gray-500">{item.time}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
+          </DrawerContent>
+        </Drawer>
+      </div>
     </div>
   );
 };
