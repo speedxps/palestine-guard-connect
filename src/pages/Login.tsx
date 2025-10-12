@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import policeLogo from "@/assets/police-logo.png";
-import newLogo from "@/assets/new-logo.png"; // الشعار الجديد
+import policeLogo from "@/assets/police-logo.png"; // نفس الصورة
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -99,13 +98,18 @@ const Login = () => {
             boxShadow: "2px 2px 8px rgba(0,0,0,0.15)",
           }}
         >
+          <img src={policeLogo} alt="Police Logo" className="w-14 h-14 object-contain" />
           <p className="italic text-white text-lg font-light">Police Ops</p>
         </div>
       </div>
 
-      {/* الشعار الجديد يظهر في الفراغ بين الشريط والنص الرئيسي */}
+      {/* نفس الشعار يظهر في الفراغ بين الشريط والنص الرئيسي */}
       <div className="absolute top-[140px] flex justify-center w-full">
-        <img src={newLogo} alt="New Logo" className="w-24 h-24 object-contain shadow-lg rounded-full bg-white p-2" />
+        <img
+          src={policeLogo}
+          alt="Police Logo Floating"
+          className="w-20 h-20 object-contain shadow-lg rounded-full bg-white p-1"
+        />
       </div>
 
       {/* Centered Content */}
