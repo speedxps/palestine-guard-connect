@@ -89,9 +89,9 @@ const Login = () => {
       {/* Blue Header */}
       <div className="w-full flex justify-end">
         <div
-          className={`bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 shadow-sm mt-4 transform transition-all duration-700 ${
-            animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"
-          }`}
+          className={`bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 mt-4 shadow-sm transform transition-all duration-500 ease-in-out
+            ${animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"}
+            hover:translate-y-[-4px] hover:shadow-lg`}
           style={{
             width: "60%", // أقصر من النسخة السابقة
             maxWidth: "350px", // أقصر على الشاشات الكبيرة
@@ -99,7 +99,6 @@ const Login = () => {
             borderBottomRightRadius: "120px",
             borderTopLeftRadius: "0", // خط مستقيم من الجهة اليسرى
             borderBottomLeftRadius: "0",
-            boxShadow: "2px 2px 8px rgba(0,0,0,0.15)", // ظل خفيف
           }}
         >
           <img src={policeLogo} alt="Police Logo" className="w-14 h-14 object-contain" />
