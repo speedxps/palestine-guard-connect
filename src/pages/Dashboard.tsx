@@ -15,38 +15,74 @@ const Dashboard = () => {
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
 
-  // Tickets section with Police System sections
+  // Tickets with proper paths and roles
   const tickets = [
-    { title: "شرطة المرور", subtitle: "0 Tickets", color: "bg-[#2B9BF4]", path: "/department/traffic", roles: [] },
-    { title: "الشرطة الخاصة", subtitle: "0 Tickets", color: "bg-[#E91E63]", path: "/department/special", roles: [] },
-    { title: "الشرطة القضائية", subtitle: "0 Tickets", color: "bg-[#4CAF50]", path: "/department/judicial", roles: [] },
-    { title: "الإدارة العامة", subtitle: "0 Tickets", color: "bg-[#9E9E9E]", path: "/department/general", roles: [] },
+    {
+      title: "شرطة المرور",
+      subtitle: "إدارة حركة المرور",
+      color: "bg-[#2B9BF4]",
+      path: "/department/traffic",
+      roles: [],
+    },
+    {
+      title: "الشرطة الخاصة",
+      subtitle: "العمليات الخاصة والأمنية",
+      color: "bg-[#E91E63]",
+      path: "/department/special",
+      roles: [],
+    },
+    {
+      title: "الشرطة القضائية",
+      subtitle: "الشؤون القضائية والقانونية",
+      color: "bg-[#4CAF50]",
+      path: "/department/judicial",
+      roles: [],
+    },
+    {
+      title: "الإدارة العامة",
+      subtitle: "لوحات الإدارة والتحكم",
+      color: "bg-[#9E9E9E]",
+      path: "/department/general",
+      roles: [],
+    },
     {
       title: "المباحث الجنائية",
-      subtitle: "0 Tickets",
+      subtitle: "التحقيق في الجرائم ومعالجة الأدلة",
       color: "bg-[#03A9F4]",
       path: "/department/criminal-investigation",
       roles: [],
     },
     {
       title: "الجرائم الإلكترونية",
-      subtitle: "0 Tickets",
+      subtitle: "مكافحة الجرائم الإلكترونية",
       color: "bg-[#00BCD4]",
       path: "/department/cyber-crime",
       roles: [],
     },
     {
       title: "المساعد الذكي",
-      subtitle: "0 Tickets",
+      subtitle: "مساعد ذكي للاستفسارات",
       color: "bg-[#9C27B0]",
       path: "/department/ai-assistant",
       roles: [],
     },
-    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/department/news", roles: [] },
-    { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/department/permissions", roles: [] },
+    {
+      title: "الأخبار",
+      subtitle: "عرض الأخبار والتحديثات",
+      color: "bg-[#FF9800]",
+      path: "/department/news",
+      roles: [],
+    },
+    {
+      title: "الصلاحيات",
+      subtitle: "إدارة صلاحيات المستخدمين",
+      color: "bg-[#8BC34A]",
+      path: "/department/permissions",
+      roles: ["admin"],
+    },
     {
       title: "إدارة المستخدمين",
-      subtitle: "0 Tickets",
+      subtitle: "إدارة حسابات المستخدمين",
       color: "bg-[#FF5722]",
       path: "/department/users",
       roles: ["admin"],
@@ -55,7 +91,7 @@ const Dashboard = () => {
 
   const newsItems = [
     {
-      title: "إطلاق حملة مرورية جديدة في المدينة",
+      title: "إطلاق حملة مرورية جديدة",
       description: "تفاصيل وجدول الحملة المرورية الجديدة للحد من المخالفات...",
       time: "منذ 10 دقائق",
     },
@@ -92,7 +128,7 @@ const Dashboard = () => {
           <button onClick={() => window.location.reload()}>
             <RotateCw className="w-7 h-7 text-[#2B9BF4]" />
           </button>
-          <button onClick={() => toast.info("No new notifications")}>
+          <button onClick={() => toast.info("لا توجد إشعارات جديدة")}>
             <Bell className="w-7 h-7 text-[#2B9BF4]" />
           </button>
           <button onClick={() => (window.location.href = "tel:100")}>
@@ -101,7 +137,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Welcome section */}
+      {/* Welcome */}
       <div className="px-6 pt-2 pb-2 flex items-center justify-between w-full">
         <h1 className="text-xl font-medium text-gray-800">Welcome {user?.full_name || "Mr. Noor Arjan"}</h1>
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-white shadow relative -top-1">
@@ -113,19 +149,22 @@ const Dashboard = () => {
       <div className="px-6 pb-3 w-full">
         <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
         <div className="grid grid-cols-2 gap-2 mb-5">
-          {tickets.map((ticket, index) => (
-            <div
-              key={index}
-              onClick={() => navigate(ticket.path)}
-              className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
-            >
-              <h3 className="font-bold text-base leading-tight text-center">{ticket.title}</h3>
-              <p className="text-xs opacity-90 mt-0.5">{ticket.subtitle}</p>
-            </div>
-          ))}
+          {tickets.map(
+            (ticket, index) =>
+              (!ticket.roles.length || hasAccess(ticket.roles)) && (
+                <div
+                  key={index}
+                  onClick={() => navigate(ticket.path)}
+                  className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
+                >
+                  <h3 className="font-bold text-base leading-tight text-center">{ticket.title}</h3>
+                  <p className="text-xs opacity-90 mt-0.5">{ticket.subtitle}</p>
+                </div>
+              ),
+          )}
         </div>
 
-        {/* Toggle section */}
+        {/* Toggle */}
         <div className="bg-white border border-gray-300 rounded-xl p-3 flex items-center justify-between mb-4">
           <span className="text-base font-medium text-[#7CB342]">Ready For Next Task ?</span>
           <Switch
@@ -146,7 +185,7 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Drawer Trigger (News Button) */}
+        {/* News Drawer */}
         <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
           <DrawerTrigger asChild>
             <button className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors">
@@ -158,7 +197,6 @@ const Dashboard = () => {
             <DrawerHeader className="border-b">
               <DrawerTitle className="text-2xl font-bold text-[#2B9BF4]">الأخبار</DrawerTitle>
             </DrawerHeader>
-
             <div className="p-6 overflow-y-auto">
               <div className="space-y-4">
                 {newsItems.map((item, index) => (
