@@ -103,17 +103,17 @@ const Login = () => {
         </div>
       </div>
 
-      {/* نفس الشعار يظهر في الفراغ بين الشريط والنص الرئيسي */}
-      <div className="absolute top-[140px] flex justify-center w-full">
+      {/* الشعار الجديد في منتصف الصفحة */}
+      <div className="absolute top-[130px] flex justify-center w-full">
         <img
           src={policeLogo}
           alt="Police Logo Floating"
-          className="w-20 h-20 object-contain shadow-lg rounded-full bg-white p-1"
+          className="w-32 h-32 object-contain" // حجم متوسط
         />
       </div>
 
       {/* Centered Content */}
-      <div className="flex flex-col items-center justify-center w-full px-6 mt-[220px] flex-grow">
+      <div className="flex flex-col items-center justify-center w-full px-6 mt-[260px] flex-grow">
         <h2 className="text-[#2B9BF4] text-2xl mb-2 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
         </h2>
