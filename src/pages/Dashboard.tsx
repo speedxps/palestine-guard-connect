@@ -42,13 +42,7 @@ const Dashboard = () => {
       roles: [],
     },
     { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/department/news", roles: [] },
-    {
-      title: "الصلاحيات",
-      subtitle: "0 Tickets",
-      color: "bg-[#8BC34A]",
-      path: "/department/permissions",
-      roles: ["admin"],
-    },
+    { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/department/permissions", roles: [] },
     {
       title: "إدارة المستخدمين",
       subtitle: "0 Tickets",
@@ -106,7 +100,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Welcome section */}
+      {/* Welcome */}
       <div className="px-6 pt-2 pb-2 flex items-center justify-between w-full">
         <h1 className="text-xl font-medium text-gray-800">Welcome {user?.full_name || "Mr. Noor Arjan"}</h1>
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-white shadow relative -top-1">
@@ -119,7 +113,9 @@ const Dashboard = () => {
         <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
         <div className="grid grid-cols-2 gap-2 mb-5">
           {tickets.map((ticket, index) => {
-            if (ticket.roles.length > 0 && !ticket.roles.some((role) => hasAccess(role))) return null; // تحقق من الصلاحية
+            const roles = Array.isArray(ticket.roles) ? ticket.roles : [];
+            if (roles.length > 0 && !roles.some((role) => hasAccess(role) === true)) return null;
+
             return (
               <div
                 key={index}
@@ -133,7 +129,7 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* Toggle section */}
+        {/* Toggle */}
         <div className="bg-white border border-gray-300 rounded-xl p-3 flex items-center justify-between mb-4">
           <span className="text-base font-medium text-[#7CB342]">Ready For Next Task ?</span>
           <Switch
@@ -154,7 +150,7 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Drawer Trigger (News Button) */}
+        {/* News Drawer */}
         <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
           <DrawerTrigger asChild>
             <button className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors">
