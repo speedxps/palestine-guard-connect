@@ -5,7 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleBasedRoute } from "@/components/RoleBasedRoute";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
-import UsersManagement from "@/pages/UsersManagement";
+import UsersManagement from "@/pages/DepartmentUsersManagement";
 import Tickets from "@/pages/Tickets";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
