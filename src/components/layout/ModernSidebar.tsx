@@ -5,6 +5,7 @@ import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
   Crown, 
   Car, 
@@ -20,7 +21,8 @@ import {
   Bot,
   UserCheck,
   Users,
-  Scale
+  Scale,
+  Bell
 } from 'lucide-react';
 import policeLogo from "@/assets/police-logo.png";
 
@@ -36,6 +38,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
   const { getAccessibleDepartments, userRole } = useRoleBasedAccess();
   
   const [openDepartments, setOpenDepartments] = useState<string[]>([]);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const toggleDepartment = (deptId: string) => {
     setOpenDepartments(prev => 
@@ -104,211 +107,249 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
     await logout();
     navigate('/login');
     onOpenChange(false);
+    setShowLogoutDialog(false);
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-72 bg-gradient-to-br from-gray-50 to-gray-100 p-0" style={{ direction: 'rtl' }}>
-        {/* Header with Green Theme */}
-        <SheetHeader className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center">
-          <div className="flex justify-center mb-3">
-            <div className="bg-white rounded-full p-1 shadow-xl">
-              <img 
-                src={policeLogo}
-                alt="Palestinian Police Logo" 
-                className="h-16 w-16 rounded-full object-cover border-2 border-white"
-              />
-            </div>
-          </div>
-          <h2 className="text-white text-xl font-bold mb-1 font-arabic">نظام إدارة الشرطة</h2>
-          <p className="text-green-100 text-sm font-arabic">فلسطين - Palestine</p>
-        </SheetHeader>
-
-        {/* User Info */}
-        <div className="p-4 bg-white mx-3 mt-3 rounded-xl shadow-md">
-          <div className="flex items-center gap-3">
-            {user?.avatar_url ? (
-              <img 
-                src={user.avatar_url} 
-                alt={user.full_name || 'مستخدم'}
-                className="w-12 h-12 rounded-full object-cover border-2 border-green-200"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <span className="text-green-600 font-bold font-arabic text-lg">
-                  {user?.full_name?.charAt(0) || 'م'}
-                </span>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="w-80 bg-white p-0" style={{ direction: 'rtl' }}>
+          {/* Header with Blue Theme */}
+          <SheetHeader className="bg-gradient-to-r from-[#2B9BF4] to-blue-500 p-6 text-center border-b-4 border-[#7CB342]">
+            <div className="flex justify-center mb-3">
+              <div className="bg-white rounded-full p-2 shadow-2xl">
+                <img 
+                  src={policeLogo}
+                  alt="Palestinian Police Logo" 
+                  className="h-20 w-20 rounded-full object-cover"
+                />
               </div>
-            )}
-            <div className="flex-1">
-              <h3 className="font-bold text-gray-900 font-arabic">
-                {user?.full_name || 'مستخدم'}
-              </h3>
-              <p className="text-xs text-gray-600 font-arabic">{user?.email}</p>
-              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 mt-1">
-                {userRole === 'admin' && 'مدير النظام'}
-                {userRole === 'traffic_police' && 'شرطة المرور'}
-                {userRole === 'cid' && 'مباحث جنائية'}
-                {userRole === 'special_police' && 'شرطة خاصة'}
-                {userRole === 'cybercrime' && 'جرائم إلكترونية'}
-                {userRole === 'judicial_police' && 'شرطة قضائية'}
-                {userRole === 'officer' && 'ضابط'}
-                {userRole === 'user' && 'مستخدم'}
-              </Badge>
             </div>
-          </div>
-        </div>
+            <h2 className="text-white text-2xl font-extrabold mb-1" style={{ fontStyle: 'italic' }}>
+              PoliceOps
+            </h2>
+            <p className="text-blue-100 text-sm font-arabic">نظام إدارة الشرطة الفلسطينية</p>
+          </SheetHeader>
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto sidebar-scroll p-3">
-          <div className="space-y-1">
-            {/* Dashboard Link */}
-            <Button
-              variant="ghost"
-              className={`w-full justify-start gap-3 rounded-xl ${
-                location.pathname === '/dashboard' 
-                  ? 'bg-green-100 text-green-700 font-semibold' 
-                  : 'text-gray-700 hover:bg-white'
-              }`}
-              onClick={() => handleNavigation('/dashboard')}
-            >
-              <Crown className="h-5 w-5 shrink-0" />
-              <span className="font-arabic">الرئيسية</span>
-            </Button>
-
-            {/* Police Assistant Link */}
-            <Button
-              variant="ghost"
-              className={`w-full justify-start gap-3 rounded-xl ${
-                location.pathname === '/police-assistant' 
-                  ? 'bg-green-100 text-green-700 font-semibold' 
-                  : 'text-gray-700 hover:bg-white'
-              }`}
-              onClick={() => handleNavigation('/police-assistant')}
-            >
-              <Bot className="h-5 w-5 shrink-0" />
-              <span className="font-arabic">المساعد الذكي</span>
-            </Button>
-
-            {/* News Link */}
-            <Button
-              variant="ghost"
-              className={`w-full justify-start gap-3 rounded-xl ${
-                location.pathname === '/police-news' 
-                  ? 'bg-green-100 text-green-700 font-semibold' 
-                  : 'text-gray-700 hover:bg-white'
-              }`}
-              onClick={() => handleNavigation('/police-news')}
-            >
-              <Newspaper className="h-5 w-5 shrink-0" />
-              <span className="font-arabic">الأخبار</span>
-            </Button>
-
-            {/* Smart Civil Registry Link - Admin Only */}
-            {userRole === 'admin' && (
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl ${
-                  location.pathname === '/smart-civil-registry' 
-                    ? 'bg-green-100 text-green-700 font-semibold' 
-                    : 'text-gray-700 hover:bg-white'
-                }`}
-                onClick={() => handleNavigation('/smart-civil-registry')}
-              >
-                <UserCheck className="h-5 w-5 shrink-0" />
-                <span className="font-arabic">السجل المدني الذكي</span>
-              </Button>
-            )}
-
-            {userRole === 'admin' && (
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl ${
-                  location.pathname === '/user-dashboard' 
-                    ? 'bg-green-100 text-green-700 font-semibold' 
-                    : 'text-gray-700 hover:bg-white'
-                }`}
-                onClick={() => handleNavigation('/user-dashboard')}
-              >
-                <Computer className="h-5 w-5 shrink-0" />
-                <span className="font-arabic">الأجهزة</span>
-              </Button>
-            )}
-
-            {userRole === 'admin' && (
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl ${
-                  location.pathname === '/admin-panel' 
-                    ? 'bg-green-100 text-green-700 font-semibold' 
-                    : 'text-gray-700 hover:bg-white'
-                }`}
-                onClick={() => handleNavigation('/admin-panel')}
-              >
-                <Users className="h-5 w-5 shrink-0" />
-                <span className="font-arabic">إدارة المستخدمين</span>
-              </Button>
-            )}
-
-            {/* Departments */}
-            {departments.length > 0 && (
-              <div className="pt-3">
-                <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2">
-                  الأقسام
+          {/* User Info */}
+          <div className="p-4 bg-gradient-to-br from-blue-50 to-green-50 mx-4 mt-4 rounded-xl shadow-lg border border-blue-100">
+            <div className="flex items-center gap-3">
+              {user?.avatar_url ? (
+                <img 
+                  src={user.avatar_url} 
+                  alt={user.full_name || 'مستخدم'}
+                  className="w-14 h-14 rounded-full object-cover border-3 border-[#2B9BF4] shadow-md"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2B9BF4] to-[#7CB342] flex items-center justify-center shadow-md">
+                  <span className="text-white font-bold font-arabic text-xl">
+                    {user?.full_name?.charAt(0) || 'م'}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900 font-arabic text-lg">
+                  {user?.full_name || 'مستخدم'}
                 </h3>
-                
-                {departments.map((dept) => {
-                    const Icon = dept.icon;
-                    return (
-                      <Button
-                        key={dept.id}
-                        variant="ghost"
-                        className={`w-full justify-start gap-3 mb-1 rounded-xl ${
-                          location.pathname === dept.path 
-                            ? 'bg-green-100 text-green-700 font-semibold' 
-                            : 'text-gray-700 hover:bg-white'
-                        }`}
-                        onClick={() => handleNavigation(dept.path)}
-                      >
-                        <div className={`p-2 rounded-lg bg-gradient-to-r ${dept.color}`}>
-                          <Icon className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="font-arabic text-sm flex-1 text-right">{dept.title}</span>
-                      </Button>
-                    );
-                  })}
+                <p className="text-xs text-gray-600 font-arabic">{user?.email}</p>
+                <Badge className="text-xs bg-[#7CB342] text-white mt-1 border-0">
+                  {userRole === 'admin' && 'مدير النظام'}
+                  {userRole === 'traffic_police' && 'شرطة المرور'}
+                  {userRole === 'cid' && 'مباحث جنائية'}
+                  {userRole === 'special_police' && 'شرطة خاصة'}
+                  {userRole === 'cybercrime' && 'جرائم إلكترونية'}
+                  {userRole === 'judicial_police' && 'شرطة قضائية'}
+                  {userRole === 'officer' && 'ضابط'}
+                  {userRole === 'user' && 'مستخدم'}
+                </Badge>
               </div>
-            )}
-
-            {/* Profile Link */}
-            <div className="pt-3 border-t border-gray-200 mt-3">
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl ${
-                  location.pathname === '/profile' 
-                    ? 'bg-green-100 text-green-700 font-semibold' 
-                    : 'text-gray-700 hover:bg-white'
-                }`}
-                onClick={() => handleNavigation('/profile')}
-              >
-                <Settings className="h-5 w-5 shrink-0" />
-                <span className="font-arabic">الملف الشخصي</span>
-              </Button>
-              
-              {/* Logout Button */}
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-1 rounded-xl"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5 shrink-0" />
-                <span className="font-arabic">تسجيل الخروج</span>
-              </Button>
             </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+
+          {/* Navigation */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-2">
+              {/* Dashboard Link */}
+              <Button
+                variant="ghost"
+                className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                  location.pathname === '/dashboard' 
+                    ? 'bg-[#2B9BF4] text-white font-bold shadow-lg' 
+                    : 'text-gray-700 hover:bg-blue-50'
+                }`}
+                onClick={() => handleNavigation('/dashboard')}
+              >
+                <Crown className="h-6 w-6 shrink-0" />
+                <span className="font-arabic text-lg">الرئيسية</span>
+              </Button>
+
+              {/* Police Assistant Link */}
+              <Button
+                variant="ghost"
+                className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                  location.pathname === '/police-assistant' 
+                    ? 'bg-[#7CB342] text-white font-bold shadow-lg' 
+                    : 'text-gray-700 hover:bg-green-50'
+                }`}
+                onClick={() => handleNavigation('/police-assistant')}
+              >
+                <Bot className="h-6 w-6 shrink-0" />
+                <span className="font-arabic text-lg">المساعد الذكي</span>
+              </Button>
+
+              {/* News Link */}
+              <Button
+                variant="ghost"
+                className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                  location.pathname === '/police-news' 
+                    ? 'bg-[#2B9BF4] text-white font-bold shadow-lg' 
+                    : 'text-gray-700 hover:bg-blue-50'
+                }`}
+                onClick={() => handleNavigation('/police-news')}
+              >
+                <Newspaper className="h-6 w-6 shrink-0" />
+                <span className="font-arabic text-lg">الأخبار</span>
+              </Button>
+
+              {/* Admin Only Links */}
+              {userRole === 'admin' && (
+                <>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/smart-civil-registry' 
+                        ? 'bg-purple-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-purple-50'
+                    }`}
+                    onClick={() => handleNavigation('/smart-civil-registry')}
+                  >
+                    <UserCheck className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">السجل المدني الذكي</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/user-dashboard' 
+                        ? 'bg-indigo-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-indigo-50'
+                    }`}
+                    onClick={() => handleNavigation('/user-dashboard')}
+                  >
+                    <Computer className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">الأجهزة</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/admin-panel' 
+                        ? 'bg-orange-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-orange-50'
+                    }`}
+                    onClick={() => handleNavigation('/admin-panel')}
+                  >
+                    <Users className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">إدارة المستخدمين</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/notification-management' 
+                        ? 'bg-pink-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-pink-50'
+                    }`}
+                    onClick={() => handleNavigation('/notification-management')}
+                  >
+                    <Bell className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">إدارة الإشعارات</span>
+                  </Button>
+                </>
+              )}
+
+              {/* Departments */}
+              {departments.length > 0 && (
+                <div className="pt-4">
+                  <h3 className="text-sm font-bold text-gray-600 font-arabic px-3 mb-3 flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    الأقسام
+                  </h3>
+                  
+                  {departments.map((dept) => {
+                      const Icon = dept.icon;
+                      return (
+                        <Button
+                          key={dept.id}
+                          variant="ghost"
+                          className={`w-full justify-start gap-3 mb-2 rounded-xl py-6 transition-all ${
+                            location.pathname === dept.path 
+                              ? 'bg-gradient-to-r ' + dept.color + ' text-white font-bold shadow-lg' 
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                          onClick={() => handleNavigation(dept.path)}
+                        >
+                          <div className={`p-2 rounded-lg ${location.pathname === dept.path ? 'bg-white/20' : 'bg-gradient-to-r ' + dept.color}`}>
+                            <Icon className={`h-5 w-5 ${location.pathname === dept.path ? 'text-white' : 'text-white'}`} />
+                          </div>
+                          <span className="font-arabic text-base flex-1 text-right">{dept.title}</span>
+                        </Button>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Profile & Logout */}
+              <div className="pt-4 border-t-2 border-gray-200 mt-4">
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                    location.pathname === '/profile' 
+                      ? 'bg-gray-700 text-white font-bold shadow-lg' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  onClick={() => handleNavigation('/profile')}
+                >
+                  <Settings className="h-6 w-6 shrink-0" />
+                  <span className="font-arabic text-lg">الملف الشخصي</span>
+                </Button>
+                
+                {/* Logout Button */}
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-2 rounded-xl py-6 transition-all"
+                  onClick={() => setShowLogoutDialog(true)}
+                >
+                  <LogOut className="h-6 w-6 shrink-0" />
+                  <span className="font-arabic text-lg">تسجيل الخروج</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent style={{ direction: 'rtl' }}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">تأكيد تسجيل الخروج</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              هل أنت متأكد من رغبتك في تسجيل الخروج من النظام؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="bg-gray-200 hover:bg-gray-300">إلغاء</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              تسجيل الخروج
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

@@ -4,10 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Menu, RotateCw, Phone, Bell } from "lucide-react";
+import { Menu, RotateCw, Phone } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
-import { toast } from "sonner";
 import ModernSidebar from "@/components/layout/ModernSidebar";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -98,9 +98,7 @@ const Dashboard = () => {
           <button onClick={() => window.location.reload()}>
             <RotateCw className="w-7 h-7 text-[#2B9BF4]" />
           </button>
-          <button onClick={() => toast.info("No new notifications")}>
-            <Bell className="w-7 h-7 text-[#2B9BF4]" />
-          </button>
+          <NotificationBell />
           <button onClick={() => (window.location.href = "tel:100")}>
             <Phone className="w-7 h-7 text-[#2B9BF4]" />
           </button>
