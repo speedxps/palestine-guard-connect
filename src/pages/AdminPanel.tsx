@@ -1,20 +1,20 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { UserManagementTabbed } from "@/components/UserManagementTabbed";
-import UserManagementProfessional from "@/components/UserManagementProfessional";
-import { PasswordResetManagement } from "@/components/PasswordResetManagement";
-import { BackButton } from "@/components/BackButton";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  Users,
-  Shield,
-  Settings,
-  FileText,
-  Key,
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { UserManagementTabbed } from '@/components/UserManagementTabbed';
+import UserManagementProfessional from '@/components/UserManagementProfessional';
+import { PasswordResetManagement } from '@/components/PasswordResetManagement';
+import { BackButton } from '@/components/BackButton';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+  Users, 
+  Shield, 
+  Settings, 
+  FileText, 
+  Key, 
   UserCheck,
   Home,
   User,
@@ -24,64 +24,65 @@ import {
   Car,
   Eye,
   MessageCircle,
-  CheckSquare,
-} from "lucide-react";
+  CheckSquare
+} from 'lucide-react';
 
 const AdminPanel = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState('overview');
 
+  // أقسام الإدارة مقسمة بحسب الوظائف
   const adminSections = [
     {
-      id: "overview",
-      title: "نظرة عامة",
-      description: "إحصائيات وملخص الأداء العام",
+      id: 'overview',
+      title: 'نظرة عامة',
+      description: 'إحصائيات وملخص الأداء العام',
       icon: BarChart3,
-      color: "from-blue-500 to-blue-600",
+      color: 'from-blue-500 to-blue-600'
     },
     {
-      id: "user-management",
-      title: "إدارة الأقسام والمستخدمين",
-      description: "تعيين الأدوار وإدارة المستخدمين",
+      id: 'user-management',
+      title: 'إدارة الأقسام والمستخدمين',
+      description: 'تعيين الأدوار وإدارة المستخدمين',
       icon: Users,
-      color: "from-green-500 to-green-600",
+      color: 'from-green-500 to-green-600'
     },
     {
-      id: "traffic-management",
-      title: "إدارة شرطة المرور",
-      description: "إدارة المخالفات والمركبات",
+      id: 'traffic-management',
+      title: 'إدارة شرطة المرور',
+      description: 'إدارة المخالفات والمركبات',
       icon: Car,
-      color: "from-yellow-500 to-yellow-600",
+      color: 'from-yellow-500 to-yellow-600'
     },
     {
-      id: "cid-management",
-      title: "إدارة المباحث الجنائية",
-      description: "إدارة البلاغات والمطلوبين",
+      id: 'cid-management',
+      title: 'إدارة المباحث الجنائية',
+      description: 'إدارة البلاغات والمطلوبين',
       icon: Eye,
-      color: "from-red-500 to-red-600",
+      color: 'from-red-500 to-red-600'
     },
     {
-      id: "special-management",
-      title: "إدارة الشرطة الخاصة",
-      description: "إدارة المهام والدوريات",
+      id: 'special-management',
+      title: 'إدارة الشرطة الخاصة',
+      description: 'إدارة المهام والدوريات',
       icon: Shield,
-      color: "from-purple-500 to-purple-600",
+      color: 'from-purple-500 to-purple-600'
     },
     {
-      id: "system-settings",
-      title: "إعدادات النظام",
-      description: "إعدادات متقدمة وصيانة",
+      id: 'system-settings',
+      title: 'إعدادات النظام',
+      description: 'إعدادات متقدمة وصيانة',
       icon: Settings,
-      color: "from-gray-500 to-gray-600",
-    },
+      color: 'from-gray-500 to-gray-600'
+    }
   ];
 
   const systemStats = [
-    { label: "إجمالي المستخدمين", value: "0", icon: Users, color: "text-blue-500" },
-    { label: "البلاغات النشطة", value: "0", icon: AlertTriangle, color: "text-red-500" },
-    { label: "المهام قيد التنفيذ", value: "0", icon: FileText, color: "text-green-500" },
-    { label: "الدوريات النشطة", value: "0", icon: UserCheck, color: "text-purple-500" },
+    { label: 'إجمالي المستخدمين', value: '0', icon: Users, color: 'text-blue-500' },
+    { label: 'البلاغات النشطة', value: '0', icon: AlertTriangle, color: 'text-red-500' },
+    { label: 'المهام قيد التنفيذ', value: '0', icon: FileText, color: 'text-green-500' },
+    { label: 'الدوريات النشطة', value: '0', icon: UserCheck, color: 'text-purple-500' },
   ];
 
   const renderOverview = () => (
@@ -164,14 +165,16 @@ const AdminPanel = () => {
           <h4 className="font-semibold font-arabic">النسخ الاحتياطي</h4>
           <p className="text-sm text-muted-foreground font-arabic mb-3">إنشاء نسخة احتياطية من البيانات</p>
           <Button variant="outline" size="sm">
-            <Database className="h-4 w-4 mr-2" /> إنشاء نسخة احتياطية
+            <Database className="h-4 w-4 mr-2" />
+            إنشاء نسخة احتياطية
           </Button>
         </div>
         <div className="p-4 border rounded-lg">
           <h4 className="font-semibold font-arabic">تنظيف النظام</h4>
           <p className="text-sm text-muted-foreground font-arabic mb-3">تنظيف الملفات المؤقتة والسجلات القديمة</p>
           <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4 mr-2" /> تنظيف النظام
+            <Settings className="h-4 w-4 mr-2" />
+            تنظيف النظام
           </Button>
         </div>
       </div>
@@ -210,28 +213,32 @@ const AdminPanel = () => {
               <BackButton to="/dashboard" />
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-md"></div>
-                <img
-                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png"
-                  alt="Palestinian Police Department Logo"
+                <img 
+                  src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                  alt="Palestinian Police Department Logo" 
                   className="relative w-12 h-12 rounded-full shadow-lg"
                 />
               </div>
               <div>
                 <h1 className="text-xl font-bold font-arabic bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  {" "}
-                  لوحة تحكم الإدارة{" "}
+                  لوحة تحكم الإدارة
                 </h1>
                 <p className="text-sm text-muted-foreground font-arabic">مرحباً، {user?.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-                <Home className="h-4 w-4 mr-2" /> الرئيسية
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+              >
+                <Home className="h-4 w-4 mr-2" />
+                الرئيسية
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate('/profile')}
                 className="relative h-10 w-10 rounded-full bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border border-primary/20"
               >
                 <User className="h-5 w-5 text-primary" />
@@ -260,17 +267,208 @@ const AdminPanel = () => {
             })}
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            {renderOverview()}
-          </TabsContent>
+      <TabsContent value="overview" className="space-y-6">
+        {renderOverview()}
+      </TabsContent>
+
+      <TabsContent value="user-management" className="space-y-6">
+        <Card className="p-1">
+        <UserManagementProfessional />
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="traffic-management" className="space-y-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة شرطة المرور</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => navigate('/violations-admin')}
+            >
+              <FileText className="h-8 w-8 text-yellow-500" />
+              <div className="text-center">
+                <p className="font-semibold font-arabic">إدارة المخالفات</p>
+                <p className="text-xs text-muted-foreground font-arabic">تحرير ومراجعة المخالفات</p>
+              </div>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => navigate('/vehicle-lookup')}
+            >
+              <Car className="h-8 w-8 text-blue-500" />
+              <div className="text-center">
+                <p className="font-semibold font-arabic">البحث عن المركبات</p>
+                <p className="text-xs text-muted-foreground font-arabic">استعلام وإدارة بيانات المركبات</p>
+              </div>
+            </Button>
+          </div>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="cid-management" className="space-y-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة المباحث الجنائية</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => navigate('/incidents-management')}
+            >
+              <AlertTriangle className="h-8 w-8 text-red-500" />
+              <div className="text-center">
+                <p className="font-semibold font-arabic">إدارة البلاغات</p>
+                <p className="text-xs text-muted-foreground font-arabic">مراجعة وتتبع البلاغات</p>
+              </div>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => navigate('/wanted-persons-tree')}
+            >
+              <Users className="h-8 w-8 text-orange-500" />
+              <div className="text-center">
+                <p className="font-semibold font-arabic">المطلوبون</p>
+                <p className="text-xs text-muted-foreground font-arabic">إدارة قائمة المطلوبين</p>
+              </div>
+            </Button>
+          </div>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="special-management" className="space-y-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة الشرطة الخاصة</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => navigate('/tasks')}
+            >
+              <CheckSquare className="h-8 w-8 text-green-500" />
+              <div className="text-center">
+                <p className="font-semibold font-arabic">إدارة المهام</p>
+                <p className="text-xs text-muted-foreground font-arabic">تكليف ومتابعة المهام</p>
+              </div>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => navigate('/patrol')}
+            >
+              <Shield className="h-8 w-8 text-blue-500" />
+              <div className="text-center">
+                <p className="font-semibold font-arabic">إدارة الدوريات</p>
+                <p className="text-xs text-muted-foreground font-arabic">تنسيق وتتبع الدوريات</p>
+              </div>
+            </Button>
+          </div>
+        </Card>
+      </TabsContent>
+
+
           <TabsContent value="user-management" className="space-y-6">
             <Card className="p-1">
-              <UserManagementProfessional />
+              <UserManagementTabbed />
             </Card>
           </TabsContent>
+
+          <TabsContent value="traffic-management" className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة شرطة المرور</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2"
+                  onClick={() => navigate('/violations-admin')}
+                >
+                  <FileText className="h-8 w-8 text-yellow-500" />
+                  <div className="text-center">
+                    <p className="font-semibold font-arabic">إدارة المخالفات</p>
+                    <p className="text-xs text-muted-foreground font-arabic">تحرير ومراجعة المخالفات</p>
+                  </div>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2"
+                  onClick={() => navigate('/vehicle-lookup')}
+                >
+                  <Car className="h-8 w-8 text-blue-500" />
+                  <div className="text-center">
+                    <p className="font-semibold font-arabic">البحث عن المركبات</p>
+                    <p className="text-xs text-muted-foreground font-arabic">استعلام وإدارة بيانات المركبات</p>
+                  </div>
+                </Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="cid-management" className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة المباحث الجنائية</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2"
+                  onClick={() => navigate('/incidents-management')}
+                >
+                  <AlertTriangle className="h-8 w-8 text-red-500" />
+                  <div className="text-center">
+                    <p className="font-semibold font-arabic">إدارة البلاغات</p>
+                    <p className="text-xs text-muted-foreground font-arabic">مراجعة وتتبع البلاغات</p>
+                  </div>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2"
+                  onClick={() => navigate('/wanted-persons-tree')}
+                >
+                  <Users className="h-8 w-8 text-orange-500" />
+                  <div className="text-center">
+                    <p className="font-semibold font-arabic">المطلوبون</p>
+                    <p className="text-xs text-muted-foreground font-arabic">إدارة قائمة المطلوبين</p>
+                  </div>
+                </Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="special-management" className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة الشرطة الخاصة</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2"
+                  onClick={() => navigate('/tasks')}
+                >
+                  <CheckSquare className="h-8 w-8 text-green-500" />
+                  <div className="text-center">
+                    <p className="font-semibold font-arabic">إدارة المهام</p>
+                    <p className="text-xs text-muted-foreground font-arabic">تكليف ومتابعة المهام</p>
+                  </div>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2"
+                  onClick={() => navigate('/patrol')}
+                >
+                  <Shield className="h-8 w-8 text-blue-500" />
+                  <div className="text-center">
+                    <p className="font-semibold font-arabic">إدارة الدوريات</p>
+                    <p className="text-xs text-muted-foreground font-arabic">تنسيق وتتبع الدوريات</p>
+                  </div>
+                </Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+
           <TabsContent value="system-settings" className="space-y-6">
             {renderSystemSettings()}
           </TabsContent>
+
           <TabsContent value="reports" className="space-y-6">
             {renderReports()}
           </TabsContent>
