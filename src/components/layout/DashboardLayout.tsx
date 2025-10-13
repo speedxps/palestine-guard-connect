@@ -28,26 +28,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
       {/* Sidebar - Desktop: Fixed, Mobile: Overlay */}
       {isMobile ? (
-        <>
-          {/* Mobile Overlay */}
-          {isSidebarOpen && (
-            <div 
-              className="fixed inset-0 bg-black/50 z-40"
-              onClick={() => setIsSidebarOpen(false)}
-            />
-          )}
-          {/* Mobile Sidebar */}
-          <div className={`fixed top-0 right-0 h-full z-50 transform transition-transform duration-300 ${
-            isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}>
-            <ModernSidebar onClose={() => setIsSidebarOpen(false)} />
-          </div>
-        </>
+        <ModernSidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
       ) : (
         /* Desktop Sidebar */
-        <div className="flex-shrink-0 h-screen">
-          <ModernSidebar />
-        </div>
+        <ModernSidebar open={true} onOpenChange={() => {}} />
       )}
 
       {/* Main Content */}

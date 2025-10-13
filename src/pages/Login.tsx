@@ -5,18 +5,50 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import policeLogo from "@/assets/police-logo.png"; // نفس الصورة
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Users } from "lucide-react";
+import policeLogo from "@/assets/police-logo.png";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [testUsersOpen, setTestUsersOpen] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [animateHeader, setAnimateHeader] = useState(false);
+
+  // Test users for development
+  const testUsers = [
+    { email: "admin@test.com", password: "admin123", role: "مدير النظام" },
+    { email: "traffic@test.com", password: "traffic123", role: "شرطة المرور" },
+    { email: "cid@test.com", password: "cid123", role: "المباحث الجنائية" },
+    { email: "special@test.com", password: "special123", role: "الشرطة الخاصة" },
+    { email: "cyber@test.com", password: "cyber123", role: "الجرائم الإلكترونية" },
+    { email: "judicial@test.com", password: "judicial123", role: "الشرطة القضائية" },
+  ];
+
+  const handleTestUserLogin = async (email: string, password: string) => {
+    setUsername(email);
+    setPassword(password);
+    setTestUsersOpen(false);
+    
+    setTimeout(async () => {
+      const success = await login(email, password);
+      if (success) {
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك في النظام",
+        });
+        setTimeout(() => {
+          window.location.replace("/dashboard");
+        }, 600);
+      }
+    }, 100);
+  };
 
   useEffect(() => {
     const savedCred = localStorage.getItem("savedCredentials");
@@ -121,14 +153,44 @@ const Login = () => {
         <p className="text-[#2B9BF4] text-base italic font-semibold mb-3">Palestinian Police Operations Center</p>
 
         <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm space-y-4">
-          <Input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
-            required
-          />
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4 pr-12"
+              required
+            />
+            <Sheet open={testUsersOpen} onOpenChange={setTestUsersOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  <Users className="w-5 h-5 text-[#2B9BF4]" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80" style={{ direction: 'rtl' }}>
+                <SheetHeader>
+                  <SheetTitle className="text-[#2B9BF4] text-xl">المستخدمون التجريبيون</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-3">
+                  {testUsers.map((user, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleTestUserLogin(user.email, user.password)}
+                      className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-right transition-colors border border-gray-200"
+                    >
+                      <div className="font-semibold text-gray-800">{user.role}</div>
+                      <div className="text-sm text-gray-600 mt-1">{user.email}</div>
+                    </button>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
 
           <Input
             type="password"

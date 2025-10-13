@@ -7,6 +7,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from 
 import { Menu, RotateCw, Phone, Bell } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import { toast } from "sonner";
+import ModernSidebar from "@/components/layout/ModernSidebar";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -14,41 +15,47 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const tickets = [
-    { title: "شرطة المرور", subtitle: "0 Tickets", color: "bg-[#2B9BF4]", path: "/department/traffic", roles: [] },
-    { title: "الشرطة الخاصة", subtitle: "0 Tickets", color: "bg-[#E91E63]", path: "/department/special", roles: [] },
-    { title: "الشرطة القضائية", subtitle: "0 Tickets", color: "bg-[#4CAF50]", path: "/department/judicial", roles: [] },
-    { title: "الإدارة العامة", subtitle: "0 Tickets", color: "bg-[#9E9E9E]", path: "/department/general", roles: [] },
+    { title: "شرطة المرور", subtitle: "0 Tickets", color: "bg-[#2B9BF4]", path: "/department/traffic", roles: ['admin', 'traffic_police'] },
+    { title: "الشرطة الخاصة", subtitle: "0 Tickets", color: "bg-[#E91E63]", path: "/department/special", roles: ['admin', 'special_police'] },
+    { title: "الشرطة القضائية", subtitle: "0 Tickets", color: "bg-[#4CAF50]", path: "/department/judicial-police", roles: ['admin', 'judicial_police'] },
+    { title: "الإدارة العامة", subtitle: "0 Tickets", color: "bg-[#F5A623]", path: "/department/admin", roles: ['admin'] },
     {
       title: "المباحث الجنائية",
       subtitle: "0 Tickets",
       color: "bg-[#03A9F4]",
-      path: "/department/criminal-investigation",
-      roles: [],
+      path: "/department/cid",
+      roles: ['admin', 'cid'],
     },
     {
       title: "الجرائم الإلكترونية",
       subtitle: "0 Tickets",
       color: "bg-[#00BCD4]",
-      path: "/department/cyber-crime",
-      roles: [],
+      path: "/department/cybercrime",
+      roles: ['admin', 'cybercrime'],
     },
     {
       title: "المساعد الذكي",
       subtitle: "0 Tickets",
       color: "bg-[#9C27B0]",
-      path: "/department/ai-assistant",
+      path: "/police-assistant",
       roles: [],
     },
-    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/department/news", roles: [] },
-    { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/department/permissions", roles: [] },
-    {
-      title: "إدارة المستخدمين",
-      subtitle: "0 Tickets",
-      color: "bg-[#FF5722]",
-      path: "/department/users",
-      roles: ["admin"],
+    { 
+      title: "الأخبار", 
+      subtitle: "0 Tickets", 
+      color: "bg-[#FF9800]", 
+      path: "/police-news", 
+      roles: [] 
+    },
+    { 
+      title: "الصلاحيات", 
+      subtitle: "0 Tickets", 
+      color: "bg-[#8BC34A]", 
+      path: "/user-permissions", 
+      roles: ['admin'] 
     },
   ];
 
@@ -84,7 +91,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-white flex flex-col items-center" style={{ direction: "ltr" }}>
       {/* Header */}
       <header className="bg-white w-full p-4 flex items-center justify-between border-b">
-        <button onClick={() => navigate("/profile")}>
+        <button onClick={() => setSidebarOpen(true)}>
           <Menu className="w-7 h-7 text-[#2B9BF4]" />
         </button>
         <div className="flex items-center gap-5">
@@ -114,7 +121,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 gap-2 mb-5">
           {tickets.map((ticket, index) => {
             // تحقق من صلاحية الأدوار
-            if (ticket.roles.length > 0 && !ticket.roles.some((role) => hasAccess([role]))) return null;
+            if (ticket.roles.length > 0 && !hasAccess(ticket.roles as any[])) return null;
 
             return (
               <div
@@ -131,12 +138,12 @@ const Dashboard = () => {
 
         {/* Toggle */}
         <div className="bg-white border border-gray-300 rounded-xl p-3 flex items-center justify-between mb-4">
-          <span className="text-base font-medium text-[#7CB342]">Ready For Next Task ?</span>
           <Switch
             checked={patrolActive}
             onCheckedChange={setPatrolActive}
-            className="data-[state=checked]:bg-[#7CB342] data-[state=unchecked]:bg-gray-400"
+            className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-gray-400"
           />
+          <span className="text-base font-medium text-[#7CB342]">تفعيل / إيقاف عمل الدورية</span>
         </div>
 
         {/* Map */}
@@ -179,6 +186,9 @@ const Dashboard = () => {
           </DrawerContent>
         </Drawer>
       </div>
+
+      {/* Modern Sidebar */}
+      <ModernSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
     </div>
   );
 };
