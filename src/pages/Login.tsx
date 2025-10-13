@@ -6,22 +6,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Users } from "lucide-react";
+import { Users, Eye, EyeOff } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👁️ حالة إظهار كلمة المرور
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [testUsersOpen, setTestUsersOpen] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-
   const [animateHeader, setAnimateHeader] = useState(false);
 
-  // Test users for development
   const testUsers = [
     { email: "admin@test.com", password: "admin123", role: "مدير النظام" },
     { email: "traffic@test.com", password: "traffic123", role: "شرطة المرور" },
@@ -35,17 +34,12 @@ const Login = () => {
     setUsername(email);
     setPassword(password);
     setTestUsersOpen(false);
-    
+
     setTimeout(async () => {
       const success = await login(email, password);
       if (success) {
-        toast({
-          title: "تم تسجيل الدخول بنجاح",
-          description: "مرحباً بك في النظام",
-        });
-        setTimeout(() => {
-          window.location.replace("/dashboard");
-        }, 600);
+        toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
+        setTimeout(() => window.location.replace("/dashboard"), 600);
       }
     }, 100);
   };
@@ -72,29 +66,18 @@ const Login = () => {
 
     try {
       const success = await login(username, password);
-
       if (success) {
         if (rememberMe) {
           localStorage.setItem(
             "savedCredentials",
-            JSON.stringify({
-              email: username,
-              rememberMe: true,
-              timestamp: Date.now(),
-            }),
+            JSON.stringify({ email: username, rememberMe: true, timestamp: Date.now() }),
           );
         } else {
           localStorage.removeItem("savedCredentials");
         }
 
-        toast({
-          title: "تم تسجيل الدخول بنجاح",
-          description: "مرحباً بك في النظام",
-        });
-
-        setTimeout(() => {
-          window.location.replace("/dashboard");
-        }, 600);
+        toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
+        setTimeout(() => window.location.replace("/dashboard"), 600);
       } else {
         toast({
           title: "فشل تسجيل الدخول",
@@ -125,8 +108,6 @@ const Login = () => {
             maxWidth: "350px",
             borderTopRightRadius: "120px",
             borderBottomRightRadius: "120px",
-            borderTopLeftRadius: "0",
-            borderBottomLeftRadius: "0",
             boxShadow: "2px 2px 8px rgba(0,0,0,0.15)",
           }}
         >
@@ -135,16 +116,12 @@ const Login = () => {
         </div>
       </div>
 
-      {/* الشعار الكبير في منتصف الصفحة */}
+      {/* الشعار الكبير */}
       <div className="absolute top-[100px] flex justify-center w-full">
-        <img
-          src={policeLogo}
-          alt="Police Logo Floating"
-          className="w-52 h-52 object-contain" // حجم كبير
-        />
+        <img src={policeLogo} alt="Police Logo Floating" className="w-52 h-52 object-contain" />
       </div>
 
-      {/* Centered Content */}
+      {/* المحتوى */}
       <div className="flex flex-col items-center justify-center w-full px-6 mt-[100px] flex-grow">
         <h2 className="text-[#2B9BF4] text-2xl mb-1 font-semibold" style={{ direction: "rtl" }}>
           الشرطة الفلسطينية
@@ -153,6 +130,7 @@ const Login = () => {
         <p className="text-[#2B9BF4] text-base italic font-semibold mb-3">Palestinian Police Operations Center</p>
 
         <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm space-y-4">
+          {/* اسم المستخدم */}
           <div className="relative">
             <Input
               type="text"
@@ -171,7 +149,7 @@ const Login = () => {
                   <Users className="w-5 h-5 text-[#2B9BF4]" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80" style={{ direction: 'rtl' }}>
+              <SheetContent side="right" className="w-80" style={{ direction: "rtl" }}>
                 <SheetHeader>
                   <SheetTitle className="text-[#2B9BF4] text-xl">المستخدمون التجريبيون</SheetTitle>
                 </SheetHeader>
@@ -192,15 +170,26 @@ const Login = () => {
             </Sheet>
           </div>
 
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4"
-            required
-          />
+          {/* كلمة المرور مع زر الإظهار */}
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4 pr-10"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2B9BF4] transition"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
 
+          {/* تذكرني */}
           <div className="flex items-center gap-2">
             <Checkbox
               id="remember"
@@ -213,6 +202,7 @@ const Login = () => {
             </label>
           </div>
 
+          {/* زر تسجيل الدخول */}
           <Button
             type="submit"
             disabled={isLoading}
