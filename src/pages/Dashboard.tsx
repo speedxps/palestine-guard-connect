@@ -17,46 +17,53 @@ const Dashboard = () => {
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // الأقسام والخدمات
   const tickets = [
-    { title: "شرطة المرور", subtitle: "0 Tickets", color: "bg-[#2B9BF4]", path: "/department/traffic", roles: ['admin', 'traffic_police'] },
-    { title: "الشرطة الخاصة", subtitle: "0 Tickets", color: "bg-[#E91E63]", path: "/department/special", roles: ['admin', 'special_police'] },
-    { title: "الشرطة القضائية", subtitle: "0 Tickets", color: "bg-[#4CAF50]", path: "/department/judicial-police", roles: ['admin', 'judicial_police'] },
-    { title: "الإدارة العامة", subtitle: "0 Tickets", color: "bg-[#F5A623]", path: "/department/admin", roles: ['admin'] },
+    {
+      title: "شرطة المرور",
+      subtitle: "0 Tickets",
+      color: "bg-[#2B9BF4]",
+      path: "/department/traffic",
+      roles: ["admin", "traffic_police"],
+    },
+    {
+      title: "الشرطة الخاصة",
+      subtitle: "0 Tickets",
+      color: "bg-[#E91E63]",
+      path: "/department/special",
+      roles: ["admin", "special_police"],
+    },
+    {
+      title: "الشرطة القضائية",
+      subtitle: "0 Tickets",
+      color: "bg-[#4CAF50]",
+      path: "/department/judicial-police",
+      roles: ["admin", "judicial_police"],
+    },
+    {
+      title: "الإدارة العامة",
+      subtitle: "0 Tickets",
+      color: "bg-[#F5A623]",
+      path: "/department/admin",
+      roles: ["admin"],
+    },
     {
       title: "المباحث الجنائية",
       subtitle: "0 Tickets",
       color: "bg-[#03A9F4]",
       path: "/department/cid",
-      roles: ['admin', 'cid'],
+      roles: ["admin", "cid"],
     },
     {
       title: "الجرائم الإلكترونية",
       subtitle: "0 Tickets",
       color: "bg-[#00BCD4]",
       path: "/department/cybercrime",
-      roles: ['admin', 'cybercrime'],
+      roles: ["admin", "cybercrime"],
     },
-    {
-      title: "المساعد الذكي",
-      subtitle: "0 Tickets",
-      color: "bg-[#9C27B0]",
-      path: "/police-assistant",
-      roles: [],
-    },
-    { 
-      title: "الأخبار", 
-      subtitle: "0 Tickets", 
-      color: "bg-[#FF9800]", 
-      path: "/police-news", 
-      roles: [] 
-    },
-    { 
-      title: "الصلاحيات", 
-      subtitle: "0 Tickets", 
-      color: "bg-[#8BC34A]", 
-      path: "/user-permissions", 
-      roles: ['admin'] 
-    },
+    { title: "المساعد الذكي", subtitle: "0 Tickets", color: "bg-[#9C27B0]", path: "/police-assistant", roles: [] },
+    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/police-news", roles: [] },
+    { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/user-permissions", roles: ["admin"] },
   ];
 
   const newsItems = [
@@ -118,8 +125,8 @@ const Dashboard = () => {
         <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
         <div className="grid grid-cols-2 gap-2 mb-5">
           {tickets.map((ticket, index) => {
-            // تحقق من صلاحية الأدوار
-            if (ticket.roles.length > 0 && !hasAccess(ticket.roles as any[])) return null;
+            // ✅ السماح للإدمن برؤية جميع الأقسام
+            if (ticket.roles.length > 0 && user?.role !== "admin" && !hasAccess(ticket.roles as any[])) return null;
 
             return (
               <div
