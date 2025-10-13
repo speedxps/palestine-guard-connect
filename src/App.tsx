@@ -1,114 +1,554 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/components/LanguageProvider";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import RoleBasedRoute from "@/components/RoleBasedRoute";
+import PagePermissionRoute from "@/components/PagePermissionRoute";
+import EmergencyNotificationSystem from "@/components/EmergencyNotificationSystem";
+
+// Pages
 import Login from "@/pages/Login";
+import SignUp from "@/pages/SignUp";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
-import AccessDenied from "@/pages/AccessDenied";
-import NotFound from "@/pages/NotFound";
-
-// الأقسام
-import TrafficDepartment from "@/pages/TrafficDepartment";
-import SpecialPoliceDepartment from "@/pages/SpecialPoliceDepartment";
-import JudicialPoliceDepartment from "@/pages/JudicialPoliceDepartment";
-import AdminDepartment from "@/pages/AdminDepartment";
-import CIDDepartment from "@/pages/CIDDepartment";
-import CybercrimeDepartment from "@/pages/CybercrimeDepartment";
-
-// الصفحات الإضافية
-import NotificationManagement from "@/pages/NotificationManagement";
-import UserPermissions from "@/pages/UserPermissions";
+import About from "@/pages/About";
 import PoliceNews from "@/pages/PoliceNews";
-import PoliceAssistant from "@/pages/PoliceAssistant";
-import CybercrimeReports from "@/pages/CybercrimeReports";
-import CybercrimeAdvancedDashboard from "@/pages/CybercrimeAdvancedDashboard";
-import DepartmentUsersManagement from "@/pages/DepartmentUsersManagement";
-import Reports from "@/pages/Reports";
-import ReportsManagement from "@/pages/ReportsManagement";
-import PatrolsManagement from "@/pages/PatrolsManagement";
+import ActivityDetail from "@/pages/ActivityDetail";
+import DailyStats from "@/pages/DailyStats";
+import UrgentTasks from "@/pages/UrgentTasks";
+import SchedulingPage from "@/pages/SchedulingPage";
+import AdminPanel from "@/pages/AdminPanel";
 import Violations from "@/pages/Violations";
 import ViolationsAdmin from "@/pages/ViolationsAdmin";
-import WantedPersonsTree from "@/pages/WantedPersonsTree";
-import Incidents from "@/pages/Incidents";
-import IncidentsManagement from "@/pages/IncidentsManagement";
-import DailyStats from "@/pages/DailyStats";
-import SmartCivilRegistry from "@/pages/SmartCivilRegistry";
-import FaceRecognition from "@/pages/FaceRecognition";
-import AdvancedFaceRecognition from "@/pages/AdvancedFaceRecognition";
-import Tasks from "@/pages/Tasks";
-import UrgentTasks from "@/pages/UrgentTasks";
 import VehicleInquiry from "@/pages/VehicleInquiry";
 import VehicleManagement from "@/pages/VehicleManagement";
-import SchedulingPage from "@/pages/SchedulingPage";
-import JudicialCaseManagement from "@/pages/JudicialCaseManagement";
-import JudicialTracking from "@/pages/JudicialTracking";
-import JudicialCommunications from "@/pages/JudicialCommunications";
-import ForensicLabs from "@/pages/ForensicLabs";
-import Feed from "@/pages/Feed";
-import About from "@/pages/About";
-import AdminPanel from "@/pages/AdminPanel";
-import Backup from "@/pages/Backup";
-import Chat from "@/pages/Chat";
-import CitizenRecords from "@/pages/CitizenRecords";
+import PatrolsManagement from "@/pages/PatrolsManagement";
+import Incidents from "@/pages/Incidents";
+import IncidentsManagement from "@/pages/IncidentsManagement";
+import NewIncident from "@/pages/NewIncident";
+import WantedPersonsTree from "@/pages/WantedPersonsTree";
 import CivilRegistry from "@/pages/CivilRegistry";
+import SmartCivilRegistry from "@/pages/SmartCivilRegistry";
+import AdvancedFaceRecognition from "@/pages/AdvancedFaceRecognition";
+import FaceRecognition from "@/pages/FaceRecognition";
+import Tasks from "@/pages/Tasks";
+import Patrol from "@/pages/Patrol";
+import Feed from "@/pages/Feed";
+import Chat from "@/pages/Chat";
+import Cybercrime from "@/pages/Cybercrime";
+import CybercrimeReports from "@/pages/CybercrimeReports";
+import Reports from "@/pages/Reports";
+import ReportsManagement from "@/pages/ReportsManagement";
+import OverviewPage from "@/pages/OverviewPage";
+import DepartmentUserManagement from "@/pages/DepartmentUserManagement";
+import DepartmentUsersManagement from "@/pages/DepartmentUsersManagement";
+import Backup from "@/pages/Backup";
+import CitizenRecords from "@/pages/CitizenRecords";
+import CybercrimeAdvanced from "@/pages/CybercrimeAdvanced";
+import CybercrimeAdvancedDashboard from "@/pages/CybercrimeAdvancedDashboard";
+import AdminDepartment from "@/pages/AdminDepartment";
+import TrafficDepartment from "@/pages/TrafficDepartment";
+import CIDDepartment from "@/pages/CIDDepartment";
+import SpecialPoliceDepartment from "@/pages/SpecialPoliceDepartment";
+import CybercrimeDepartment from "@/pages/CybercrimeDepartment";
+import UserDashboard from "@/pages/UserDashboard";
+import PoliceAssistant from "@/pages/PoliceAssistant";
+import ForensicLabs from "@/pages/ForensicLabs";
+import JudicialCaseManagement from "@/pages/JudicialCaseManagement";
+import JudicialCommunications from "@/pages/JudicialCommunications";
+import JudicialTracking from "@/pages/JudicialTracking";
+import JudicialPoliceDepartment from "@/pages/JudicialPoliceDepartment";
+import JudicialPoliceUsers from "@/pages/JudicialPoliceUsers";
+import NotificationManagement from "@/pages/NotificationManagement";
+import UserPermissions from "@/pages/UserPermissions";
+import NotFound from "@/pages/NotFound";
 
-function App() {
+const queryClient = new QueryClient();
+
+// Department user management wrappers
+const DepartmentUserManagementTraffic = () => <DepartmentUserManagement department="traffic" />;
+const DepartmentUserManagementCID = () => <DepartmentUserManagement department="cid" />;
+const DepartmentUserManagementSpecial = () => <DepartmentUserManagement department="special" />;
+const DepartmentUserManagementCybercrime = () => <DepartmentUserManagement department="cybercrime" />;
+
+const App = () => {
+  React.useEffect(() => {
+    document.documentElement.classList.remove("dark");
+    document.documentElement.dir = "rtl";
+  }, []);
+
   return (
-    <Router>
-      <Routes>
-        {/* صفحات عامة */}
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/access-denied" element={<AccessDenied />} />
-        <Route path="*" element={<NotFound />} />
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/access-denied" element={<Navigate to="/login" replace />} />
 
-        {/* الأقسام */}
-        <Route path="/department/traffic" element={<TrafficDepartment />} />
-        <Route path="/department/special-police" element={<SpecialPoliceDepartment />} />
-        <Route path="/department/judicial" element={<JudicialPoliceDepartment />} />
-        <Route path="/department/admin" element={<AdminDepartment />} />
-        <Route path="/department/cid" element={<CIDDepartment />} />
-        <Route path="/department/cybercrime" element={<CybercrimeDepartment />} />
+                {/* Judicial Police */}
+                <Route
+                  path="/department/judicial-police/users"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
+                        <JudicialPoliceUsers />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
 
-        {/* الصفحات الخاصة */}
-        <Route path="/notifications" element={<NotificationManagement />} />
-        <Route path="/permissions" element={<UserPermissions />} />
-        <Route path="/news" element={<PoliceNews />} />
-        <Route path="/assistant" element={<PoliceAssistant />} />
-        <Route path="/cybercrime/reports" element={<CybercrimeReports />} />
-        <Route path="/cybercrime/dashboard" element={<CybercrimeAdvancedDashboard />} />
-        <Route path="/department/users" element={<DepartmentUsersManagement />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/reports/management" element={<ReportsManagement />} />
-        <Route path="/patrols" element={<PatrolsManagement />} />
-        <Route path="/violations" element={<Violations />} />
-        <Route path="/violations/admin" element={<ViolationsAdmin />} />
-        <Route path="/wanted" element={<WantedPersonsTree />} />
-        <Route path="/incidents" element={<Incidents />} />
-        <Route path="/incidents/management" element={<IncidentsManagement />} />
-        <Route path="/daily-stats" element={<DailyStats />} />
-        <Route path="/registry/smart" element={<SmartCivilRegistry />} />
-        <Route path="/face-recognition" element={<FaceRecognition />} />
-        <Route path="/face-recognition/advanced" element={<AdvancedFaceRecognition />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/tasks/urgent" element={<UrgentTasks />} />
-        <Route path="/vehicles/inquiry" element={<VehicleInquiry />} />
-        <Route path="/vehicles/management" element={<VehicleManagement />} />
-        <Route path="/scheduling" element={<SchedulingPage />} />
-        <Route path="/judicial/cases" element={<JudicialCaseManagement />} />
-        <Route path="/judicial/tracking" element={<JudicialTracking />} />
-        <Route path="/judicial/communications" element={<JudicialCommunications />} />
-        <Route path="/labs" element={<ForensicLabs />} />
-        <Route path="/feed" element={<Feed />} />
-        <Route path="/admin/panel" element={<AdminPanel />} />
-        <Route path="/backup" element={<Backup />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/citizen-records" element={<CitizenRecords />} />
-        <Route path="/civil-registry" element={<CivilRegistry />} />
-      </Routes>
-    </Router>
+                {/* Notification & Permissions - Admin */}
+                <Route
+                  path="/notification-management"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <NotificationManagement />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/user-permissions"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <UserPermissions />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Dashboard & Profile */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/about"
+                  element={
+                    <ProtectedRoute>
+                      <About />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/police-news"
+                  element={
+                    <ProtectedRoute>
+                      <PoliceNews />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/activity/:id/:type"
+                  element={
+                    <ProtectedRoute>
+                      <ActivityDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/daily-stats"
+                  element={
+                    <ProtectedRoute>
+                      <DailyStats />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/urgent-tasks"
+                  element={
+                    <ProtectedRoute>
+                      <UrgentTasks />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/scheduling"
+                  element={
+                    <ProtectedRoute>
+                      <SchedulingPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Admin Panel */}
+                <Route
+                  path="/admin-panel"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin"]}>
+                      <AdminPanel />
+                    </RoleBasedRoute>
+                  }
+                />
+
+                {/* Traffic */}
+                <Route
+                  path="/violations"
+                  element={
+                    <ProtectedRoute>
+                      <Violations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/violations-admin"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
+                      <ViolationsAdmin />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/vehicle-inquiry"
+                  element={
+                    <ProtectedRoute>
+                      <VehicleInquiry />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/vehicle-management"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
+                      <VehicleManagement />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/patrols-management"
+                  element={
+                    <ProtectedRoute>
+                      <PatrolsManagement />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* CID */}
+                <Route
+                  path="/incidents"
+                  element={
+                    <ProtectedRoute>
+                      <Incidents />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/incidents-management"
+                  element={
+                    <ProtectedRoute>
+                      <IncidentsManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/new-incident"
+                  element={
+                    <ProtectedRoute>
+                      <NewIncident />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/wanted-persons-tree"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                      <WantedPersonsTree />
+                    </RoleBasedRoute>
+                  }
+                />
+
+                {/* Civil Registry */}
+                <Route
+                  path="/civil-registry"
+                  element={
+                    <ProtectedRoute>
+                      <CivilRegistry />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/smart-civil-registry"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin"]}>
+                      <SmartCivilRegistry />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/advanced-face-recognition"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                      <AdvancedFaceRecognition />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/face-recognition"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                      <FaceRecognition />
+                    </RoleBasedRoute>
+                  }
+                />
+
+                {/* Special Police */}
+                <Route
+                  path="/tasks"
+                  element={
+                    <ProtectedRoute>
+                      <Tasks />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/patrol"
+                  element={
+                    <ProtectedRoute>
+                      <Patrol />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/feed"
+                  element={
+                    <ProtectedRoute>
+                      <Feed />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chat"
+                  element={
+                    <ProtectedRoute>
+                      <Chat />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Cybercrime */}
+                <Route
+                  path="/cybercrime"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                      <Cybercrime />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/cybercrime-reports"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                      <CybercrimeReports />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/reports"
+                  element={
+                    <ProtectedRoute>
+                      <Reports />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/reports-management"
+                  element={
+                    <ProtectedRoute>
+                      <ReportsManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/overview"
+                  element={
+                    <ProtectedRoute>
+                      <OverviewPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Department Users */}
+                <Route
+                  path="/department-users/traffic"
+                  element={
+                    <ProtectedRoute>
+                      <DepartmentUserManagementTraffic />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department-users/cid"
+                  element={
+                    <ProtectedRoute>
+                      <DepartmentUserManagementCID />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department-users/special"
+                  element={
+                    <ProtectedRoute>
+                      <DepartmentUserManagementSpecial />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department-users/cybercrime"
+                  element={
+                    <ProtectedRoute>
+                      <DepartmentUserManagementCybercrime />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Backup / Citizen Records */}
+                <Route
+                  path="/backup"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin"]}>
+                      <Backup />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/citizen-records"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                      <CitizenRecords />
+                    </RoleBasedRoute>
+                  }
+                />
+
+                {/* Advanced Cybercrime */}
+                <Route
+                  path="/cybercrime-advanced"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                      <CybercrimeAdvanced />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/cybercrime-dashboard"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                      <CybercrimeAdvancedDashboard />
+                    </RoleBasedRoute>
+                  }
+                />
+
+                {/* Department Pages */}
+                <Route
+                  path="/department/admin"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin"]}>
+                      <AdminDepartment />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/department/traffic"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
+                      <PagePermissionRoute>
+                        <TrafficDepartment />
+                      </PagePermissionRoute>
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/department/cid"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cid"]}>
+                      <PagePermissionRoute>
+                        <CIDDepartment />
+                      </PagePermissionRoute>
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/forensic-labs"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cid"]}>
+                      <ForensicLabs />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/department/special"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "special_police"]}>
+                      <PagePermissionRoute>
+                        <SpecialPoliceDepartment />
+                      </PagePermissionRoute>
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/department/cybercrime"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                      <PagePermissionRoute>
+                        <CybercrimeDepartment />
+                      </PagePermissionRoute>
+                    </RoleBasedRoute>
+                  }
+                />
+
+                {/* User Dashboard & Assistant */}
+                <Route
+                  path="/user-dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <UserDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/police-assistant"
+                  element={
+                    <ProtectedRoute>
+                      <PoliceAssistant />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Fallback */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <EmergencyNotificationSystem />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
   );
-}
+};
 
 export default App;
