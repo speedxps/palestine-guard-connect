@@ -22,7 +22,7 @@ const Login = () => {
   const [animateHeader, setAnimateHeader] = useState(false);
 
   const testUsers = [
-    { email: "admin@test.com", password: "admin123", role: "مدير النظام" },
+    { email: "noor-khallaf@hotmail.com", password: "123123", role: "مدير النظام" },
     { email: "traffic@test.com", password: "traffic123", role: "شرطة المرور" },
     { email: "cid@test.com", password: "cid123", role: "المباحث الجنائية" },
     { email: "special@test.com", password: "special123", role: "الشرطة الخاصة" },
