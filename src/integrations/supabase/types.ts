@@ -1558,6 +1558,27 @@ export type Database = {
           },
         ]
       }
+      test_users_setup: {
+        Row: {
+          created_at: string | null
+          email: string
+          password_hint: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          password_hint?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          password_hint?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       traffic_records: {
         Row: {
           citizen_name: string
@@ -1871,6 +1892,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_test_user_role: {
+        Args: {
+          user_email: string
+          user_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
