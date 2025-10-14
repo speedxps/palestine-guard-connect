@@ -62,7 +62,7 @@ const Dashboard = () => {
       roles: ["admin", "cybercrime"],
     },
     { title: "المساعد الذكي", subtitle: "0 Tickets", color: "bg-[#9C27B0]", path: "/police-assistant", roles: [] },
-    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/police-news", roles: [] },
+    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/news", roles: [] },
     { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/user-permissions", roles: ["admin"] },
   ];
 
@@ -98,9 +98,6 @@ const Dashboard = () => {
     <div className="min-h-screen bg-white flex flex-col items-center" style={{ direction: "ltr" }}>
       {/* Header */}
       <header className="bg-white w-full p-4 flex items-center justify-between border-b">
-        <button onClick={() => setSidebarOpen(true)}>
-          <Menu className="w-7 h-7 text-[#2B9BF4]" />
-        </button>
         <div className="flex items-center gap-5">
           <button onClick={() => window.location.reload()}>
             <RotateCw className="w-7 h-7 text-[#2B9BF4]" />
@@ -110,11 +107,14 @@ const Dashboard = () => {
             <Phone className="w-7 h-7 text-[#2B9BF4]" />
           </button>
         </div>
+        <button onClick={() => setSidebarOpen(true)}>
+          <Menu className="w-7 h-7 text-[#2B9BF4]" />
+        </button>
       </header>
 
       {/* Welcome */}
       <div className="px-6 pt-2 pb-2 flex items-center justify-between w-full">
-        <h1 className="text-xl font-medium text-gray-800">Welcome {user?.full_name || "Mr. Noor Arjan"}</h1>
+        <h1 className="text-xl font-medium text-gray-800">مرحباً بك، {user?.full_name || "الضابط"}</h1>
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-white shadow relative -top-1">
           <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
         </div>
@@ -165,30 +165,13 @@ const Dashboard = () => {
         {/* News Drawer */}
         <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
           <DrawerTrigger asChild>
-            <button className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors">
-              <h2 className="text-2xl font-bold">News</h2>
+            <button 
+              className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors"
+              onClick={() => navigate('/news')}
+            >
+              <h2 className="text-2xl font-bold">الأخبار</h2>
             </button>
           </DrawerTrigger>
-
-          <DrawerContent className="max-h-[80vh] rounded-t-3xl" style={{ direction: "rtl" }}>
-            <DrawerHeader className="border-b">
-              <DrawerTitle className="text-2xl font-bold text-[#2B9BF4]">الأخبار</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-6 overflow-y-auto">
-              <div className="space-y-4">
-                {newsItems.map((item, index) => (
-                  <div
-                    key={index}
-                    className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <h3 className="font-bold text-lg text-gray-800 mb-2">{item.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3 leading-relaxed">{item.description}</p>
-                    <div className="text-xs text-gray-500">{item.time}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </DrawerContent>
         </Drawer>
       </div>
 

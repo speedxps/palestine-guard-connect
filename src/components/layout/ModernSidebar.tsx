@@ -113,7 +113,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-80 bg-white p-0" style={{ direction: 'rtl' }}>
+        <SheetContent side="right" className="w-80 bg-white p-0 overflow-y-auto" style={{ direction: 'rtl' }}>
           {/* Header with Blue Theme */}
           <SheetHeader className="bg-gradient-to-r from-[#2B9BF4] to-blue-500 p-6 text-center border-b-4 border-[#7CB342]">
             <div className="flex justify-center mb-3">
@@ -201,11 +201,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
               <Button
                 variant="ghost"
                 className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                  location.pathname === '/police-news' 
+                  location.pathname === '/news' || location.pathname.startsWith('/news/')
                     ? 'bg-[#2B9BF4] text-white font-bold shadow-lg' 
                     : 'text-gray-700 hover:bg-blue-50'
                 }`}
-                onClick={() => handleNavigation('/police-news')}
+                onClick={() => handleNavigation('/news')}
               >
                 <Newspaper className="h-6 w-6 shrink-0" />
                 <span className="font-arabic text-lg">الأخبار</span>
@@ -264,6 +264,19 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   >
                     <Bell className="h-6 w-6 shrink-0" />
                     <span className="font-arabic text-lg">إدارة الإشعارات</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/news-management' 
+                        ? 'bg-teal-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-teal-50'
+                    }`}
+                    onClick={() => handleNavigation('/news-management')}
+                  >
+                    <Newspaper className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">إدارة الأخبار</span>
                   </Button>
                 </>
               )}

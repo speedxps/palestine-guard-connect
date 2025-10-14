@@ -18,7 +18,8 @@ import SignUp from "@/pages/SignUp";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import About from "@/pages/About";
-import PoliceNews from "@/pages/PoliceNews";
+import News from "@/pages/News";
+import NewsManagementPage from "@/pages/NewsManagementPage";
 import ActivityDetail from "@/pages/ActivityDetail";
 import DailyStats from "@/pages/DailyStats";
 import UrgentTasks from "@/pages/UrgentTasks";
@@ -157,11 +158,27 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/police-news"
+                  path="/news"
                   element={
                     <ProtectedRoute>
-                      <PoliceNews />
+                      <News />
                     </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/news/:id"
+                  element={
+                    <ProtectedRoute>
+                      <News />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/news-management"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin"]}>
+                      <NewsManagementPage />
+                    </RoleBasedRoute>
                   }
                 />
                 <Route
