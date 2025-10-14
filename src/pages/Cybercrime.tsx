@@ -1,113 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Shield, AlertTriangle, Computer, CreditCard, Mail, Phone, Globe, ArrowLeft, Users } from 'lucide-react';
+import { Shield, AlertTriangle, Computer, CreditCard, Mail, Phone, ArrowLeft, Users } from 'lucide-react';
 
 const Cybercrime = () => {
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    checkCybercrimeAccess();
-  }, [user]);
-
-  const checkCybercrimeAccess = async () => {
-    if (!user) {
-      setHasAccess(false);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      // Check if user is admin first
-      if (user.role === 'admin') {
-        setHasAccess(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // Get user profile first
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profile) {
-        throw new Error('User profile not found');
-      }
-
-      // Check cybercrime access directly from the table using profile ID
-      const { data, error } = await supabase
-        .from('cybercrime_access')
-        .select('is_active')
-        .eq('user_id', profile.id)
-        .eq('is_active', true)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      // User has access if they have an active cybercrime_access record
-      setHasAccess(!!data);
-    } catch (error) {
-      console.error('Error checking cybercrime access:', error);
-      setHasAccess(false);
-      toast({
-        title: "خطأ في التحقق من الصلاحيات",
-        description: "لا يمكن التحقق من صلاحيات الوصول",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="mobile-container">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">جاري التحقق من الصلاحيات...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="mobile-container">
-        <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 flex flex-col justify-center px-6">
-          <Card className="p-8 text-center">
-            <Shield className="h-16 w-16 text-destructive mx-auto mb-4" />
-            <h2 className="text-xl font-bold font-arabic mb-4">الوصول محظور</h2>
-            <p className="text-muted-foreground mb-6">
-              هذه الصفحة مخصصة للضباط المعتمدين في قسم الجرائم الإلكترونية فقط
-            </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              Access Restricted to Authorized Cyber Crime Officers Only
-            </p>
-            <Button onClick={() => navigate('/')} variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              العودة للصفحة الرئيسية
-            </Button>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="mobile-container">

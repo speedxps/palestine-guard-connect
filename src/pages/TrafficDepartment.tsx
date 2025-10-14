@@ -50,6 +50,14 @@ const TrafficDepartment = () => {
       icon: Activity,
       path: '/patrols-management',
       color: 'from-teal-500 to-teal-600'
+    },
+    {
+      title: 'مستخدمي القسم',
+      description: 'إدارة المستخدمين والصلاحيات',
+      icon: Users,
+      path: '/department/traffic/users',
+      color: 'from-indigo-500 to-indigo-600',
+      adminOnly: true
     }
   ];
 
