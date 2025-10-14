@@ -43,14 +43,6 @@ const SpecialPoliceDepartment = () => {
       icon: MessageCircle,
       path: '/chat',
       color: 'from-teal-500 to-teal-600'
-    },
-    {
-      title: 'مستخدمي القسم',
-      description: 'إدارة المستخدمين والصلاحيات',
-      icon: Users,
-      path: '/department/special/users',
-      color: 'from-indigo-500 to-indigo-600',
-      adminOnly: true
     }
   ];
 

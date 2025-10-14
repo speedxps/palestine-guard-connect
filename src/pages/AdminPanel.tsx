@@ -9,8 +9,6 @@ import UserManagementProfessional from '@/components/UserManagementProfessional'
 import { PasswordResetManagement } from '@/components/PasswordResetManagement';
 import { BackButton } from '@/components/BackButton';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Shield, 
@@ -32,9 +30,7 @@ import {
 const AdminPanel = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
-  const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
 
   // أقسام الإدارة مقسمة بحسب الوظائف
   const adminSections = [
@@ -161,53 +157,10 @@ const AdminPanel = () => {
     </div>
   );
 
-  const handleCreateTestUsers = async () => {
-    setIsCreatingTestUsers(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-test-users', {
-        method: 'POST'
-      });
-      
-      if (error) throw error;
-      
-      if (data?.success) {
-        toast({
-          title: "تم إنشاء المستخدمين التجريبيين",
-          description: `تم إنشاء ${data.summary.created.length} مستخدمين بنجاح`,
-        });
-      } else {
-        throw new Error('Failed to create users');
-      }
-    } catch (error: any) {
-      toast({
-        title: "خطأ في إنشاء المستخدمين",
-        description: error.message || "حدث خطأ أثناء إنشاء المستخدمين التجريبيين",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingTestUsers(false);
-    }
-  };
-
   const renderSystemSettings = () => (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4 font-arabic">إعدادات النظام</h3>
       <div className="space-y-4">
-        <div className="p-4 border rounded-lg bg-blue-50/50">
-          <h4 className="font-semibold font-arabic">إنشاء المستخدمين التجريبيين</h4>
-          <p className="text-sm text-muted-foreground font-arabic mb-3">
-            إنشاء جميع حسابات المستخدمين التجريبيين تلقائياً (admin, traffic, cid, special, cyber, judicial)
-          </p>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleCreateTestUsers}
-            disabled={isCreatingTestUsers}
-          >
-            <Users className="h-4 w-4 mr-2" />
-            {isCreatingTestUsers ? "جاري الإنشاء..." : "إنشاء المستخدمين التجريبيين"}
-          </Button>
-        </div>
         <div className="p-4 border rounded-lg">
           <h4 className="font-semibold font-arabic">النسخ الاحتياطي</h4>
           <p className="text-sm text-muted-foreground font-arabic mb-3">إنشاء نسخة احتياطية من البيانات</p>

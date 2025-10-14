@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, AlertTriangle, Plus, Users, Eye, Settings, Microscope } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Plus, Users, Eye, Settings } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const CIDDepartment = () => {
@@ -43,21 +43,6 @@ const CIDDepartment = () => {
       icon: Eye,
       path: '/face-recognition',
       color: 'from-purple-500 to-purple-600'
-    },
-    {
-      title: 'المختبرات والأدلة الجنائية',
-      description: 'إدارة الأدلة الجنائية وتقارير المختبرات',
-      icon: Microscope,
-      path: '/forensic-labs',
-      color: 'from-cyan-500 to-cyan-600'
-    },
-    {
-      title: 'مستخدمي القسم',
-      description: 'إدارة المستخدمين والصلاحيات',
-      icon: Users,
-      path: '/department/cid/users',
-      color: 'from-indigo-500 to-indigo-600',
-      adminOnly: true
     }
   ];
 

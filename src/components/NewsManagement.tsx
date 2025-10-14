@@ -45,7 +45,7 @@ export const NewsManagement: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('internal_news')
+        .from('news')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -70,11 +70,8 @@ export const NewsManagement: React.FC = () => {
     try {
       if (editingNews) {
         const { error } = await supabase
-          .from('internal_news')
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString()
-          })
+          .from('news')
+          .update(formData)
           .eq('id', editingNews.id);
 
         if (error) throw error;
@@ -85,11 +82,10 @@ export const NewsManagement: React.FC = () => {
         });
       } else {
         const { error } = await supabase
-          .from('internal_news')
+          .from('news')
           .insert({
             ...formData,
-            author_id: user.id,
-            author_name: user.full_name || user.email || 'مجهول'
+            author_id: user.id
           });
 
         if (error) throw error;

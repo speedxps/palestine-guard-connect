@@ -110,10 +110,7 @@ class AudioQueue {
 
     try {
       const wavData = this.createWavFromPCM(audioData);
-      // Create a copy of the buffer as ArrayBuffer to avoid SharedArrayBuffer type issue
-      const buffer = new ArrayBuffer(wavData.buffer.byteLength);
-      new Uint8Array(buffer).set(new Uint8Array(wavData.buffer));
-      const audioBuffer = await this.audioContext.decodeAudioData(buffer);
+      const audioBuffer = await this.audioContext.decodeAudioData(wavData.buffer);
       
       const source = this.audioContext.createBufferSource();
       source.buffer = audioBuffer;

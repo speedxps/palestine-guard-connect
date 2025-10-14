@@ -1,217 +1,371 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Users, Eye, EyeOff } from "lucide-react";
-import policeLogo from "@/assets/police-logo.png";
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { Eye, EyeOff, Mail, Lock, Save, Camera, ChevronDown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import genericPoliceLogo from '@/assets/generic-police-logo.png';
+import ForgotPasswordModal from '@/components/ForgotPasswordModal';
+import FaceLoginButton from '@/components/FaceLoginButton';
 
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👁️ حالة إظهار كلمة المرور
-  const [rememberMe, setRememberMe] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [testUsersOpen, setTestUsersOpen] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [selectedDemo, setSelectedDemo] = useState<string>("");
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [animateHeader, setAnimateHeader] = useState(false);
 
-  const testUsers = [
-    { email: "admin@test.com", password: "admin123", role: "مدير النظام" },
-    { email: "traffic@test.com", password: "traffic123", role: "شرطة المرور" },
-    { email: "cid@test.com", password: "cid123", role: "المباحث الجنائية" },
-    { email: "special@test.com", password: "special123", role: "الشرطة الخاصة" },
-    { email: "cyber@test.com", password: "cyber123", role: "الجرائم الإلكترونية" },
-    { email: "judicial@test.com", password: "judicial123", role: "الشرطة القضائية" },
-  ];
-
-  const handleTestUserLogin = async (email: string, password: string) => {
-    setUsername(email);
-    setPassword(password);
-    setTestUsersOpen(false);
-
-    setTimeout(async () => {
-      const success = await login(email, password);
-      if (success) {
-        toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
-        setTimeout(() => window.location.replace("/dashboard"), 600);
-      }
-    }, 100);
-  };
-
-  useEffect(() => {
-    const savedCred = localStorage.getItem("savedCredentials");
-    if (savedCred) {
-      try {
-        const { email, rememberMe: saved } = JSON.parse(savedCred);
-        if (saved) {
-          setUsername(email);
-          setRememberMe(true);
+  // Load saved credentials and settings on component mount
+  React.useEffect(() => {
+    const loadSavedData = () => {
+      // Load saved credentials if remember me was enabled
+      const savedCredentials = localStorage.getItem('savedCredentials');
+      if (savedCredentials) {
+        try {
+          const { email: savedEmail, rememberMe: savedRememberMe } = JSON.parse(savedCredentials);
+          if (savedRememberMe) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+          }
+        } catch (error) {
+          console.error('Error loading saved credentials:', error);
         }
-      } catch (error) {
-        console.error("Error loading credentials:", error);
       }
-    }
-    setTimeout(() => setAnimateHeader(true), 100);
+
+    };
+
+    loadSavedData();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const saveCredentials = (email: string, password: string, rememberMe: boolean) => {
+    if (rememberMe) {
+      const credentialsData = {
+        email,
+        rememberMe: true,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('savedCredentials', JSON.stringify(credentialsData));
+    } else {
+      localStorage.removeItem('savedCredentials');
+    }
+  };
 
+  const handleFaceRecognitionLogin = async () => {
     try {
-      const success = await login(username, password);
-      if (success) {
-        if (rememberMe) {
-          localStorage.setItem(
-            "savedCredentials",
-            JSON.stringify({ email: username, rememberMe: true, timestamp: Date.now() }),
-          );
-        } else {
-          localStorage.removeItem("savedCredentials");
-        }
+      setIsLoading(true);
+      toast({
+        title: "🔍 بدء التعرف على الوجه",
+        description: "يرجى توجيه وجهك نحو الكاميرا...",
+      });
 
-        toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
-        setTimeout(() => window.location.replace("/dashboard"), 600);
-      } else {
+      // محاكاة التعرف على الوجه - في التطبيق الحقيقي سيتم استخدام AI
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      
+      // بعد 3 ثوان، محاكاة نجح التعرف
+      setTimeout(async () => {
+        stream.getTracks().forEach(track => track.stop());
+        
+        // محاكاة تسجيل دخول ناجح بحساب تجريبي
+        await performLogin('noor-khallaf@hotmail.com', '123123');
+        
         toast({
-          title: "فشل تسجيل الدخول",
-          description: "تحقق من اسم المستخدم وكلمة المرور",
-          variant: "destructive",
+          title: "✅ تم التعرف بنجاح!",
+          description: "مرحباً نور، جاري تسجيل الدخول...",
         });
-        setIsLoading(false);
-      }
+      }, 3000);
+      
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء تسجيل الدخول",
+        title: "❌ فشل التعرف على الوجه",
+        description: "تأكد من السماح بالوصول للكاميرا",
         variant: "destructive",
       });
       setIsLoading(false);
     }
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      console.log('Attempting login with:', email);
+      await performLogin(email, password);
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "❌ خطأ في تسجيل الدخول",
+        description: "حدث خطأ، حاول مرة أخرى",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const performLogin = async (loginEmail: string, loginPassword: string) => {
+    const success = await login(loginEmail, loginPassword);
+    console.log('Login result:', success);
+    
+    if (success) {
+      // Save credentials if remember me is checked
+      saveCredentials(loginEmail, loginPassword, rememberMe);
+
+      toast({
+        title: "✅ تم تسجيل الدخول بنجاح!",
+        description: "جاري التوجه إلى الصفحة الرئيسية...",
+      });
+      
+      // Immediate redirect - don't wait
+      setTimeout(() => {
+        window.location.replace('/dashboard');
+      }, 1000);
+    } else {
+      toast({
+        title: "❌ فشل تسجيل الدخول", 
+        description: "تحقق من البريد الإلكتروني وكلمة المرور",
+        variant: "destructive",
+      });
+    }
+  };
+
+
+  const fillDemoAccount = (role: 'admin' | 'officer' | 'user') => {
+    // حسابات تجريبية حقيقية موجودة في قاعدة البيانات
+    switch (role) {
+      case 'admin':
+        setEmail('noor-khallaf@hotmail.com');
+        setPassword('123123');
+        break;
+      case 'officer':
+        setEmail('ahmad@police.com');
+        setPassword('123123');
+        break;
+      case 'user':
+        setEmail('user@police.ps');
+        setPassword('123123');
+        break;
+    }
+  };
+
+  // حسابات تجريبية مع أقسامهم ومدرائهم
+  const demoAccounts = [
+    // مدراء النظام
+    { name: 'نور خلاف', email: 'noor-khallaf@hotmail.com', password: '123123', role: 'admin', department: 'الإدارة العامة' },
+    { name: 'عمر علي', email: 'omar@police.com', password: '123123', role: 'admin', department: 'الإدارة العامة' },
+    
+    // مديرو الأقسام
+    { name: 'ياسر المرور', email: 'traffic-manager@police.com', password: '123123', role: 'traffic_manager', department: 'مدير شرطة المرور' },
+    { name: 'خالد المباحث', email: 'cid-manager@police.com', password: '123123', role: 'cid_manager', department: 'مدير المباحث الجنائية' },
+    { name: 'سمير الخاصة', email: 'special-manager@police.com', password: '123123', role: 'special_manager', department: 'مدير الشرطة الخاصة' },
+    { name: 'علي السيبراني', email: 'cyber-manager@police.com', password: '123123', role: 'cybercrime_manager', department: 'مدير الجرائم الإلكترونية' },
+    
+    // موظفو الأقسام
+    { name: 'أحمد محمد', email: 'ahmad@police.com', password: '123123', role: 'traffic_police', department: 'شرطة المرور' },
+    { name: 'سارة أحمد', email: 'sara@police.com', password: '123123', role: 'cid', department: 'المباحث الجنائية' },
+    { name: 'محمد علي', email: '192059@ppu.edu.ps', password: '123123', role: 'special_police', department: 'الشرطة الخاصة' },
+    { name: 'فاطمة خالد', email: 'user@police.ps', password: '123123', role: 'cybercrime', department: 'الجرائم الإلكترونية' }
+  ];
+
   return (
-    <div className="w-screen h-screen bg-white flex flex-col justify-start items-center overflow-hidden relative">
-      {/* Blue Header */}
-      <div className="w-full flex justify-end">
-        <div
-          className={`bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 mt-4 shadow-sm transform transition-all duration-500 ease-in-out
-            ${animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"}`}
-          style={{
-            width: "60%",
-            maxWidth: "350px",
-            borderTopRightRadius: "120px",
-            borderBottomRightRadius: "120px",
-            boxShadow: "2px 2px 8px rgba(0,0,0,0.15)",
-          }}
-        >
-          <img src={policeLogo} alt="Police Logo" className="w-14 h-14 object-contain" />
-          <p className="italic text-white text-lg font-light">Police Ops</p>
+    <div className="min-h-screen relative overflow-hidden login-page">
+      {/* Bright Professional Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 z-0">
+        {/* Professional Geometric Elements */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute top-1/4 right-16 w-24 h-24 bg-indigo-200/15 rounded-lg rotate-45 animate-bounce" style={{ animationDelay: '1s', animationDuration: '3s' }}></div>
+          <div className="absolute bottom-1/4 left-8 w-40 h-40 bg-blue-100/20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 right-12 w-20 h-20 bg-indigo-300/25 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+        
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="grid grid-cols-6 gap-4 h-full p-4">
+            {Array.from({ length: 24 }, (_, i) => (
+              <div key={i} className="border border-blue-300/30 rounded-lg"></div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* الشعار الكبير */}
-      <div className="absolute top-[100px] flex justify-center w-full">
-        <img src={policeLogo} alt="Police Logo Floating" className="w-52 h-52 object-contain" />
-      </div>
+      <div className="relative z-10 min-h-screen flex flex-col justify-center px-4 sm:px-6">
+        {/* Header Section - Mobile Responsive */}
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in relative z-20">
+          <div className="relative mb-6 sm:mb-8">
+            <div className="absolute inset-0 bg-blue-200/30 rounded-full blur-2xl transform scale-150"></div>
+            <div className="relative mx-auto w-24 h-24 sm:w-32 sm:h-32 bg-white/90 backdrop-blur-sm rounded-full p-3 sm:p-4 shadow-2xl border border-blue-200/30">
+              <img 
+                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
+                alt="Palestinian Police Department Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold font-arabic text-gray-800 mb-2 drop-shadow-sm relative z-30">
+            الشرطة الفلسطينية
+          </h1>
+          <p className="text-gray-600 font-inter text-xs sm:text-sm relative z-30">Palestinian Police Department</p>
+        </div>
 
-      {/* المحتوى */}
-      <div className="flex flex-col items-center justify-center w-full px-6 mt-[100px] flex-grow">
-        <h2 className="text-[#2B9BF4] text-2xl mb-1 font-semibold" style={{ direction: "rtl" }}>
-          الشرطة الفلسطينية
-        </h2>
-        <h1 className="text-[#2B9BF4] text-5xl font-extrabold italic mb-1 leading-tight">PoliceOps</h1>
-        <p className="text-[#2B9BF4] text-base italic font-semibold mb-3">Palestinian Police Operations Center</p>
+        {/* Login Form - Mobile Responsive */}
+        <div className="w-full max-w-sm mx-auto relative z-20">
+          <div className="bg-white/98 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-blue-200/30 p-6 sm:p-8 animate-scale-in">
+            <div className="text-center mb-6 sm:mb-8 relative z-30">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">تسجيل الدخول</h2>
+              <p className="text-gray-600 text-xs sm:text-sm">أدخل بياناتك للوصول إلى النظام</p>
+            </div>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-xs sm:max-w-sm space-y-4">
-          {/* اسم المستخدم */}
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4 pr-12"
-              required
-            />
-            <Sheet open={testUsersOpen} onOpenChange={setTestUsersOpen}>
-              <SheetTrigger asChild>
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
+              {/* Email Input */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
+                </div>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-12 h-12 sm:h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-sm sm:text-base rounded-xl sm:rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
+                  placeholder="البريد الإلكتروني"
+                  required
+                />
+              </div>
+
+              {/* Password Input */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors duration-300" />
+                </div>
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-12 pr-14 h-12 sm:h-14 bg-white border-2 border-blue-500 focus:border-blue-600 text-sm sm:text-base rounded-xl sm:rounded-2xl transition-all duration-300 focus:shadow-lg text-gray-900"
+                  placeholder="كلمة المرور"
+                  required
+                />
                 <button
                   type="button"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-primary transition-colors duration-300"
                 >
-                  <Users className="w-5 h-5 text-[#2B9BF4]" />
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80" style={{ direction: "rtl" }}>
-                <SheetHeader>
-                  <SheetTitle className="text-[#2B9BF4] text-xl">المستخدمون التجريبيون</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6 space-y-3">
-                  {testUsers.map((user, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => handleTestUserLogin(user.email, user.password)}
-                      className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-right transition-colors border border-gray-200"
-                    >
-                      <div className="font-semibold text-gray-800">{user.role}</div>
-                      <div className="text-sm text-gray-600 mt-1">{user.email}</div>
-                    </button>
-                  ))}
+              </div>
+
+              {/* Login Options */}
+              <div className="space-y-4">
+                {/* Remember Me */}
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <Checkbox 
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label 
+                    htmlFor="rememberMe" 
+                    className="text-sm text-gray-600 cursor-pointer font-arabic flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    حفظ تسجيل الدخول
+                  </Label>
                 </div>
-              </SheetContent>
-            </Sheet>
+
+                {/* Demo Accounts Dropdown */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-gray-700 font-arabic">
+                    الحسابات التجريبية
+                  </Label>
+                  <Select value={selectedDemo} onValueChange={(value) => {
+                    setSelectedDemo(value);
+                    const account = demoAccounts.find(acc => acc.email === value);
+                    if (account) {
+                      setEmail(account.email);
+                      setPassword(account.password);
+                    }
+                  }}>
+                    <SelectTrigger className="w-full h-12 bg-white/95 backdrop-blur-sm border-2 border-blue-500 hover:border-blue-600 rounded-xl text-gray-900 text-sm font-medium shadow-sm transition-all duration-200">
+                      <SelectValue placeholder="اختر حساب تجريبي" className="text-gray-500" />
+                    </SelectTrigger>
+                    <SelectContent className="w-full max-w-sm">
+                      {demoAccounts.map((account) => (
+                        <SelectItem key={account.email} value={account.email}>
+                          <div className="flex flex-col gap-1 py-1 w-full">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-900 dark:text-white">{account.name}</span>
+                              <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full">
+                                {account.role === 'admin' ? 'مدير' : 
+                                 account.role.includes('manager') ? 'مدير قسم' : 'موظف'}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-arabic">{account.department}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Face Recognition Login */}
+                <FaceLoginButton 
+                  onSuccess={() => {
+                    toast({
+                      title: "✅ تسجيل دخول ناجح",
+                      description: "تم تسجيل الدخول بنجاح باستخدام التعرف على الوجه",
+                    });
+                    navigate('/dashboard');
+                  }}
+                />
+              </div>
+
+              {/* Login Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 sm:h-14 bg-gradient-to-r from-primary to-primary-light hover:from-primary-light hover:to-primary text-white text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 mt-6 sm:mt-8"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    جاري تسجيل الدخول...
+                  </div>
+                ) : 'تسجيل الدخول'}
+              </Button>
+
+              {/* Forgot Password */}
+              <div className="text-center pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium text-sm"
+                >
+                  نسيت كلمة المرور؟
+                </button>
+              </div>
+            </form>
           </div>
 
-          {/* كلمة المرور مع زر الإظهار */}
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 bg-gray-100 border-0 rounded-xl text-gray-700 placeholder:text-gray-500 px-4 pr-10"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2B9BF4] transition"
-            >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            </button>
-          </div>
-
-          {/* تذكرني */}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="remember"
-              checked={rememberMe}
-              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              className="w-5 h-5 border-gray-400"
-            />
-            <label htmlFor="remember" className="text-gray-700 text-sm cursor-pointer">
-              Remember me
-            </label>
-          </div>
-
-          {/* زر تسجيل الدخول */}
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 bg-[#2B9BF4] text-white italic text-lg rounded-none mt-3 transition-all duration-150 active:scale-[0.98]"
-          >
-            {isLoading ? "Loading..." : "Login"}
-          </Button>
-        </form>
+        </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal 
+        isOpen={showForgotPassword} 
+        onClose={() => setShowForgotPassword(false)} 
+      />
     </div>
   );
 };

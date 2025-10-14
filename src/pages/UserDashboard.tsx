@@ -20,16 +20,12 @@ import {
   Rss,
   MessageCircle,
   BarChart3,
-  ArrowLeft,
-  Scale,
-  Microscope
+  ArrowLeft
 } from 'lucide-react';
-import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getAccessibleDepartments } = useRoleBasedAccess();
   const userRole = user?.role;
 
   const getRoleName = (role: string) => {
@@ -210,38 +206,6 @@ const UserDashboard = () => {
         icon: FileText, 
         color: 'from-slate-500 to-slate-600',
         description: 'الأخبار الرسمية للشرطة'
-      },
-      { 
-        name: 'forensic-labs', 
-        title: 'مختبرات الطب الشرعي', 
-        path: '/forensic-labs', 
-        icon: Microscope, 
-        color: 'from-teal-500 to-teal-600',
-        description: 'إدارة الأدلة الجنائية والمختبرات'
-      },
-      { 
-        name: 'judicial-case-management', 
-        title: 'إدارة القضايا القضائية', 
-        path: '/judicial-case-management', 
-        icon: Scale, 
-        color: 'from-emerald-500 to-emerald-600',
-        description: 'إدارة القضايا والتواصل مع المحاكم'
-      },
-      { 
-        name: 'judicial-communications', 
-        title: 'المراسلات الرسمية', 
-        path: '/judicial-communications', 
-        icon: MessageCircle, 
-        color: 'from-green-500 to-green-600',
-        description: 'التواصل الرسمي للقضايا'
-      },
-      { 
-        name: 'judicial-tracking', 
-        title: 'تتبع القضايا', 
-        path: '/judicial-tracking', 
-        icon: Eye, 
-        color: 'from-cyan-500 to-cyan-600',
-        description: 'متابعة القضايا المرسلة والمستلمة'
       }
     ];
   };
@@ -249,7 +213,6 @@ const UserDashboard = () => {
   // جميع الصفحات متاحة الآن للمستخدمين المسجلين
   const allPages = getAllPages();
   const accessiblePages = allPages;
-  const accessibleDepartments = getAccessibleDepartments();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" dir="rtl">
@@ -312,66 +275,11 @@ const UserDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Accessible Departments */}
-        <Card className="bg-white/90 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="font-arabic flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              الأقسام المتاحة لك ({accessibleDepartments.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {accessibleDepartments.map((dept) => {
-                const deptColors = {
-                  admin: 'from-yellow-500 to-yellow-600',
-                  traffic_police: 'from-blue-500 to-blue-600',
-                  cid: 'from-red-500 to-red-600',
-                  special_police: 'from-purple-500 to-purple-600',
-                  cybercrime: 'from-indigo-500 to-indigo-600',
-                  judicial_police: 'from-emerald-500 to-emerald-600'
-                };
-                const deptIcons = {
-                  admin: Crown,
-                  traffic_police: Car,
-                  cid: ShieldCheck,
-                  special_police: Shield,
-                  cybercrime: Computer,
-                  judicial_police: Scale
-                };
-                const Icon = deptIcons[dept.id as keyof typeof deptIcons] || Shield;
-                const color = deptColors[dept.id as keyof typeof deptColors] || 'from-gray-500 to-gray-600';
-                
-                return (
-                  <Card 
-                    key={dept.id}
-                    className="hover:shadow-lg transition-all duration-300 cursor-pointer bg-gradient-to-br from-white to-gray-50"
-                    onClick={() => navigate(dept.path)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg bg-gradient-to-r ${color} shrink-0`}>
-                          <Icon className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 font-arabic text-sm mb-1">
-                            {dept.title}
-                          </h3>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Accessible Pages */}
         <Card className="bg-white/90 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="font-arabic flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+              <Shield className="h-5 w-5" />
               الصفحات المتاحة لك ({accessiblePages.length})
             </CardTitle>
           </CardHeader>
