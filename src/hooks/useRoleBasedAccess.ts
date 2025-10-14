@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRoles } from '@/hooks/useUserRoles';
 
-export type UserRole = 'admin' | 'traffic_police' | 'cid' | 'special_police' | 'cybercrime' | 'officer' | 'user';
+export type UserRole = 'admin' | 'traffic_police' | 'cid' | 'special_police' | 'cybercrime' | 'judicial_police' | 'officer' | 'user';
 
 export interface Department {
   id: string;
@@ -39,17 +40,24 @@ export const departments: Department[] = [
     title: 'الجرائم الإلكترونية',
     roles: ['admin', 'cybercrime'],
     path: '/department/cybercrime'
+  },
+  {
+    id: 'judicial_police',
+    title: 'الشرطة القضائية',
+    roles: ['admin', 'judicial_police'],
+    path: '/department/judicial-police'
   }
 ];
 
 export const useRoleBasedAccess = () => {
   const { user } = useAuth();
+  const { roles, hasRole: hasUserRole, hasAnyRole } = useUserRoles();
   
-  const userRole = user?.role as UserRole;
+  // Use the first role as the primary role for backward compatibility
+  const userRole = (roles.length > 0 ? roles[0] : user?.role) as UserRole;
 
   const hasAccess = (allowedRoles: UserRole[]): boolean => {
-    if (!userRole) return false;
-    return allowedRoles.includes(userRole);
+    return hasAnyRole(allowedRoles);
   };
 
   const canAccessDepartment = (departmentId: string): boolean => {

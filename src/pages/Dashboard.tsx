@@ -1,210 +1,183 @@
-import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import StatsCards from '@/components/dashboard/StatsCards';
-import RecentActivity from '@/components/dashboard/RecentActivity';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import PoliceNews from '@/components/dashboard/PoliceNews';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Crown, 
-  Shield, 
-  Clock,
-  TrendingUp,
-  Calendar,
-  Users,
-  Bot
-} from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
+import { Switch } from "@/components/ui/switch";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { Menu, RotateCw, Phone } from "lucide-react";
+import policeLogo from "@/assets/police-logo.png";
+import ModernSidebar from "@/components/layout/ModernSidebar";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { hasAccess } = useRoleBasedAccess();
   const navigate = useNavigate();
-  const userRole = user?.role;
+  const [patrolActive, setPatrolActive] = useState(false);
+  const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const getRoleName = (role: string) => {
-    const roleNames: Record<string, string> = {
-      admin: 'مدير النظام',
-      traffic_police: 'شرطة المرور',
-      cid: 'المباحث الجنائية',
-      special_police: 'الشرطة الخاصة',
-      cybercrime: 'الجرائم الإلكترونية',
-      officer: 'ضابط',
-      user: 'مستخدم'
-    };
-    return roleNames[role] || 'مستخدم';
-  };
+  // الأقسام والخدمات
+  const tickets = [
+    {
+      title: "شرطة المرور",
+      subtitle: "0 Tickets",
+      color: "bg-[#2B9BF4]",
+      path: "/department/traffic",
+      roles: ["admin", "traffic_police"],
+    },
+    {
+      title: "الشرطة الخاصة",
+      subtitle: "0 Tickets",
+      color: "bg-[#E91E63]",
+      path: "/department/special",
+      roles: ["admin", "special_police"],
+    },
+    {
+      title: "الشرطة القضائية",
+      subtitle: "0 Tickets",
+      color: "bg-[#4CAF50]",
+      path: "/department/judicial-police",
+      roles: ["admin", "judicial_police"],
+    },
+    {
+      title: "الإدارة العامة",
+      subtitle: "0 Tickets",
+      color: "bg-[#F5A623]",
+      path: "/department/admin",
+      roles: ["admin"],
+    },
+    {
+      title: "المباحث الجنائية",
+      subtitle: "0 Tickets",
+      color: "bg-[#03A9F4]",
+      path: "/department/cid",
+      roles: ["admin", "cid"],
+    },
+    {
+      title: "الجرائم الإلكترونية",
+      subtitle: "0 Tickets",
+      color: "bg-[#00BCD4]",
+      path: "/department/cybercrime",
+      roles: ["admin", "cybercrime"],
+    },
+    { title: "المساعد الذكي", subtitle: "0 Tickets", color: "bg-[#9C27B0]", path: "/police-assistant", roles: [] },
+    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/news", roles: [] },
+    { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/user-permissions", roles: ["admin"] },
+  ];
 
-  const getQuickActions = () => {
-    const quickActions = [
-      {
-        title: 'المساعد الذكي للشرطة',
-        description: 'محادثة ذكية مع المساعد',
-        icon: Bot,
-        color: 'from-violet-500 to-violet-600',
-        path: '/police-assistant'
-      },
-      {
-        title: 'الإحصائيات اليومية',
-        description: 'عرض أداء اليوم',
-        icon: TrendingUp,
-        color: 'from-blue-500 to-blue-600'
-      },
-      {
-        title: 'المهام العاجلة',
-        description: 'المهام المطلوب إنجازها',
-        icon: Clock,
-        color: 'from-orange-500 to-orange-600'
-      },
-      {
-        title: 'الجدولة',
-        description: 'مواعيد وأنشطة اليوم',
-        icon: Calendar,
-        color: 'from-green-500 to-green-600'
-      }
-    ];
-    
-    if (userRole === 'admin') {
-      quickActions.push({
-        title: 'إدارة المستخدمين',
-        description: 'إضافة وتعديل المستخدمين',
-        icon: Users,
-        color: 'from-purple-500 to-purple-600'
-      });
-    }
-    
-    return quickActions;
-  };
-
+  const newsItems = [
+    {
+      title: "إطلاق حملة مرورية جديدة في المدينة",
+      description: "تفاصيل وجدول الحملة المرورية الجديدة للحد من المخالفات...",
+      time: "منذ 10 دقائق",
+    },
+    {
+      title: "تحديث: نظام التعرف على الوجه",
+      description: "تم تحديث نظام التعرف على الوجه بأحدث تقنيات الذكاء الاصطناعي...",
+      time: "منذ ساعة",
+    },
+    {
+      title: "اجتماع تنسيقي بين الأقسام",
+      description: "اجتماع دوري لتنسيق العمل بين جميع أقسام الشرطة غداً الساعة 10 صباحاً...",
+      time: "منذ ساعتين",
+    },
+    {
+      title: "تدريب جديد على نظام PoliceOps",
+      description: "سيتم عقد دورة تدريبية شاملة على استخدام نظام PoliceOps الأسبوع القادم...",
+      time: "منذ 3 ساعات",
+    },
+    {
+      title: "إنجازات القسم لهذا الشهر",
+      description: "تقرير شامل بالإنجازات والإحصائيات الشهرية لجميع الأقسام...",
+      time: "منذ 5 ساعات",
+    },
+  ];
 
   return (
-    <DashboardLayout>
-      <div className="min-h-screen bg-white w-full overflow-x-hidden">
-        <div className="responsive-padding space-y-4 sm:space-y-6" dir="rtl">
-        {/* Welcome Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
-            <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-primary to-primary-glow flex-shrink-0">
-              <img 
-                src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
-                alt="Palestinian Police Logo" 
-                className="h-5 w-5 sm:h-6 sm:w-6 object-contain"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 font-arabic break-words">
-                مرحباً، {user?.full_name || 'المستخدم'}
-              </h1>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                <Badge variant="secondary" className="font-arabic bg-primary/10 text-primary text-xs w-fit">
-                  {getRoleName(userRole || 'user')}
-                </Badge>
-                <span className="text-gray-600 font-arabic text-xs sm:text-sm">
-                  الشرطة الفلسطينية
-                </span>
+    <div className="min-h-screen bg-white flex flex-col items-center" style={{ direction: "ltr" }}>
+      {/* Header */}
+      <header className="bg-white w-full p-4 flex items-center justify-between border-b">
+        <div className="flex items-center gap-5">
+          <button onClick={() => window.location.reload()}>
+            <RotateCw className="w-7 h-7 text-[#2B9BF4]" />
+          </button>
+          <NotificationBell />
+          <button onClick={() => (window.location.href = "tel:100")}>
+            <Phone className="w-7 h-7 text-[#2B9BF4]" />
+          </button>
+        </div>
+        <button onClick={() => setSidebarOpen(true)}>
+          <Menu className="w-7 h-7 text-[#2B9BF4]" />
+        </button>
+      </header>
+
+      {/* Welcome */}
+      <div className="px-6 pt-2 pb-2 flex items-center justify-between w-full">
+        <h1 className="text-xl font-medium text-gray-800">مرحباً بك، {user?.full_name || "الضابط"}</h1>
+        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-white shadow relative -top-1">
+          <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
+        </div>
+      </div>
+
+      {/* Tickets */}
+      <div className="px-6 pb-3 w-full">
+        <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
+        <div className="grid grid-cols-2 gap-2 mb-5">
+          {tickets.map((ticket, index) => {
+            // ✅ السماح للإدمن برؤية جميع الأقسام
+            if (ticket.roles.length > 0 && user?.role !== "admin" && !hasAccess(ticket.roles as any[])) return null;
+
+            return (
+              <div
+                key={index}
+                onClick={() => navigate(ticket.path)}
+                className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
+              >
+                <h3 className="font-bold text-base leading-tight text-center">{ticket.title}</h3>
+                <p className="text-xs opacity-90 mt-0.5">{ticket.subtitle}</p>
               </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Statistics Cards */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
-            الإحصائيات العامة
-          </h2>
-          <StatsCards />
+        {/* Toggle */}
+        <div className="bg-white border border-gray-300 rounded-xl p-3 flex items-center justify-between mb-4">
+          <Switch
+            checked={patrolActive}
+            onCheckedChange={setPatrolActive}
+            className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-gray-400"
+          />
+          <span className="text-base font-medium text-[#7CB342]">تفعيل / إيقاف عمل الدورية</span>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
-            إجراءات سريعة
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-            {/* User Dashboard Access */}
-            <Card 
-              className="p-3 sm:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer bg-white border border-gray-200 rounded-lg sm:rounded-xl" 
-              onClick={() => navigate('/user-dashboard')}
+        {/* Map */}
+        <div className="bg-gray-200 rounded-2xl overflow-hidden mb-3 h-[350px]">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3387.0!2d35.2!3d31.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDU0JzAwLjAiTiAzNcKwMTInMDAuMCJF!5e0!3m2!1sen!2s!4v1234567890"
+            className="w-full h-full"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
+
+        {/* News Drawer */}
+        <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
+          <DrawerTrigger asChild>
+            <button 
+              className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors"
+              onClick={() => navigate('/news')}
             >
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 flex-shrink-0">
-                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 font-arabic text-xs sm:text-sm truncate">
-                    صلاحياتي
-                  </h3>
-                  <p className="text-xs text-gray-600 font-arabic line-clamp-2">
-                    عرض الصفحات المسموح بالوصول إليها
-                  </p>
-                </div>
-              </div>
-            </Card>
-            
-            {getQuickActions().map((action, index) => {
-              const Icon = action.icon;
-              const getActionPath = (title: string) => {
-                switch (title) {
-                  case 'المساعد الذكي للشرطة': return '/police-assistant';
-                  case 'الإحصائيات اليومية': return '/overview';
-                  case 'المهام العاجلة': return '/urgent-tasks';
-                  case 'الجدولة': return '/scheduling';
-                  case 'إدارة المستخدمين': {
-                    // حسب الدور، الانتقال لصفحة الإدارة المناسبة
-                    if (userRole === 'admin') return '/admin-panel';
-                    if (userRole === 'traffic_manager') return '/department-users/traffic';
-                    if (userRole === 'cid_manager') return '/department-users/cid';
-                    if (userRole === 'special_manager') return '/department-users/special';
-                    if (userRole === 'cybercrime_manager') return '/department-users/cybercrime';
-                    return '/dashboard';
-                  }
-                  default: return '/dashboard';
-                }
-              };
-              
-              return (
-                <Card 
-                  key={index} 
-                  className="p-3 sm:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer bg-white border border-gray-200 rounded-lg sm:rounded-xl"
-                  onClick={() => navigate(action.path || getActionPath(action.title))}
-                >
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className={`p-2 rounded-lg bg-gradient-to-r ${action.color} flex-shrink-0`}>
-                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 font-arabic text-xs sm:text-sm truncate">
-                        {action.title}
-                      </h3>
-                      <p className="text-xs text-gray-600 font-arabic line-clamp-2">
-                        {action.description}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Police News */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
-            الأخبار الرسمية
-          </h2>
-          <PoliceNews />
-        </div>
-
-        {/* Recent Activity */}
-        <div className="pb-4">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-arabic mb-3 sm:mb-4">
-            النشاط الأخير
-          </h2>
-          <RecentActivity />
-        </div>
+              <h2 className="text-2xl font-bold">الأخبار</h2>
+            </button>
+          </DrawerTrigger>
+        </Drawer>
       </div>
-      </div>
-    </DashboardLayout>
+
+      {/* Modern Sidebar */}
+      <ModernSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
+    </div>
   );
 };
 

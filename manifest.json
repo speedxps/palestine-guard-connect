@@ -1,0 +1,30 @@
+{
+  "name": "الشرطة الفلسطينية | Palestinian Police",
+  "short_name": "الشرطة الفلسطينية | Palestinian Police",
+  "description": "Smart Palestinian Police Mobile Application",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b3d91",
+  "orientation": "any",
+  "scope": "/",
+  "dir": "auto",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/hdq832YeyLeV8vjBmE8MWj0VgzH2/uploads/1758838311999-5d8c7245-166d-4337-afbb-639857489274.png",
+      "type": "image/png",
+      "sizes": "417x417"
+    },
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/hdq832YeyLeV8vjBmE8MWj0VgzH2/social-images/social-1758838290492-5d8c7245-166d-4337-afbb-639857489274.png",
+      "type": "image/png",
+      "sizes": "417x417"
+    },
+    {
+      "src": "https://www.policedepartment.today/favicon.ico",
+      "type": "image/png",
+      "sizes": "73x74"
+    }
+  ]
+}

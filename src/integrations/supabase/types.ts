@@ -650,6 +650,65 @@ export type Database = {
           },
         ]
       }
+      forensic_evidence: {
+        Row: {
+          analysis_date: string | null
+          analysis_report: string | null
+          analyzed_by: string | null
+          case_id: string | null
+          chain_of_custody: Json | null
+          collected_by: string
+          collection_date: string
+          created_at: string
+          description: string
+          evidence_type: Database["public"]["Enums"]["evidence_type"]
+          file_url: string | null
+          id: string
+          is_verified: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_date?: string | null
+          analysis_report?: string | null
+          analyzed_by?: string | null
+          case_id?: string | null
+          chain_of_custody?: Json | null
+          collected_by: string
+          collection_date?: string
+          created_at?: string
+          description: string
+          evidence_type: Database["public"]["Enums"]["evidence_type"]
+          file_url?: string | null
+          id?: string
+          is_verified?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_date?: string | null
+          analysis_report?: string | null
+          analyzed_by?: string | null
+          case_id?: string | null
+          chain_of_custody?: Json | null
+          collected_by?: string
+          collection_date?: string
+          created_at?: string
+          description?: string
+          evidence_type?: Database["public"]["Enums"]["evidence_type"]
+          file_url?: string | null
+          id?: string
+          is_verified?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forensic_evidence_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incident_files: {
         Row: {
           created_at: string
@@ -797,6 +856,157 @@ export type Database = {
         }
         Relationships: []
       }
+      judicial_cases: {
+        Row: {
+          assigned_to: string | null
+          attachments: string[] | null
+          case_number: string
+          case_type: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          notes: string | null
+          parties: Json
+          status: Database["public"]["Enums"]["case_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: string[] | null
+          case_number: string
+          case_type: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          notes?: string | null
+          parties: Json
+          status?: Database["public"]["Enums"]["case_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: string[] | null
+          case_number?: string
+          case_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          parties?: Json
+          status?: Database["public"]["Enums"]["case_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      judicial_messages: {
+        Row: {
+          attachments: string[] | null
+          case_id: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          read_at: string | null
+          sender_department: string
+          sender_id: string
+        }
+        Insert: {
+          attachments?: string[] | null
+          case_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          read_at?: string | null
+          sender_department: string
+          sender_id: string
+        }
+        Update: {
+          attachments?: string[] | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          read_at?: string | null
+          sender_department?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "judicial_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "judicial_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      judicial_transfers: {
+        Row: {
+          attachments: string[] | null
+          case_id: string
+          created_at: string
+          digital_signature: string | null
+          from_department: string
+          id: string
+          message: string | null
+          received_at: string | null
+          received_by: string | null
+          status: Database["public"]["Enums"]["transfer_status"]
+          to_department: string
+          transfer_type: string
+          transferred_at: string
+          transferred_by: string
+        }
+        Insert: {
+          attachments?: string[] | null
+          case_id: string
+          created_at?: string
+          digital_signature?: string | null
+          from_department: string
+          id?: string
+          message?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          status?: Database["public"]["Enums"]["transfer_status"]
+          to_department: string
+          transfer_type: string
+          transferred_at?: string
+          transferred_by: string
+        }
+        Update: {
+          attachments?: string[] | null
+          case_id?: string
+          created_at?: string
+          digital_signature?: string | null
+          from_department?: string
+          id?: string
+          message?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          status?: Database["public"]["Enums"]["transfer_status"]
+          to_department?: string
+          transfer_type?: string
+          transferred_at?: string
+          transferred_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "judicial_transfers_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "judicial_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news: {
         Row: {
           author_id: string
@@ -834,28 +1044,37 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_system_wide: boolean | null
           message: string
+          priority: string | null
           recipient_id: string | null
           sender_id: string
           status: Database["public"]["Enums"]["notification_status"]
+          target_departments: string[] | null
           title: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_system_wide?: boolean | null
           message: string
+          priority?: string | null
           recipient_id?: string | null
           sender_id: string
           status?: Database["public"]["Enums"]["notification_status"]
+          target_departments?: string[] | null
           title: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_system_wide?: boolean | null
           message?: string
+          priority?: string | null
           recipient_id?: string | null
           sender_id?: string
           status?: Database["public"]["Enums"]["notification_status"]
+          target_departments?: string[] | null
           title?: string
         }
         Relationships: [
@@ -1339,6 +1558,27 @@ export type Database = {
           },
         ]
       }
+      test_users_setup: {
+        Row: {
+          created_at: string | null
+          email: string
+          password_hint: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          password_hint?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          password_hint?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       traffic_records: {
         Row: {
           citizen_name: string
@@ -1404,6 +1644,30 @@ export type Database = {
           is_allowed?: boolean
           page_path?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -1628,6 +1892,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_test_user_role: {
+        Args: {
+          user_email: string
+          user_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1635,6 +1906,10 @@ export type Database = {
       get_user_profile: {
         Args: { user_id: string }
         Returns: string
+      }
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
       }
       has_cybercrime_access: {
         Args: { user_id: string }
@@ -1644,8 +1919,19 @@ export type Database = {
         Args: { _page_path: string; _user_id: string }
         Returns: boolean
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      is_admin_role: {
+        Args: { _user_id: string }
         Returns: boolean
       }
     }
@@ -1662,11 +1948,26 @@ export type Database = {
         | "cid_manager"
         | "special_manager"
         | "cybercrime_manager"
+        | "judicial_police"
+      case_status:
+        | "open"
+        | "under_investigation"
+        | "sent_to_court"
+        | "sent_to_prosecution"
+        | "closed"
       cybercrime_type:
         | "phishing"
         | "fraud"
         | "harassment"
         | "identity_theft"
+        | "other"
+      evidence_type:
+        | "dna"
+        | "fingerprint"
+        | "photo"
+        | "document"
+        | "video"
+        | "audio"
         | "other"
       family_relation:
         | "father"
@@ -1677,9 +1978,15 @@ export type Database = {
         | "son"
         | "daughter"
       incident_status: "new" | "in_progress" | "resolved"
+      judicial_role:
+        | "judicial_police"
+        | "court"
+        | "prosecution"
+        | "forensic_lab"
       notification_status: "unread" | "read"
       task_status: "pending" | "completed" | "in_progress"
       traffic_record_type: "violation" | "case"
+      transfer_status: "pending" | "received" | "reviewed" | "completed"
       user_role:
         | "admin"
         | "traffic_police"
@@ -1827,12 +2134,29 @@ export const Constants = {
         "cid_manager",
         "special_manager",
         "cybercrime_manager",
+        "judicial_police",
+      ],
+      case_status: [
+        "open",
+        "under_investigation",
+        "sent_to_court",
+        "sent_to_prosecution",
+        "closed",
       ],
       cybercrime_type: [
         "phishing",
         "fraud",
         "harassment",
         "identity_theft",
+        "other",
+      ],
+      evidence_type: [
+        "dna",
+        "fingerprint",
+        "photo",
+        "document",
+        "video",
+        "audio",
         "other",
       ],
       family_relation: [
@@ -1845,9 +2169,16 @@ export const Constants = {
         "daughter",
       ],
       incident_status: ["new", "in_progress", "resolved"],
+      judicial_role: [
+        "judicial_police",
+        "court",
+        "prosecution",
+        "forensic_lab",
+      ],
       notification_status: ["unread", "read"],
       task_status: ["pending", "completed", "in_progress"],
       traffic_record_type: ["violation", "case"],
+      transfer_status: ["pending", "received", "reviewed", "completed"],
       user_role: [
         "admin",
         "traffic_police",
