@@ -19,24 +19,36 @@ export type Database = {
           activity_description: string
           activity_type: string
           created_at: string
+          error: string | null
+          event: string | null
           id: string
           metadata: Json | null
+          payload: Json | null
+          source: string | null
           user_id: string | null
         }
         Insert: {
           activity_description: string
           activity_type: string
           created_at?: string
+          error?: string | null
+          event?: string | null
           id?: string
           metadata?: Json | null
+          payload?: Json | null
+          source?: string | null
           user_id?: string | null
         }
         Update: {
           activity_description?: string
           activity_type?: string
           created_at?: string
+          error?: string | null
+          event?: string | null
           id?: string
           metadata?: Json | null
+          payload?: Json | null
+          source?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -1934,6 +1946,15 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      log_activity_error: {
+        Args: {
+          p_error: string
+          p_event: string
+          p_payload: Json
+          p_source: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
@@ -1995,6 +2016,7 @@ export type Database = {
         | "cybercrime"
         | "officer"
         | "user"
+        | "judicial_police"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2187,6 +2209,7 @@ export const Constants = {
         "cybercrime",
         "officer",
         "user",
+        "judicial_police",
       ],
     },
   },
