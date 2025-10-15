@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Check, X, UserCog } from 'lucide-react';
-import { useUserRoles } from '@/hooks/useUserRoles';
+
 
 interface UserWithRoles {
   id: string;
@@ -20,9 +19,7 @@ interface UserWithRoles {
 }
 
 const UserPermissions = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin } = useUserRoles();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,13 +35,8 @@ const UserPermissions = () => {
   };
 
   useEffect(() => {
-    if (!isAdmin) {
-      navigate('/access-denied');
-      return;
-    }
-
     fetchUsersWithRoles();
-  }, [isAdmin, navigate]);
+  }, []);
 
   const fetchUsersWithRoles = async () => {
     try {

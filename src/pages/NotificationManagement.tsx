@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,14 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
 import { useToast } from '@/hooks/use-toast';
 import { Bell, Send, Users, AlertCircle } from 'lucide-react';
-import { useUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/contexts/AuthContext';
 
 const NotificationManagement = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isAdmin } = useUserRoles();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
@@ -35,11 +31,6 @@ const NotificationManagement = () => {
     { id: 'officer', name: 'الضباط' },
   ];
 
-  useEffect(() => {
-    if (!isAdmin) {
-      navigate('/access-denied');
-    }
-  }, [isAdmin, navigate]);
 
   const handleDepartmentToggle = (deptId: string) => {
     setSelectedDepartments(prev =>

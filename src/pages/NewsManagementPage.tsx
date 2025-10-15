@@ -1,21 +1,10 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { NewsManagement } from '@/components/NewsManagement';
 import { BackButton } from '@/components/BackButton';
-import { useUserRoles } from '@/hooks/useUserRoles';
 import { Newspaper } from 'lucide-react';
 
 const NewsManagementPage = () => {
-  const navigate = useNavigate();
-  const { isAdmin } = useUserRoles();
 
-  useEffect(() => {
-    if (!isAdmin) {
-      navigate('/access-denied');
-    }
-  }, [isAdmin, navigate]);
-
-  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-6">

@@ -532,29 +532,35 @@ const App = () => {
                 <Route
                   path="/department/admin"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin"]}>
-                      <AdminDepartment />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <AdminDepartment />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/department/traffic"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
-                      <PagePermissionRoute>
-                        <TrafficDepartment />
-                      </PagePermissionRoute>
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
+                        <PagePermissionRoute>
+                          <TrafficDepartment />
+                        </PagePermissionRoute>
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/department/cid"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cid"]}>
-                      <PagePermissionRoute>
-                        <CIDDepartment />
-                      </PagePermissionRoute>
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid"]}>
+                        <PagePermissionRoute>
+                          <CIDDepartment />
+                        </PagePermissionRoute>
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
@@ -570,21 +576,65 @@ const App = () => {
                 <Route
                   path="/department/special"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "special_police"]}>
-                      <PagePermissionRoute>
-                        <SpecialPoliceDepartment />
-                      </PagePermissionRoute>
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "special_police"]}>
+                        <PagePermissionRoute>
+                          <SpecialPoliceDepartment />
+                        </PagePermissionRoute>
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/department/cybercrime"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
-                      <PagePermissionRoute>
-                        <CybercrimeDepartment />
-                      </PagePermissionRoute>
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <PagePermissionRoute>
+                          <CybercrimeDepartment />
+                        </PagePermissionRoute>
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department/judicial-police"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
+                        <JudicialPoliceDepartment />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/judicial-case-management"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
+                        <JudicialCaseManagement />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/judicial-communications"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
+                        <JudicialCommunications />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/judicial-tracking"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
+                        <JudicialTracking />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
 
