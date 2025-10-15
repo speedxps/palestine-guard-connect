@@ -114,7 +114,20 @@ const AdminPanel = () => {
       {/* Quick Actions */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 font-arabic">الإجراءات السريعة</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Button
+            variant="default"
+            className="h-auto p-4 flex flex-col items-center gap-2"
+            onClick={() => navigate('/create-user')}
+          >
+            <div className="p-3 rounded-lg bg-gradient-to-r from-primary to-primary/80">
+              <User className="h-6 w-6 text-white" />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold font-arabic">إنشاء مستخدم جديد</p>
+              <p className="text-xs opacity-90 font-arabic">إضافة مستخدم للنظام</p>
+            </div>
+          </Button>
           {adminSections.slice(1, 4).map((section) => {
             const Icon = section.icon;
             return (

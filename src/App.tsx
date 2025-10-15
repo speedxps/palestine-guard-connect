@@ -70,6 +70,7 @@ import NotificationManagement from "@/pages/NotificationManagement";
 import UserPermissions from "@/pages/UserPermissions";
 import NotFound from "@/pages/NotFound";
 import SetupTestUsers from "@/pages/SetupTestUsers";
+import CreateUser from "@/pages/CreateUser";
 
 const queryClient = new QueryClient();
 
@@ -222,6 +223,16 @@ const App = () => {
                   element={
                     <RoleBasedRoute allowedRoles={["admin"]}>
                       <AdminPanel />
+                    </RoleBasedRoute>
+                  }
+                />
+                
+                {/* Create User */}
+                <Route
+                  path="/create-user"
+                  element={
+                    <RoleBasedRoute allowedRoles={["admin"]}>
+                      <CreateUser />
                     </RoleBasedRoute>
                   }
                 />
