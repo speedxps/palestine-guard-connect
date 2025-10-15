@@ -35,7 +35,7 @@ interface Profile {
   user_id: string;
   username: string;
   full_name: string;
-  role: UserRole;
+  roles: UserRole[]; // Changed to array from user_roles table
   phone?: string;
   badge_number?: string;
   is_active: boolean;
@@ -99,46 +99,43 @@ export const UserManagement = () => {
     try {
       console.log('Starting to fetch profiles...');
       
-      // First, try to fetch profiles with a simpler query
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      console.log('Profiles query result:', { profilesData, profilesError });
+      if (profilesError) throw profilesError;
 
-      if (profilesError) {
-        console.error('Profiles error:', profilesError);
-        throw profilesError;
-      }
+      // Get user roles
+      const { data: userRolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
 
-      // Get auth users to retrieve email addresses (ignore errors for now)
+      // Get auth users
       let authUsers = null;
       try {
-        const { data: authUsersData, error: authError } = await supabase.auth.admin.listUsers();
-        if (!authError) {
-          authUsers = authUsersData;
-        }
+        const { data: authUsersData } = await supabase.auth.admin.listUsers();
+        authUsers = authUsersData;
       } catch (error) {
-        console.warn('Could not fetch auth users (non-critical):', error);
+        console.warn('Could not fetch auth users:', error);
       }
 
-      // Get cybercrime access data separately
+      // Get cybercrime access
       const { data: cybercrimeData } = await supabase
         .from('cybercrime_access')
         .select('user_id, is_active')
         .eq('is_active', true);
 
-      console.log('Cybercrime data:', cybercrimeData);
-
       // Combine all data
       const enrichedProfiles = profilesData?.map((profile: any) => {
         const authUser = authUsers?.users?.find((u: any) => u.id === profile.user_id);
+        const userRoles = userRolesData?.filter(ur => ur.user_id === profile.user_id).map(ur => ur.role) || [];
         const cybercrimeAccess = cybercrimeData?.find(ca => ca.user_id === profile.user_id);
         
         return {
           ...profile,
           email: authUser?.email || 'غير متوفر',
+          roles: userRoles,
           cybercrime_access: cybercrimeAccess ? {
             id: 'temp',
             user_id: profile.user_id,
@@ -149,29 +146,14 @@ export const UserManagement = () => {
         };
       }) || [];
 
-      console.log('Final enriched profiles:', enrichedProfiles);
       setProfiles(enrichedProfiles);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching profiles:', error);
       toast({
         title: "❌ خطأ في تحميل المستخدمين",
-        description: `فشل في تحميل قائمة المستخدمين: ${error.message}`,
+        description: error.message,
         variant: "destructive",
       });
-      
-      // Try to show at least basic profile data
-      try {
-        const { data: basicProfiles } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (basicProfiles) {
-          setProfiles(basicProfiles.map(p => ({ ...p, email: 'غير متوفر', cybercrime_access: null })));
-        }
-      } catch (fallbackError) {
-        console.error('Even basic fetch failed:', fallbackError);
-      }
     } finally {
       setIsLoading(false);
     }
@@ -192,7 +174,6 @@ export const UserManagement = () => {
     setIsLoading(true);
 
     try {
-      // Use regular signup instead of admin API for now
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -207,25 +188,6 @@ export const UserManagement = () => {
       });
 
       if (authError) throw authError;
-
-      if (authData.user) {
-        // Create profile manually
-         const { error: profileError } = await supabase
-           .from('profiles')
-           .insert({
-             user_id: authData.user.id,
-             username: formData.username,
-             full_name: formData.full_name,
-             phone: formData.phone || null,
-             badge_number: formData.badge_number || null,
-             role: formData.role as any,
-             is_active: true
-           });
-
-        if (profileError) {
-          console.warn('Profile might already exist from trigger:', profileError);
-        }
-      }
 
       toast({
         title: "✅ تم إنشاء المستخدم بنجاح",
@@ -242,7 +204,9 @@ export const UserManagement = () => {
         badge_number: '',
         role: 'officer',
       });
-      fetchProfiles();
+      
+      // Wait a moment for the trigger to complete
+      setTimeout(() => fetchProfiles(), 1000);
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -262,18 +226,37 @@ export const UserManagement = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
+      // Update profile (without role)
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           username: formData.username,
           full_name: formData.full_name,
           phone: formData.phone || null,
           badge_number: formData.badge_number || null,
-          role: formData.role as any,
         })
         .eq('id', editingProfile.id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Update role in user_roles table
+      // First delete old roles
+      const { error: deleteError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', editingProfile.user_id);
+
+      if (deleteError) console.warn('Error deleting old roles:', deleteError);
+
+      // Insert new role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: editingProfile.user_id,
+          role: formData.role
+        });
+
+      if (roleError) throw roleError;
 
       toast({
         title: "✅ تم تحديث المستخدم",
@@ -495,19 +478,19 @@ export const UserManagement = () => {
       full_name: profile.full_name,
       phone: profile.phone || '',
       badge_number: profile.badge_number || '',
-      role: profile.role,
+      role: profile.roles[0] || 'officer',
     });
   };
 
   // Group users by department
   const groupedProfiles = {
-    admin: profiles.filter(p => p.role === 'admin'),
-    traffic_police: profiles.filter(p => p.role === 'traffic_police'),
-    cid: profiles.filter(p => p.role === 'cid'),
-    special_police: profiles.filter(p => p.role === 'special_police'),
-    cybercrime: profiles.filter(p => p.role === 'cybercrime'),
-    officer: profiles.filter(p => p.role === 'officer'),
-    user: profiles.filter(p => p.role === 'user')
+    admin: profiles.filter(p => p.roles.includes('admin')),
+    traffic_police: profiles.filter(p => p.roles.includes('traffic_police')),
+    cid: profiles.filter(p => p.roles.includes('cid')),
+    special_police: profiles.filter(p => p.roles.includes('special_police')),
+    cybercrime: profiles.filter(p => p.roles.includes('cybercrime')),
+    officer: profiles.filter(p => p.roles.includes('officer')),
+    user: profiles.filter(p => p.roles.includes('user'))
   };
 
   // Filter users based on search term
@@ -626,7 +609,7 @@ export const UserManagement = () => {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{profile.full_name}</h3>
-                  {getRoleBadge(profile.role)}
+                  {getRoleBadge(profile.roles[0] || 'officer')}
                 </div>
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
                 <p className="text-xs text-muted-foreground">البريد: {profile.email}</p>

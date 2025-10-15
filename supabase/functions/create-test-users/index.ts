@@ -61,19 +61,16 @@ serve(async (req) => {
       }
 
       // 1) Insert role into public.user_roles (idempotent)
-      const { error: roleErr } = await admin.from("user_roles").insert({ user_id: userId, role: u.role as any }).onConflict("user_id,role");
+      const { error: roleErr } = await admin
+        .from("user_roles")
+        .upsert({ user_id: userId, role: u.role as any }, { onConflict: "user_id,role" });
+      
       if (roleErr && !String(roleErr.message || "").includes("duplicate")) {
-        // Continue but note the error
         results.push({ email: u.email, status: "created", role_assigned: false, role_error: roleErr.message });
+        continue;
       }
 
-      // 2) Ensure a profile exists and has a safe role value from user_role enum
-      // user_role enum supports: admin, cid, cybercrime, officer, special_police, traffic_police, user
-      const profileRole = ["admin","cid","cybercrime","special_police","traffic_police","officer","user"].includes(u.role)
-        ? u.role
-        : "officer";
-
-      // Try select existing profile
+      // 2) Ensure a profile exists (trigger should handle this, but double check)
       const { data: existingProfile } = await admin
         .from("profiles")
         .select("id")
@@ -81,17 +78,19 @@ serve(async (req) => {
         .maybeSingle();
 
       if (existingProfile) {
+        // Update profile with latest info (without role)
         await admin
           .from("profiles")
-          .update({ email: u.email, username: u.email, full_name: u.fullName, role: profileRole })
+          .update({ email: u.email, username: u.email, full_name: u.fullName })
           .eq("user_id", userId);
       } else {
+        // Trigger should have created it, but if not, create it now
         await admin
           .from("profiles")
-          .insert({ user_id: userId, email: u.email, username: u.email, full_name: u.fullName, role: profileRole });
+          .insert({ user_id: userId, email: u.email, username: u.email, full_name: u.fullName });
       }
 
-      results.push({ email: u.email, status: "ok", user_id: userId, role: u.role, profile_role: profileRole });
+      results.push({ email: u.email, status: "ok", user_id: userId, role: u.role });
     } catch (e) {
       results.push({ email: u.email, status: "failed", reason: e instanceof Error ? e.message : String(e) });
     }
