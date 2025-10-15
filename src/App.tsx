@@ -69,6 +69,7 @@ import JudicialPoliceUsers from "@/pages/JudicialPoliceUsers";
 import NotificationManagement from "@/pages/NotificationManagement";
 import UserPermissions from "@/pages/UserPermissions";
 import NotFound from "@/pages/NotFound";
+import SetupTestUsers from "@/pages/SetupTestUsers";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,7 @@ const App = () => {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
+                <Route path="/setup-test-users" element={<SetupTestUsers />} />
                 <Route path="/access-denied" element={<Navigate to="/login" replace />} />
 
                 {/* Judicial Police */}
