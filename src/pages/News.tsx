@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, User, Newspaper } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface News {
   id: string;
@@ -22,6 +23,7 @@ interface News {
 const News = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
   const [news, setNews] = useState<News[]>([]);
   const [selectedNews, setSelectedNews] = useState<News | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,8 +36,21 @@ const News = () => {
     if (id && news.length > 0) {
       const newsItem = news.find(n => n.id === id);
       setSelectedNews(newsItem || null);
+      
+      // Mark news as read
+      if (newsItem && user) {
+        supabase
+          .from('news_reads')
+          .insert({
+            news_id: id,
+            user_id: user.id
+          })
+          .then(({ error }) => {
+            if (error) console.error('Error marking news as read:', error);
+          });
+      }
     }
-  }, [id, news]);
+  }, [id, news, user]);
 
   const fetchPublishedNews = async () => {
     try {

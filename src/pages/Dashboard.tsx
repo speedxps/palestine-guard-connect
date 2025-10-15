@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Menu, RotateCw, Phone } from "lucide-react";
+import { Menu, RotateCw, Phone, Badge as BadgeIcon } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import ModernSidebar from "@/components/layout/ModernSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -16,6 +18,58 @@ const Dashboard = () => {
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadNewsCount, setUnreadNewsCount] = useState(0);
+
+  useEffect(() => {
+    fetchUnreadNewsCount();
+
+    // Subscribe to news changes
+    const channel = supabase
+      .channel('news_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'internal_news'
+        },
+        () => {
+          fetchUnreadNewsCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const fetchUnreadNewsCount = async () => {
+    if (!user) return;
+
+    try {
+      // Get all published news
+      const { data: allNews } = await supabase
+        .from('internal_news')
+        .select('id')
+        .eq('is_published', true);
+
+      if (!allNews) return;
+
+      // Get news that user has read
+      const { data: readNews } = await supabase
+        .from('news_reads')
+        .select('news_id')
+        .eq('user_id', user.id);
+
+      const readNewsIds = readNews?.map(r => r.news_id) || [];
+      const unreadCount = allNews.filter(n => !readNewsIds.includes(n.id)).length;
+      
+      setUnreadNewsCount(unreadCount);
+    } catch (error) {
+      console.error('Error fetching unread news count:', error);
+    }
+  };
 
   // الأقسام والخدمات
   const tickets = [
@@ -166,10 +220,15 @@ const Dashboard = () => {
         <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
           <DrawerTrigger asChild>
             <button 
-              className="bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors"
+              className="relative bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors"
               onClick={() => navigate('/news')}
             >
               <h2 className="text-2xl font-bold">الأخبار</h2>
+              {unreadNewsCount > 0 && (
+                <Badge className="absolute top-2 right-4 h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs rounded-full">
+                  {unreadNewsCount}
+                </Badge>
+              )}
             </button>
           </DrawerTrigger>
         </Drawer>

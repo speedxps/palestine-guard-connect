@@ -116,14 +116,41 @@ export const NotificationBell = () => {
     return date.toLocaleDateString('ar-SA');
   };
 
+  const markNotificationAsViewed = async (notificationId: string) => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('notification_views')
+        .insert({
+          notification_id: notificationId,
+          user_id: user.id
+        });
+      
+      fetchNotifications();
+    } catch (error) {
+      console.error('Error marking notification as viewed:', error);
+    }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (notification.status === 'unread') {
+      markNotificationAsViewed(notification.id);
+    }
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-6 w-6 text-[#7CB342]" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={`relative ${unreadCount > 0 ? 'animate-pulse' : ''}`}
+        >
+          <Bell className={`h-6 w-6 ${unreadCount > 0 ? 'text-red-500' : 'text-blue-500'}`} />
           {unreadCount > 0 && (
             <Badge
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs animate-ping"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -160,7 +187,8 @@ export const NotificationBell = () => {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-3 rounded-lg border transition-all ${
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md ${
                     notification.status === 'unread'
                       ? 'bg-blue-50 border-blue-200'
                       : 'bg-white border-gray-200'

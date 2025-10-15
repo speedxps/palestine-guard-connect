@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,42 @@ const NotificationManagement = () => {
     );
   };
 
+  const [sentNotifications, setSentNotifications] = useState<any[]>([]);
+  const [editingNotification, setEditingNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSentNotifications();
+  }, []);
+
+  const fetchSentNotifications = async () => {
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (!profileData) return;
+
+      const { data, error } = await supabase
+        .from('notifications')
+        .select(`
+          *,
+          notification_views (
+            user_id,
+            viewed_at
+          )
+        `)
+        .eq('sender_id', profileData.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSentNotifications(data || []);
+    } catch (error: any) {
+      console.error('Error fetching sent notifications:', error);
+    }
+  };
+
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) {
       toast({
@@ -61,7 +97,6 @@ const NotificationManagement = () => {
 
     setLoading(true);
     try {
-      // Get profile ID
       const { data: profileData } = await supabase
         .from('profiles')
         .select('id')
@@ -89,12 +124,12 @@ const NotificationManagement = () => {
         description: 'تم إرسال الإشعار بنجاح',
       });
 
-      // Reset form
       setTitle('');
       setMessage('');
       setPriority('normal');
       setTargetType('all');
       setSelectedDepartments([]);
+      fetchSentNotifications();
     } catch (error: any) {
       toast({
         title: 'خطأ',
@@ -103,6 +138,30 @@ const NotificationManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'نجح',
+        description: 'تم حذف الإشعار بنجاح',
+      });
+
+      fetchSentNotifications();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'فشل في حذف الإشعار',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -232,6 +291,49 @@ const NotificationManagement = () => {
               <Send className="h-5 w-5 ml-2" />
               إرسال الإشعار
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Sent Notifications */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              الإشعارات المرسلة ({sentNotifications.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {sentNotifications.map((notification) => (
+              <Card key={notification.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-bold text-lg">{notification.title}</h3>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteNotification(notification.id)}
+                    >
+                      حذف
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{notification.message}</p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <Badge className={
+                      notification.priority === 'urgent' ? 'bg-red-500' :
+                      notification.priority === 'high' ? 'bg-orange-500' :
+                      notification.priority === 'normal' ? 'bg-blue-500' : 'bg-gray-500'
+                    }>
+                      {notification.priority === 'urgent' ? 'عاجل' :
+                       notification.priority === 'high' ? 'مهم' :
+                       notification.priority === 'normal' ? 'عادي' : 'منخفض'}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      شاهده {notification.notification_views?.length || 0} مستخدم
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </CardContent>
         </Card>
       </div>

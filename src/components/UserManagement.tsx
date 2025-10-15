@@ -387,23 +387,27 @@ export const UserManagement = () => {
 
   const handlePermanentDeleteUser = async (profile: Profile) => {
     try {
-      // First deactivate the user
-      const { error: deactivateError } = await supabase
-        .from('profiles')
-        .update({ is_active: false })
-        .eq('id', profile.id);
-
-      if (deactivateError) throw deactivateError;
+      // Delete user roles first
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', profile.user_id);
 
       // Delete cybercrime access if exists
-      const { error: cybercrimeError } = await supabase
+      await supabase
         .from('cybercrime_access')
         .delete()
         .eq('user_id', profile.user_id);
 
-      // Ignore cybercrime error if record doesn't exist
+      // Delete profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', profile.user_id);
 
-      // Try to delete the auth user (might fail if not admin)
+      if (profileError) throw profileError;
+
+      // Try to delete the auth user
       try {
         const { error: authError } = await supabase.auth.admin.deleteUser(profile.user_id);
         if (authError) {

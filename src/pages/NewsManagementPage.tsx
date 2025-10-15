@@ -1,10 +1,58 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NewsManagement } from '@/components/NewsManagement';
 import { BackButton } from '@/components/BackButton';
 import { Newspaper } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const NewsManagementPage = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
 
+  // Auto-send notification when news is published
+  useEffect(() => {
+    const channel = supabase
+      .channel('news_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'internal_news'
+        },
+        async (payload) => {
+          if (payload.new.is_published) {
+            try {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('user_id', user?.id)
+                .single();
+
+              if (profileData) {
+                await supabase
+                  .from('notifications')
+                  .insert({
+                    sender_id: profileData.id,
+                    title: 'خبر جديد',
+                    message: `تم نشر خبر جديد: ${payload.new.title}`,
+                    priority: 'normal',
+                    is_system_wide: true
+                  });
+              }
+            } catch (error) {
+              console.error('Error sending notification:', error);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-6">

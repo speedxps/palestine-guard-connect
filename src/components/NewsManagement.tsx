@@ -125,6 +125,31 @@ export const NewsManagement: React.FC = () => {
     setIsDialogOpen(true);
   };
 
+  const handleDelete = async (newsId: string) => {
+    try {
+      const { error } = await supabase
+        .from('internal_news')
+        .delete()
+        .eq('id', newsId);
+
+      if (error) throw error;
+
+      toast({
+        title: "تم حذف الخبر",
+        description: "تم حذف الخبر بنجاح.",
+      });
+
+      fetchNews();
+    } catch (error) {
+      console.error('Error deleting news:', error);
+      toast({
+        title: "خطأ في حذف الخبر",
+        description: "حدث خطأ أثناء حذف الخبر.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleNewNews = () => {
     setEditingNews(null);
     setFormData({ title: '', content: '', image_url: '', is_published: false });
@@ -260,6 +285,9 @@ export const NewsManagement: React.FC = () => {
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => handleEdit(newsItem)}>
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(newsItem.id)}>
+                        حذف
                       </Button>
                     </div>
                   </div>

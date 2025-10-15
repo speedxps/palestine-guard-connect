@@ -1067,6 +1067,64 @@ export type Database = {
         }
         Relationships: []
       }
+      news_reads: {
+        Row: {
+          id: string
+          news_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          news_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          news_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_reads_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "internal_news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_views: {
+        Row: {
+          id: string
+          notification_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          notification_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          notification_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_views_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
