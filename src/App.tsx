@@ -69,6 +69,7 @@ import JudicialPoliceUsers from "@/pages/JudicialPoliceUsers";
 import NotificationManagement from "@/pages/NotificationManagement";
 import UserPermissions from "@/pages/UserPermissions";
 import NotFound from "@/pages/NotFound";
+import AccessDenied from "@/pages/AccessDenied";
 import SetupTestUsers from "@/pages/SetupTestUsers";
 import CreateUser from "@/pages/CreateUser";
 
@@ -99,7 +100,11 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/setup-test-users" element={<SetupTestUsers />} />
-                <Route path="/access-denied" element={<Navigate to="/login" replace />} />
+                <Route path="/access-denied" element={
+                  <ProtectedRoute>
+                    <AccessDenied />
+                  </ProtectedRoute>
+                } />
 
                 {/* Judicial Police */}
                 <Route
@@ -179,9 +184,11 @@ const App = () => {
                 <Route
                   path="/news-management"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin"]}>
-                      <NewsManagementPage />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <NewsManagementPage />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
@@ -221,9 +228,11 @@ const App = () => {
                 <Route
                   path="/admin-panel"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin"]}>
-                      <AdminPanel />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <AdminPanel />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 
@@ -231,9 +240,11 @@ const App = () => {
                 <Route
                   path="/create-user"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin"]}>
-                      <CreateUser />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <CreateUser />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
 
@@ -249,9 +260,11 @@ const App = () => {
                 <Route
                   path="/violations-admin"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
-                      <ViolationsAdmin />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
+                        <ViolationsAdmin />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
@@ -265,9 +278,11 @@ const App = () => {
                 <Route
                   path="/vehicle-management"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
-                      <VehicleManagement />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "traffic_police"]}>
+                        <VehicleManagement />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
@@ -307,9 +322,11 @@ const App = () => {
                 <Route
                   path="/wanted-persons-tree"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
-                      <WantedPersonsTree />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                        <WantedPersonsTree />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
 
@@ -325,25 +342,31 @@ const App = () => {
                 <Route
                   path="/smart-civil-registry"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin"]}>
-                      <SmartCivilRegistry />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <SmartCivilRegistry />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/advanced-face-recognition"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
-                      <AdvancedFaceRecognition />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                        <AdvancedFaceRecognition />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/face-recognition"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
-                      <FaceRecognition />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                        <FaceRecognition />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
 
@@ -385,17 +408,21 @@ const App = () => {
                 <Route
                   path="/cybercrime"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
-                      <Cybercrime />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <Cybercrime />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/cybercrime-reports"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
-                      <CybercrimeReports />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <CybercrimeReports />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
@@ -461,17 +488,21 @@ const App = () => {
                 <Route
                   path="/backup"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin"]}>
-                      <Backup />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <Backup />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/citizen-records"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
-                      <CitizenRecords />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                        <CitizenRecords />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
 
@@ -479,17 +510,21 @@ const App = () => {
                 <Route
                   path="/cybercrime-advanced"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
-                      <CybercrimeAdvanced />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <CybercrimeAdvanced />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
                   path="/cybercrime-dashboard"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
-                      <CybercrimeAdvancedDashboard />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <CybercrimeAdvancedDashboard />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
 
@@ -525,9 +560,11 @@ const App = () => {
                 <Route
                   path="/forensic-labs"
                   element={
-                    <RoleBasedRoute allowedRoles={["admin", "cid"]}>
-                      <ForensicLabs />
-                    </RoleBasedRoute>
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid"]}>
+                        <ForensicLabs />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
