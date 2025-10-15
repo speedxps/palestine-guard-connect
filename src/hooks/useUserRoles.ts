@@ -13,29 +13,41 @@ export type UserRole =
   | 'user';
 
 export const useUserRoles = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserRoles = async () => {
-      if (!user) {
+      // Use session.user.id instead of user.id for better reliability
+      const userId = session?.user?.id || user?.id;
+      
+      if (!userId) {
         setRoles([]);
         setLoading(false);
         return;
       }
 
       try {
+        console.log('Fetching roles for user:', userId);
+        
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
 
-        if (error) throw error;
+        console.log('User roles response:', { data, error });
 
-        setRoles(data?.map(r => r.role as UserRole) || []);
+        if (error) {
+          console.error('Error fetching user roles:', error);
+          throw error;
+        }
+
+        const fetchedRoles = data?.map(r => r.role as UserRole) || [];
+        console.log('Fetched roles:', fetchedRoles);
+        setRoles(fetchedRoles);
       } catch (error) {
-        console.error('Error fetching user roles:', error);
+        console.error('Exception fetching user roles:', error);
         setRoles([]);
       } finally {
         setLoading(false);
@@ -43,7 +55,7 @@ export const useUserRoles = () => {
     };
 
     fetchUserRoles();
-  }, [user]);
+  }, [user, session]);
 
   const hasRole = (role: UserRole): boolean => {
     return roles.includes(role);
