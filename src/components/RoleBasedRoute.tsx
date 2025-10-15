@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/hooks/useRoleBasedAccess';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RoleBasedRouteProps {
@@ -14,6 +15,7 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   allowedRoles 
 }) => {
   const { isAuthenticated, user, session } = useAuth();
+  const { roles, loading: rolesLoading, hasAnyRole } = useUserRoles();
   const [hasCybercrimeAccess, setHasCybercrimeAccess] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,21 +47,20 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   }, [user?.id, allowedRoles]);
 
   // Show loading while auth state is being determined
-  if (session === undefined || loading) {
+  if (session === undefined || loading || rolesLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (!isAuthenticated || !user || !session) {
     return <Navigate to="/login" replace />;
   }
-
-  const userRole = user?.role as UserRole;
   
-  // Check if user has required role OR has cybercrime access (if cybercrime role is allowed)
-  const hasRoleAccess = allowedRoles.includes(userRole);
+  // Check if user has any of the required roles from user_roles table
+  const hasRoleAccess = hasAnyRole(allowedRoles);
   const hasCybercrimeRoleAccess = allowedRoles.includes('cybercrime') && hasCybercrimeAccess === true;
   
   if (!hasRoleAccess && !hasCybercrimeRoleAccess) {
+    console.log('Access denied - User roles:', roles, 'Required:', allowedRoles);
     return <Navigate to="/access-denied" replace />;
   }
 

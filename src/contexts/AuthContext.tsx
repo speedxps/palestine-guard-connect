@@ -47,14 +47,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
           setUser(basicUserData);
           
-          // Try to fetch profile data but don't block on it
+          // Fetch profile and roles data
           setTimeout(async () => {
             try {
+              // Fetch profile
               const { data: profile } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('user_id', session.user.id)
                 .single();
+
+              // Fetch user roles
+              const { data: userRoles } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', session.user.id);
+                
+              // Get the first role or default to profile role
+              const primaryRole = userRoles && userRoles.length > 0 
+                ? userRoles[0].role as UserRole
+                : profile?.role || basicUserData.role;
                 
               if (profile) {
                 setUser({
@@ -62,9 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   name: profile.full_name || basicUserData.name,
                   full_name: profile.full_name,
                   avatar_url: profile.avatar_url,
-                  role: profile.role || basicUserData.role,
+                  role: primaryRole,
                 });
-                console.log('Profile loaded:', profile);
+                console.log('Profile loaded:', { ...profile, primaryRole });
               } else {
                 console.log('No profile found for user');
               }
@@ -139,11 +151,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!session?.user) return;
     
     try {
+      // Fetch profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', session.user.id)
         .single();
+
+      // Fetch user roles
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+        
+      // Get the first role or default to profile role
+      const primaryRole = userRoles && userRoles.length > 0 
+        ? userRoles[0].role as UserRole
+        : profile?.role;
       
       if (profile) {
         setUser(prev => prev ? {
@@ -151,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: profile.full_name || prev.name,
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
-          role: profile.role || prev.role,
+          role: primaryRole || prev.role,
         } : null);
       }
     } catch (error) {
