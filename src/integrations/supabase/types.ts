@@ -61,6 +61,21 @@ export type Database = {
           },
         ]
       }
+      app_user_roles: {
+        Row: {
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
