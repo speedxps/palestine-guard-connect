@@ -12,7 +12,8 @@ import {
   Clock,
   TrendingUp,
   Target,
-  Ticket
+  Ticket,
+  Newspaper
 } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
@@ -44,6 +45,14 @@ const SpecialPoliceSection = () => {
       path: '/feed',
       color: 'from-blue-500 to-blue-600',
       stats: '24 جديد'
+    },
+    {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-cyan-500 to-cyan-600',
+      stats: 'جديد'
     },
     {
       title: 'المحادثات',

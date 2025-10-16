@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Shield, CheckSquare, Users, Rss, MessageCircle, Activity } from 'lucide-react';
+import { Shield, CheckSquare, Users, Rss, MessageCircle, Activity, Newspaper, Ticket } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const SpecialPoliceDepartment = () => {
@@ -38,11 +38,25 @@ const SpecialPoliceDepartment = () => {
       color: 'from-orange-500 to-orange-600'
     },
     {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-cyan-500 to-cyan-600'
+    },
+    {
       title: 'المحادثات',
       description: 'التواصل مع الفرق والوحدات',
       icon: MessageCircle,
       path: '/chat',
       color: 'from-teal-500 to-teal-600'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600'
     },
     {
       title: 'مستخدمي القسم',

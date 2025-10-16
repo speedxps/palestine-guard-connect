@@ -220,24 +220,46 @@ const NotificationManagement = () => {
 
   const fetchNotificationViewers = async (notificationId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: viewsData, error: viewsError } = await supabase
         .from('notification_views')
-        .select(`
-          user_id,
-          viewed_at,
-          profiles:user_id (
-            full_name,
-            username,
-            email
-          )
-        `)
+        .select('user_id, viewed_at')
         .eq('notification_id', notificationId);
 
-      if (error) throw error;
-      setSelectedNotificationViewers(data || []);
+      if (viewsError) throw viewsError;
+
+      if (!viewsData || viewsData.length === 0) {
+        setSelectedNotificationViewers([]);
+        setViewersDialogOpen(true);
+        return;
+      }
+
+      // Fetch user profiles for each viewer
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, email')
+        .in('user_id', viewsData.map(v => v.user_id));
+
+      if (profilesError) throw profilesError;
+
+      // Combine views with profile data
+      const viewersWithProfiles = viewsData.map(view => {
+        const profile = profilesData?.find(p => p.user_id === view.user_id);
+        return {
+          user_id: view.user_id,
+          viewed_at: view.viewed_at,
+          profiles: profile || null
+        };
+      });
+
+      setSelectedNotificationViewers(viewersWithProfiles);
       setViewersDialogOpen(true);
     } catch (error: any) {
       console.error('Error fetching viewers:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل في جلب قائمة المشاهدين',
+        variant: 'destructive',
+      });
     }
   };
 
