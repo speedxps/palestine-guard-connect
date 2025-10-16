@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
 
 interface Notification {
   id: string;
@@ -16,11 +17,14 @@ interface Notification {
   priority: string;
   created_at: string;
   status: string;
+  action_url?: string;
+  news_id?: string;
 }
 
 export const NotificationBell = () => {
   const { user } = useAuth();
   const { roles } = useUserRoles();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -170,6 +174,12 @@ export const NotificationBell = () => {
   const handleNotificationClick = (notification: Notification) => {
     if (notification.status === 'unread') {
       markNotificationAsViewed(notification.id);
+    }
+    
+    // Navigate if action_url is provided
+    if (notification.action_url) {
+      setIsOpen(false); // Close the sheet
+      navigate(notification.action_url);
     }
   };
 

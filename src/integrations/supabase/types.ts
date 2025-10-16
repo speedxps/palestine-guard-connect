@@ -1249,10 +1249,12 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_url: string | null
           created_at: string
           id: string
           is_system_wide: boolean | null
           message: string
+          news_id: string | null
           priority: string | null
           recipient_id: string | null
           sender_id: string
@@ -1261,10 +1263,12 @@ export type Database = {
           title: string
         }
         Insert: {
+          action_url?: string | null
           created_at?: string
           id?: string
           is_system_wide?: boolean | null
           message: string
+          news_id?: string | null
           priority?: string | null
           recipient_id?: string | null
           sender_id: string
@@ -1273,10 +1277,12 @@ export type Database = {
           title: string
         }
         Update: {
+          action_url?: string | null
           created_at?: string
           id?: string
           is_system_wide?: boolean | null
           message?: string
+          news_id?: string | null
           priority?: string | null
           recipient_id?: string | null
           sender_id?: string
@@ -1285,6 +1291,13 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "internal_news"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_recipient_id_fkey"
             columns: ["recipient_id"]
