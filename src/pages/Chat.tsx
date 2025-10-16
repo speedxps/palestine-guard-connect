@@ -1,146 +1,438 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { BackButton } from '@/components/BackButton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserRoles } from '@/hooks/useUserRoles';
+import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowLeft, 
   Send, 
-  Mic, 
-  Paperclip, 
-  MapPin,
-  Phone,
-  Video,
-  Shield
+  Shield,
+  Plus,
+  Users,
+  Edit,
+  Trash2,
+  UserPlus,
+  X
 } from 'lucide-react';
-
-interface Message {
-  id: string;
-  sender: string;
-  content: string;
-  timestamp: string;
-  type: 'text' | 'voice' | 'image' | 'location';
-  isOwn: boolean;
-}
 
 interface ChatRoom {
   id: string;
   name: string;
-  type: 'group' | 'private';
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  isOnline: boolean;
+  description: string | null;
+  department: string;
+  created_by: string;
+  created_at: string;
+  member_count?: number;
 }
 
-const demoChatRooms: ChatRoom[] = [
-  {
-    id: '1',
-    name: 'غرفة العمليات الرئيسية',
-    type: 'group',
-    lastMessage: 'تم تأكيد وصول الدعم إلى الموقع',
-    timestamp: '14:30',
-    unread: 3,
-    isOnline: true
-  },
-  {
-    id: '2',
-    name: 'قائد الدورية الشرقية',
-    type: 'private',
-    lastMessage: 'سأكون في الموقع خلال 10 دقائق',
-    timestamp: '14:15',
-    unread: 1,
-    isOnline: true
-  },
-  {
-    id: '3',
-    name: 'فريق التحقيقات',
-    type: 'group',
-    lastMessage: 'نحتاج إلى مراجعة تسجيلات الكاميرات',
-    timestamp: '13:45',
-    unread: 0,
-    isOnline: false
-  },
-  {
-    id: '4',
-    name: 'الدعم التقني',
-    type: 'group',
-    lastMessage: 'تم إصلاح مشكلة النظام',
-    timestamp: '12:30',
-    unread: 0,
-    isOnline: true
-  }
-];
+interface Message {
+  id: string;
+  room_id: string;
+  sender_id: string;
+  message: string;
+  created_at: string;
+  sender?: {
+    full_name: string;
+    avatar_url: string | null;
+  };
+}
 
-const demoMessages: Message[] = [
-  {
-    id: '1',
-    sender: 'أحمد محمد',
-    content: 'السلام عليكم، هل تم تأكيد الموقع؟',
-    timestamp: '14:25',
-    type: 'text',
-    isOwn: false
-  },
-  {
-    id: '2',
-    sender: 'أنت',
-    content: 'نعم، أكدت وصولي إلى الموقع',
-    timestamp: '14:26',
-    type: 'text',
-    isOwn: true
-  },
-  {
-    id: '3',
-    sender: 'سارة أحمد',
-    content: 'هل تحتاجون دعماً إضافياً؟',
-    timestamp: '14:28',
-    type: 'text',
-    isOwn: false
-  },
-  {
-    id: '4',
-    sender: 'أنت',
-    content: 'تم تأكيد وصول الدعم إلى الموقع',
-    timestamp: '14:30',
-    type: 'text',
-    isOwn: true
-  }
-];
+interface RoomMember {
+  id: string;
+  user_id: string;
+  joined_at: string;
+  profile?: {
+    full_name: string;
+    avatar_url: string | null;
+    badge_number: string | null;
+  };
+}
 
 const Chat = () => {
   const navigate = useNavigate();
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { roles } = useUserRoles();
+  const { toast } = useToast();
+
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+  const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState(demoMessages);
+  const [loading, setLoading] = useState(true);
+  
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+  const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
+  
+  // Form states
+  const [roomName, setRoomName] = useState('');
+  const [roomDescription, setRoomDescription] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>(roles[0] || '');
+  
+  // Members states
+  const [roomMembers, setRoomMembers] = useState<RoomMember[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      const newMessage: Message = {
-        id: String(messages.length + 1),
-        sender: 'أنت',
-        content: message,
-        timestamp: new Date().toLocaleTimeString('ar-SA', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        type: 'text',
-        isOwn: true
-      };
-      
-      setMessages([...messages, newMessage]);
+  useEffect(() => {
+    if (roles.length > 0) {
+      setSelectedDepartment(roles[0]);
+      fetchChatRooms();
+    }
+  }, [roles]);
+
+  useEffect(() => {
+    if (selectedRoom) {
+      fetchMessages();
+      const cleanup = subscribeToMessages();
+      return cleanup;
+    }
+  }, [selectedRoom]);
+
+  const fetchChatRooms = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('chat_rooms')
+        .select('*')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      setChatRooms(data || []);
+    } catch (error) {
+      console.error('Error fetching chat rooms:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء تحميل غرف المحادثة',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    if (!selectedRoom) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('department_chat_messages')
+        .select(`
+          *,
+          sender:profiles!department_chat_messages_sender_id_fkey(
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('room_id', selectedRoom.id)
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const subscribeToMessages = () => {
+    if (!selectedRoom) return () => {};
+
+    const channel = supabase
+      .channel(`room-${selectedRoom.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'department_chat_messages',
+          filter: `room_id=eq.${selectedRoom.id}`,
+        },
+        async (payload) => {
+          const { data: senderData } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', payload.new.sender_id)
+            .single();
+
+          setMessages((prev) => [
+            ...prev,
+            { ...payload.new, sender: senderData } as Message,
+          ]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !selectedRoom || !user) return;
+
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) return;
+
+      const { error } = await supabase
+        .from('department_chat_messages')
+        .insert({
+          room_id: selectedRoom.id,
+          sender_id: profileData.id,
+          message: message.trim(),
+        });
+
+      if (error) throw error;
       setMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل إرسال الرسالة',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
+  const handleCreateRoom = async () => {
+    if (!roomName.trim() || !user) return;
+
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) return;
+
+      const { data: newRoom, error } = await supabase
+        .from('chat_rooms')
+        .insert([{
+          name: roomName.trim(),
+          description: roomDescription.trim() || null,
+          department: selectedDepartment as any,
+          created_by: profileData.id,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add creator as member
+      await supabase.from('chat_room_members').insert({
+        room_id: newRoom.id,
+        user_id: profileData.id,
+      });
+
+      toast({
+        title: 'نجح',
+        description: 'تم إنشاء غرفة المحادثة',
+      });
+
+      setCreateDialogOpen(false);
+      setRoomName('');
+      setRoomDescription('');
+      fetchChatRooms();
+    } catch (error) {
+      console.error('Error creating room:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل إنشاء غرفة المحادثة',
+        variant: 'destructive',
+      });
     }
   };
 
-  if (selectedChat) {
+  const handleUpdateRoom = async () => {
+    if (!selectedRoom || !roomName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_rooms')
+        .update({
+          name: roomName.trim(),
+          description: roomDescription.trim() || null,
+        })
+        .eq('id', selectedRoom.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'نجح',
+        description: 'تم تحديث غرفة المحادثة',
+      });
+
+      setEditDialogOpen(false);
+      fetchChatRooms();
+    } catch (error) {
+      console.error('Error updating room:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل تحديث غرفة المحادثة',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteRoom = async (roomId: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الغرفة؟')) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_rooms')
+        .update({ is_active: false })
+        .eq('id', roomId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'نجح',
+        description: 'تم حذف غرفة المحادثة',
+      });
+
+      if (selectedRoom?.id === roomId) {
+        setSelectedRoom(null);
+      }
+      fetchChatRooms();
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل حذف غرفة المحادثة',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchRoomMembers = async (roomId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_room_members')
+        .select(`
+          *,
+          profile:profiles!chat_room_members_user_id_fkey(
+            full_name,
+            avatar_url,
+            badge_number
+          )
+        `)
+        .eq('room_id', roomId);
+
+      if (error) throw error;
+      setRoomMembers(data || []);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    }
+  };
+
+  const fetchAvailableUsers = async (department: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select(`
+          user_id,
+          profiles!user_roles_user_id_fkey(
+            id,
+            full_name,
+            badge_number,
+            avatar_url
+          )
+        `)
+        .eq('role', department as any);
+
+      if (error) throw error;
+      
+      const users = data
+        ?.map((item) => item.profiles)
+        .filter((profile): profile is NonNullable<typeof profile> => profile !== null);
+      
+      setAvailableUsers(users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!selectedRoom || !selectedUserId) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_room_members')
+        .insert({
+          room_id: selectedRoom.id,
+          user_id: selectedUserId,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'نجح',
+        description: 'تم إضافة العضو',
+      });
+
+      setAddMemberDialogOpen(false);
+      setSelectedUserId('');
+      fetchRoomMembers(selectedRoom.id);
+    } catch (error) {
+      console.error('Error adding member:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل إضافة العضو',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string, userId: string) => {
+    if (!confirm('هل أنت متأكد من إزالة هذا العضو؟')) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_room_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'نجح',
+        description: 'تم إزالة العضو',
+      });
+
+      if (selectedRoom) {
+        fetchRoomMembers(selectedRoom.id);
+      }
+    } catch (error) {
+      console.error('Error removing member:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل إزالة العضو',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (selectedRoom) {
     return (
       <div className="mobile-container">
         {/* Chat Header */}
@@ -150,78 +442,91 @@ const Chat = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setSelectedChat(null)}
+                onClick={() => setSelectedRoom(null)}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h3 className="font-semibold font-arabic">غرفة العمليات الرئيسية</h3>
-                <p className="text-xs text-green-400">متصل • 12 عضو</p>
+                <h3 className="font-semibold font-arabic">{selectedRoom.name}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {selectedRoom.description || 'غرفة محادثة'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
-                <Phone className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  fetchRoomMembers(selectedRoom.id);
+                  setMembersDialogOpen(true);
+                }}
+              >
+                <Users className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon">
-                <Video className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setRoomName(selectedRoom.name);
+                  setRoomDescription(selectedRoom.description || '');
+                  setEditDialogOpen(true);
+                }}
+              >
+                <Edit className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 p-4 space-y-4 pb-20 max-h-[calc(100vh-140px)] overflow-y-auto">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] p-3 rounded-2xl ${
-                  msg.isOwn
-                    ? 'bg-primary text-primary-foreground rounded-br-md'
-                    : 'bg-card/50 text-foreground rounded-bl-md'
-                }`}
-              >
-                {!msg.isOwn && (
-                  <p className="text-xs text-muted-foreground mb-1 font-arabic">
-                    {msg.sender}
-                  </p>
-                )}
-                <p className="text-sm">{msg.content}</p>
-                <p className="text-xs opacity-70 mt-1 text-right">
-                  {msg.timestamp}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ScrollArea className="flex-1 p-4 h-[calc(100vh-200px)]">
+          <div className="space-y-4">
+            {messages.map((msg) => {
+              const isOwn = user?.id && msg.sender_id === user.id;
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-2xl ${
+                      isOwn
+                        ? 'bg-primary text-primary-foreground rounded-br-md'
+                        : 'bg-card/50 text-foreground rounded-bl-md'
+                    }`}
+                  >
+                    {!isOwn && msg.sender && (
+                      <p className="text-xs text-muted-foreground mb-1 font-arabic">
+                        {msg.sender.full_name}
+                      </p>
+                    )}
+                    <p className="text-sm">{msg.message}</p>
+                    <p className="text-xs opacity-70 mt-1 text-right">
+                      {new Date(msg.created_at).toLocaleTimeString('ar-SA', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
 
         {/* Message Input */}
         <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-card/80 backdrop-blur-md border-t border-border/50 p-4">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <div className="flex-1 relative">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="اكتب رسالة..."
-                className="pr-10"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
-              >
-                <Mic className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button 
-              variant="police" 
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="اكتب رسالة..."
+              className="flex-1"
+            />
+            <Button
+              variant="default"
               size="icon"
               onClick={handleSendMessage}
               disabled={!message.trim()}
@@ -230,6 +535,135 @@ const Chat = () => {
             </Button>
           </div>
         </div>
+
+        {/* Members Dialog */}
+        <Dialog open={membersDialogOpen} onOpenChange={setMembersDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-arabic">أعضاء الغرفة</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Button
+                onClick={() => {
+                  fetchAvailableUsers(selectedRoom.department);
+                  setAddMemberDialogOpen(true);
+                }}
+                className="w-full"
+              >
+                <UserPlus className="h-4 w-4 ml-2" />
+                إضافة عضو
+              </Button>
+              <ScrollArea className="h-[300px]">
+                {roomMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between p-2 border-b"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        {member.profile?.avatar_url ? (
+                          <img
+                            src={member.profile.avatar_url}
+                            alt=""
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm">
+                            {member.profile?.full_name?.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-arabic">
+                          {member.profile?.full_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {member.profile?.badge_number}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveMember(member.id, member.user_id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Member Dialog */}
+        <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-arabic">إضافة عضو جديد</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>اختر العضو</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر عضو" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name} - {user.badge_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleAddMember} className="w-full">
+                إضافة
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Room Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-arabic">تعديل الغرفة</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>اسم الغرفة</Label>
+                <Input
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  placeholder="اسم الغرفة"
+                />
+              </div>
+              <div>
+                <Label>الوصف</Label>
+                <Textarea
+                  value={roomDescription}
+                  onChange={(e) => setRoomDescription(e.target.value)}
+                  placeholder="وصف الغرفة"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleUpdateRoom} className="flex-1">
+                  حفظ
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleDeleteRoom(selectedRoom.id)}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-4 w-4 ml-2" />
+                  حذف
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -242,15 +676,69 @@ const Chat = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(-1)}
             className="text-foreground"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-xl font-bold font-arabic">الرسائل الآمنة</h1>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold font-arabic">المحادثات الآمنة</h1>
             <p className="text-sm text-muted-foreground">Secure Messaging</p>
           </div>
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 ml-2" />
+                غرفة جديدة
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-arabic">إنشاء غرفة محادثة</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>اسم الغرفة</Label>
+                  <Input
+                    value={roomName}
+                    onChange={(e) => setRoomName(e.target.value)}
+                    placeholder="اسم الغرفة"
+                  />
+                </div>
+                <div>
+                  <Label>الوصف</Label>
+                  <Textarea
+                    value={roomDescription}
+                    onChange={(e) => setRoomDescription(e.target.value)}
+                    placeholder="وصف الغرفة"
+                  />
+                </div>
+                <div>
+                  <Label>القسم</Label>
+                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {role === 'admin' && 'الإدارة العامة'}
+                          {role === 'traffic_police' && 'شرطة المرور'}
+                          {role === 'cid' && 'المباحث الجنائية'}
+                          {role === 'special_police' && 'الشرطة الخاصة'}
+                          {role === 'cybercrime' && 'الجرائم الإلكترونية'}
+                          {role === 'judicial_police' && 'الشرطة القضائية'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleCreateRoom} className="w-full">
+                  إنشاء
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -260,68 +748,60 @@ const Chat = () => {
           <div className="flex items-center gap-3">
             <Shield className="h-5 w-5 text-green-400" />
             <div>
-              <h4 className="font-semibold text-green-400">تشفير من النهاية للنهاية</h4>
+              <h4 className="font-semibold text-green-400">محادثات آمنة</h4>
               <p className="text-xs text-green-400/80">
-                جميع الرسائل محمية بتشفير متقدم
+                جميع الرسائل محمية بسياسات الأمان المتقدمة
               </p>
             </div>
           </div>
         </Card>
 
         {/* Chat Rooms */}
-        <div className="space-y-3">
-          {demoChatRooms.map((chat) => (
-            <Card 
-              key={chat.id} 
-              className="glass-card p-4 cursor-pointer hover:bg-card/90 transition-all duration-300"
-              onClick={() => setSelectedChat(chat.id)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      chat.type === 'group' ? 'bg-primary/20' : 'bg-blue-500/20'
-                    }`}>
-                      <span className="text-lg">
-                        {chat.type === 'group' ? '👥' : '👤'}
-                      </span>
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">جاري التحميل...</div>
+        ) : chatRooms.length === 0 ? (
+          <Card className="glass-card p-8 text-center">
+            <p className="text-muted-foreground mb-4">لا توجد غرف محادثة</p>
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 ml-2" />
+              إنشاء غرفة جديدة
+            </Button>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {chatRooms.map((room) => (
+              <Card
+                key={room.id}
+                className="glass-card p-4 cursor-pointer hover:bg-card/90 transition-all duration-300"
+                onClick={() => setSelectedRoom(room)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Users className="h-6 w-6 text-primary" />
                     </div>
-                    {chat.isOnline && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-background"></div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex-1">
                       <h3 className="font-semibold font-arabic text-sm">
-                        {chat.name}
+                        {room.name}
                       </h3>
-                      {chat.type === 'group' && (
-                        <Badge variant="outline" className="text-xs">
-                          مجموعة
-                        </Badge>
-                      )}
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {room.description || 'غرفة محادثة'}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {chat.lastMessage}
-                    </p>
                   </div>
+                  <Badge variant="outline" className="text-xs">
+                    {room.department === 'admin' && 'الإدارة'}
+                    {room.department === 'traffic_police' && 'المرور'}
+                    {room.department === 'cid' && 'المباحث'}
+                    {room.department === 'special_police' && 'الخاصة'}
+                    {room.department === 'cybercrime' && 'السيبرانية'}
+                    {room.department === 'judicial_police' && 'القضائية'}
+                  </Badge>
                 </div>
-                
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs text-muted-foreground">
-                    {chat.timestamp}
-                  </span>
-                  {chat.unread > 0 && (
-                    <Badge className="bg-emergency text-emergency-foreground text-xs min-w-[20px] h-5 rounded-full">
-                      {chat.unread}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

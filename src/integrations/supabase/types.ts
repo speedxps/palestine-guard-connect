@@ -115,6 +115,83 @@ export type Database = {
           },
         ]
       }
+      chat_room_members: {
+        Row: {
+          id: string
+          joined_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_room_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_rooms: {
+        Row: {
+          created_at: string
+          created_by: string
+          department: Database["public"]["Enums"]["app_role"]
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          department: Database["public"]["Enums"]["app_role"]
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          department?: Database["public"]["Enums"]["app_role"]
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rooms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       citizen_audit_log: {
         Row: {
           action_type: string
@@ -517,6 +594,51 @@ export type Database = {
           {
             foreignKeyName: "cybercrime_reports_reporter_id_fkey"
             columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      department_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_deleted: boolean
+          message: string
+          room_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          message: string
+          room_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          message?: string
+          room_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
