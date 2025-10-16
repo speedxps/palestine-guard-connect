@@ -38,79 +38,93 @@ serve(async (req) => {
 
     console.log('Starting user deletion process for:', userId);
 
-    // حذف السجلات المرتبطة أولاً لتجنب مشاكل foreign key
-    
-    // 1. حذف tickets
-    const { error: ticketsError } = await supabaseAdmin
-      .from('tickets')
-      .delete()
-      .eq('user_id', userId);
-    
-    if (ticketsError) {
-      console.error('Error deleting tickets:', ticketsError);
+    // أولاً: جلب profile.id من user_id
+    const { data: profileData } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (!profileData) {
+      return new Response(
+        JSON.stringify({ error: 'Profile not found' }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // 2. حذف activity logs
-    const { error: activityError } = await supabaseAdmin
-      .from('activity_logs')
-      .delete()
-      .eq('user_id', userId);
-    
-    if (activityError) {
-      console.error('Error deleting activity logs:', activityError);
-    }
+    const profileId = profileData.id;
+    console.log('Profile ID:', profileId);
 
-    // 3. حذف user_roles
-    const { error: rolesError } = await supabaseAdmin
-      .from('user_roles')
-      .delete()
-      .eq('user_id', userId);
+    // حذف السجلات المرتبطة بـ profiles.id أولاً
     
-    if (rolesError) {
-      console.error('Error deleting user roles:', rolesError);
-    }
-
-    // 4. حذف news_reads
-    const { error: newsReadsError } = await supabaseAdmin
-      .from('news_reads')
-      .delete()
-      .eq('user_id', userId);
+    // 1. حذف incidents
+    await supabaseAdmin.from('incidents').delete().eq('reporter_id', profileId);
+    await supabaseAdmin.from('incidents').delete().eq('assigned_to', profileId);
     
-    if (newsReadsError) {
-      console.error('Error deleting news reads:', newsReadsError);
-    }
-
-    // 5. حذف notification_views
-    const { error: notificationViewsError } = await supabaseAdmin
-      .from('notification_views')
-      .delete()
-      .eq('user_id', userId);
+    // 2. حذف cybercrime_reports
+    await supabaseAdmin.from('cybercrime_reports').delete().eq('reporter_id', profileId);
+    await supabaseAdmin.from('cybercrime_reports').delete().eq('assigned_to', profileId);
     
-    if (notificationViewsError) {
-      console.error('Error deleting notification views:', notificationViewsError);
-    }
-
-    // 6. حذف cybercrime_access
-    const { error: cybercrimeAccessError } = await supabaseAdmin
-      .from('cybercrime_access')
-      .delete()
-      .eq('user_id', userId);
+    // 3. حذف tasks
+    await supabaseAdmin.from('tasks').delete().eq('assigned_by', profileId);
+    await supabaseAdmin.from('tasks').delete().eq('assigned_to', profileId);
     
-    if (cybercrimeAccessError) {
-      console.error('Error deleting cybercrime access:', cybercrimeAccessError);
-    }
-
-    // 7. حذف face_data
-    const { error: faceDataError } = await supabaseAdmin
-      .from('face_data')
-      .delete()
-      .eq('user_id', userId);
+    // 4. حذف notifications
+    await supabaseAdmin.from('notifications').delete().eq('sender_id', profileId);
+    await supabaseAdmin.from('notifications').delete().eq('recipient_id', profileId);
     
-    if (faceDataError) {
-      console.error('Error deleting face data:', faceDataError);
-    }
-
-    // 8. حذف profiles
+    // 5. حذف chat_messages
+    await supabaseAdmin.from('chat_messages').delete().eq('sender_id', profileId);
+    await supabaseAdmin.from('chat_messages').delete().eq('recipient_id', profileId);
+    
+    // 6. حذف department_chat_messages
+    await supabaseAdmin.from('department_chat_messages').delete().eq('sender_id', profileId);
+    
+    // 7. حذف chat_rooms
+    await supabaseAdmin.from('chat_rooms').delete().eq('created_by', profileId);
+    
+    // 8. حذف chat_room_members (سيحذف تلقائياً مع CASCADE)
+    await supabaseAdmin.from('chat_room_members').delete().eq('user_id', profileId);
+    
+    // 9. حذف incident_files
+    await supabaseAdmin.from('incident_files').delete().eq('uploaded_by', profileId);
+    
+    // 10. حذف patrol_tracking
+    await supabaseAdmin.from('patrol_tracking').delete().eq('officer_id', profileId);
+    
+    // 11. حذف reports
+    await supabaseAdmin.from('reports').delete().eq('generated_by', profileId);
+    
+    // 12. حذف activity_logs (المرتبط بـ profile.id)
+    await supabaseAdmin.from('activity_logs').delete().eq('user_id', profileId);
+    
+    // حذف السجلات المرتبطة بـ user_id
+    
+    // 13. حذف tickets
+    await supabaseAdmin.from('tickets').delete().eq('user_id', userId);
+    
+    // 14. حذف user_roles
+    await supabaseAdmin.from('user_roles').delete().eq('user_id', userId);
+    
+    // 15. حذف news_reads
+    await supabaseAdmin.from('news_reads').delete().eq('user_id', userId);
+    
+    // 16. حذف notification_views
+    await supabaseAdmin.from('notification_views').delete().eq('user_id', userId);
+    
+    // 17. حذف cybercrime_access
+    await supabaseAdmin.from('cybercrime_access').delete().eq('user_id', userId);
+    
+    // 18. حذف face_data
+    await supabaseAdmin.from('face_data').delete().eq('user_id', userId);
+    
+    // السجلات مع CASCADE ستحذف تلقائياً: posts, post_comments, post_likes, 
+    // cybercrime_comments, cybercrime_followers, duty_chat_messages
+    
+    // 19. أخيراً حذف profile
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -118,9 +132,16 @@ serve(async (req) => {
     
     if (profileError) {
       console.error('Error deleting profile:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to delete profile: ' + profileError.message }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // 9. أخيراً حذف المستخدم من auth
+    // 20. أخيراً حذف المستخدم من auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteError) {

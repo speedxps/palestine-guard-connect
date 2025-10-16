@@ -7,6 +7,7 @@ import { Search, AlertTriangle, Users, Calendar, Printer, Upload, FileSpreadshee
 import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTickets } from "@/hooks/useTickets";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -50,6 +51,7 @@ export default function Violations() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const { logTicket } = useTickets();
 
   // Details dialog state
   const [selected, setSelected] = useState<RecordItem | null>(null);
@@ -94,6 +96,17 @@ export default function Violations() {
 
       if (error) throw error;
       setResults(data || []);
+      
+      // تسجيل عملية البحث في tickets
+      await logTicket({
+        section: 'المخالفات والقضايا',
+        action_type: 'view',
+        description: `بحث عن مخالفات برقم الهوية: ${q}`,
+        metadata: { 
+          nationalId: q,
+          resultsCount: data?.length || 0
+        }
+      });
       
       // Fetch citizen photos and wanted status
       if (data && data.length > 0) {

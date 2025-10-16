@@ -165,6 +165,14 @@ const Dashboard = () => {
       path: "/incidents", 
       roles: [] 
     },
+    { 
+      title: "المخالفات والقضايا", 
+      subtitle: "0 Tickets", 
+      sectionName: "المخالفات والقضايا",
+      color: "bg-[#9E9E9E]", 
+      path: "/violations", 
+      roles: [] 
+    },
   ];
 
   const newsItems = [
