@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 import { useTranslation } from '@/hooks/useLanguage';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -80,6 +81,7 @@ interface WantedPerson {
 
 const CitizenRecords: React.FC = () => {
   const { toast } = useToast();
+  const { logTicket } = useTickets();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [records, setRecords] = useState<CitizenRecord[]>([]);
@@ -383,7 +385,20 @@ const CitizenRecords: React.FC = () => {
             <Input
               placeholder={`${t('general.search')}...`}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={async (e) => {
+                const term = e.target.value;
+                setSearchTerm(term);
+                
+                // تسجيل البحث إذا كان طول النص أكبر من 2
+                if (term.length > 2) {
+                  await logTicket({
+                    section: 'سجلات المواطنين',
+                    action_type: 'view',
+                    description: `بحث عن: ${term}`,
+                    metadata: { searchTerm: term, resultsCount: filteredRecords.length }
+                  });
+                }
+              }}
               className="pr-10 font-arabic"
             />
           </div>
@@ -395,7 +410,25 @@ const CitizenRecords: React.FC = () => {
                 key={type}
                 variant={filterType === type ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilterType(type as any)}
+                onClick={async () => {
+                  setFilterType(type as any);
+                  
+                  // تسجيل الفلترة
+                  const filterLabels = {
+                    all: 'الكل',
+                    violations: 'المخالفات',
+                    cybercrime: 'الجرائم الإلكترونية',
+                    incidents: 'الحوادث',
+                    wanted: 'المطلوبين'
+                  };
+                  
+                  await logTicket({
+                    section: 'سجلات المواطنين',
+                    action_type: 'view',
+                    description: `تصفية السجلات حسب: ${filterLabels[type as keyof typeof filterLabels]}`,
+                    metadata: { filterType: type }
+                  });
+                }}
                 className="font-arabic whitespace-nowrap flex-shrink-0"
               >
                 <Filter className="h-3 w-3 mr-1" />
@@ -466,7 +499,23 @@ const CitizenRecords: React.FC = () => {
                       variant="outline" 
                       size="sm"
                       className="w-full font-arabic text-sm"
-                      onClick={() => setSelectedRecord(record)}
+                      onClick={async () => {
+                        setSelectedRecord(record);
+                        // تسجيل العملية في tickets
+                        await logTicket({
+                          section: 'سجلات المواطنين',
+                          action_type: 'view',
+                          description: `عرض تفاصيل المواطن: ${record.full_name} (${record.national_id})`,
+                          metadata: { 
+                            citizenId: record.id,
+                            nationalId: record.national_id,
+                            hasViolations: record.traffic_violations.length > 0,
+                            hasCybercrimeReports: record.cybercrime_reports.length > 0,
+                            hasIncidents: record.incidents.length > 0,
+                            isWanted: !!record.wanted_status
+                          }
+                        });
+                      }}
                     >
                       <Eye className="h-3 w-3 ml-1" />
                       {t('citizen_records.view_details')}

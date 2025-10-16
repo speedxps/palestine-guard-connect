@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 import { Shield, Check, X, UserCog, Trash2, Edit } from 'lucide-react';
 import {
   Dialog,
@@ -40,6 +41,7 @@ interface UserWithRoles {
 
 const UserPermissions = () => {
   const { toast } = useToast();
+  const { logTicket } = useTickets();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -106,6 +108,8 @@ const UserPermissions = () => {
 
   const toggleUserStatus = async (userId: string, isActive: boolean) => {
     try {
+      const user = users.find(u => u.user_id === userId);
+      
       const { error } = await supabase
         .from('profiles')
         .update({ is_active: !isActive })
@@ -116,6 +120,14 @@ const UserPermissions = () => {
       toast({
         title: 'نجح',
         description: `تم ${!isActive ? 'تفعيل' : 'تعطيل'} المستخدم`,
+      });
+
+      // تسجيل العملية في tickets
+      await logTicket({
+        section: 'صلاحيات المستخدمين',
+        action_type: 'update',
+        description: `${!isActive ? 'تفعيل' : 'تعطيل'} المستخدم: ${user?.full_name || 'غير معروف'}`,
+        metadata: { userId, previousStatus: isActive, newStatus: !isActive }
       });
 
       fetchUsersWithRoles();
@@ -147,6 +159,7 @@ const UserPermissions = () => {
 
     try {
       setUpdating(true);
+      const previousRoles = selectedUser.roles;
 
       // حذف جميع الأدوار الحالية
       const { error: deleteError } = await supabase
@@ -173,6 +186,18 @@ const UserPermissions = () => {
       toast({
         title: 'نجح',
         description: 'تم تحديث صلاحيات المستخدم بنجاح',
+      });
+
+      // تسجيل العملية في tickets
+      await logTicket({
+        section: 'صلاحيات المستخدمين',
+        action_type: 'update',
+        description: `تعديل صلاحيات المستخدم: ${selectedUser.full_name}`,
+        metadata: { 
+          userId: selectedUser.user_id,
+          previousRoles,
+          newRoles: selectedRoles
+        }
       });
 
       setEditDialogOpen(false);
@@ -210,6 +235,18 @@ const UserPermissions = () => {
       toast({
         title: 'نجح',
         description: 'تم حذف المستخدم بنجاح',
+      });
+
+      // تسجيل العملية في tickets
+      await logTicket({
+        section: 'صلاحيات المستخدمين',
+        action_type: 'delete',
+        description: `حذف المستخدم: ${selectedUser.full_name} (${selectedUser.email})`,
+        metadata: { 
+          userId: selectedUser.user_id,
+          email: selectedUser.email,
+          roles: selectedUser.roles
+        }
       });
 
       setDeleteDialogOpen(false);

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MapPin, 
@@ -38,6 +39,7 @@ interface IncidentItem {
 const Incidents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logTicket } = useTickets();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -281,13 +283,48 @@ const Incidents = () => {
             <Input
               placeholder="البحث في البلاغات..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={async (e) => {
+                const term = e.target.value;
+                setSearchTerm(term);
+                
+                // تسجيل البحث إذا كان طول النص أكبر من 2
+                if (term.length > 2) {
+                  await logTicket({
+                    section: 'الحوادث والبلاغات',
+                    action_type: 'view',
+                    description: `بحث في الحوادث عن: ${term}`,
+                    metadata: { searchTerm: term }
+                  });
+                }
+              }}
               className="pl-10 h-12 bg-background/50 border-border/50"
             />
           </div>
           
           <div className="flex gap-2">
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={async (value) => {
+              setFilterType(value);
+              
+              // تسجيل الفلترة
+              const typeLabels: Record<string, string> = {
+                all: 'جميع الأنواع',
+                emergency: 'طوارئ',
+                theft: 'سرقة',
+                accident: 'حادث',
+                riot: 'اضطرابات',
+                violence: 'عنف',
+                fire: 'حريق',
+                medical: 'طوارئ طبية',
+                task: 'مهام'
+              };
+              
+              await logTicket({
+                section: 'الحوادث والبلاغات',
+                action_type: 'view',
+                description: `تصفية الحوادث حسب النوع: ${typeLabels[value] || value}`,
+                metadata: { filterType: value }
+              });
+            }}>
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="نوع البلاغ" />
               </SelectTrigger>
@@ -304,7 +341,26 @@ const Incidents = () => {
               </SelectContent>
             </Select>
             
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={async (value) => {
+              setFilterStatus(value);
+              
+              // تسجيل الفلترة
+              const statusLabels: Record<string, string> = {
+                all: 'جميع الحالات',
+                new: 'جديد',
+                in_progress: 'قيد المعالجة',
+                resolved: 'محلول',
+                pending: 'معلق',
+                completed: 'مكتمل'
+              };
+              
+              await logTicket({
+                section: 'الحوادث والبلاغات',
+                action_type: 'view',
+                description: `تصفية الحوادث حسب الحالة: ${statusLabels[value] || value}`,
+                metadata: { filterStatus: value }
+              });
+            }}>
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="الحالة" />
               </SelectTrigger>
