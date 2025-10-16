@@ -2,11 +2,13 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Crown, Settings, Users, FileText, Database, Shield } from 'lucide-react';
+import { Crown, Settings, Users, FileText, Database, Shield, Ticket, MessageCircle, Newspaper } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const AdminDepartment = () => {
   const navigate = useNavigate();
+  const stats = useDashboardStats();
 
   const adminTools = [
     {
@@ -43,6 +45,28 @@ const AdminDepartment = () => {
       icon: Settings,
       path: '/user-permissions',
       color: 'from-gray-500 to-gray-600'
+    },
+    {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-cyan-500 to-cyan-600'
+    },
+    {
+      title: 'المحادثات',
+      description: 'التواصل مع الفريق',
+      icon: MessageCircle,
+      path: '/chat',
+      color: 'from-indigo-500 to-indigo-600'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600',
+      stats: `${stats.adminTickets} Tickets`
     }
   ];
 
@@ -74,6 +98,9 @@ const AdminDepartment = () => {
                 <CardDescription className="font-arabic text-gray-600">
                   {tool.description}
                 </CardDescription>
+                {tool.stats && (
+                  <p className="text-sm font-semibold text-primary">{tool.stats}</p>
+                )}
               </CardHeader>
               <CardContent>
                 <Button 

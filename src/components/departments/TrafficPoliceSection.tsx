@@ -11,11 +11,16 @@ import {
   Users,
   TrendingUp,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Ticket,
+  MessageCircle,
+  Newspaper
 } from 'lucide-react';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const TrafficPoliceSection = () => {
   const navigate = useNavigate();
+  const stats = useDashboardStats();
 
   const sections = [
     {
@@ -49,6 +54,30 @@ const TrafficPoliceSection = () => {
       path: '/patrol',
       color: 'from-green-500 to-green-600',
       stats: '12 نشط'
+    },
+    {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-cyan-500 to-cyan-600',
+      stats: 'جديد'
+    },
+    {
+      title: 'المحادثات',
+      description: 'التواصل مع الفريق',
+      icon: MessageCircle,
+      path: '/chat',
+      color: 'from-indigo-500 to-indigo-600',
+      stats: '5 رسائل'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600',
+      stats: `${stats.trafficTickets} Tickets`
     }
   ];
 

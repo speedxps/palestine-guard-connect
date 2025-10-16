@@ -2,10 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BackButton } from '@/components/BackButton';
-import { Scale, FileText, MessageSquare, TrendingUp, Shield } from 'lucide-react';
+import { Scale, FileText, MessageSquare, TrendingUp, Shield, Ticket, MessageCircle, Newspaper } from 'lucide-react';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const JudicialPoliceDepartment = () => {
   const navigate = useNavigate();
+  const stats = useDashboardStats();
 
   const tools = [
     {
@@ -35,6 +37,28 @@ const JudicialPoliceDepartment = () => {
       icon: Shield,
       path: '/department/judicial-police/users',
       color: 'from-orange-500 to-orange-600'
+    },
+    {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-cyan-500 to-cyan-600'
+    },
+    {
+      title: 'المحادثات',
+      description: 'التواصل مع الفريق',
+      icon: MessageCircle,
+      path: '/chat',
+      color: 'from-indigo-500 to-indigo-600'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600',
+      stats: `${stats.judicialPoliceTickets} Tickets`
     }
   ];
 
@@ -85,6 +109,9 @@ const JudicialPoliceDepartment = () => {
                 <p className="text-muted-foreground">
                   {tool.description}
                 </p>
+                {tool.stats && (
+                  <p className="text-sm font-semibold text-primary mt-2">{tool.stats}</p>
+                )}
               </CardContent>
             </Card>
           ))}

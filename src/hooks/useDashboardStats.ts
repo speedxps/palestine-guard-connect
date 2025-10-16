@@ -10,6 +10,12 @@ interface DashboardStats {
   totalTasks: number;
   pendingTasks: number;
   totalReports: number;
+  adminTickets: number;
+  trafficTickets: number;
+  cidTickets: number;
+  specialPoliceTickets: number;
+  cybercrimeTickets: number;
+  judicialPoliceTickets: number;
   isLoading: boolean;
   error: string | null;
 }
@@ -24,6 +30,12 @@ export const useDashboardStats = () => {
     totalTasks: 0,
     pendingTasks: 0,
     totalReports: 0,
+    adminTickets: 0,
+    trafficTickets: 0,
+    cidTickets: 0,
+    specialPoliceTickets: 0,
+    cybercrimeTickets: 0,
+    judicialPoliceTickets: 0,
     isLoading: true,
     error: null
   });
@@ -73,6 +85,37 @@ export const useDashboardStats = () => {
           .from('cybercrime_reports')
           .select('*', { count: 'exact', head: true });
 
+        // Fetch ticket counts per section
+        const { count: adminTickets } = await supabase
+          .from('tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('section', 'admin');
+
+        const { count: trafficTickets } = await supabase
+          .from('tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('section', 'traffic');
+
+        const { count: cidTickets } = await supabase
+          .from('tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('section', 'cid');
+
+        const { count: specialPoliceTickets } = await supabase
+          .from('tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('section', 'special_police');
+
+        const { count: cybercrimeTickets } = await supabase
+          .from('tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('section', 'cybercrime');
+
+        const { count: judicialPoliceTickets } = await supabase
+          .from('tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('section', 'judicial_police');
+
         setStats({
           totalUsers: usersCount || 0,
           totalViolations: violationsCount || 0,
@@ -82,6 +125,12 @@ export const useDashboardStats = () => {
           totalTasks: tasksCount || 0,
           pendingTasks: pendingTasksCount || 0,
           totalReports: reportsCount || 0,
+          adminTickets: adminTickets || 0,
+          trafficTickets: trafficTickets || 0,
+          cidTickets: cidTickets || 0,
+          specialPoliceTickets: specialPoliceTickets || 0,
+          cybercrimeTickets: cybercrimeTickets || 0,
+          judicialPoliceTickets: judicialPoliceTickets || 0,
           isLoading: false,
           error: null
         });

@@ -1664,6 +1664,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          action_type: string
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          section: string
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          section: string
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          section?: string
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
       traffic_records: {
         Row: {
           citizen_name: string

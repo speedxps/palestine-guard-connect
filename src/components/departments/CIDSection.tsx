@@ -11,11 +11,16 @@ import {
   Plus, 
   FileText,
   TrendingUp,
-  Clock
+  Clock,
+  Ticket,
+  MessageCircle,
+  Newspaper
 } from 'lucide-react';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const CIDSection = () => {
   const navigate = useNavigate();
+  const stats = useDashboardStats();
 
   const sections = [
     {
@@ -57,6 +62,30 @@ const CIDSection = () => {
       path: '/face-recognition',
       color: 'from-blue-500 to-blue-600',
       stats: 'متاح'
+    },
+    {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-cyan-500 to-cyan-600',
+      stats: 'جديد'
+    },
+    {
+      title: 'المحادثات',
+      description: 'التواصل مع الفريق',
+      icon: MessageCircle,
+      path: '/chat',
+      color: 'from-indigo-500 to-indigo-600',
+      stats: '5 رسائل'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600',
+      stats: `${stats.cidTickets} Tickets`
     }
   ];
 

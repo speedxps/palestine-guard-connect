@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Menu, RotateCw, Phone, Badge as BadgeIcon } from "lucide-react";
@@ -15,6 +16,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { hasAccess } = useRoleBasedAccess();
   const navigate = useNavigate();
+  const stats = useDashboardStats();
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -75,42 +77,42 @@ const Dashboard = () => {
   const tickets = [
     {
       title: "شرطة المرور",
-      subtitle: "0 Tickets",
+      subtitle: `${stats.trafficTickets} Tickets`,
       color: "bg-[#2B9BF4]",
       path: "/department/traffic",
       roles: ["admin", "traffic_police"],
     },
     {
       title: "الشرطة الخاصة",
-      subtitle: "0 Tickets",
+      subtitle: `${stats.specialPoliceTickets} Tickets`,
       color: "bg-[#E91E63]",
       path: "/department/special",
       roles: ["admin", "special_police"],
     },
     {
       title: "الشرطة القضائية",
-      subtitle: "0 Tickets",
+      subtitle: `${stats.judicialPoliceTickets} Tickets`,
       color: "bg-[#4CAF50]",
       path: "/department/judicial-police",
       roles: ["admin", "judicial_police"],
     },
     {
       title: "الإدارة العامة",
-      subtitle: "0 Tickets",
+      subtitle: `${stats.adminTickets} Tickets`,
       color: "bg-[#F5A623]",
       path: "/department/admin",
       roles: ["admin"],
     },
     {
       title: "المباحث الجنائية",
-      subtitle: "0 Tickets",
+      subtitle: `${stats.cidTickets} Tickets`,
       color: "bg-[#03A9F4]",
       path: "/department/cid",
       roles: ["admin", "cid"],
     },
     {
       title: "الجرائم الإلكترونية",
-      subtitle: "0 Tickets",
+      subtitle: `${stats.cybercrimeTickets} Tickets`,
       color: "bg-[#00BCD4]",
       path: "/department/cybercrime",
       roles: ["admin", "cybercrime"],

@@ -11,11 +11,14 @@ import {
   MessageCircle,
   Clock,
   TrendingUp,
-  Target
+  Target,
+  Ticket
 } from 'lucide-react';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const SpecialPoliceSection = () => {
   const navigate = useNavigate();
+  const stats = useDashboardStats();
 
   const sections = [
     {
@@ -49,6 +52,14 @@ const SpecialPoliceSection = () => {
       path: '/chat',
       color: 'from-indigo-500 to-indigo-600',
       stats: '5 رسائل'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600',
+      stats: `${stats.specialPoliceTickets} Tickets`
     }
   ];
 

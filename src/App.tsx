@@ -72,6 +72,8 @@ import NotFound from "@/pages/NotFound";
 import AccessDenied from "@/pages/AccessDenied";
 import SetupTestUsers from "@/pages/SetupTestUsers";
 import CreateUser from "@/pages/CreateUser";
+import Tickets from "@/pages/Tickets";
+import InternalNews from "@/pages/InternalNews";
 
 const queryClient = new QueryClient();
 
@@ -396,10 +398,26 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="/internal-news"
+                  element={
+                    <ProtectedRoute>
+                      <InternalNews />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/chat"
                   element={
                     <ProtectedRoute>
                       <Chat />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/tickets"
+                  element={
+                    <ProtectedRoute>
+                      <Tickets />
                     </ProtectedRoute>
                   }
                 />
