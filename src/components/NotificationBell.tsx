@@ -30,17 +30,35 @@ export const NotificationBell = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Get notifications
+      const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
         .select('*')
         .or(`is_system_wide.eq.true,target_departments.cs.{${roles.join(',')}}`)
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (notificationsError) throw notificationsError;
 
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => n.status === 'unread').length || 0);
+      // Get notification views for current user
+      const { data: viewsData, error: viewsError } = await supabase
+        .from('notification_views')
+        .select('notification_id')
+        .eq('user_id', user.id);
+
+      if (viewsError) throw viewsError;
+
+      // Create a set of viewed notification IDs
+      const viewedIds = new Set(viewsData?.map(v => v.notification_id) || []);
+
+      // Mark notifications as read/unread based on views
+      const notificationsWithStatus = notificationsData?.map(notification => ({
+        ...notification,
+        status: viewedIds.has(notification.id) ? 'read' : 'unread'
+      })) || [];
+
+      setNotifications(notificationsWithStatus);
+      setUnreadCount(notificationsWithStatus.filter(n => n.status === 'unread').length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
