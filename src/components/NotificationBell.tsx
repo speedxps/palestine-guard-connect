@@ -182,10 +182,10 @@ export const NotificationBell = () => {
           size="icon"
           className="relative h-12 w-12"
         >
-          <Bell className={`h-8 w-8 transition-colors ${unreadCount > 0 ? 'text-emergency animate-pulse' : 'text-primary'}`} />
+          <Bell className={`h-8 w-8 ${unreadCount > 0 ? 'animate-police-flash' : 'text-primary transition-colors'}`} />
           {unreadCount > 0 && (
             <Badge
-              className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center p-0 bg-emergency text-emergency-foreground text-xs font-bold"
+              className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center p-0 bg-emergency text-emergency-foreground text-xs font-bold animate-pulse"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>

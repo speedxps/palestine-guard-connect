@@ -126,11 +126,22 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'police-flash': {
+					'0%, 100%': {
+						color: 'hsl(var(--emergency))',
+						filter: 'drop-shadow(0 0 8px hsl(var(--emergency)))'
+					},
+					'50%': {
+						color: 'hsl(var(--primary))',
+						filter: 'drop-shadow(0 0 8px hsl(var(--primary)))'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'police-flash': 'police-flash 1s ease-in-out infinite'
 			}
 		}
 	},
