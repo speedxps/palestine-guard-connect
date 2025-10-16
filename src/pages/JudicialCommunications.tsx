@@ -40,18 +40,26 @@ const JudicialCommunications = () => {
 
   const loadMessages = async (caseId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: messagesData, error } = await supabase
         .from('judicial_messages')
-        .select('*, profiles!judicial_messages_sender_id_fkey(full_name)')
+        .select(`
+          *,
+          sender:profiles!sender_id (
+            id,
+            full_name,
+            username
+          )
+        `)
         .eq('case_id', caseId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages(messagesData || []);
     } catch (error: any) {
+      console.error('Error loading messages:', error);
       toast({
         title: 'خطأ',
-        description: error.message,
+        description: 'حدث خطأ أثناء تحميل الرسائل',
         variant: 'destructive'
       });
     }
@@ -67,17 +75,18 @@ const JudicialCommunications = () => {
       
       // Set up realtime subscription
       const channel = supabase
-        .channel('judicial-messages')
+        .channel(`judicial-messages-${selectedCase}`)
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*',
             schema: 'public',
             table: 'judicial_messages',
             filter: `case_id=eq.${selectedCase}`
           },
-          (payload) => {
-            setMessages(prev => [...prev, payload.new]);
+          () => {
+            // Reload messages when any change occurs
+            loadMessages(selectedCase);
           }
         )
         .subscribe();
@@ -89,21 +98,27 @@ const JudicialCommunications = () => {
   }, [selectedCase]);
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedCase) return;
+    if (!newMessage.trim() || !selectedCase || !user) return;
 
     setLoading(true);
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('user_id', user?.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      
+      if (!profile) {
+        throw new Error('لم يتم العثور على ملف المستخدم');
+      }
 
       const { error } = await supabase
         .from('judicial_messages')
         .insert({
           case_id: selectedCase,
-          sender_id: profile?.id,
+          sender_id: profile.id,
           sender_department: 'judicial_police',
           message: newMessage
         });
@@ -116,9 +131,10 @@ const JudicialCommunications = () => {
         description: 'تم إرسال الرسالة بنجاح'
       });
     } catch (error: any) {
+      console.error('Error sending message:', error);
       toast({
         title: 'خطأ',
-        description: error.message,
+        description: error.message || 'حدث خطأ أثناء إرسال الرسالة',
         variant: 'destructive'
       });
     } finally {
@@ -204,13 +220,19 @@ const JudicialCommunications = () => {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-semibold text-sm">
-                            {msg.sender_department}
+                            {msg.sender?.full_name || msg.sender?.username || msg.sender_department}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(msg.created_at).toLocaleString('ar')}
+                            {new Date(msg.created_at).toLocaleString('ar-SA', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </span>
                         </div>
-                        <p className="text-sm">{msg.message}</p>
+                        <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                         <div className="flex items-center justify-between mt-2">
                           {msg.is_read ? (
                             <CheckCheck className="h-4 w-4 text-blue-500" />

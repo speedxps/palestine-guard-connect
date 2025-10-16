@@ -42,14 +42,26 @@ const News = () => {
       
       // Mark news as read
       if (newsItem && user) {
+        // Check if already read before inserting
         supabase
           .from('news_reads')
-          .insert({
-            news_id: id,
-            user_id: user.id
-          })
-          .then(({ error }) => {
-            if (error) console.error('Error marking news as read:', error);
+          .select('id')
+          .eq('news_id', id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+          .then(({ data: existing }) => {
+            if (!existing) {
+              // Only insert if not already read
+              supabase
+                .from('news_reads')
+                .insert({
+                  news_id: id,
+                  user_id: user.id
+                })
+                .then(({ error }) => {
+                  if (error) console.error('Error marking news as read:', error);
+                });
+            }
           });
       }
     }
