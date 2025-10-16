@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/BackButton';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, User, Newspaper } from 'lucide-react';
+import { Calendar, User, Newspaper, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface News {
@@ -85,11 +86,27 @@ const News = () => {
     setSelectedNews(newsItem);
   };
 
+  const handleBackClick = () => {
+    if (selectedNews) {
+      setSelectedNews(null);
+      navigate('/news');
+    } else {
+      navigate(-1);
+    }
+  };
+
   if (selectedNews) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-6">
         <div className="max-w-4xl mx-auto space-y-6">
-          <BackButton to="/news" />
+          <Button 
+            variant="ghost" 
+            onClick={handleBackClick}
+            className="flex items-center gap-2"
+          >
+            <ArrowRight className="h-4 w-4" />
+            رجوع
+          </Button>
           
           <Card className="shadow-lg">
             <CardHeader className="space-y-4">

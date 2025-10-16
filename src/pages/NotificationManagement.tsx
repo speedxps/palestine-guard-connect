@@ -8,8 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, Send, Users, AlertCircle } from 'lucide-react';
+import { Bell, Send, Users, AlertCircle, Edit2, Eye } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const NotificationManagement = () => {
   const { toast } = useToast();
@@ -41,7 +48,12 @@ const NotificationManagement = () => {
   };
 
   const [sentNotifications, setSentNotifications] = useState<any[]>([]);
-  const [editingNotification, setEditingNotification] = useState<string | null>(null);
+  const [editingNotification, setEditingNotification] = useState<any | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editMessage, setEditMessage] = useState('');
+  const [editPriority, setEditPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [viewersDialogOpen, setViewersDialogOpen] = useState(false);
+  const [selectedNotificationViewers, setSelectedNotificationViewers] = useState<any[]>([]);
 
   useEffect(() => {
     fetchSentNotifications();
@@ -162,6 +174,70 @@ const NotificationManagement = () => {
         description: error.message || 'فشل في حذف الإشعار',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleEditNotification = async () => {
+    if (!editingNotification || !editTitle.trim() || !editMessage.trim()) {
+      toast({
+        title: 'تنبيه',
+        description: 'الرجاء إدخال العنوان والرسالة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({
+          title: editTitle,
+          message: editMessage,
+          priority: editPriority,
+        })
+        .eq('id', editingNotification.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'نجح',
+        description: 'تم تحديث الإشعار بنجاح',
+      });
+
+      setEditingNotification(null);
+      setEditTitle('');
+      setEditMessage('');
+      setEditPriority('normal');
+      fetchSentNotifications();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'فشل في تحديث الإشعار',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchNotificationViewers = async (notificationId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notification_views')
+        .select(`
+          user_id,
+          viewed_at,
+          profiles:user_id (
+            full_name,
+            username,
+            email
+          )
+        `)
+        .eq('notification_id', notificationId);
+
+      if (error) throw error;
+      setSelectedNotificationViewers(data || []);
+      setViewersDialogOpen(true);
+    } catch (error: any) {
+      console.error('Error fetching viewers:', error);
     }
   };
 
@@ -308,13 +384,36 @@ const NotificationManagement = () => {
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <h3 className="font-bold text-lg">{notification.title}</h3>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteNotification(notification.id)}
-                    >
-                      حذف
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingNotification(notification);
+                          setEditTitle(notification.title);
+                          setEditMessage(notification.message);
+                          setEditPriority(notification.priority);
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4 ml-1" />
+                        تعديل
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchNotificationViewers(notification.id)}
+                      >
+                        <Eye className="h-4 w-4 ml-1" />
+                        المشاهدات
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteNotification(notification.id)}
+                      >
+                        حذف
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground">{notification.message}</p>
                   <div className="flex items-center gap-4 text-sm">
@@ -336,6 +435,88 @@ const NotificationManagement = () => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingNotification} onOpenChange={(open) => !open && setEditingNotification(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>تعديل الإشعار</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>العنوان</Label>
+                <Input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="أدخل العنوان"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>الرسالة</Label>
+                <Textarea
+                  value={editMessage}
+                  onChange={(e) => setEditMessage(e.target.value)}
+                  placeholder="أدخل الرسالة"
+                  rows={5}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>الأولوية</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'low', label: 'منخفضة', color: 'bg-gray-500' },
+                    { value: 'normal', label: 'عادية', color: 'bg-blue-500' },
+                    { value: 'high', label: 'عالية', color: 'bg-orange-500' },
+                    { value: 'urgent', label: 'عاجلة', color: 'bg-red-500' },
+                  ].map((p) => (
+                    <Button
+                      key={p.value}
+                      type="button"
+                      variant={editPriority === p.value ? 'default' : 'outline'}
+                      onClick={() => setEditPriority(p.value as any)}
+                      className={editPriority === p.value ? p.color : ''}
+                    >
+                      {p.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <Button onClick={handleEditNotification} className="w-full">
+                حفظ التعديلات
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Viewers Dialog */}
+        <Dialog open={viewersDialogOpen} onOpenChange={setViewersDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>المستخدمون الذين شاهدوا الإشعار</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {selectedNotificationViewers.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">لم يشاهد أحد هذا الإشعار بعد</p>
+              ) : (
+                selectedNotificationViewers.map((viewer: any) => (
+                  <Card key={viewer.user_id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">
+                          {viewer.profiles?.full_name || viewer.profiles?.username || viewer.profiles?.email || 'مستخدم'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(viewer.viewed_at).toLocaleString('ar-PS')}
+                        </p>
+                      </div>
+                      <Badge variant="outline">شاهد</Badge>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
