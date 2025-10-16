@@ -5,7 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Check, X, UserCog } from 'lucide-react';
+import { Shield, Check, X, UserCog, Trash2, Edit } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 
 interface UserWithRoles {
@@ -22,6 +42,11 @@ const UserPermissions = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [updating, setUpdating] = useState(false);
 
   const roleLabels: Record<string, string> = {
     admin: 'مدير النظام',
@@ -33,6 +58,8 @@ const UserPermissions = () => {
     officer: 'ضابط',
     user: 'مستخدم',
   };
+
+  const availableRoles = Object.keys(roleLabels);
 
   useEffect(() => {
     fetchUsersWithRoles();
@@ -98,6 +125,104 @@ const UserPermissions = () => {
         description: 'فشل في تحديث حالة المستخدم',
         variant: 'destructive',
       });
+    }
+  };
+
+  const openEditDialog = (user: UserWithRoles) => {
+    setSelectedUser(user);
+    setSelectedRoles(user.roles);
+    setEditDialogOpen(true);
+  };
+
+  const handleRoleToggle = (role: string) => {
+    setSelectedRoles(prev =>
+      prev.includes(role)
+        ? prev.filter(r => r !== role)
+        : [...prev, role]
+    );
+  };
+
+  const updateUserRoles = async () => {
+    if (!selectedUser) return;
+
+    try {
+      setUpdating(true);
+
+      // حذف جميع الأدوار الحالية
+      const { error: deleteError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', selectedUser.user_id);
+
+      if (deleteError) throw deleteError;
+
+      // إضافة الأدوار الجديدة
+      if (selectedRoles.length > 0) {
+        const rolesToInsert = selectedRoles.map(role => ({
+          user_id: selectedUser.user_id,
+          role: role as any,
+        }));
+
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert(rolesToInsert);
+
+        if (insertError) throw insertError;
+      }
+
+      toast({
+        title: 'نجح',
+        description: 'تم تحديث صلاحيات المستخدم بنجاح',
+      });
+
+      setEditDialogOpen(false);
+      fetchUsersWithRoles();
+    } catch (error: any) {
+      console.error('Error updating roles:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل في تحديث الصلاحيات: ' + error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const openDeleteDialog = (user: UserWithRoles) => {
+    setSelectedUser(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      setUpdating(true);
+
+      // استدعاء edge function لحذف المستخدم من auth
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: selectedUser.user_id },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'نجح',
+        description: 'تم حذف المستخدم بنجاح',
+      });
+
+      setDeleteDialogOpen(false);
+      fetchUsersWithRoles();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل في حذف المستخدم: ' + error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -182,9 +307,18 @@ const UserPermissions = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(user)}
+                      >
+                        <Edit className="h-4 w-4 ml-2" />
+                        تعديل الصلاحيات
+                      </Button>
                       <Button
                         variant={user.is_active ? 'destructive' : 'default'}
+                        size="sm"
                         onClick={() => toggleUserStatus(user.user_id, user.is_active)}
                       >
                         {user.is_active ? (
@@ -199,6 +333,14 @@ const UserPermissions = () => {
                           </>
                         )}
                       </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => openDeleteDialog(user)}
+                      >
+                        <Trash2 className="h-4 w-4 ml-2" />
+                        حذف
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -212,6 +354,70 @@ const UserPermissions = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog تعديل الصلاحيات */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>تعديل صلاحيات المستخدم</DialogTitle>
+            <DialogDescription>
+              {selectedUser?.full_name} - {selectedUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {availableRoles.map((role) => (
+              <div key={role} className="flex items-center space-x-2 space-x-reverse">
+                <Checkbox
+                  id={role}
+                  checked={selectedRoles.includes(role)}
+                  onCheckedChange={() => handleRoleToggle(role)}
+                />
+                <Label
+                  htmlFor={role}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {roleLabels[role]}
+                </Label>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={updating}
+            >
+              إلغاء
+            </Button>
+            <Button onClick={updateUserRoles} disabled={updating}>
+              {updating ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog تأكيد الحذف */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد من حذف هذا المستخدم؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف المستخدم <strong>{selectedUser?.full_name}</strong> ({selectedUser?.email}) 
+              بشكل نهائي من قاعدة البيانات. لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updating}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteUser}
+              disabled={updating}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {updating ? 'جاري الحذف...' : 'حذف المستخدم'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
