@@ -752,23 +752,18 @@ const Chat = () => {
                 </div>
                 <div>
                   <Label>القسم</Label>
-                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {role === 'admin' && 'الإدارة العامة'}
-                          {role === 'traffic_police' && 'شرطة المرور'}
-                          {role === 'cid' && 'المباحث الجنائية'}
-                          {role === 'special_police' && 'الشرطة الخاصة'}
-                          {role === 'cybercrime' && 'الجرائم الإلكترونية'}
-                          {role === 'judicial_police' && 'الشرطة القضائية'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={
+                      selectedDepartment === 'admin' ? 'الإدارة العامة' :
+                      selectedDepartment === 'traffic_police' ? 'شرطة المرور' :
+                      selectedDepartment === 'cid' ? 'المباحث الجنائية' :
+                      selectedDepartment === 'special_police' ? 'الشرطة الخاصة' :
+                      selectedDepartment === 'cybercrime' ? 'الجرائم الإلكترونية' :
+                      selectedDepartment === 'judicial_police' ? 'الشرطة القضائية' : ''
+                    }
+                    disabled
+                    className="bg-muted text-right"
+                  />
                 </div>
                 <Button onClick={handleCreateRoom} className="w-full">
                   إنشاء

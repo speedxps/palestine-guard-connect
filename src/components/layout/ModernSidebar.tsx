@@ -221,7 +221,10 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                         ? 'bg-purple-500 text-white font-bold shadow-lg' 
                         : 'text-gray-700 hover:bg-purple-50'
                     }`}
-                    onClick={() => handleNavigation('/smart-civil-registry')}
+                    onClick={() => {
+                      handleNavigation('/smart-civil-registry');
+                      onOpenChange(false);
+                    }}
                   >
                     <UserCheck className="h-6 w-6 shrink-0" />
                     <span className="font-arabic text-lg">السجل المدني الذكي</span>
@@ -291,22 +294,61 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   
                   {departments.map((dept) => {
                       const Icon = dept.icon;
+                      const isOpen = openDepartments.includes(dept.id);
+                      const isActive = location.pathname.startsWith(dept.path);
+                      
+                      const deptPages = [
+                        { path: dept.path, label: 'الرئيسية' },
+                        { path: `/chat/${dept.id}`, label: 'المحادثات' }
+                      ];
+                      
                       return (
-                        <Button
-                          key={dept.id}
-                          variant="ghost"
-                          className={`w-full justify-start gap-3 mb-2 rounded-xl py-6 transition-all ${
-                            location.pathname === dept.path 
-                              ? 'bg-gradient-to-r ' + dept.color + ' text-white font-bold shadow-lg' 
-                              : 'text-gray-700 hover:bg-gray-100'
-                          }`}
-                          onClick={() => handleNavigation(dept.path)}
-                        >
-                          <div className={`p-2 rounded-lg ${location.pathname === dept.path ? 'bg-white/20' : 'bg-gradient-to-r ' + dept.color}`}>
-                            <Icon className={`h-5 w-5 ${location.pathname === dept.path ? 'text-white' : 'text-white'}`} />
+                        <div key={dept.id} className="mb-2">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              className={`flex-1 justify-start gap-3 rounded-xl py-6 transition-all ${
+                                isActive
+                                  ? 'bg-gradient-to-r ' + dept.color + ' text-white font-bold shadow-lg' 
+                                  : 'text-gray-700 hover:bg-gray-100'
+                              }`}
+                              onClick={() => handleNavigation(dept.path)}
+                            >
+                              <div className={`p-2 rounded-lg ${isActive ? 'bg-white/20' : 'bg-gradient-to-r ' + dept.color}`}>
+                                <Icon className="h-5 w-5 text-white" />
+                              </div>
+                              <span className="font-arabic text-base flex-1 text-right">{dept.title}</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2"
+                              onClick={() => toggleDepartment(dept.id)}
+                            >
+                              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </Button>
                           </div>
-                          <span className="font-arabic text-base flex-1 text-right">{dept.title}</span>
-                        </Button>
+                          
+                          {isOpen && (
+                            <div className="mr-6 mt-1 space-y-1">
+                              {deptPages.map((page) => (
+                                <Button
+                                  key={page.path}
+                                  variant="ghost"
+                                  className={`w-full justify-start gap-2 rounded-lg py-3 text-sm ${
+                                    location.pathname === page.path
+                                      ? 'bg-gray-200 text-gray-900 font-semibold'
+                                      : 'text-gray-600 hover:bg-gray-100'
+                                  }`}
+                                  onClick={() => handleNavigation(page.path)}
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span className="font-arabic">{page.label}</span>
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                 </div>
