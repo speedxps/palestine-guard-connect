@@ -36,11 +36,45 @@ serve(async (req) => {
       );
     }
 
-    // Delete user from auth
+    console.log('Starting user deletion process for:', userId);
+
+    // حذف السجلات المرتبطة أولاً لتجنب مشاكل foreign key
+    
+    // 1. حذف activity logs
+    const { error: activityError } = await supabaseAdmin
+      .from('activity_logs')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (activityError) {
+      console.error('Error deleting activity logs:', activityError);
+    }
+
+    // 2. حذف user_roles
+    const { error: rolesError } = await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (rolesError) {
+      console.error('Error deleting user roles:', rolesError);
+    }
+
+    // 3. حذف profiles
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (profileError) {
+      console.error('Error deleting profile:', profileError);
+    }
+
+    // 4. أخيراً حذف المستخدم من auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteError) {
-      console.error('Error deleting user:', deleteError);
+      console.error('Error deleting user from auth:', deleteError);
       return new Response(
         JSON.stringify({ error: deleteError.message }),
         { 
@@ -49,6 +83,8 @@ serve(async (req) => {
         }
       );
     }
+
+    console.log('User deleted successfully:', userId);
 
     return new Response(
       JSON.stringify({ success: true, message: 'User deleted successfully' }),
