@@ -135,18 +135,21 @@ export const AccountSettings = () => {
       // Create unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `avatars/${user.id}/${fileName}`;
 
       // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('citizen-photos')
-        .upload(filePath, file);
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('citizen-photos')
+        .from('avatars')
         .getPublicUrl(filePath);
 
       // Update form data with new avatar URL

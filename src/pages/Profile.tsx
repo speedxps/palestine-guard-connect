@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { AccountSettings } from '@/components/profile/AccountSettings';
 import { NotificationSettings } from '@/components/profile/NotificationSettings';
@@ -17,11 +18,13 @@ import {
   LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
 
   const handleLogout = () => {
     logout();
@@ -58,6 +61,28 @@ const Profile = () => {
     }
   };
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
 
   return (
     <div className="mobile-container">
@@ -86,9 +111,12 @@ const Profile = () => {
         <Card className="glass-card border-2 border-primary/20 shadow-2xl">
           <CardContent className="p-6">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center shadow-lg ring-4 ring-primary/20">
-                <User className="h-10 w-10 text-primary-foreground" />
-              </div>
+              <Avatar className="w-20 h-20 shadow-lg ring-4 ring-primary/20">
+                <AvatarImage src={avatarUrl} alt={user?.name || 'صورة شخصية'} />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl">
+                  {user?.name?.charAt(0) || user?.email?.charAt(0) || '👤'}
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1">
                 <h3 className="text-xl font-bold font-arabic text-foreground mb-1">
                   {user?.name}
