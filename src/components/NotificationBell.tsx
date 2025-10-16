@@ -143,6 +143,8 @@ export const NotificationBell = () => {
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open && unreadCount > 0) {
+      // Reset unread count immediately
+      setUnreadCount(0);
       // Mark all notifications as viewed when opening
       notifications
         .filter(n => n.status === 'unread')

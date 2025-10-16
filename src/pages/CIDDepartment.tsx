@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, AlertTriangle, Plus, Users, Eye, Settings, Microscope } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Plus, Users, Eye, Settings, Microscope, Newspaper, MessageCircle, Ticket } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const CIDDepartment = () => {
@@ -52,11 +52,32 @@ const CIDDepartment = () => {
       color: 'from-cyan-500 to-cyan-600'
     },
     {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-teal-500 to-teal-600'
+    },
+    {
+      title: 'المحادثات',
+      description: 'التواصل مع الفريق',
+      icon: MessageCircle,
+      path: '/chat',
+      color: 'from-indigo-500 to-indigo-600'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600'
+    },
+    {
       title: 'مستخدمي القسم',
       description: 'إدارة المستخدمين والصلاحيات',
       icon: Users,
       path: '/department/cid/users',
-      color: 'from-indigo-500 to-indigo-600',
+      color: 'from-pink-500 to-pink-600',
       adminOnly: true
     }
   ];

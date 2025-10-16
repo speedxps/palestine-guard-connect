@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Computer, Shield, FileText, BarChart3, Activity, Users } from 'lucide-react';
+import { Computer, Shield, FileText, BarChart3, Activity, Users, Newspaper, MessageCircle, Ticket } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const CybercrimeDepartment = () => {
@@ -45,11 +45,32 @@ const CybercrimeDepartment = () => {
       color: 'from-indigo-500 to-indigo-600'
     },
     {
+      title: 'الأخبار الداخلية',
+      description: 'آخر الأخبار والتحديثات',
+      icon: Newspaper,
+      path: '/internal-news',
+      color: 'from-cyan-500 to-cyan-600'
+    },
+    {
+      title: 'المحادثات',
+      description: 'التواصل مع الفريق',
+      icon: MessageCircle,
+      path: '/chat',
+      color: 'from-teal-500 to-teal-600'
+    },
+    {
+      title: 'السجل',
+      description: 'آخر الإجراءات والتعديلات',
+      icon: Ticket,
+      path: '/tickets',
+      color: 'from-amber-500 to-amber-600'
+    },
+    {
       title: 'مستخدمي القسم',
       description: 'إدارة المستخدمين والصلاحيات',
       icon: Users,
       path: '/department/cybercrime/users',
-      color: 'from-pink-500 to-pink-600',
+      color: 'from-rose-500 to-rose-600',
       adminOnly: true
     }
   ];
