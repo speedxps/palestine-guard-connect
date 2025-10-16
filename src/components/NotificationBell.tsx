@@ -140,15 +140,19 @@ export const NotificationBell = () => {
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = async (open: boolean) => {
     setIsOpen(open);
     if (open && unreadCount > 0) {
-      // Reset unread count immediately
-      setUnreadCount(0);
       // Mark all notifications as viewed when opening
-      notifications
-        .filter(n => n.status === 'unread')
-        .forEach(n => markNotificationAsViewed(n.id));
+      const unreadNotifications = notifications.filter(n => n.status === 'unread');
+      
+      // Reset unread count immediately for UI feedback
+      setUnreadCount(0);
+      
+      // Mark notifications as viewed in database
+      for (const notification of unreadNotifications) {
+        await markNotificationAsViewed(notification.id);
+      }
     }
   };
 
@@ -157,10 +161,10 @@ export const NotificationBell = () => {
       <SheetTrigger asChild>
         <Button 
           variant="ghost" 
-          size="icon" 
-          className="relative"
+          size="default"
+          className="relative h-10 w-10 p-0"
         >
-          <Bell className={`h-6 w-6 ${unreadCount > 0 ? 'text-red-500 animate-pulse' : 'text-blue-500'}`} />
+          <Bell className={`h-7 w-7 ${unreadCount > 0 ? 'text-red-500 animate-pulse' : 'text-blue-500'}`} />
           {unreadCount > 0 && (
             <Badge
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs"

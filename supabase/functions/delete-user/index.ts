@@ -40,7 +40,17 @@ serve(async (req) => {
 
     // حذف السجلات المرتبطة أولاً لتجنب مشاكل foreign key
     
-    // 1. حذف activity logs
+    // 1. حذف tickets
+    const { error: ticketsError } = await supabaseAdmin
+      .from('tickets')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (ticketsError) {
+      console.error('Error deleting tickets:', ticketsError);
+    }
+
+    // 2. حذف activity logs
     const { error: activityError } = await supabaseAdmin
       .from('activity_logs')
       .delete()
@@ -50,7 +60,7 @@ serve(async (req) => {
       console.error('Error deleting activity logs:', activityError);
     }
 
-    // 2. حذف user_roles
+    // 3. حذف user_roles
     const { error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .delete()
@@ -60,7 +70,47 @@ serve(async (req) => {
       console.error('Error deleting user roles:', rolesError);
     }
 
-    // 3. حذف profiles
+    // 4. حذف news_reads
+    const { error: newsReadsError } = await supabaseAdmin
+      .from('news_reads')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (newsReadsError) {
+      console.error('Error deleting news reads:', newsReadsError);
+    }
+
+    // 5. حذف notification_views
+    const { error: notificationViewsError } = await supabaseAdmin
+      .from('notification_views')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (notificationViewsError) {
+      console.error('Error deleting notification views:', notificationViewsError);
+    }
+
+    // 6. حذف cybercrime_access
+    const { error: cybercrimeAccessError } = await supabaseAdmin
+      .from('cybercrime_access')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (cybercrimeAccessError) {
+      console.error('Error deleting cybercrime access:', cybercrimeAccessError);
+    }
+
+    // 7. حذف face_data
+    const { error: faceDataError } = await supabaseAdmin
+      .from('face_data')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (faceDataError) {
+      console.error('Error deleting face data:', faceDataError);
+    }
+
+    // 8. حذف profiles
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -70,7 +120,7 @@ serve(async (req) => {
       console.error('Error deleting profile:', profileError);
     }
 
-    // 4. أخيراً حذف المستخدم من auth
+    // 9. أخيراً حذف المستخدم من auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteError) {
