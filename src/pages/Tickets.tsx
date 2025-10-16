@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Activity, Check } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 interface Ticket {
   id: string;
@@ -19,8 +21,10 @@ interface Ticket {
 
 export default function Tickets() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchTickets();
@@ -63,6 +67,37 @@ export default function Tickets() {
     }
   };
 
+  const handleConfirmTicket = async (ticketId: string) => {
+    setConfirmingIds(prev => new Set(prev).add(ticketId));
+    
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      toast({
+        title: "تم التأكيد",
+        description: "تم حذف السجل بنجاح",
+      });
+    } catch (error) {
+      console.error('Error confirming ticket:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل حذف السجل",
+        variant: "destructive",
+      });
+    } finally {
+      setConfirmingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(ticketId);
+        return newSet;
+      });
+    }
+  };
+
   const getActionTypeColor = (actionType: string) => {
     const colors: Record<string, string> = {
       create: 'bg-green-500/10 text-green-500',
@@ -102,8 +137,8 @@ export default function Tickets() {
           tickets.map((ticket) => (
             <Card key={ticket.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1 flex-1">
                     <CardTitle className="text-lg">{ticket.description}</CardTitle>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span>بواسطة: {ticket.user_name}</span>
@@ -113,9 +148,26 @@ export default function Tickets() {
                       </span>
                     </div>
                   </div>
-                  <Badge className={getActionTypeColor(ticket.action_type)}>
-                    {ticket.action_type}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getActionTypeColor(ticket.action_type)}>
+                      {ticket.action_type}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      onClick={() => handleConfirmTicket(ticket.id)}
+                      disabled={confirmingIds.has(ticket.id)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {confirmingIds.has(ticket.id) ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4 ml-1" />
+                          تم التأكيد
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
             </Card>
