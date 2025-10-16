@@ -12,6 +12,8 @@ const NewsManagementPage = () => {
 
   // Auto-send notification when news is published
   useEffect(() => {
+    if (!user) return;
+
     const channel = supabase
       .channel('news_changes')
       .on(
@@ -22,16 +24,24 @@ const NewsManagementPage = () => {
           table: 'internal_news'
         },
         async (payload) => {
+          console.log('News insert detected:', payload.new);
+          
           if (payload.new.is_published) {
             try {
-              const { data: profileData } = await supabase
+              // Get the author's profile
+              const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
                 .select('id')
-                .eq('user_id', user?.id)
+                .eq('user_id', payload.new.author_id)
                 .single();
 
+              if (profileError) {
+                console.error('Error fetching profile:', profileError);
+                return;
+              }
+
               if (profileData) {
-                await supabase
+                const { data: notificationData, error: notificationError } = await supabase
                   .from('notifications')
                   .insert({
                     sender_id: profileData.id,
@@ -39,7 +49,19 @@ const NewsManagementPage = () => {
                     message: `تم نشر خبر جديد: ${payload.new.title}`,
                     priority: 'normal',
                     is_system_wide: true
+                  })
+                  .select()
+                  .single();
+
+                if (notificationError) {
+                  console.error('Error creating notification:', notificationError);
+                } else {
+                  console.log('Notification created successfully:', notificationData);
+                  toast({
+                    title: "تم إرسال الإشعار",
+                    description: "تم إرسال إشعار لجميع المستخدمين بالخبر الجديد",
                   });
+                }
               }
             } catch (error) {
               console.error('Error sending notification:', error);
@@ -52,7 +74,7 @@ const NewsManagementPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-6">

@@ -139,14 +139,29 @@ export const NotificationBell = () => {
     if (!user) return;
     
     try {
-      await supabase
+      // Check if already viewed
+      const { data: existingView } = await supabase
         .from('notification_views')
-        .insert({
-          notification_id: notificationId,
-          user_id: user.id
-        });
-      
-      fetchNotifications();
+        .select('id')
+        .eq('notification_id', notificationId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!existingView) {
+        const { error } = await supabase
+          .from('notification_views')
+          .insert({
+            notification_id: notificationId,
+            user_id: user.id
+          });
+        
+        if (error) {
+          console.error('Error marking notification as viewed:', error);
+        } else {
+          // Refresh notifications after successful insert
+          fetchNotifications();
+        }
+      }
     } catch (error) {
       console.error('Error marking notification as viewed:', error);
     }
