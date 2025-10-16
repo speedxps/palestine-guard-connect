@@ -1,80 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NewsManagement } from '@/components/NewsManagement';
 import { BackButton } from '@/components/BackButton';
 import { Newspaper } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 
 const NewsManagementPage = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  // Auto-send notification when news is published
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('news_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'internal_news'
-        },
-        async (payload) => {
-          console.log('News insert detected:', payload.new);
-          
-          if (payload.new.is_published) {
-            try {
-              // Get the author's profile
-              const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('user_id', payload.new.author_id)
-                .single();
-
-              if (profileError) {
-                console.error('Error fetching profile:', profileError);
-                return;
-              }
-
-              if (profileData) {
-                const { data: notificationData, error: notificationError } = await supabase
-                  .from('notifications')
-                  .insert({
-                    sender_id: profileData.id,
-                    title: 'خبر جديد',
-                    message: `تم نشر خبر جديد: ${payload.new.title}`,
-                    priority: 'normal',
-                    is_system_wide: true
-                  })
-                  .select()
-                  .single();
-
-                if (notificationError) {
-                  console.error('Error creating notification:', notificationError);
-                } else {
-                  console.log('Notification created successfully:', notificationData);
-                  toast({
-                    title: "تم إرسال الإشعار",
-                    description: "تم إرسال إشعار لجميع المستخدمين بالخبر الجديد",
-                  });
-                }
-              }
-            } catch (error) {
-              console.error('Error sending notification:', error);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, toast]);
+  // Notifications are now automatically created by database trigger
+  // when a news article is published
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-6">
