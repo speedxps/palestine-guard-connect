@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useTicketsCount } from "@/hooks/useTicketsCount";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Menu, RotateCw, Phone, Badge as BadgeIcon } from "lucide-react";
@@ -17,6 +18,7 @@ const Dashboard = () => {
   const { hasAccess } = useRoleBasedAccess();
   const navigate = useNavigate();
   const stats = useDashboardStats();
+  const { ticketsCounts } = useTicketsCount();
   const [patrolActive, setPatrolActive] = useState(false);
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,6 +80,7 @@ const Dashboard = () => {
     {
       title: "شرطة المرور",
       subtitle: `${stats.trafficTickets} Tickets`,
+      sectionName: "شرطة المرور",
       color: "bg-[#2B9BF4]",
       path: "/department/traffic",
       roles: ["admin", "traffic_police"],
@@ -85,6 +88,7 @@ const Dashboard = () => {
     {
       title: "الشرطة الخاصة",
       subtitle: `${stats.specialPoliceTickets} Tickets`,
+      sectionName: "الشرطة الخاصة",
       color: "bg-[#E91E63]",
       path: "/department/special",
       roles: ["admin", "special_police"],
@@ -92,6 +96,7 @@ const Dashboard = () => {
     {
       title: "الشرطة القضائية",
       subtitle: `${stats.judicialPoliceTickets} Tickets`,
+      sectionName: "الشرطة القضائية",
       color: "bg-[#4CAF50]",
       path: "/department/judicial-police",
       roles: ["admin", "judicial_police"],
@@ -99,6 +104,7 @@ const Dashboard = () => {
     {
       title: "الإدارة العامة",
       subtitle: `${stats.adminTickets} Tickets`,
+      sectionName: "الإدارة العامة",
       color: "bg-[#F5A623]",
       path: "/department/admin",
       roles: ["admin"],
@@ -106,6 +112,7 @@ const Dashboard = () => {
     {
       title: "المباحث الجنائية",
       subtitle: `${stats.cidTickets} Tickets`,
+      sectionName: "المباحث الجنائية",
       color: "bg-[#03A9F4]",
       path: "/department/cid",
       roles: ["admin", "cid"],
@@ -113,13 +120,51 @@ const Dashboard = () => {
     {
       title: "الجرائم الإلكترونية",
       subtitle: `${stats.cybercrimeTickets} Tickets`,
+      sectionName: "الجرائم الإلكترونية",
       color: "bg-[#00BCD4]",
       path: "/department/cybercrime",
       roles: ["admin", "cybercrime"],
     },
-    { title: "المساعد الذكي", subtitle: "0 Tickets", color: "bg-[#9C27B0]", path: "/police-assistant", roles: [] },
-    { title: "الأخبار", subtitle: "0 Tickets", color: "bg-[#FF9800]", path: "/news", roles: [] },
-    { title: "الصلاحيات", subtitle: "0 Tickets", color: "bg-[#8BC34A]", path: "/user-permissions", roles: ["admin"] },
+    { 
+      title: "المساعد الذكي", 
+      subtitle: "0 Tickets", 
+      sectionName: "المساعد الذكي",
+      color: "bg-[#9C27B0]", 
+      path: "/police-assistant", 
+      roles: [] 
+    },
+    { 
+      title: "الأخبار", 
+      subtitle: "0 Tickets", 
+      sectionName: "الأخبار",
+      color: "bg-[#FF9800]", 
+      path: "/news", 
+      roles: [] 
+    },
+    { 
+      title: "الصلاحيات", 
+      subtitle: "0 Tickets", 
+      sectionName: "صلاحيات المستخدمين",
+      color: "bg-[#8BC34A]", 
+      path: "/user-permissions", 
+      roles: ["admin"] 
+    },
+    { 
+      title: "سجلات المواطنين", 
+      subtitle: "0 Tickets", 
+      sectionName: "سجلات المواطنين",
+      color: "bg-[#607D8B]", 
+      path: "/citizen-records", 
+      roles: ["admin", "cybercrime"] 
+    },
+    { 
+      title: "الحوادث والبلاغات", 
+      subtitle: "0 Tickets", 
+      sectionName: "الحوادث والبلاغات",
+      color: "bg-[#FF5722]", 
+      path: "/incidents", 
+      roles: [] 
+    },
   ];
 
   const newsItems = [
@@ -184,14 +229,21 @@ const Dashboard = () => {
             // ✅ السماح للإدمن برؤية جميع الأقسام
             if (ticket.roles.length > 0 && user?.role !== "admin" && !hasAccess(ticket.roles as any[])) return null;
 
+            const newTicketsCount = ticketsCounts[ticket.sectionName] || 0;
+
             return (
               <div
                 key={index}
                 onClick={() => navigate(ticket.path)}
-                className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
+                className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all relative`}
               >
                 <h3 className="font-bold text-base leading-tight text-center">{ticket.title}</h3>
                 <p className="text-xs opacity-90 mt-0.5">{ticket.subtitle}</p>
+                {newTicketsCount > 0 && (
+                  <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold border-2 border-white shadow-lg">
+                    {newTicketsCount}
+                  </div>
+                )}
               </div>
             );
           })}

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface LogTicketParams {
   section: string;
@@ -23,7 +24,7 @@ export const useTickets = () => {
 
       const userName = profile?.full_name || profile?.username || user.email || 'مستخدم';
 
-      await supabase
+      const { error } = await supabase
         .from('tickets')
         .insert({
           section,
@@ -33,6 +34,15 @@ export const useTickets = () => {
           user_name: userName,
           metadata
         });
+
+      if (error) throw error;
+
+      // إظهار toast بعد تسجيل ticket بنجاح
+      toast({
+        title: '✅ تم التسجيل',
+        description: 'تم تسجيل عملية tickets 1 جديدة',
+        duration: 3000,
+      });
     } catch (error) {
       console.error('Error logging ticket:', error);
     }
