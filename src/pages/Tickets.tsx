@@ -8,6 +8,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface Ticket {
   id: string;
@@ -22,11 +24,15 @@ interface Ticket {
 export default function Tickets() {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { isAdmin } = useUserRoles();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!user) return;
+    
     fetchTickets();
 
     // Subscribe to realtime changes
@@ -48,7 +54,7 @@ export default function Tickets() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user, isAdmin]);
 
   const fetchTickets = async () => {
     try {
