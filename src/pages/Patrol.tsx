@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import MapboxComponent from '@/components/MapboxComponent';
+import { useTickets } from '@/hooks/useTickets';
 
 interface Profile {
   id: string;
@@ -43,6 +44,7 @@ interface Patrol {
 const PatrolUpdated = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { logTicket } = useTickets();
   const navigate = useNavigate();
   const [patrols, setPatrols] = useState<Patrol[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -166,6 +168,14 @@ const PatrolUpdated = () => {
         title: "تم إنشاء الدورية بنجاح",
         description: "تم إضافة الدورية الجديدة",
       });
+      
+      // Log ticket
+      await logTicket({
+        section: 'الدوريات',
+        action_type: 'create',
+        description: `إنشاء دورية جديدة: ${formData.name}`,
+        metadata: { patrolId: patrol.id, area: formData.area }
+      });
 
       setCreateDialogOpen(false);
       resetForm();
@@ -230,6 +240,14 @@ const PatrolUpdated = () => {
         title: "تم تحديث الدورية",
         description: "تم حفظ التغييرات بنجاح",
       });
+      
+      // Log ticket
+      await logTicket({
+        section: 'الدوريات',
+        action_type: 'update',
+        description: `تحديث الدورية: ${formData.name}`,
+        metadata: { patrolId: selectedPatrol.id }
+      });
 
       setEditDialogOpen(false);
       setSelectedPatrol(null);
@@ -259,6 +277,14 @@ const PatrolUpdated = () => {
       toast({
         title: "تم حذف الدورية",
         description: "تم حذف الدورية بنجاح",
+      });
+      
+      // Log ticket
+      await logTicket({
+        section: 'الدوريات',
+        action_type: 'delete',
+        description: `حذف دورية`,
+        metadata: { patrolId }
       });
 
       fetchPatrols();

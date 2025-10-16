@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Car, Users, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
+import { useTickets } from '@/hooks/useTickets';
 
 interface VehicleData {
   id: string;
@@ -53,6 +54,7 @@ interface ViolationData {
 export default function VehicleManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { logTicket } = useTickets();
   
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [owners, setOwners] = useState<OwnerData[]>([]);
@@ -141,6 +143,14 @@ export default function VehicleManagement() {
           .insert([vehicleForm]);
         if (error) throw error;
         toast({ title: "تم الإنشاء", description: "تم إنشاء المركبة بنجاح" });
+        
+        // Log ticket
+        await logTicket({
+          section: 'إدارة المركبات',
+          action_type: 'create',
+          description: `إنشاء مركبة جديدة: ${vehicleForm.plate_number}`,
+          metadata: { plateNumber: vehicleForm.plate_number, vehicleType: vehicleForm.vehicle_type }
+        });
       }
       
       setShowVehicleDialog(false);
@@ -181,6 +191,14 @@ export default function VehicleManagement() {
           .insert([ownerForm]);
         if (error) throw error;
         toast({ title: "تم الإنشاء", description: "تم إنشاء المالك بنجاح" });
+        
+        // Log ticket
+        await logTicket({
+          section: 'إدارة المركبات',
+          action_type: 'create',
+          description: `إضافة مالك جديد: ${ownerForm.owner_name}`,
+          metadata: { ownerName: ownerForm.owner_name, nationalId: ownerForm.national_id }
+        });
       }
       
       setShowOwnerDialog(false);
@@ -212,6 +230,14 @@ export default function VehicleManagement() {
           .insert([violationForm]);
         if (error) throw error;
         toast({ title: "تم الإنشاء", description: "تم إنشاء المخالفة بنجاح" });
+        
+        // Log ticket
+        await logTicket({
+          section: 'إدارة المركبات',
+          action_type: 'create',
+          description: `تسجيل مخالفة جديدة: ${violationForm.violation_type}`,
+          metadata: { violationType: violationForm.violation_type, fineAmount: violationForm.fine_amount }
+        });
       }
       
       setShowViolationDialog(false);

@@ -16,6 +16,7 @@ import {
   Phone
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 
 interface TeamMember {
   name: string;
@@ -117,6 +118,7 @@ const demoTasks: Task[] = [
 const Tasks = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logTicket } = useTickets();
   const [tasks, setTasks] = useState(demoTasks);
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -161,7 +163,8 @@ const Tasks = () => {
     }
   };
 
-  const updateTaskStatus = (taskId: string, newStatus: string) => {
+  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    const task = tasks.find(t => t.id === taskId);
     setTasks(tasks.map(task => 
       task.id === taskId ? { ...task, status: newStatus as Task['status'] } : task
     ));
@@ -169,6 +172,14 @@ const Tasks = () => {
     toast({
       title: "تم تحديث حالة المهمة",
       description: "تم تحديث حالة المهمة بنجاح",
+    });
+    
+    // Log ticket
+    await logTicket({
+      section: 'المهام والدوريات',
+      action_type: 'update',
+      description: `تحديث حالة المهمة: ${task?.title}`,
+      metadata: { taskId, oldStatus: task?.status, newStatus }
     });
   };
 

@@ -10,8 +10,10 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { BackButton } from '@/components/BackButton';
+import { useTickets } from '@/hooks/useTickets';
 
 const Reports = () => {
+  const { logTicket } = useTickets();
   const [reportType, setReportType] = useState('');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [reportData, setReportData] = useState<any>(null);
@@ -73,6 +75,14 @@ const Reports = () => {
 
       setReportData(data);
       toast.success('تم إنشاء التقرير بنجاح');
+      
+      // Log ticket
+      await logTicket({
+        section: 'التقارير والإحصائيات',
+        action_type: 'view',
+        description: `إنشاء ${getReportTitle(reportType)}`,
+        metadata: { reportType, recordCount: data?.length || 0 }
+      });
     } catch (error) {
       console.error('Error generating report:', error);
       toast.error('حدث خطأ في إنشاء التقرير');
@@ -102,6 +112,14 @@ const Reports = () => {
 
       setReportData(comprehensiveData);
       toast.success('تم إنشاء التقرير الشامل بنجاح');
+      
+      // Log ticket
+      await logTicket({
+        section: 'التقارير والإحصائيات',
+        action_type: 'view',
+        description: 'إنشاء تقرير شامل لكل البيانات',
+        metadata: { totalRecords: Object.values(comprehensiveData).reduce((sum: number, arr: any) => sum + (arr?.length || 0), 0) }
+      });
     } catch (error) {
       console.error('Error generating comprehensive report:', error);
       toast.error('حدث خطأ في إنشاء التقرير الشامل');

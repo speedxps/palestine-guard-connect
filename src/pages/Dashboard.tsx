@@ -75,11 +75,15 @@ const Dashboard = () => {
     }
   };
 
-  // الأقسام والخدمات
+  // الأقسام والخدمات - العداد يعرض tickets من آخر 24 ساعة
+  const getTicketsSubtitle = (sectionName: string) => {
+    const count = ticketsCounts[sectionName] || 0;
+    return `${count} Tickets`;
+  };
+
   const tickets = [
     {
       title: "شرطة المرور",
-      subtitle: `${stats.trafficTickets} Tickets`,
       sectionName: "شرطة المرور",
       color: "bg-[#2B9BF4]",
       path: "/department/traffic",
@@ -87,7 +91,6 @@ const Dashboard = () => {
     },
     {
       title: "الشرطة الخاصة",
-      subtitle: `${stats.specialPoliceTickets} Tickets`,
       sectionName: "الشرطة الخاصة",
       color: "bg-[#E91E63]",
       path: "/department/special",
@@ -95,7 +98,6 @@ const Dashboard = () => {
     },
     {
       title: "الشرطة القضائية",
-      subtitle: `${stats.judicialPoliceTickets} Tickets`,
       sectionName: "الشرطة القضائية",
       color: "bg-[#4CAF50]",
       path: "/department/judicial-police",
@@ -103,7 +105,6 @@ const Dashboard = () => {
     },
     {
       title: "الإدارة العامة",
-      subtitle: `${stats.adminTickets} Tickets`,
       sectionName: "الإدارة العامة",
       color: "bg-[#F5A623]",
       path: "/department/admin",
@@ -111,7 +112,6 @@ const Dashboard = () => {
     },
     {
       title: "المباحث الجنائية",
-      subtitle: `${stats.cidTickets} Tickets`,
       sectionName: "المباحث الجنائية",
       color: "bg-[#03A9F4]",
       path: "/department/cid",
@@ -119,7 +119,6 @@ const Dashboard = () => {
     },
     {
       title: "الجرائم الإلكترونية",
-      subtitle: `${stats.cybercrimeTickets} Tickets`,
       sectionName: "الجرائم الإلكترونية",
       color: "bg-[#00BCD4]",
       path: "/department/cybercrime",
@@ -127,7 +126,6 @@ const Dashboard = () => {
     },
     { 
       title: "المساعد الذكي", 
-      subtitle: "0 Tickets", 
       sectionName: "المساعد الذكي",
       color: "bg-[#9C27B0]", 
       path: "/police-assistant", 
@@ -135,7 +133,6 @@ const Dashboard = () => {
     },
     { 
       title: "الأخبار", 
-      subtitle: "0 Tickets", 
       sectionName: "الأخبار",
       color: "bg-[#FF9800]", 
       path: "/news", 
@@ -143,7 +140,6 @@ const Dashboard = () => {
     },
     { 
       title: "الصلاحيات", 
-      subtitle: "0 Tickets", 
       sectionName: "صلاحيات المستخدمين",
       color: "bg-[#8BC34A]", 
       path: "/user-permissions", 
@@ -151,7 +147,6 @@ const Dashboard = () => {
     },
     { 
       title: "سجلات المواطنين", 
-      subtitle: "0 Tickets", 
       sectionName: "سجلات المواطنين",
       color: "bg-[#607D8B]", 
       path: "/citizen-records", 
@@ -159,7 +154,6 @@ const Dashboard = () => {
     },
     { 
       title: "الحوادث والبلاغات", 
-      subtitle: "0 Tickets", 
       sectionName: "الحوادث والبلاغات",
       color: "bg-[#FF5722]", 
       path: "/incidents", 
@@ -167,7 +161,6 @@ const Dashboard = () => {
     },
     { 
       title: "المخالفات والقضايا", 
-      subtitle: "0 Tickets", 
       sectionName: "المخالفات والقضايا",
       color: "bg-[#9E9E9E]", 
       path: "/violations", 
@@ -237,21 +230,14 @@ const Dashboard = () => {
             // ✅ السماح للإدمن برؤية جميع الأقسام
             if (ticket.roles.length > 0 && user?.role !== "admin" && !hasAccess(ticket.roles as any[])) return null;
 
-            const newTicketsCount = ticketsCounts[ticket.sectionName] || 0;
-
             return (
               <div
                 key={index}
                 onClick={() => navigate(ticket.path)}
-                className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all relative`}
+                className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
               >
                 <h3 className="font-bold text-base leading-tight text-center">{ticket.title}</h3>
-                <p className="text-xs opacity-90 mt-0.5">{ticket.subtitle}</p>
-                {newTicketsCount > 0 && (
-                  <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold border-2 border-white shadow-lg">
-                    {newTicketsCount}
-                  </div>
-                )}
+                <p className="text-xs opacity-90 mt-0.5">{getTicketsSubtitle(ticket.sectionName)}</p>
               </div>
             );
           })}

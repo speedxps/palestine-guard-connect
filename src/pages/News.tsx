@@ -8,6 +8,7 @@ import { BackButton } from '@/components/BackButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, User, Newspaper, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTickets } from '@/hooks/useTickets';
 
 interface News {
   id: string;
@@ -25,6 +26,7 @@ const News = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
+  const { logTicket } = useTickets();
   const [news, setNews] = useState<News[]>([]);
   const [selectedNews, setSelectedNews] = useState<News | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,9 +83,17 @@ const News = () => {
     }).format(new Date(dateString));
   };
 
-  const handleNewsClick = (newsItem: News) => {
+  const handleNewsClick = async (newsItem: News) => {
     navigate(`/news/${newsItem.id}`);
     setSelectedNews(newsItem);
+    
+    // Log ticket
+    await logTicket({
+      section: 'الأخبار',
+      action_type: 'view',
+      description: `قراءة خبر: ${newsItem.title}`,
+      metadata: { newsId: newsItem.id, newsTitle: newsItem.title }
+    });
   };
 
   const handleBackClick = () => {

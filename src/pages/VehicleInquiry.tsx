@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { PrintService } from '@/components/PrintService';
 import { BackButton } from '@/components/BackButton';
+import { useTickets } from '@/hooks/useTickets';
 
 interface VehicleData {
   id: string;
@@ -47,6 +48,7 @@ interface ViolationData {
 
 export default function VehicleInquiry() {
   const { toast } = useToast();
+  const { logTicket } = useTickets();
   const [plateNumber, setPlateNumber] = useState('');
   const [ownerNationalId, setOwnerNationalId] = useState('');
   const [ownerName, setOwnerName] = useState('');
@@ -215,6 +217,18 @@ export default function VehicleInquiry() {
       toast({
         title: "تم العثور على المركبة",
         description: `تم العثور على ${vehicleResponse.vehicle_type} رقم ${vehicleResponse.plate_number}`,
+      });
+      
+      // Log ticket
+      await logTicket({
+        section: 'الإستعلام عن المركبات',
+        action_type: 'view',
+        description: `البحث عن مركبة: ${vehicleResponse.plate_number}`,
+        metadata: { 
+          searchType, 
+          plateNumber: vehicleResponse.plate_number, 
+          violationsCount: violationsResponse?.length || 0 
+        }
       });
 
     } catch (error) {
