@@ -26,6 +26,7 @@ interface VehicleData {
   chassis_number: string;
   registration_date: string;
   status: string;
+  owner_national_id?: string;
 }
 
 interface OwnerData {
@@ -74,7 +75,8 @@ export default function VehicleManagement() {
     year: new Date().getFullYear(),
     engine_number: '',
     chassis_number: '',
-    status: 'active'
+    status: 'active',
+    owner_national_id: ''
   });
   
   const [ownerForm, setOwnerForm] = useState({
@@ -86,6 +88,8 @@ export default function VehicleManagement() {
     ownership_start_date: new Date().toISOString().split('T')[0],
     is_current_owner: true
   });
+
+  const [isLoadingCitizen, setIsLoadingCitizen] = useState(false);
   
   const [violationForm, setViolationForm] = useState({
     vehicle_id: '',
@@ -125,6 +129,50 @@ export default function VehicleManagement() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchCitizenData = async (nationalId: string) => {
+    if (!nationalId || nationalId.length < 9) return;
+    
+    setIsLoadingCitizen(true);
+    try {
+      const { data, error } = await supabase
+        .from('citizens')
+        .select('full_name, phone, address, national_id')
+        .eq('national_id', nationalId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setOwnerForm(prev => ({
+          ...prev,
+          national_id: data.national_id,
+          owner_name: data.full_name || '',
+          phone: data.phone || '',
+          address: data.address || ''
+        }));
+        toast({
+          title: "تم العثور على المواطن",
+          description: `تم جلب بيانات ${data.full_name} من السجل المدني`,
+        });
+      } else {
+        toast({
+          title: "تنبيه",
+          description: "رقم الهوية غير موجود في السجل المدني",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching citizen:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في جلب بيانات المواطن",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingCitizen(false);
     }
   };
 
@@ -217,6 +265,21 @@ export default function VehicleManagement() {
 
   const handleSaveViolation = async () => {
     try {
+      // Get owner national_id from vehicle_owners table
+      let ownerNationalId = '';
+      if (violationForm.vehicle_id) {
+        const { data: ownerData } = await supabase
+          .from('vehicle_owners')
+          .select('national_id')
+          .eq('vehicle_id', violationForm.vehicle_id)
+          .eq('is_current_owner', true)
+          .maybeSingle();
+        
+        if (ownerData) {
+          ownerNationalId = ownerData.national_id;
+        }
+      }
+
       if (editingItem) {
         const { error } = await supabase
           .from('vehicle_violations')
@@ -229,14 +292,27 @@ export default function VehicleManagement() {
           .from('vehicle_violations')
           .insert([violationForm]);
         if (error) throw error;
-        toast({ title: "تم الإنشاء", description: "تم إنشاء المخالفة بنجاح" });
+
+        // Create traffic_records entry for the violation
+        if (ownerNationalId) {
+          const owner = owners.find(o => o.national_id === ownerNationalId);
+          await supabase.from('traffic_records').insert({
+            national_id: ownerNationalId,
+            citizen_name: owner?.owner_name || 'غير معروف',
+            record_type: 'violation',
+            record_date: violationForm.violation_date,
+            details: `${violationForm.violation_type} - مبلغ الغرامة: ${violationForm.fine_amount}`
+          });
+        }
+        
+        toast({ title: "تم الإنشاء", description: "تم إنشاء المخالفة وربطها بسجل المالك بنجاح" });
         
         // Log ticket
         await logTicket({
           section: 'traffic_police',
           action_type: 'create',
           description: `تسجيل مخالفة جديدة: ${violationForm.violation_type}`,
-          metadata: { violationType: violationForm.violation_type, fineAmount: violationForm.fine_amount }
+          metadata: { violationType: violationForm.violation_type, fineAmount: violationForm.fine_amount, ownerNationalId }
         });
       }
       
@@ -286,7 +362,8 @@ export default function VehicleManagement() {
       year: new Date().getFullYear(),
       engine_number: '',
       chassis_number: '',
-      status: 'active'
+      status: 'active',
+      owner_national_id: ''
     });
   };
 
@@ -396,9 +473,12 @@ export default function VehicleManagement() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            setEditingItem(vehicle);
-                            setVehicleForm(vehicle);
-                            setShowVehicleDialog(true);
+                          setEditingItem(vehicle);
+                          setVehicleForm({
+                            ...vehicle,
+                            owner_national_id: vehicle.owner_national_id || ''
+                          });
+                          setShowVehicleDialog(true);
                           }}
                         >
                           <Edit className="h-4 w-4" />
@@ -701,20 +781,31 @@ export default function VehicleManagement() {
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="flex-1">
+                <Label htmlFor="national_id">رقم الهوية *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="national_id"
+                    value={ownerForm.national_id}
+                    onChange={(e) => setOwnerForm({...ownerForm, national_id: e.target.value})}
+                    placeholder="أدخل رقم الهوية"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => fetchCitizenData(ownerForm.national_id)}
+                    disabled={isLoadingCitizen || !ownerForm.national_id}
+                    variant="outline"
+                  >
+                    {isLoadingCitizen ? 'جاري...' : 'جلب البيانات'}
+                  </Button>
+                </div>
+              </div>
               <div>
                 <Label htmlFor="owner_name">اسم المالك *</Label>
                 <Input
                   id="owner_name"
                   value={ownerForm.owner_name}
                   onChange={(e) => setOwnerForm({...ownerForm, owner_name: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="national_id">رقم الهوية *</Label>
-                <Input
-                  id="national_id"
-                  value={ownerForm.national_id}
-                  onChange={(e) => setOwnerForm({...ownerForm, national_id: e.target.value})}
                 />
               </div>
             </div>

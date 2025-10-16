@@ -62,6 +62,16 @@ const ForensicLabs = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.evidence_type || !formData.description) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى ملء جميع الحقول المطلوبة',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -81,7 +91,8 @@ const ForensicLabs = () => {
           description: formData.description,
           file_url: formData.file_url || null,
           analysis_report: formData.analysis_report || null,
-          collected_by: profile.id
+          collected_by: profile.id,
+          collection_date: new Date().toISOString()
         });
 
       if (error) throw error;
@@ -101,9 +112,10 @@ const ForensicLabs = () => {
       });
       loadEvidence();
     } catch (error: any) {
+      console.error('Error submitting evidence:', error);
       toast({
         title: 'خطأ',
-        description: error.message,
+        description: error.message || 'فشل في إضافة الأدلة الجنائية',
         variant: 'destructive'
       });
     } finally {

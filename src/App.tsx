@@ -108,17 +108,12 @@ const App = () => {
                   </ProtectedRoute>
                 } />
 
-                {/* Judicial Police */}
-                <Route
-                  path="/department/judicial-police/users"
-                  element={
-                    <ProtectedRoute>
-                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
-                        <JudicialPoliceUsers />
-                      </RoleBasedRoute>
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Department User Management Routes */}
+                <Route path="/department/traffic/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><DepartmentUserManagementTraffic /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/cid/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><DepartmentUserManagementCID /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/special/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "special_police"]}><DepartmentUserManagementSpecial /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/cybercrime/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cybercrime"]}><DepartmentUserManagementCybercrime /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/judicial-police/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "judicial_police"]}><JudicialPoliceUsers /></RoleBasedRoute></ProtectedRoute>} />
 
                 {/* Notification & Permissions - Admin */}
                 <Route
