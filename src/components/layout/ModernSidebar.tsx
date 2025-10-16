@@ -221,10 +221,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                         ? 'bg-purple-500 text-white font-bold shadow-lg' 
                         : 'text-gray-700 hover:bg-purple-50'
                     }`}
-                    onClick={() => {
-                      handleNavigation('/smart-civil-registry');
-                      onOpenChange(false);
-                    }}
+                    onClick={() => handleNavigation('/smart-civil-registry')}
                   >
                     <UserCheck className="h-6 w-6 shrink-0" />
                     <span className="font-arabic text-lg">السجل المدني الذكي</span>
@@ -297,10 +294,69 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                       const isOpen = openDepartments.includes(dept.id);
                       const isActive = location.pathname.startsWith(dept.path);
                       
-                      const deptPages = [
-                        { path: dept.path, label: 'الرئيسية' },
-                        { path: `/chat/${dept.id}`, label: 'المحادثات' }
-                      ];
+                      // Define pages for each department
+                      const getDeptPages = (deptId: string) => {
+                        const basePages = [
+                          { path: dept.path, label: 'الرئيسية' },
+                          { path: '/chat', label: 'المحادثات' }
+                        ];
+                        
+                        switch (deptId) {
+                          case 'admin':
+                            return [
+                              ...basePages,
+                              { path: '/admin-panel', label: 'إدارة المستخدمين' },
+                              { path: '/user-dashboard', label: 'الأجهزة' },
+                              { path: '/notification-management', label: 'إدارة الإشعارات' },
+                              { path: '/news-management', label: 'إدارة الأخبار' },
+                              { path: '/smart-civil-registry', label: 'السجل المدني الذكي' },
+                              { path: '/create-user', label: 'إنشاء مستخدم' },
+                              { path: '/user-permissions', label: 'صلاحيات المستخدمين' }
+                            ];
+                          case 'traffic_police':
+                            return [
+                              ...basePages,
+                              { path: '/violations-admin', label: 'إدارة المخالفات' },
+                              { path: '/vehicle-management', label: 'إدارة المركبات' },
+                              { path: '/patrols-management', label: 'إدارة الدوريات' }
+                            ];
+                          case 'cid':
+                            return [
+                              ...basePages,
+                              { path: '/forensic-labs', label: 'المختبرات الجنائية' },
+                              { path: '/wanted-persons-tree', label: 'المطلوبين' },
+                              { path: '/incidents-management', label: 'إدارة الحوادث' }
+                            ];
+                          case 'special_police':
+                            return [
+                              ...basePages,
+                              { path: '/patrol', label: 'الدورية' },
+                              { path: '/tasks', label: 'المهام' },
+                              { path: '/feed', label: 'التغذية' }
+                            ];
+                          case 'cybercrime':
+                            return [
+                              ...basePages,
+                              { path: '/cybercrime', label: 'الجرائم الإلكترونية' },
+                              { path: '/cybercrime-reports', label: 'التقارير' },
+                              { path: '/cybercrime-advanced', label: 'النظام المتقدم' },
+                              { path: '/cybercrime-advanced-dashboard', label: 'لوحة التحكم المتقدمة' },
+                              { path: '/wanted-persons-tree', label: 'المطلوبين' }
+                            ];
+                          case 'judicial_police':
+                            return [
+                              ...basePages,
+                              { path: '/department/judicial-police/users', label: 'إدارة المستخدمين' },
+                              { path: '/judicial-case-management', label: 'إدارة القضايا' },
+                              { path: '/judicial-communications', label: 'الاتصالات القضائية' },
+                              { path: '/judicial-tracking', label: 'تتبع القضايا' }
+                            ];
+                          default:
+                            return basePages;
+                        }
+                      };
+                      
+                      const deptPages = getDeptPages(dept.id);
                       
                       return (
                         <div key={dept.id} className="mb-2">
