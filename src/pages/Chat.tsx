@@ -104,10 +104,13 @@ const Chat = () => {
   const fetchChatRooms = async () => {
     try {
       setLoading(true);
+      
+      // Filter rooms by user's departments
       const { data, error } = await supabase
         .from('chat_rooms')
         .select('*')
         .eq('is_active', true)
+        .in('department', roles)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -347,28 +350,49 @@ const Chat = () => {
 
   const fetchAvailableUsers = async (department: string) => {
     try {
-      const { data, error } = await supabase
+      // Get all user IDs with the specified role
+      const { data: userRoleData, error: roleError } = await supabase
         .from('user_roles')
-        .select(`
-          user_id,
-          profiles!user_roles_user_id_fkey(
-            id,
-            full_name,
-            badge_number,
-            avatar_url
-          )
-        `)
+        .select('user_id')
         .eq('role', department as any);
 
-      if (error) throw error;
+      if (roleError) throw roleError;
       
-      const users = data
-        ?.map((item) => item.profiles)
-        .filter((profile): profile is NonNullable<typeof profile> => profile !== null);
+      const userIds = userRoleData?.map(ur => ur.user_id) || [];
       
-      setAvailableUsers(users || []);
+      if (userIds.length === 0) {
+        setAvailableUsers([]);
+        return;
+      }
+
+      // Get profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, badge_number, avatar_url, user_id')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+      
+      // Filter out users who are already members
+      if (selectedRoom) {
+        const { data: existingMembers } = await supabase
+          .from('chat_room_members')
+          .select('user_id')
+          .eq('room_id', selectedRoom.id);
+        
+        const existingMemberIds = existingMembers?.map(m => m.user_id) || [];
+        const filtered = profilesData?.filter(p => !existingMemberIds.includes(p.id)) || [];
+        setAvailableUsers(filtered);
+      } else {
+        setAvailableUsers(profilesData || []);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل تحميل المستخدمين',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -545,8 +569,10 @@ const Chat = () => {
             <div className="space-y-3">
               <Button
                 onClick={() => {
-                  fetchAvailableUsers(selectedRoom.department);
-                  setAddMemberDialogOpen(true);
+                  if (selectedRoom) {
+                    fetchAvailableUsers(selectedRoom.department);
+                    setAddMemberDialogOpen(true);
+                  }
                 }}
                 className="w-full"
               >
@@ -610,9 +636,9 @@ const Chat = () => {
                     <SelectValue placeholder="اختر عضو" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.full_name} - {user.badge_number}
+                    {availableUsers.map((profile) => (
+                      <SelectItem key={profile.id} value={profile.id}>
+                        {profile.full_name} {profile.badge_number ? `- ${profile.badge_number}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -682,8 +708,19 @@ const Chat = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold font-arabic">المحادثات الآمنة</h1>
-            <p className="text-sm text-muted-foreground">Secure Messaging</p>
+            <h1 className="text-xl font-bold font-arabic">المحادثات</h1>
+            <p className="text-sm text-muted-foreground">
+              {roles.length > 0 && (
+                <>
+                  {roles[0] === 'admin' && 'الإدارة العامة'}
+                  {roles[0] === 'traffic_police' && 'شرطة المرور'}
+                  {roles[0] === 'cid' && 'المباحث الجنائية'}
+                  {roles[0] === 'special_police' && 'الشرطة الخاصة'}
+                  {roles[0] === 'cybercrime' && 'الجرائم الإلكترونية'}
+                  {roles[0] === 'judicial_police' && 'الشرطة القضائية'}
+                </>
+              )}
+            </p>
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
