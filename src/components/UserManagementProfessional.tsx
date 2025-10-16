@@ -150,18 +150,70 @@ const UserManagementProfessional = () => {
 
   const updateUserRole = async (userId: string, newRole: 'admin' | 'traffic_police' | 'cid' | 'special_police' | 'cybercrime') => {
     try {
-      const { error } = await supabase
+      // Update profile role
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ role: newRole })
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Delete all existing roles for this user
+      const { error: deleteError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) throw deleteError;
+
+      // Insert new role
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role: newRole });
+
+      if (insertError) throw insertError;
       
       toast.success('تم تحديث قسم المستخدم بنجاح');
       fetchUsers();
     } catch (error) {
       console.error('Error updating user role:', error);
       toast.error('فشل في تحديث قسم المستخدم');
+    }
+  };
+
+  const deleteUser = async (userId: string, profileId: string) => {
+    try {
+      // First delete from profiles (this will cascade to other tables)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      // Delete from user_roles
+      const { error: rolesError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (rolesError) throw rolesError;
+
+      // Call edge function to delete auth user
+      const { error: authError } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (authError) {
+        console.error('Error deleting auth user:', authError);
+        // Don't throw - profile is already deleted
+      }
+      
+      toast.success('تم حذف المستخدم بنجاح');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('فشل في حذف المستخدم');
     }
   };
 
@@ -419,6 +471,19 @@ const UserManagementProfessional = () => {
                               onClick={() => updateUserStatus(selectedUser.user_id, !selectedUser.is_active)}
                             >
                               {selectedUser.is_active ? 'إلغاء التفعيل' : 'تفعيل المستخدم'}
+                            </Button>
+
+                            <Button
+                              variant="destructive"
+                              className="w-full font-arabic"
+                              onClick={() => {
+                                if (confirm('هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                                  deleteUser(selectedUser.user_id, selectedUser.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              حذف المستخدم
                             </Button>
                           </div>
                         </div>
