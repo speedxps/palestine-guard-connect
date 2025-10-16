@@ -392,7 +392,7 @@ const CitizenRecords: React.FC = () => {
                 // تسجيل البحث إذا كان طول النص أكبر من 2
                 if (term.length > 2) {
                   await logTicket({
-                    section: 'سجلات المواطنين',
+                    section: 'cid',
                     action_type: 'view',
                     description: `بحث عن: ${term}`,
                     metadata: { searchTerm: term, resultsCount: filteredRecords.length }
@@ -423,7 +423,7 @@ const CitizenRecords: React.FC = () => {
                   };
                   
                   await logTicket({
-                    section: 'سجلات المواطنين',
+                    section: 'cid',
                     action_type: 'view',
                     description: `تصفية السجلات حسب: ${filterLabels[type as keyof typeof filterLabels]}`,
                     metadata: { filterType: type }
@@ -503,7 +503,7 @@ const CitizenRecords: React.FC = () => {
                         setSelectedRecord(record);
                         // تسجيل العملية في tickets
                         await logTicket({
-                          section: 'سجلات المواطنين',
+                          section: 'cid',
                           action_type: 'view',
                           description: `عرض تفاصيل المواطن: ${record.full_name} (${record.national_id})`,
                           metadata: { 

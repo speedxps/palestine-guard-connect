@@ -146,7 +146,7 @@ export default function VehicleManagement() {
         
         // Log ticket
         await logTicket({
-          section: 'إدارة المركبات',
+          section: 'traffic_police',
           action_type: 'create',
           description: `إنشاء مركبة جديدة: ${vehicleForm.plate_number}`,
           metadata: { plateNumber: vehicleForm.plate_number, vehicleType: vehicleForm.vehicle_type }
@@ -194,7 +194,7 @@ export default function VehicleManagement() {
         
         // Log ticket
         await logTicket({
-          section: 'إدارة المركبات',
+          section: 'traffic_police',
           action_type: 'create',
           description: `إضافة مالك جديد: ${ownerForm.owner_name}`,
           metadata: { ownerName: ownerForm.owner_name, nationalId: ownerForm.national_id }
@@ -233,7 +233,7 @@ export default function VehicleManagement() {
         
         // Log ticket
         await logTicket({
-          section: 'إدارة المركبات',
+          section: 'traffic_police',
           action_type: 'create',
           description: `تسجيل مخالفة جديدة: ${violationForm.violation_type}`,
           metadata: { violationType: violationForm.violation_type, fineAmount: violationForm.fine_amount }

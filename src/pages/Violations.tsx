@@ -99,7 +99,7 @@ export default function Violations() {
       
       // تسجيل عملية البحث في tickets
       await logTicket({
-        section: 'المخالفات والقضايا',
+        section: 'traffic_police',
         action_type: 'view',
         description: `بحث عن مخالفات برقم الهوية: ${q}`,
         metadata: { 

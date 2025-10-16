@@ -76,85 +76,85 @@ const Dashboard = () => {
   };
 
   // الأقسام والخدمات - العداد يعرض tickets من آخر 24 ساعة
-  const getTicketsSubtitle = (sectionName: string) => {
-    const count = ticketsCounts[sectionName] || 0;
+  const getTicketsSubtitle = (sectionId: string) => {
+    const count = ticketsCounts[sectionId] || 0;
     return `${count} Tickets`;
   };
 
   const tickets = [
     {
       title: "شرطة المرور",
-      sectionName: "شرطة المرور",
+      subtitle: getTicketsSubtitle('traffic_police'),
       color: "bg-[#2B9BF4]",
       path: "/department/traffic",
       roles: ["admin", "traffic_police"],
     },
     {
       title: "الشرطة الخاصة",
-      sectionName: "الشرطة الخاصة",
+      subtitle: getTicketsSubtitle('special_police'),
       color: "bg-[#E91E63]",
       path: "/department/special",
       roles: ["admin", "special_police"],
     },
     {
       title: "الشرطة القضائية",
-      sectionName: "الشرطة القضائية",
+      subtitle: getTicketsSubtitle('judicial_police'),
       color: "bg-[#4CAF50]",
       path: "/department/judicial-police",
       roles: ["admin", "judicial_police"],
     },
     {
       title: "الإدارة العامة",
-      sectionName: "الإدارة العامة",
+      subtitle: getTicketsSubtitle('admin'),
       color: "bg-[#F5A623]",
       path: "/department/admin",
       roles: ["admin"],
     },
     {
       title: "المباحث الجنائية",
-      sectionName: "المباحث الجنائية",
+      subtitle: getTicketsSubtitle('cid'),
       color: "bg-[#03A9F4]",
       path: "/department/cid",
       roles: ["admin", "cid"],
     },
     {
       title: "الجرائم الإلكترونية",
-      sectionName: "الجرائم الإلكترونية",
+      subtitle: getTicketsSubtitle('cybercrime'),
       color: "bg-[#00BCD4]",
       path: "/department/cybercrime",
       roles: ["admin", "cybercrime"],
     },
     { 
       title: "المساعد الذكي", 
-      sectionName: "المساعد الذكي",
+      subtitle: "AI Assistant",
       color: "bg-[#9C27B0]", 
       path: "/police-assistant", 
       roles: [] 
     },
     { 
       title: "الأخبار", 
-      sectionName: "الأخبار",
+      subtitle: "News",
       color: "bg-[#FF9800]", 
       path: "/news", 
       roles: [] 
     },
     { 
       title: "الصلاحيات", 
-      sectionName: "صلاحيات المستخدمين",
+      subtitle: "Permissions",
       color: "bg-[#8BC34A]", 
       path: "/user-permissions", 
       roles: ["admin"] 
     },
     { 
       title: "سجلات المواطنين", 
-      sectionName: "سجلات المواطنين",
+      subtitle: getTicketsSubtitle('cid'),
       color: "bg-[#607D8B]", 
       path: "/citizen-records", 
       roles: ["admin", "cybercrime"] 
     },
     { 
       title: "الحوادث والبلاغات", 
-      sectionName: "الحوادث والبلاغات",
+      subtitle: getTicketsSubtitle('cid'),
       color: "bg-[#FF5722]", 
       path: "/incidents", 
       roles: [] 
@@ -230,7 +230,7 @@ const Dashboard = () => {
                 className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
               >
                 <h3 className="font-bold text-base leading-tight text-center">{ticket.title}</h3>
-                <p className="text-xs opacity-90 mt-0.5">{getTicketsSubtitle(ticket.sectionName)}</p>
+                <p className="text-xs opacity-90 mt-0.5">{ticket.subtitle}</p>
               </div>
             );
           })}

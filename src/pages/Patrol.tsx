@@ -171,7 +171,7 @@ const PatrolUpdated = () => {
       
       // Log ticket
       await logTicket({
-        section: 'الدوريات',
+        section: 'special_police',
         action_type: 'create',
         description: `إنشاء دورية جديدة: ${formData.name}`,
         metadata: { patrolId: patrol.id, area: formData.area }
@@ -243,7 +243,7 @@ const PatrolUpdated = () => {
       
       // Log ticket
       await logTicket({
-        section: 'الدوريات',
+        section: 'special_police',
         action_type: 'update',
         description: `تحديث الدورية: ${formData.name}`,
         metadata: { patrolId: selectedPatrol.id }
@@ -281,7 +281,7 @@ const PatrolUpdated = () => {
       
       // Log ticket
       await logTicket({
-        section: 'الدوريات',
+        section: 'special_police',
         action_type: 'delete',
         description: `حذف دورية`,
         metadata: { patrolId }

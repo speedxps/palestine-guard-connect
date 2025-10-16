@@ -290,7 +290,7 @@ const Incidents = () => {
                 // تسجيل البحث إذا كان طول النص أكبر من 2
                 if (term.length > 2) {
                   await logTicket({
-                    section: 'الحوادث والبلاغات',
+                    section: 'cid',
                     action_type: 'view',
                     description: `بحث في الحوادث عن: ${term}`,
                     metadata: { searchTerm: term }
@@ -319,7 +319,7 @@ const Incidents = () => {
               };
               
               await logTicket({
-                section: 'الحوادث والبلاغات',
+                section: 'cid',
                 action_type: 'view',
                 description: `تصفية الحوادث حسب النوع: ${typeLabels[value] || value}`,
                 metadata: { filterType: value }
@@ -355,7 +355,7 @@ const Incidents = () => {
               };
               
               await logTicket({
-                section: 'الحوادث والبلاغات',
+                section: 'cid',
                 action_type: 'view',
                 description: `تصفية الحوادث حسب الحالة: ${statusLabels[value] || value}`,
                 metadata: { filterStatus: value }

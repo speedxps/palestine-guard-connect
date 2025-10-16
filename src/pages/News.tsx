@@ -89,7 +89,7 @@ const News = () => {
     
     // Log ticket
     await logTicket({
-      section: 'الأخبار',
+      section: 'admin',
       action_type: 'view',
       description: `قراءة خبر: ${newsItem.title}`,
       metadata: { newsId: newsItem.id, newsTitle: newsItem.title }

@@ -221,7 +221,7 @@ export default function VehicleInquiry() {
       
       // Log ticket
       await logTicket({
-        section: 'الإستعلام عن المركبات',
+        section: 'traffic_police',
         action_type: 'view',
         description: `البحث عن مركبة: ${vehicleResponse.plate_number}`,
         metadata: { 

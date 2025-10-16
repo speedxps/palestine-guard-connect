@@ -78,7 +78,7 @@ const Reports = () => {
       
       // Log ticket
       await logTicket({
-        section: 'التقارير والإحصائيات',
+        section: 'admin',
         action_type: 'view',
         description: `إنشاء ${getReportTitle(reportType)}`,
         metadata: { reportType, recordCount: data?.length || 0 }
@@ -115,7 +115,7 @@ const Reports = () => {
       
       // Log ticket
       await logTicket({
-        section: 'التقارير والإحصائيات',
+        section: 'admin',
         action_type: 'view',
         description: 'إنشاء تقرير شامل لكل البيانات',
         metadata: { totalRecords: Object.values(comprehensiveData).reduce((sum: number, arr: any) => sum + (arr?.length || 0), 0) }

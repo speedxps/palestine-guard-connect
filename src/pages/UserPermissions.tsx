@@ -124,7 +124,7 @@ const UserPermissions = () => {
 
       // تسجيل العملية في tickets
       await logTicket({
-        section: 'صلاحيات المستخدمين',
+        section: 'admin',
         action_type: 'update',
         description: `${!isActive ? 'تفعيل' : 'تعطيل'} المستخدم: ${user?.full_name || 'غير معروف'}`,
         metadata: { userId, previousStatus: isActive, newStatus: !isActive }
@@ -190,7 +190,7 @@ const UserPermissions = () => {
 
       // تسجيل العملية في tickets
       await logTicket({
-        section: 'صلاحيات المستخدمين',
+        section: 'admin',
         action_type: 'update',
         description: `تعديل صلاحيات المستخدم: ${selectedUser.full_name}`,
         metadata: { 
@@ -239,7 +239,7 @@ const UserPermissions = () => {
 
       // تسجيل العملية في tickets
       await logTicket({
-        section: 'صلاحيات المستخدمين',
+        section: 'admin',
         action_type: 'delete',
         description: `حذف المستخدم: ${selectedUser.full_name} (${selectedUser.email})`,
         metadata: { 

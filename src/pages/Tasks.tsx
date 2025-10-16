@@ -176,7 +176,7 @@ const Tasks = () => {
     
     // Log ticket
     await logTicket({
-      section: 'المهام والدوريات',
+      section: 'special_police',
       action_type: 'update',
       description: `تحديث حالة المهمة: ${task?.title}`,
       metadata: { taskId, oldStatus: task?.status, newStatus }
