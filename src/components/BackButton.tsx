@@ -20,7 +20,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
     if (to) {
       navigate(to);
     } else {
-      navigate(-1);
+      navigate('/dashboard');
     }
   };
 
