@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ProfessionalLayout } from '@/components/layout/ProfessionalLayout';
+import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useTickets } from '@/hooks/useTickets';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MapPin, 
   Clock, 
   Search, 
-  Filter,
   AlertTriangle,
   Car,
   Users,
   Shield,
   CheckSquare,
-  ArrowLeft
+  Phone,
+  FileText,
+  Filter as FilterIcon
 } from 'lucide-react';
 
 interface IncidentItem {
@@ -34,15 +34,16 @@ interface IncidentItem {
   priority: 'low' | 'medium' | 'high';
   source: 'incident' | 'task';
   reporter_name?: string;
+  reporter_phone?: string;
 }
 
 const Incidents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { logTicket } = useTickets();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('all');
   const [incidents, setIncidents] = useState<IncidentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +55,6 @@ const Incidents = () => {
     try {
       setLoading(true);
       
-      // Fetch incidents
       const { data: incidentsData, error: incidentsError } = await supabase
         .from('incidents')
         .select(`
@@ -71,62 +71,22 @@ const Incidents = () => {
 
       if (incidentsError) throw incidentsError;
 
-      // Fetch tasks created from incidents
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select(`
-          id,
-          title,
-          description,
-          location_address,
-          status,
-          created_at,
-          profiles!tasks_assigned_by_fkey(full_name)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (tasksError) throw tasksError;
-
-      // Combine and format data
-      const formattedIncidents: IncidentItem[] = [
-        ...(incidentsData || []).map(item => ({
-          id: item.id,
-          type: item.incident_type,
-          title: item.title,
-          description: item.description,
-          location: item.location_address || 'غير محدد',
-          date: new Date(item.created_at).toLocaleDateString('ar-EG'),
-          time: new Date(item.created_at).toLocaleTimeString('ar-EG', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          status: item.status,
-          priority: getPriorityFromType(item.incident_type),
-          source: 'incident' as const,
-          reporter_name: item.profiles?.full_name
-        })),
-        ...(tasksData || []).map(item => ({
-          id: item.id,
-          type: 'task',
-          title: item.title,
-          description: item.description || 'مهمة منشأة من بلاغ',
-          location: item.location_address || 'غير محدد',
-          date: new Date(item.created_at).toLocaleDateString('ar-EG'),
-          time: new Date(item.created_at).toLocaleTimeString('ar-EG', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          status: item.status,
-          priority: 'medium' as const,
-          source: 'task' as const,
-          reporter_name: item.profiles?.full_name
-        }))
-      ];
-
-      // Sort by creation date (newest first)
-      formattedIncidents.sort((a, b) => 
-        new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime()
-      );
+      const formattedIncidents: IncidentItem[] = (incidentsData || []).map(item => ({
+        id: item.id,
+        type: item.incident_type,
+        title: item.title,
+        description: item.description,
+        location: item.location_address || 'غير محدد',
+        date: new Date(item.created_at).toLocaleDateString('ar-EG'),
+        time: new Date(item.created_at).toLocaleTimeString('ar-EG', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        status: item.status,
+        priority: getPriorityFromType(item.incident_type),
+        source: 'incident' as const,
+        reporter_name: item.profiles?.full_name
+      }));
 
       setIncidents(formattedIncidents);
     } catch (error) {
@@ -144,13 +104,11 @@ const Incidents = () => {
   const getPriorityFromType = (type: string): 'low' | 'medium' | 'high' => {
     switch (type) {
       case 'emergency':
-        return 'high';
       case 'riot':
       case 'violence':
         return 'high';
       case 'fire':
       case 'accident':
-        return 'medium';
       case 'theft':
         return 'medium';
       default:
@@ -158,11 +116,7 @@ const Incidents = () => {
     }
   };
 
-  const getIncidentIcon = (type: string, source: string) => {
-    if (source === 'task') {
-      return CheckSquare;
-    }
-    
+  const getIncidentIcon = (type: string) => {
     switch (type) {
       case 'emergency':
         return AlertTriangle;
@@ -173,10 +127,6 @@ const Incidents = () => {
       case 'riot':
       case 'violence':
         return Users;
-      case 'fire':
-        return AlertTriangle;
-      case 'medical':
-        return AlertTriangle;
       default:
         return AlertTriangle;
     }
@@ -186,50 +136,56 @@ const Incidents = () => {
     switch (status) {
       case 'new':
       case 'pending':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        return 'bg-blue-500/20 text-blue-600 border-blue-500/30';
       case 'in_progress':
       case 'in-progress':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
       case 'resolved':
       case 'completed':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
+        return 'bg-green-500/20 text-green-600 border-green-500/30';
       case 'delayed':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-red-500/20 text-red-600 border-red-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-gray-500/20 text-gray-600 border-gray-500/30';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'new':
-        return 'جديد';
-      case 'pending':
-        return 'قيد الانتظار';
+      case 'new': return 'جديد';
+      case 'pending': return 'قيد الانتظار';
       case 'in_progress':
-      case 'in-progress':
-        return 'قيد المعالجة';
-      case 'resolved':
-        return 'محلول';
-      case 'completed':
-        return 'مكتمل';
-      case 'delayed':
-        return 'متأخر';
-      default:
-        return status;
+      case 'in-progress': return 'قيد المعالجة';
+      case 'resolved': return 'محلول';
+      case 'completed': return 'مكتمل';
+      case 'delayed': return 'متأخر';
+      default: return status;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-red-500/20 text-red-600 border-red-500/30';
       case 'medium':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
       case 'low':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
+        return 'bg-green-500/20 text-green-600 border-green-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-gray-500/20 text-gray-600 border-gray-500/30';
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'emergency': return 'طوارئ';
+      case 'theft': return 'سرقة';
+      case 'accident': return 'حادث';
+      case 'riot': return 'اضطرابات';
+      case 'violence': return 'عنف';
+      case 'fire': return 'حريق';
+      case 'medical': return 'طوارئ طبية';
+      default: return type;
     }
   };
 
@@ -238,226 +194,219 @@ const Incidents = () => {
                          incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          incident.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (incident.reporter_name && incident.reporter_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesType = filterType === 'all' || incident.type === filterType || 
-                       (filterType === 'task' && incident.source === 'task');
+    const matchesType = filterType === 'all' || incident.type === filterType;
     const matchesStatus = filterStatus === 'all' || incident.status === filterStatus;
+    const matchesPriority = filterPriority === 'all' || incident.priority === filterPriority;
     
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType && matchesStatus && matchesPriority;
   });
+
+  const stats = {
+    total: incidents.length,
+    new: incidents.filter(i => i.status === 'new').length,
+    inProgress: incidents.filter(i => i.status === 'in_progress' || i.status === 'in-progress').length,
+    resolved: incidents.filter(i => i.status === 'resolved' || i.status === 'completed').length,
+  };
 
   if (loading) {
     return (
-      <div className="mobile-container">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="mobile-container">
-      {/* Header */}
-      <div className="page-header">
-        <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/dashboard')}
-            className="text-foreground"
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <BackButton />
+          <div className="flex items-center gap-3 bg-card px-4 md:px-6 py-3 rounded-full shadow-lg border">
+            <AlertTriangle className="h-6 md:h-8 w-6 md:w-8 text-primary" />
+            <h1 className="text-xl md:text-3xl font-bold">الأحداث والبلاغات</h1>
+          </div>
+          <Button 
+            onClick={() => navigate('/incidents/new')}
+            className="bg-gradient-to-r from-primary to-primary/80"
           >
-            <ArrowLeft className="h-5 w-5" />
+            بلاغ جديد
           </Button>
-          <div>
-            <h1 className="text-xl font-bold font-arabic">الأحداث والبلاغات</h1>
-            <p className="text-sm text-muted-foreground">Incidents & Reports</p>
-          </div>
         </div>
-      </div>
 
-      <div className="px-4 pb-20 space-y-4">
-        {/* Search and Filters */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="البحث في البلاغات..."
-              value={searchTerm}
-              onChange={async (e) => {
-                const term = e.target.value;
-                setSearchTerm(term);
-                
-                // تسجيل البحث إذا كان طول النص أكبر من 2
-                if (term.length > 2) {
-                  await logTicket({
-                    section: 'cid',
-                    action_type: 'view',
-                    description: `بحث في الحوادث عن: ${term}`,
-                    metadata: { searchTerm: term }
-                  });
-                }
-              }}
-              className="pl-10 h-12 bg-background/50 border-border/50"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <Select value={filterType} onValueChange={async (value) => {
-              setFilterType(value);
-              
-              // تسجيل الفلترة
-              const typeLabels: Record<string, string> = {
-                all: 'جميع الأنواع',
-                emergency: 'طوارئ',
-                theft: 'سرقة',
-                accident: 'حادث',
-                riot: 'اضطرابات',
-                violence: 'عنف',
-                fire: 'حريق',
-                medical: 'طوارئ طبية',
-                task: 'مهام'
-              };
-              
-              await logTicket({
-                section: 'cid',
-                action_type: 'view',
-                description: `تصفية الحوادث حسب النوع: ${typeLabels[value] || value}`,
-                metadata: { filterType: value }
-              });
-            }}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="نوع البلاغ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الأنواع</SelectItem>
-                <SelectItem value="emergency">طوارئ</SelectItem>
-                <SelectItem value="theft">سرقة</SelectItem>
-                <SelectItem value="accident">حادث</SelectItem>
-                <SelectItem value="riot">اضطرابات</SelectItem>
-                <SelectItem value="violence">عنف</SelectItem>
-                <SelectItem value="fire">حريق</SelectItem>
-                <SelectItem value="medical">طوارئ طبية</SelectItem>
-                <SelectItem value="task">مهام</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={filterStatus} onValueChange={async (value) => {
-              setFilterStatus(value);
-              
-              // تسجيل الفلترة
-              const statusLabels: Record<string, string> = {
-                all: 'جميع الحالات',
-                new: 'جديد',
-                in_progress: 'قيد المعالجة',
-                resolved: 'محلول',
-                pending: 'معلق',
-                completed: 'مكتمل'
-              };
-              
-              await logTicket({
-                section: 'cid',
-                action_type: 'view',
-                description: `تصفية الحوادث حسب الحالة: ${statusLabels[value] || value}`,
-                metadata: { filterStatus: value }
-              });
-            }}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="الحالة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value="new">جديد</SelectItem>
-                <SelectItem value="pending">قيد الانتظار</SelectItem>
-                <SelectItem value="in_progress">قيد المعالجة</SelectItem>
-                <SelectItem value="resolved">محلول</SelectItem>
-                <SelectItem value="completed">مكتمل</SelectItem>
-                <SelectItem value="delayed">متأخر</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="shadow-lg border-t-4 border-primary">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-primary">{stats.total}</p>
+                <p className="text-sm text-muted-foreground mt-1">إجمالي البلاغات</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg border-t-4 border-blue-500">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-blue-600">{stats.new}</p>
+                <p className="text-sm text-muted-foreground mt-1">جديدة</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg border-t-4 border-yellow-500">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-yellow-600">{stats.inProgress}</p>
+                <p className="text-sm text-muted-foreground mt-1">قيد المعالجة</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg border-t-4 border-green-500">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-green-600">{stats.resolved}</p>
+                <p className="text-sm text-muted-foreground mt-1">محلولة</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Filters */}
+        <Card className="shadow-lg">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative md:col-span-1">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="البحث..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10"
+                />
+              </div>
+              
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="نوع البلاغ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الأنواع</SelectItem>
+                  <SelectItem value="emergency">طوارئ</SelectItem>
+                  <SelectItem value="theft">سرقة</SelectItem>
+                  <SelectItem value="accident">حادث</SelectItem>
+                  <SelectItem value="riot">اضطرابات</SelectItem>
+                  <SelectItem value="violence">عنف</SelectItem>
+                  <SelectItem value="fire">حريق</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="new">جديد</SelectItem>
+                  <SelectItem value="pending">قيد الانتظار</SelectItem>
+                  <SelectItem value="in_progress">قيد المعالجة</SelectItem>
+                  <SelectItem value="resolved">محلول</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterPriority} onValueChange={setFilterPriority}>
+                <SelectTrigger>
+                  <SelectValue placeholder="الأولوية" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الأولويات</SelectItem>
+                  <SelectItem value="high">عالية</SelectItem>
+                  <SelectItem value="medium">متوسطة</SelectItem>
+                  <SelectItem value="low">منخفضة</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Incidents List */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredIncidents.map((incident) => {
-            const Icon = getIncidentIcon(incident.type, incident.source);
+            const Icon = getIncidentIcon(incident.type);
             
             return (
-              <Card key={`${incident.source}-${incident.id}`} className="glass-card p-4 hover:bg-card/90 transition-all duration-300">
-                <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    incident.source === 'task' ? 'bg-purple-500/20' :
-                    incident.priority === 'high' ? 'bg-red-500/20' :
-                    incident.priority === 'medium' ? 'bg-yellow-500/20' :
-                    'bg-blue-500/20'
-                  }`}>
-                    <Icon className={`h-5 w-5 ${
-                      incident.source === 'task' ? 'text-purple-400' :
-                      incident.priority === 'high' ? 'text-red-400' :
-                      incident.priority === 'medium' ? 'text-yellow-400' :
-                      'text-blue-400'
-                    }`} />
+              <Card 
+                key={incident.id} 
+                className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border-l-4 border-primary"
+                onClick={() => navigate(`/incidents/${incident.id}`)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-3 rounded-lg ${
+                      incident.priority === 'high' ? 'bg-red-500/20' :
+                      incident.priority === 'medium' ? 'bg-yellow-500/20' :
+                      'bg-blue-500/20'
+                    }`}>
+                      <Icon className={`h-6 w-6 ${
+                        incident.priority === 'high' ? 'text-red-600' :
+                        incident.priority === 'medium' ? 'text-yellow-600' :
+                        'text-blue-600'
+                      }`} />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">
+                          {getTypeLabel(incident.type)}
+                        </Badge>
+                        <Badge className={getPriorityColor(incident.priority)}>
+                          {incident.priority === 'high' ? 'عالي' :
+                           incident.priority === 'medium' ? 'متوسط' : 'منخفض'}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg">{incident.title}</CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {incident.description}
+                  </p>
+                  
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span className="line-clamp-1">{incident.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>{incident.date} - {incident.time}</span>
+                    </div>
+                    {incident.reporter_name && (
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span>{incident.reporter_name}</span>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold font-arabic text-foreground">
-                          {incident.title}
-                        </h3>
-                        {incident.source === 'task' && (
-                          <Badge variant="outline" className="text-xs mt-1">
-                            مهمة
-                          </Badge>
-                        )}
-                      </div>
-                      <Badge className={getPriorityColor(incident.priority)}>
-                        {incident.priority === 'high' ? 'عالي' :
-                         incident.priority === 'medium' ? 'متوسط' : 'منخفض'}
-                      </Badge>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground font-arabic">
-                      {incident.description}
-                    </p>
-                    
-                    {incident.reporter_name && (
-                      <p className="text-xs text-muted-foreground">
-                        بواسطة: {incident.reporter_name}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>{incident.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{incident.time}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <Badge className={getStatusColor(incident.status)}>
-                        {getStatusText(incident.status)}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {incident.date}
-                      </span>
-                    </div>
+                  <div className="pt-2">
+                    <Badge className={getStatusColor(incident.status)}>
+                      {getStatusText(incident.status)}
+                    </Badge>
                   </div>
-                </div>
+                </CardContent>
               </Card>
             );
           })}
         </div>
 
         {filteredIncidents.length === 0 && (
-          <div className="text-center py-8">
-            <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">لا توجد بلاغات مطابقة للبحث</p>
-          </div>
+          <Card className="shadow-lg">
+            <CardContent className="text-center py-12">
+              <FilterIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-xl text-muted-foreground">لا توجد بلاغات مطابقة للبحث</p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

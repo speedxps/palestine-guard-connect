@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Microscope, Plus, Search, FileText, Upload } from 'lucide-react';
+import { Microscope, Plus, Search, FileText, Upload, X } from 'lucide-react';
 
 const ForensicLabs = () => {
   const { toast } = useToast();
@@ -26,8 +26,12 @@ const ForensicLabs = () => {
     evidence_type: '',
     description: '',
     file_url: '',
-    analysis_report: ''
+    analysis_report: '',
+    citizen_national_id: ''
   });
+  const [selectedEvidence, setSelectedEvidence] = useState<any>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [citizenData, setCitizenData] = useState<any>(null);
 
   const loadEvidence = async () => {
     setLoading(true);
@@ -59,6 +63,41 @@ const ForensicLabs = () => {
   React.useEffect(() => {
     loadEvidence();
   }, []);
+
+  const fetchCitizenData = async (nationalId: string) => {
+    if (!nationalId || nationalId.length < 3) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('citizens')
+        .select('*')
+        .eq('national_id', nationalId)
+        .single();
+
+      if (error) {
+        toast({
+          title: 'خطأ',
+          description: 'لم يتم العثور على مواطن بهذا الرقم',
+          variant: 'destructive'
+        });
+        setCitizenData(null);
+        return;
+      }
+
+      setCitizenData(data);
+      setFormData(prev => ({
+        ...prev,
+        description: prev.description || `دليل جنائي يخص: ${data.full_name} (${data.national_id})`
+      }));
+
+      toast({
+        title: 'تم جلب البيانات',
+        description: `تم العثور على: ${data.full_name}`
+      });
+    } catch (error) {
+      console.error('Error fetching citizen:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +147,10 @@ const ForensicLabs = () => {
         evidence_type: '',
         description: '',
         file_url: '',
-        analysis_report: ''
+        analysis_report: '',
+        citizen_national_id: ''
       });
+      setCitizenData(null);
       loadEvidence();
     } catch (error: any) {
       console.error('Error submitting evidence:', error);
@@ -156,6 +197,32 @@ const ForensicLabs = () => {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
+                    <Label>رقم الهوية</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={formData.citizen_national_id}
+                        onChange={(e) => setFormData({ ...formData, citizen_national_id: e.target.value })}
+                        placeholder="أدخل رقم الهوية"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => fetchCitizenData(formData.citizen_national_id)}
+                        disabled={!formData.citizen_national_id}
+                      >
+                        <Search className="h-4 w-4 ml-2" />
+                        جلب البيانات
+                      </Button>
+                    </div>
+                    {citizenData && (
+                      <div className="mt-2 p-3 bg-muted rounded-lg text-sm">
+                        <p><strong>الاسم:</strong> {citizenData.full_name}</p>
+                        <p><strong>العنوان:</strong> {citizenData.address}</p>
+                        <p><strong>الهاتف:</strong> {citizenData.phone}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
                     <Label>نوع الدليل</Label>
                     <Select
                       value={formData.evidence_type}
@@ -182,6 +249,7 @@ const ForensicLabs = () => {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       required
+                      rows={3}
                     />
                   </div>
 
@@ -252,7 +320,14 @@ const ForensicLabs = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedEvidence(item);
+                          setDetailsDialogOpen(true);
+                        }}
+                      >
                         <FileText className="h-4 w-4 ml-2" />
                         عرض التفاصيل
                       </Button>
@@ -263,6 +338,71 @@ const ForensicLabs = () => {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Details Dialog */}
+        <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>تفاصيل الدليل الجنائي</DialogTitle>
+            </DialogHeader>
+            {selectedEvidence && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">نوع الدليل</Label>
+                    <p className="font-medium mt-1">{selectedEvidence.evidence_type}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">تاريخ الجمع</Label>
+                    <p className="font-medium mt-1">
+                      {new Date(selectedEvidence.collection_date).toLocaleDateString('ar')}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">الحالة</Label>
+                    <p className="font-medium mt-1">
+                      {selectedEvidence.is_verified ? 'موثق' : 'قيد المراجعة'}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-muted-foreground">الوصف</Label>
+                  <p className="mt-1 p-3 bg-muted rounded-lg">{selectedEvidence.description}</p>
+                </div>
+
+                {selectedEvidence.file_url && (
+                  <div>
+                    <Label className="text-muted-foreground">رابط الملف</Label>
+                    <a 
+                      href={selectedEvidence.file_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline mt-1 block"
+                    >
+                      {selectedEvidence.file_url}
+                    </a>
+                  </div>
+                )}
+
+                {selectedEvidence.analysis_report && (
+                  <div>
+                    <Label className="text-muted-foreground">تقرير التحليل</Label>
+                    <div className="mt-1 p-3 bg-muted rounded-lg whitespace-pre-wrap">
+                      {selectedEvidence.analysis_report}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button onClick={() => setDetailsDialogOpen(false)}>
+                    إغلاق
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
