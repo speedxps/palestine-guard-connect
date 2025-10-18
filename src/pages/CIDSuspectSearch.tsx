@@ -132,7 +132,12 @@ const CIDSuspectSearch = () => {
         </Card>
 
         {/* Results */}
-        {results.length > 0 && (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="mt-4 text-muted-foreground">جاري تحميل البيانات...</p>
+          </div>
+        ) : results.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {results.map((citizen) => (
               <Card
@@ -174,6 +179,16 @@ const CIDSuspectSearch = () => {
               </Card>
             ))}
           </div>
+        ) : (
+          <Card className="shadow-lg">
+            <CardContent className="p-12 text-center">
+              <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">لا توجد نتائج</h3>
+              <p className="text-muted-foreground">
+                لم يتم العثور على أي مشتبهين. يرجى التحقق من الصلاحيات أو إضافة بيانات جديدة.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
