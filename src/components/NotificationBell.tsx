@@ -31,10 +31,12 @@ export const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const fetchNotifications = async () => {
-    if (!user) return;
+    if (!user || roles.length === 0) return;
 
     try {
-      // Get notifications
+      console.log('Fetching notifications for roles:', roles);
+      
+      // Get notifications - if user has roles, include both system-wide and department-specific
       const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
         .select('*')
@@ -42,7 +44,12 @@ export const NotificationBell = () => {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (notificationsError) throw notificationsError;
+      if (notificationsError) {
+        console.error('Error fetching notifications:', notificationsError);
+        throw notificationsError;
+      }
+
+      console.log('Fetched notifications:', notificationsData);
 
       // Get notification views for current user
       const { data: viewsData, error: viewsError } = await supabase
@@ -50,7 +57,10 @@ export const NotificationBell = () => {
         .select('notification_id')
         .eq('user_id', user.id);
 
-      if (viewsError) throw viewsError;
+      if (viewsError) {
+        console.error('Error fetching notification views:', viewsError);
+        throw viewsError;
+      }
 
       // Create a set of viewed notification IDs
       const viewedIds = new Set(viewsData?.map(v => v.notification_id) || []);
@@ -60,6 +70,9 @@ export const NotificationBell = () => {
         ...notification,
         status: viewedIds.has(notification.id) ? 'read' : 'unread'
       })) || [];
+
+      console.log('Notifications with status:', notificationsWithStatus);
+      console.log('Unread count:', notificationsWithStatus.filter(n => n.status === 'unread').length);
 
       setNotifications(notificationsWithStatus);
       setUnreadCount(notificationsWithStatus.filter(n => n.status === 'unread').length);
@@ -172,12 +185,15 @@ export const NotificationBell = () => {
   };
 
   const handleNotificationClick = async (notification: Notification) => {
+    console.log('Notification clicked:', notification);
+    
     if (notification.status === 'unread') {
       await markNotificationAsViewed(notification.id);
     }
     
     // للإشعارات الخاصة بطلبات إغلاق التحقيق، وجّه للصفحة الإدارية
-    if (notification.title === 'طلب إغلاق تحقيق' && roles.includes('admin')) {
+    if ((notification.title === 'طلب إغلاق تحقيق' || notification.title.includes('إغلاق')) && roles.includes('admin')) {
+      console.log('Navigating to investigation closure management');
       setIsOpen(false);
       navigate('/investigation-closure-management');
       return;
@@ -185,6 +201,7 @@ export const NotificationBell = () => {
     
     // Navigate if action_url is provided
     if (notification.action_url) {
+      console.log('Navigating to:', notification.action_url);
       setIsOpen(false);
       navigate(notification.action_url);
     }

@@ -40,6 +40,7 @@ const InvestigationClosureManagement = () => {
 
   const fetchClosureRequests = async () => {
     try {
+      console.log('Fetching closure requests...');
       const { data, error } = await supabase
         .from('investigation_closure_requests')
         .select(`
@@ -50,7 +51,12 @@ const InvestigationClosureManagement = () => {
         `)
         .order('requested_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching closure requests:', error);
+        throw error;
+      }
+      
+      console.log('Closure requests fetched:', data);
       setRequests(data || []);
     } catch (error) {
       console.error('Error fetching closure requests:', error);
@@ -65,6 +71,8 @@ const InvestigationClosureManagement = () => {
 
     setProcessing(true);
     try {
+      console.log('Processing closure request:', { approve, requestId: selectedRequest.id });
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -76,6 +84,8 @@ const InvestigationClosureManagement = () => {
 
       if (!profile) throw new Error('Profile not found');
 
+      console.log('Updating closure request status...');
+      
       // تحديث حالة الطلب
       const { error: updateError } = await supabase
         .from('investigation_closure_requests')
@@ -92,8 +102,11 @@ const InvestigationClosureManagement = () => {
         throw updateError;
       }
 
+      console.log('Closure request updated successfully');
+
       // إذا تمت الموافقة، نضيف ملاحظة في سجل التحقيق
       if (approve) {
+        console.log('Adding closure note to investigation...');
         const closureNote = `✅ تم إغلاق التحقيق بناءً على طلب ${selectedRequest.requester?.full_name || 'المحقق'}\n\nالسبب: ${selectedRequest.reason}\n\nتمت الموافقة من قبل: ${profile.full_name}\nالتاريخ: ${new Date().toLocaleDateString('ar')}\n${adminNotes ? `\nملاحظات الإدارة: ${adminNotes}` : ''}`;
         
         const { error: noteError } = await supabase
@@ -106,17 +119,23 @@ const InvestigationClosureManagement = () => {
 
         if (noteError) {
           console.error('Error adding closure note:', noteError);
+        } else {
+          console.log('Closure note added successfully');
         }
       }
+
+      console.log('Sending notification to investigator...');
 
       // إرسال إشعار للمحقق الذي طلب الإغلاق
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
           sender_id: profile.id,
+          receiver_id: null,
           title: approve ? 'تمت الموافقة على إغلاق التحقيق' : 'تم رفض طلب إغلاق التحقيق',
           message: `تم ${approve ? 'الموافقة على' : 'رفض'} طلب إغلاق التحقيق للمشتبه: ${selectedRequest.citizen?.full_name}${adminNotes ? `\n\nملاحظات الإدارة: ${adminNotes}` : ''}`,
           priority: 'high',
+          status: 'unread',
           is_system_wide: false,
           target_departments: ['cid'],
           action_url: `/department/cid/suspect-record/${selectedRequest.citizen_id}`
@@ -124,6 +143,8 @@ const InvestigationClosureManagement = () => {
 
       if (notificationError) {
         console.error('Error sending notification:', notificationError);
+      } else {
+        console.log('Notification sent successfully');
       }
 
       toast.success(`تم ${approve ? 'الموافقة على' : 'رفض'} الطلب بنجاح`);
