@@ -122,7 +122,6 @@ const App = () => {
               <Route path="/department/traffic/citizen-record/:id" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><TrafficCitizenRecord /></RoleBasedRoute></ProtectedRoute>} />
               <Route path="/department/cid/suspect-search" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDSuspectSearch /></RoleBasedRoute></ProtectedRoute>} />
               <Route path="/department/cid/suspect-record/:id" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDSuspectRecord /></RoleBasedRoute></ProtectedRoute>} />
-              <Route path="/department/judicial-police/case-record" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "judicial_police"]}><JudicialCaseRecord /></RoleBasedRoute></ProtectedRoute>} />
 
                 {/* Notification & Permissions - Admin */}
                 <Route

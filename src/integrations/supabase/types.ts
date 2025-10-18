@@ -1071,6 +1071,7 @@ export type Database = {
           created_by: string
           description: string
           id: string
+          national_id: string | null
           notes: string | null
           parties: Json
           status: Database["public"]["Enums"]["case_status"]
@@ -1086,6 +1087,7 @@ export type Database = {
           created_by: string
           description: string
           id?: string
+          national_id?: string | null
           notes?: string | null
           parties: Json
           status?: Database["public"]["Enums"]["case_status"]
@@ -1101,6 +1103,7 @@ export type Database = {
           created_by?: string
           description?: string
           id?: string
+          national_id?: string | null
           notes?: string | null
           parties?: Json
           status?: Database["public"]["Enums"]["case_status"]
