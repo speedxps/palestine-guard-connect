@@ -57,12 +57,64 @@ interface Evidence {
   collected_at: string;
 }
 
+interface SecurityAlert {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  category: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface EducationMaterial {
+  id: string;
+  title: string;
+  description: string;
+  type: 'article' | 'video' | 'infographic' | 'guide';
+  content?: string;
+  thumbnail_url?: string;
+  file_url?: string;
+  tags?: string[];
+  views_count: number;
+  created_at: string;
+}
+
+interface Investigation {
+  id: string;
+  case_id: string;
+  investigator_id: string;
+  status: 'active' | 'pending' | 'completed' | 'suspended';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  findings?: string;
+  next_steps?: string;
+  completion_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RiskAssessment {
+  id: string;
+  case_id: string;
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  risk_score: number;
+  threat_vectors?: string[];
+  impact_analysis?: string;
+  mitigation_steps?: string;
+  assessed_by: string;
+  assessed_at: string;
+}
+
 export default function CybercrimeAdvancedDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   
   const [cases, setCases] = useState<CybercrimeCase[]>([]);
   const [evidence, setEvidence] = useState<Evidence[]>([]);
+  const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+  const [educationMaterials, setEducationMaterials] = useState<EducationMaterial[]>([]);
+  const [investigations, setInvestigations] = useState<Investigation[]>([]);
+  const [riskAssessments, setRiskAssessments] = useState<RiskAssessment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('reports');
   
@@ -71,6 +123,7 @@ export default function CybercrimeAdvancedDashboard() {
   const [showEvidenceDetailsDialog, setShowEvidenceDetailsDialog] = useState(false);
   const [selectedCase, setSelectedCase] = useState<CybercrimeCase | null>(null);
   const [selectedEvidence, setSelectedEvidence] = useState<Evidence | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<EducationMaterial | null>(null);
   
   const [caseForm, setCaseForm] = useState({
     title: '',
@@ -92,16 +145,28 @@ export default function CybercrimeAdvancedDashboard() {
 
   const fetchData = async () => {
     try {
-      const [casesRes, evidenceRes] = await Promise.all([
+      const [casesRes, evidenceRes, alertsRes, materialsRes, investigationsRes, assessmentsRes] = await Promise.all([
         supabase.from('cybercrime_cases').select('*').order('created_at', { ascending: false }),
-        supabase.from('cybercrime_evidence').select('*').order('collected_at', { ascending: false })
+        supabase.from('cybercrime_evidence').select('*').order('collected_at', { ascending: false }),
+        supabase.from('security_alerts').select('*').eq('is_active', true).order('created_at', { ascending: false }),
+        supabase.from('education_materials').select('*').order('created_at', { ascending: false }),
+        supabase.from('investigations').select('*').order('created_at', { ascending: false }),
+        supabase.from('risk_assessments').select('*').order('assessed_at', { ascending: false })
       ]);
 
       if (casesRes.error) throw casesRes.error;
       if (evidenceRes.error) throw evidenceRes.error;
+      if (alertsRes.error) throw alertsRes.error;
+      if (materialsRes.error) throw materialsRes.error;
+      if (investigationsRes.error) throw investigationsRes.error;
+      if (assessmentsRes.error) throw assessmentsRes.error;
 
       setCases(casesRes.data || []);
       setEvidence(evidenceRes.data || []);
+      setAlerts((alertsRes.data || []) as SecurityAlert[]);
+      setEducationMaterials((materialsRes.data || []) as EducationMaterial[]);
+      setInvestigations((investigationsRes.data || []) as Investigation[]);
+      setRiskAssessments((assessmentsRes.data || []) as RiskAssessment[]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -251,6 +316,26 @@ export default function CybercrimeAdvancedDashboard() {
       other: 'أخرى'
     };
     return types[type] || type;
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium': return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getMaterialTypeIcon = (type: string) => {
+    switch (type) {
+      case 'article': return BookOpen;
+      case 'video': return Video;
+      case 'infographic': return ImageIcon;
+      case 'guide': return FileText;
+      default: return FileText;
+    }
   };
 
   if (isLoading) {
@@ -551,31 +636,64 @@ export default function CybercrimeAdvancedDashboard() {
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <AlertTriangle className="h-4 w-4 md:h-5 md:w-5" />
-                التحذيرات والتنبيهات
+                التحذيرات والتنبيهات ({alerts.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
-              <div className="space-y-3 md:space-y-4">
-                <div className="bg-red-50 border-l-4 border-red-500 p-3 md:p-4 rounded">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
-                    <h4 className="font-semibold text-red-700 text-sm md:text-base">تحذير أمني عالي</h4>
-                  </div>
-                  <p className="text-red-700 text-xs md:text-sm">
-                    تم اكتشاف برنامج فدية جديد يستهدف المؤسسات الحكومية. يرجى تحديث أنظمة الحماية فوراً.
-                  </p>
+              {alerts.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-8">لا توجد تحذيرات نشطة حالياً</p>
+              ) : (
+                <div className="space-y-3 md:space-y-4">
+                  {alerts.map((alert) => (
+                    <div 
+                      key={alert.id} 
+                      className={`border-l-4 p-3 md:p-4 rounded ${
+                        alert.severity === 'critical' ? 'bg-red-50 border-red-500' :
+                        alert.severity === 'high' ? 'bg-orange-50 border-orange-500' :
+                        alert.severity === 'medium' ? 'bg-amber-50 border-amber-500' :
+                        'bg-green-50 border-green-500'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle className={`h-4 w-4 md:h-5 md:w-5 ${
+                              alert.severity === 'critical' ? 'text-red-500' :
+                              alert.severity === 'high' ? 'text-orange-500' :
+                              alert.severity === 'medium' ? 'text-amber-500' :
+                              'text-green-500'
+                            }`} />
+                            <h4 className={`font-semibold text-sm md:text-base ${
+                              alert.severity === 'critical' ? 'text-red-700' :
+                              alert.severity === 'high' ? 'text-orange-700' :
+                              alert.severity === 'medium' ? 'text-amber-700' :
+                              'text-green-700'
+                            }`}>
+                              {alert.title}
+                            </h4>
+                            <Badge className={getSeverityColor(alert.severity) + " text-xs"}>
+                              {alert.severity === 'critical' ? 'حرج' :
+                               alert.severity === 'high' ? 'عالي' :
+                               alert.severity === 'medium' ? 'متوسط' : 'منخفض'}
+                            </Badge>
+                          </div>
+                          <p className={`text-xs md:text-sm ${
+                            alert.severity === 'critical' ? 'text-red-700' :
+                            alert.severity === 'high' ? 'text-orange-700' :
+                            alert.severity === 'medium' ? 'text-amber-700' :
+                            'text-green-700'
+                          }`}>
+                            {alert.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {new Date(alert.created_at).toLocaleDateString('ar-SA')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                
-                <div className="bg-amber-50 border-l-4 border-amber-500 p-3 md:p-4 rounded">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-amber-500" />
-                    <h4 className="font-semibold text-amber-700 text-sm md:text-base">تنبيه متوسط</h4>
-                  </div>
-                  <p className="text-amber-700 text-xs md:text-sm">
-                    زيادة في نشاط التصيد الإلكتروني عبر رسائل SMS. تأكد من توعية الموظفين.
-                  </p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -586,77 +704,133 @@ export default function CybercrimeAdvancedDashboard() {
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <BookOpen className="h-4 w-4 md:h-5 md:w-5" />
-                التوعية والتعليم
+                التوعية والتعليم ({educationMaterials.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
-              <div className="grid gap-4 md:gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card className="p-3 md:p-4 cursor-pointer hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-2 md:mb-3">
-                      <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
-                      <h4 className="font-semibold text-sm md:text-base">مقالات الحماية</h4>
-                    </div>
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      دليل شامل لحماية البيانات الشخصية والمؤسسية من الجرائم الإلكترونية
-                    </p>
-                  </Card>
-                  
-                  <Card className="p-3 md:p-4 cursor-pointer hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-2 md:mb-3">
-                      <Video className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
-                      <h4 className="font-semibold text-sm md:text-base">فيديوهات تعليمية</h4>
-                    </div>
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      مجموعة من الفيديوهات التعليمية حول التعرف على التهديدات الإلكترونية
-                    </p>
-                  </Card>
-                </div>
-                
-                <Card className="p-3 md:p-4">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2 text-sm md:text-base">
-                    <ImageIcon className="h-4 w-4 md:h-5 md:w-5" />
-                    إنفوجرافيك التوعية
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="border rounded-lg p-3 text-center">
-                      <div className="w-full h-24 md:h-32 bg-gradient-to-br from-blue-100 to-blue-200 rounded mb-2 flex items-center justify-center">
-                        <Lock className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
-                      </div>
-                      <p className="text-xs md:text-sm font-medium">كلمات المرور الآمنة</p>
-                    </div>
-                    
-                    <div className="border rounded-lg p-3 text-center">
-                      <div className="w-full h-24 md:h-32 bg-gradient-to-br from-green-100 to-green-200 rounded mb-2 flex items-center justify-center">
-                        <Shield className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
-                      </div>
-                      <p className="text-xs md:text-sm font-medium">التصفح الآمن</p>
-                    </div>
-                    
-                    <div className="border rounded-lg p-3 text-center">
-                      <div className="w-full h-24 md:h-32 bg-gradient-to-br from-red-100 to-red-200 rounded mb-2 flex items-center justify-center">
-                        <AlertTriangle className="h-6 w-6 md:h-8 md:w-8 text-red-600" />
-                      </div>
-                      <p className="text-xs md:text-sm font-medium">التعرف على الاحتيال</p>
-                    </div>
+              {educationMaterials.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-8">لا توجد مواد تعليمية حالياً</p>
+              ) : (
+                <div className="grid gap-4 md:gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {educationMaterials.map((material) => {
+                      const IconComponent = getMaterialTypeIcon(material.type);
+                      return (
+                        <Card 
+                          key={material.id} 
+                          className="p-3 md:p-4 cursor-pointer hover:shadow-lg transition-all duration-300"
+                          onClick={() => setSelectedMaterial(material)}
+                        >
+                          <div className="flex items-center gap-3 mb-2 md:mb-3">
+                            <IconComponent className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-sm md:text-base line-clamp-1">
+                                {material.title}
+                              </h4>
+                              <Badge variant="outline" className="text-xs mt-1">
+                                {material.type === 'article' ? 'مقال' :
+                                 material.type === 'video' ? 'فيديو' :
+                                 material.type === 'infographic' ? 'إنفوجرافيك' : 'دليل'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                            {material.description}
+                          </p>
+                          {material.tags && material.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-3">
+                              {material.tags.slice(0, 3).map((tag, i) => (
+                                <Badge key={i} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {material.views_count} مشاهدة
+                            </span>
+                            <span>{new Date(material.created_at).toLocaleDateString('ar-SA')}</span>
+                          </div>
+                        </Card>
+                      );
+                    })}
                   </div>
-                </Card>
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Other tabs would follow similar patterns */}
+        {/* Investigations Tab */}
         <TabsContent value="investigations" className="mt-4">
           <Card>
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
-                التحقيقات ومتابعة الجرائم
+                التحقيقات ومتابعة الجرائم ({investigations.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
-              <p className="text-muted-foreground text-sm">متابعة حالة التحقيق وربطه بالجهات المعنية - قيد التطوير</p>
+              {investigations.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-8">لا توجد تحقيقات جارية حالياً</p>
+              ) : (
+                <div className="space-y-3 md:space-y-4">
+                  {investigations.map((investigation) => {
+                    const relatedCase = cases.find(c => c.id === investigation.case_id);
+                    return (
+                      <div key={investigation.id} className="border rounded-lg p-3 md:p-4 hover:shadow-md transition-shadow">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="font-semibold text-sm md:text-base">
+                              {relatedCase?.title || 'قضية غير معروفة'}
+                            </h4>
+                            <Badge className={`text-xs ${
+                              investigation.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              investigation.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                              investigation.status === 'suspended' ? 'bg-gray-100 text-gray-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {investigation.status === 'completed' ? 'مكتمل' :
+                               investigation.status === 'active' ? 'نشط' :
+                               investigation.status === 'suspended' ? 'معلق' : 'معلق'}
+                            </Badge>
+                            <Badge className={`text-xs ${
+                              investigation.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                              investigation.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                              investigation.priority === 'medium' ? 'bg-amber-100 text-amber-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {investigation.priority === 'urgent' ? 'عاجل' :
+                               investigation.priority === 'high' ? 'عالي' :
+                               investigation.priority === 'medium' ? 'متوسط' : 'منخفض'}
+                            </Badge>
+                          </div>
+                          {investigation.findings && (
+                            <div className="bg-muted/50 p-3 rounded-lg">
+                              <Label className="text-xs font-semibold">النتائج:</Label>
+                              <p className="text-xs md:text-sm mt-1">{investigation.findings}</p>
+                            </div>
+                          )}
+                          {investigation.next_steps && (
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                              <Label className="text-xs font-semibold text-blue-700">الخطوات القادمة:</Label>
+                              <p className="text-xs md:text-sm mt-1 text-blue-600">{investigation.next_steps}</p>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>تم البدء: {new Date(investigation.created_at).toLocaleDateString('ar-SA')}</span>
+                            {investigation.completion_date && (
+                              <span>تم الإكمال: {new Date(investigation.completion_date).toLocaleDateString('ar-SA')}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -666,11 +840,73 @@ export default function CybercrimeAdvancedDashboard() {
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
-                تقييم المخاطر
+                تقييم المخاطر ({riskAssessments.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
-              <p className="text-muted-foreground text-sm">أدوات لتقييم المخاطر الرقمية - قيد التطوير</p>
+              {riskAssessments.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-8">لا توجد تقييمات مخاطر حالياً</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {riskAssessments.map((assessment) => {
+                    const relatedCase = cases.find(c => c.id === assessment.case_id);
+                    return (
+                      <Card key={assessment.id} className="p-3 md:p-4 hover:shadow-md transition-shadow">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold text-sm md:text-base line-clamp-1">
+                              {relatedCase?.title || 'قضية غير معروفة'}
+                            </h4>
+                            <Badge className={getSeverityColor(assessment.risk_level) + " text-xs"}>
+                              {assessment.risk_level === 'critical' ? 'حرج' :
+                               assessment.risk_level === 'high' ? 'عالي' :
+                               assessment.risk_level === 'medium' ? 'متوسط' : 'منخفض'}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  assessment.risk_score >= 75 ? 'bg-red-500' :
+                                  assessment.risk_score >= 50 ? 'bg-orange-500' :
+                                  assessment.risk_score >= 25 ? 'bg-amber-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${assessment.risk_score}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-bold">{assessment.risk_score}%</span>
+                          </div>
+                          
+                          {assessment.threat_vectors && assessment.threat_vectors.length > 0 && (
+                            <div>
+                              <Label className="text-xs font-semibold">ناقلات التهديد:</Label>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {assessment.threat_vectors.map((vector, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">
+                                    {vector}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {assessment.impact_analysis && (
+                            <div className="bg-muted/50 p-2 rounded">
+                              <Label className="text-xs font-semibold">تحليل التأثير:</Label>
+                              <p className="text-xs mt-1 line-clamp-2">{assessment.impact_analysis}</p>
+                            </div>
+                          )}
+                          
+                          <p className="text-xs text-muted-foreground">
+                            تم التقييم: {new Date(assessment.assessed_at).toLocaleDateString('ar-SA')}
+                          </p>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -684,7 +920,122 @@ export default function CybercrimeAdvancedDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
-              <p className="text-muted-foreground text-sm">عرض الرسوم البيانية والمخططات الخاصة بالجرائم - قيد التطوير</p>
+              <div className="grid gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card className="p-4 bg-blue-50">
+                    <p className="text-xs text-muted-foreground">إجمالي القضايا</p>
+                    <p className="text-2xl font-bold text-blue-600">{cases.length}</p>
+                  </Card>
+                  <Card className="p-4 bg-green-50">
+                    <p className="text-xs text-muted-foreground">القضايا المحلولة</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {cases.filter(c => c.status === 'resolved').length}
+                    </p>
+                  </Card>
+                  <Card className="p-4 bg-amber-50">
+                    <p className="text-xs text-muted-foreground">قيد التحقيق</p>
+                    <p className="text-2xl font-bold text-amber-600">
+                      {cases.filter(c => c.status === 'investigating').length}
+                    </p>
+                  </Card>
+                  <Card className="p-4 bg-red-50">
+                    <p className="text-xs text-muted-foreground">قضايا مفتوحة</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {cases.filter(c => c.status === 'open').length}
+                    </p>
+                  </Card>
+                </div>
+                
+                <Card className="p-4">
+                  <h4 className="font-semibold mb-4 text-sm md:text-base">توزيع القضايا حسب النوع</h4>
+                  <div className="space-y-3">
+                    {['fraud', 'hacking', 'phishing', 'malware'].map(type => {
+                      const count = cases.filter(c => c.case_type === type).length;
+                      const percentage = cases.length > 0 ? (count / cases.length * 100).toFixed(1) : 0;
+                      return (
+                        <div key={type}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm">{getCaseTypeText(type)}</span>
+                            <span className="text-sm font-medium">{count} ({percentage}%)</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-primary h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="p-4">
+                    <h4 className="font-semibold mb-3 text-sm md:text-base">نسبة الحل</h4>
+                    <div className="flex items-center justify-center">
+                      <div className="relative w-32 h-32">
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle 
+                            cx="64" 
+                            cy="64" 
+                            r="56" 
+                            stroke="currentColor" 
+                            strokeWidth="8" 
+                            fill="none" 
+                            className="text-gray-200"
+                          />
+                          <circle 
+                            cx="64" 
+                            cy="64" 
+                            r="56" 
+                            stroke="currentColor" 
+                            strokeWidth="8" 
+                            fill="none" 
+                            strokeDasharray={`${((cases.filter(c => c.status === 'resolved').length / cases.length) * 352) || 0} 352`}
+                            className="text-green-500"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-2xl font-bold">
+                            {cases.length > 0 ? Math.round((cases.filter(c => c.status === 'resolved').length / cases.length) * 100) : 0}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4">
+                    <h4 className="font-semibold mb-3 text-sm md:text-base">إحصائيات التحذيرات</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">تحذيرات حرجة</span>
+                        <Badge className="bg-red-100 text-red-800">
+                          {alerts.filter(a => a.severity === 'critical').length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">تحذيرات عالية</span>
+                        <Badge className="bg-orange-100 text-orange-800">
+                          {alerts.filter(a => a.severity === 'high').length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">تحذيرات متوسطة</span>
+                        <Badge className="bg-amber-100 text-amber-800">
+                          {alerts.filter(a => a.severity === 'medium').length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">تحذيرات منخفضة</span>
+                        <Badge className="bg-green-100 text-green-800">
+                          {alerts.filter(a => a.severity === 'low').length}
+                        </Badge>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -932,6 +1283,90 @@ export default function CybercrimeAdvancedDashboard() {
           <DialogFooter>
             <Button 
               onClick={() => setShowEvidenceDetailsDialog(false)}
+              variant="outline"
+              className="w-full sm:w-auto"
+              size="sm"
+            >
+              إغلاق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Education Material Details Dialog */}
+      <Dialog open={selectedMaterial !== null} onOpenChange={(open) => !open && setSelectedMaterial(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base md:text-lg">
+              {selectedMaterial?.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
+              {selectedMaterial?.type === 'article' ? 'مقال' :
+               selectedMaterial?.type === 'video' ? 'فيديو' :
+               selectedMaterial?.type === 'infographic' ? 'إنفوجرافيك' : 'دليل'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedMaterial && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label className="text-sm font-semibold">الوصف</Label>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  {selectedMaterial.description}
+                </p>
+              </div>
+              
+              {selectedMaterial.content && (
+                <div className="grid gap-2">
+                  <Label className="text-sm font-semibold">المحتوى</Label>
+                  <div className="text-sm bg-muted/50 p-4 rounded-lg max-h-64 overflow-y-auto">
+                    {selectedMaterial.content}
+                  </div>
+                </div>
+              )}
+              
+              {selectedMaterial.tags && selectedMaterial.tags.length > 0 && (
+                <div className="grid gap-2">
+                  <Label className="text-sm font-semibold">الوسوم</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMaterial.tags.map((tag, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {selectedMaterial.file_url && (
+                <div className="grid gap-2">
+                  <Label className="text-sm font-semibold">الملف</Label>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open(selectedMaterial.file_url!, '_blank')}
+                    className="w-full"
+                  >
+                    <Download className="h-4 w-4 ml-2" />
+                    تحميل الملف
+                  </Button>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t">
+                <span className="flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  {selectedMaterial.views_count} مشاهدة
+                </span>
+                <span>
+                  {new Date(selectedMaterial.created_at).toLocaleDateString('ar-SA')}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              onClick={() => setSelectedMaterial(null)}
               variant="outline"
               className="w-full sm:w-auto"
               size="sm"

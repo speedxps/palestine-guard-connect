@@ -739,6 +739,51 @@ export type Database = {
           },
         ]
       }
+      education_materials: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          file_url: string | null
+          id: string
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          type: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          file_url?: string | null
+          id?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          file_url?: string | null
+          id?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       face_data: {
         Row: {
           created_at: string
@@ -1163,6 +1208,53 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investigations: {
+        Row: {
+          case_id: string | null
+          completion_date: string | null
+          created_at: string | null
+          findings: string | null
+          id: string
+          investigator_id: string
+          next_steps: string | null
+          priority: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          findings?: string | null
+          id?: string
+          investigator_id: string
+          next_steps?: string | null
+          priority?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          findings?: string | null
+          id?: string
+          investigator_id?: string
+          next_steps?: string | null
+          priority?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investigations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cybercrime_cases"
             referencedColumns: ["id"]
           },
         ]
@@ -1894,6 +1986,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      risk_assessments: {
+        Row: {
+          assessed_at: string | null
+          assessed_by: string
+          case_id: string | null
+          created_at: string | null
+          id: string
+          impact_analysis: string | null
+          mitigation_steps: string | null
+          risk_level: string
+          risk_score: number | null
+          threat_vectors: string[] | null
+        }
+        Insert: {
+          assessed_at?: string | null
+          assessed_by: string
+          case_id?: string | null
+          created_at?: string | null
+          id?: string
+          impact_analysis?: string | null
+          mitigation_steps?: string | null
+          risk_level: string
+          risk_score?: number | null
+          threat_vectors?: string[] | null
+        }
+        Update: {
+          assessed_at?: string | null
+          assessed_by?: string
+          case_id?: string | null
+          created_at?: string | null
+          id?: string
+          impact_analysis?: string | null
+          mitigation_steps?: string | null
+          risk_level?: string
+          risk_score?: number | null
+          threat_vectors?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_assessments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cybercrime_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      security_alerts: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          is_active: boolean | null
+          severity: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          is_active?: boolean | null
+          severity: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          severity?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       statistics_snapshots: {
         Row: {
