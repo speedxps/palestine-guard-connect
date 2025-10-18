@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Car, FileText, MapPin, Camera, User, 
-  FolderOpen, Bell, Settings, ArrowRight, Phone, X, PlusCircle,
+  FolderOpen, Bell, Settings, Phone, X, PlusCircle,
   Upload, Download, Trash2, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { BackButton } from '@/components/BackButton';
 
 const TrafficCitizenRecord = () => {
   const { id } = useParams();
@@ -506,13 +507,7 @@ const TrafficCitizenRecord = () => {
       <div className="bg-white dark:bg-gray-800 border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+            <BackButton to="/department/traffic/citizen-search" />
             
             <h1 className="text-xl md:text-2xl font-bold text-primary flex-1 text-center">
               المواطن: {citizen.full_name}
