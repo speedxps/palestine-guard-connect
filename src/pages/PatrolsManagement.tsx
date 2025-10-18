@@ -48,6 +48,7 @@ export default function PatrolsManagement() {
   const [patrolForm, setPatrolForm] = useState({
     name: '',
     area: '',
+    department: '',
     location_address: '',
     location_lat: '',
     location_lng: ''
@@ -105,8 +106,11 @@ export default function PatrolsManagement() {
 
       if (profileError) throw profileError;
 
-      const patrolData = {
-        ...patrolForm,
+      const patrolData: any = {
+        name: patrolForm.name,
+        area: patrolForm.area,
+        department: patrolForm.department || null,
+        location_address: patrolForm.location_address,
         created_by: profile.id,
         location_lat: patrolForm.location_lat ? parseFloat(patrolForm.location_lat) : null,
         location_lng: patrolForm.location_lng ? parseFloat(patrolForm.location_lng) : null,
@@ -127,6 +131,7 @@ export default function PatrolsManagement() {
       setPatrolForm({
         name: '',
         area: '',
+        department: '',
         location_address: '',
         location_lat: '',
         location_lng: ''
@@ -259,6 +264,26 @@ export default function PatrolsManagement() {
                   onChange={(e) => setPatrolForm({...patrolForm, area: e.target.value})}
                   placeholder="مثال: المنطقة الشرقية - غزة"
                 />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="department">القسم المسؤول (اختياري)</Label>
+                <Select
+                  value={patrolForm.department}
+                  onValueChange={(value) => setPatrolForm({...patrolForm, department: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر القسم أو اتركه فارغاً" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">بدون قسم محدد</SelectItem>
+                    <SelectItem value="traffic_police">شرطة المرور</SelectItem>
+                    <SelectItem value="cid">المباحث الجنائية</SelectItem>
+                    <SelectItem value="special_police">الشرطة الخاصة</SelectItem>
+                    <SelectItem value="cybercrime">مكافحة الجرائم الإلكترونية</SelectItem>
+                    <SelectItem value="judicial_police">الشرطة القضائية</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="grid gap-2">

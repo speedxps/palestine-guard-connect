@@ -1739,6 +1739,7 @@ export type Database = {
           area: string
           created_at: string
           created_by: string
+          department: Database["public"]["Enums"]["app_role"] | null
           id: string
           location_address: string | null
           location_lat: number | null
@@ -1751,6 +1752,7 @@ export type Database = {
           area: string
           created_at?: string
           created_by: string
+          department?: Database["public"]["Enums"]["app_role"] | null
           id?: string
           location_address?: string | null
           location_lat?: number | null
@@ -1763,6 +1765,7 @@ export type Database = {
           area?: string
           created_at?: string
           created_by?: string
+          department?: Database["public"]["Enums"]["app_role"] | null
           id?: string
           location_address?: string | null
           location_lat?: number | null
@@ -2120,6 +2123,7 @@ export type Database = {
           assigned_by: string
           assigned_to: string | null
           created_at: string
+          department: Database["public"]["Enums"]["app_role"] | null
           description: string | null
           due_date: string | null
           id: string
@@ -2134,6 +2138,7 @@ export type Database = {
           assigned_by: string
           assigned_to?: string | null
           created_at?: string
+          department?: Database["public"]["Enums"]["app_role"] | null
           description?: string | null
           due_date?: string | null
           id?: string
@@ -2148,6 +2153,7 @@ export type Database = {
           assigned_by?: string
           assigned_to?: string | null
           created_at?: string
+          department?: Database["public"]["Enums"]["app_role"] | null
           description?: string | null
           due_date?: string | null
           id?: string

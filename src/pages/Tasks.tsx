@@ -34,8 +34,9 @@ interface Task {
   location_address: string;
   due_date: string;
   status: 'pending' | 'in_progress' | 'completed';
-  assigned_to: string;
+  assigned_to: string | null;
   assigned_by: string;
+  department: string | null;
   created_at: string;
   updated_at: string;
   location_lat?: number;
@@ -62,6 +63,8 @@ const Tasks = () => {
     title: '',
     description: '',
     assigned_to: '',
+    department: '',
+    assignment_type: 'individual', // 'individual' or 'department'
     location_address: '',
     due_date: ''
   });
@@ -112,7 +115,7 @@ const Tasks = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.assigned_to) {
+    if (!formData.title || (formData.assignment_type === 'individual' && !formData.assigned_to) || (formData.assignment_type === 'department' && !formData.department)) {
       toast({
         title: 'خطأ',
         description: 'يرجى ملء جميع الحقول المطلوبة',
@@ -131,17 +134,24 @@ const Tasks = () => {
 
       if (!profile?.id) throw new Error('Profile not found');
 
+      const taskData: any = {
+        title: formData.title,
+        description: formData.description,
+        assigned_by: profile.id,
+        location_address: formData.location_address,
+        due_date: formData.due_date || null,
+        status: 'pending' as const
+      };
+
+      if (formData.assignment_type === 'individual') {
+        taskData.assigned_to = formData.assigned_to;
+      } else if (formData.assignment_type === 'department') {
+        taskData.department = formData.department;
+      }
+
       const { error } = await supabase
         .from('tasks')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          assigned_to: formData.assigned_to,
-          assigned_by: profile.id,
-          location_address: formData.location_address,
-          due_date: formData.due_date || null,
-          status: 'pending'
-        });
+        .insert([taskData]);
 
       if (error) throw error;
 
@@ -155,6 +165,8 @@ const Tasks = () => {
         title: '',
         description: '',
         assigned_to: '',
+        department: '',
+        assignment_type: 'individual',
         location_address: '',
         due_date: ''
       });
@@ -222,8 +234,11 @@ const Tasks = () => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
+    const matchesDepartment = filterDepartment === 'all' || 
+                              task.department === filterDepartment ||
+                              (filterDepartment === 'individual' && task.assigned_to && !task.department);
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesDepartment;
   });
 
   return (
@@ -269,23 +284,62 @@ const Tasks = () => {
                 </div>
 
                 <div>
-                  <Label>المسؤول عن التنفيذ *</Label>
+                  <Label>نوع التوزيع *</Label>
                   <Select
-                    value={formData.assigned_to}
-                    onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                    value={formData.assignment_type}
+                    onValueChange={(value) => setFormData({ ...formData, assignment_type: value, assigned_to: '', department: '' })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="اختر الضابط المسؤول" />
+                      <SelectValue placeholder="اختر نوع التوزيع" />
                     </SelectTrigger>
                     <SelectContent>
-                      {profiles.map((profile) => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {profile.full_name} {profile.badge_number && `(${profile.badge_number})`}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="individual">توزيع فردي (ضابط محدد)</SelectItem>
+                      <SelectItem value="department">توزيع على قسم</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                {formData.assignment_type === 'individual' && (
+                  <div>
+                    <Label>المسؤول عن التنفيذ *</Label>
+                    <Select
+                      value={formData.assigned_to}
+                      onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر الضابط المسؤول" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {profiles.map((profile) => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {profile.full_name} {profile.badge_number && `(${profile.badge_number})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {formData.assignment_type === 'department' && (
+                  <div>
+                    <Label>القسم المسؤول *</Label>
+                    <Select
+                      value={formData.department}
+                      onValueChange={(value) => setFormData({ ...formData, department: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر القسم" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="traffic_police">شرطة المرور</SelectItem>
+                        <SelectItem value="cid">المباحث الجنائية</SelectItem>
+                        <SelectItem value="special_police">الشرطة الخاصة</SelectItem>
+                        <SelectItem value="cybercrime">مكافحة الجرائم الإلكترونية</SelectItem>
+                        <SelectItem value="judicial_police">الشرطة القضائية</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div>
                   <Label>الموقع</Label>
@@ -321,7 +375,7 @@ const Tasks = () => {
         {/* Filters */}
         <Card className="shadow-lg">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative md:col-span-2">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -331,6 +385,21 @@ const Tasks = () => {
                   className="pr-10"
                 />
               </div>
+
+              <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+                <SelectTrigger>
+                  <SelectValue placeholder="تصفية حسب القسم" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الأقسام</SelectItem>
+                  <SelectItem value="individual">مهام فردية</SelectItem>
+                  <SelectItem value="traffic_police">شرطة المرور</SelectItem>
+                  <SelectItem value="cid">المباحث الجنائية</SelectItem>
+                  <SelectItem value="special_police">الشرطة الخاصة</SelectItem>
+                  <SelectItem value="cybercrime">مكافحة الجرائم الإلكترونية</SelectItem>
+                  <SelectItem value="judicial_police">الشرطة القضائية</SelectItem>
+                </SelectContent>
+              </Select>
 
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger>
@@ -381,10 +450,23 @@ const Tasks = () => {
                       </div>
                     )}
 
-                    {task.profiles && (
+                    {task.profiles && task.assigned_to && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Users className="h-4 w-4" />
                         <span>{task.profiles.full_name}</span>
+                      </div>
+                    )}
+
+                    {task.department && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Shield className="h-4 w-4" />
+                        <Badge variant="outline">
+                          {task.department === 'traffic_police' && 'شرطة المرور'}
+                          {task.department === 'cid' && 'المباحث الجنائية'}
+                          {task.department === 'special_police' && 'الشرطة الخاصة'}
+                          {task.department === 'cybercrime' && 'مكافحة الجرائم الإلكترونية'}
+                          {task.department === 'judicial_police' && 'الشرطة القضائية'}
+                        </Badge>
                       </div>
                     )}
                   </div>
