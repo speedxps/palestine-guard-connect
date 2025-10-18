@@ -70,12 +70,13 @@ const InvestigationClosureManagement = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, full_name')
         .eq('user_id', user.id)
         .single();
 
       if (!profile) throw new Error('Profile not found');
 
+      // تحديث حالة الطلب
       const { error: updateError } = await supabase
         .from('investigation_closure_requests')
         .update({
@@ -86,7 +87,27 @@ const InvestigationClosureManagement = () => {
         })
         .eq('id', selectedRequest.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating closure request:', updateError);
+        throw updateError;
+      }
+
+      // إذا تمت الموافقة، نضيف ملاحظة في سجل التحقيق
+      if (approve) {
+        const closureNote = `✅ تم إغلاق التحقيق بناءً على طلب ${selectedRequest.requester?.full_name || 'المحقق'}\n\nالسبب: ${selectedRequest.reason}\n\nتمت الموافقة من قبل: ${profile.full_name}\nالتاريخ: ${new Date().toLocaleDateString('ar')}\n${adminNotes ? `\nملاحظات الإدارة: ${adminNotes}` : ''}`;
+        
+        const { error: noteError } = await supabase
+          .from('investigation_notes')
+          .insert({
+            citizen_id: selectedRequest.citizen_id,
+            created_by: profile.id,
+            note_text: closureNote
+          });
+
+        if (noteError) {
+          console.error('Error adding closure note:', noteError);
+        }
+      }
 
       // إرسال إشعار للمحقق الذي طلب الإغلاق
       const { error: notificationError } = await supabase
@@ -94,14 +115,16 @@ const InvestigationClosureManagement = () => {
         .insert({
           sender_id: profile.id,
           title: approve ? 'تمت الموافقة على إغلاق التحقيق' : 'تم رفض طلب إغلاق التحقيق',
-          message: `تم ${approve ? 'الموافقة على' : 'رفض'} طلب إغلاق التحقيق للمشتبه: ${selectedRequest.citizen?.full_name}`,
+          message: `تم ${approve ? 'الموافقة على' : 'رفض'} طلب إغلاق التحقيق للمشتبه: ${selectedRequest.citizen?.full_name}${adminNotes ? `\n\nملاحظات الإدارة: ${adminNotes}` : ''}`,
           priority: 'high',
           is_system_wide: false,
           target_departments: ['cid'],
           action_url: `/department/cid/suspect-record/${selectedRequest.citizen_id}`
         });
 
-      if (notificationError) throw notificationError;
+      if (notificationError) {
+        console.error('Error sending notification:', notificationError);
+      }
 
       toast.success(`تم ${approve ? 'الموافقة على' : 'رفض'} الطلب بنجاح`);
       setSelectedRequest(null);

@@ -275,7 +275,7 @@ const CIDSuspectRecord = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, full_name')
         .eq('user_id', user.id)
         .single();
 
@@ -296,9 +296,11 @@ const CIDSuspectRecord = () => {
         .from('notifications')
         .insert({
           sender_id: profile.id,
+          receiver_id: null,
           title: 'طلب إغلاق تحقيق',
-          message: `طلب إغلاق تحقيق للمشتبه: ${citizen.full_name} (${citizen.national_id})`,
+          message: `طلب إغلاق تحقيق للمشتبه: ${citizen.full_name} (${citizen.national_id})\n\nالسبب: ${closureReason}`,
           priority: 'high',
+          status: 'unread',
           is_system_wide: false,
           target_departments: ['admin'],
           action_url: `/investigation-closure-management`
