@@ -94,6 +94,7 @@ serve(async (req) => {
         .from('notifications')
         .insert({
           recipient_id: profile.id,
+          sender_id: profile.id, // System notification from user's own profile
           title: 'تنبيه أمني: تسجيل دخول جديد',
           message: notificationMessage,
           priority: 'high',
