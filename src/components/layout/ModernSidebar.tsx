@@ -269,6 +269,19 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   <Button
                     variant="ghost"
                     className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/investigation-closure-management' 
+                        ? 'bg-red-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-red-50'
+                    }`}
+                    onClick={() => handleNavigation('/investigation-closure-management')}
+                  >
+                    <FileText className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">طلبات إغلاق التحقيقات</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
                       location.pathname === '/news-management' 
                         ? 'bg-teal-500 text-white font-bold shadow-lg' 
                         : 'text-gray-700 hover:bg-teal-50'
