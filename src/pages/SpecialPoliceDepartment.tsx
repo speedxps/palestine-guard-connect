@@ -18,13 +18,6 @@ const SpecialPoliceDepartment = () => {
       highlighted: true
     },
     {
-      title: 'المهام',
-      description: 'إدارة ومتابعة المهام الخاصة',
-      icon: CheckSquare,
-      path: '/tasks',
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
       title: 'الدوريات',
       description: 'تنسيق وتتبع الدوريات الأمنية',
       icon: Users,
