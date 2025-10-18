@@ -42,6 +42,70 @@ serve(async (req) => {
 
     const base64Image = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
 
+  // First, verify that the image contains a face
+  const verificationResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'أنت خبير في تحليل الصور. مهمتك التحقق من وجود وجه بشري واضح في الصورة.'
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'هل هذه الصورة تحتوي على وجه بشري واضح؟ أجب بكلمة واحدة فقط: "نعم" أو "لا". لا تقبل الشعارات أو الرموز أو الصور غير البشرية.'
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 10
+    })
+  })
+
+  if (!verificationResponse.ok) {
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: 'فشل في التحقق من الصورة',
+        matches: []
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+
+  const verificationResult = await verificationResponse.json()
+  const hasFace = verificationResult.choices[0]?.message?.content?.trim()
+  
+  if (hasFace !== 'نعم') {
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: 'الصورة لا تحتوي على وجه بشري واضح. يرجى رفع صورة وجه فقط.',
+        matches: []
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+
   const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {

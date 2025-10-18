@@ -11,6 +11,8 @@ const FaceRecognition = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchingAnimation, setSearchingAnimation] = useState(false);
+  const [currentFakeImage, setCurrentFakeImage] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,19 +78,44 @@ const FaceRecognition = () => {
     }
 
     setLoading(true);
+    setSearchingAnimation(true);
+    setResults([]);
+    
+    // جلب جميع صور المواطنين للأنيميشن
+    const { data: allCitizens } = await supabase
+      .from('citizens')
+      .select('photo_url')
+      .not('photo_url', 'is', null)
+      .limit(100);
+    
+    const fakeImages = allCitizens?.map(c => c.photo_url) || [];
+    
     try {
       // تحويل الصورة إلى base64 لإرسالها للـ AI
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageData = e.target?.result as string;
         
+        // بدء الأنيميشن مع البحث
+        let animationInterval: any;
+        if (fakeImages.length > 0) {
+          animationInterval = setInterval(() => {
+            const randomIndex = Math.floor(Math.random() * fakeImages.length);
+            setCurrentFakeImage(fakeImages[randomIndex]);
+          }, 50); // تغيير الصورة كل 50ms
+        }
+        
         try {
           // البحث باستخدام النظام المحسن
           const searchResult = await searchFaces(imageData);
           
+          // إيقاف الأنيميشن
+          if (animationInterval) clearInterval(animationInterval);
+          
           if (!searchResult.success) {
             toast.error(searchResult.error || 'فشل في البحث');
             setLoading(false);
+            setSearchingAnimation(false);
             return;
           }
 
@@ -104,16 +131,24 @@ const FaceRecognition = () => {
               role: match.role
             }));
             
+            // إظهار الصورة النهائية لمدة ثانية
+            setCurrentFakeImage(formattedResults[0].photo_url);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             setResults(formattedResults);
+            setSearchingAnimation(false);
             toast.success(`تم العثور على ${formattedResults.length} تطابق محتمل`);
           } else {
             setResults([]);
+            setSearchingAnimation(false);
             toast.error('لا يوجد تطابق أعلى من 70%');
           }
           
         } catch (error) {
+          if (animationInterval) clearInterval(animationInterval);
           console.error('Error in face recognition:', error);
           toast.error('حدث خطأ في التعرف على الوجه');
+          setSearchingAnimation(false);
         } finally {
           setLoading(false);
         }
@@ -125,6 +160,7 @@ const FaceRecognition = () => {
       console.error('Error searching faces:', error);
       toast.error('حدث خطأ أثناء البحث');
       setLoading(false);
+      setSearchingAnimation(false);
     }
   };
 
@@ -234,7 +270,29 @@ const FaceRecognition = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {results.length > 0 ? (
+            {searchingAnimation && (
+              <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                <div className="relative w-48 h-48 rounded-lg overflow-hidden border-4 border-primary animate-pulse">
+                  {currentFakeImage && (
+                    <img
+                      src={currentFakeImage}
+                      alt="جاري البحث"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-primary animate-pulse">
+                    جاري البحث في قاعدة البيانات...
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    يتم الآن فحص آلاف الصور للعثور على التطابق
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {!searchingAnimation && results.length > 0 ? (
               <div className="space-y-4">
                 <div className="text-sm text-muted-foreground mb-4">
                   أفضل {results.length} تطابق (الحد الأدنى 70%)

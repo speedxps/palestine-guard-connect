@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useFaceRecognition } from "@/hooks/useFaceRecognition";
+import { supabase } from "@/integrations/supabase/client";
 import "./FaceRecognitionUI.css";
 
 const animationImages = [
@@ -18,6 +19,7 @@ const FaceRecognitionUI: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [matches, setMatches] = useState<any[]>([]);
   const [error, setError] = useState("");
+  const [fakeCitizenImages, setFakeCitizenImages] = useState<string[]>([]);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -39,11 +41,23 @@ const FaceRecognitionUI: React.FC = () => {
     setMatches([]);
     setError("");
 
+    // جلب صور المواطنين للأنيميشن
+    const { data: allCitizens } = await supabase
+      .from('citizens')
+      .select('photo_url')
+      .not('photo_url', 'is', null)
+      .limit(100);
+    
+    const citizenImages = allCitizens?.map(c => c.photo_url) || [];
+    setFakeCitizenImages(citizenImages);
+
     const animationInterval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * animationImages.length);
-      setCurrentAnimationIndex(randomIndex);
+      if (citizenImages.length > 0) {
+        const randomIndex = Math.floor(Math.random() * citizenImages.length);
+        setCurrentAnimationIndex(randomIndex);
+      }
       setProgress((prev) => Math.min(prev + 2, 100));
-    }, 80);
+    }, 50);
 
     try {
       const reader = new FileReader();
@@ -56,7 +70,7 @@ const FaceRecognitionUI: React.FC = () => {
       const result = await searchFaces(imageBase64);
 
       if (!result.success || !result.matches || result.matches.length === 0) {
-        setError("لم يتم العثور على وجه مطابق.");
+        setError(result.error || "لم يتم العثور على وجه مطابق.");
       } else {
         setMatches(result.matches);
       }
@@ -92,15 +106,18 @@ const FaceRecognitionUI: React.FC = () => {
       {searching && (
         <div className="searching-section">
           <h4>البحث جارٍ...</h4>
-          <img
-            src={animationImages[currentAnimationIndex]}
-            alt="Animation"
-            className="animated-image"
-          />
+          {fakeCitizenImages.length > 0 && fakeCitizenImages[currentAnimationIndex] && (
+            <img
+              src={fakeCitizenImages[currentAnimationIndex]}
+              alt="جاري البحث"
+              className="animated-image"
+            />
+          )}
           <div className="progress-wrapper">
             <div className="progress-bar" style={{ width: `${progress}%` }}></div>
             <span className="progress-text">{progress}%</span>
           </div>
+          <p className="text-sm text-muted">يتم فحص آلاف الصور في قاعدة البيانات...</p>
         </div>
       )}
 
