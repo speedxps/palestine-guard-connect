@@ -32,6 +32,11 @@ const JudicialCaseRecord = () => {
   const [loadingData, setLoadingData] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<{url: string; name: string; type: string} | null>(null);
+  const [documentForm, setDocumentForm] = useState({
+    document_name: '',
+    document_type: '',
+    notes: ''
+  });
   
   const [messageForm, setMessageForm] = useState({
     message: '',
@@ -153,7 +158,17 @@ const JudicialCaseRecord = () => {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !judicialCase) return;
+    if (!file) return;
+
+    if (!documentForm.document_name.trim()) {
+      toast.error('يرجى إدخال اسم المستند');
+      return;
+    }
+
+    if (!documentForm.document_type.trim()) {
+      toast.error('يرجى اختيار نوع المستند');
+      return;
+    }
 
     setUploadingFile(true);
     try {
@@ -169,7 +184,7 @@ const JudicialCaseRecord = () => {
       if (!profile) throw new Error('Profile not found');
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${judicialCase.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('judicial-documents')
@@ -177,32 +192,40 @@ const JudicialCaseRecord = () => {
 
       if (uploadError) throw uploadError;
 
-      const { error: dbError } = await supabase
+      const { data: { publicUrl } } = supabase.storage
+        .from('judicial-documents')
+        .getPublicUrl(fileName);
+
+      const { error: insertError } = await supabase
         .from('judicial_documents')
         .insert({
           case_id: judicialCase.id,
-          document_name: file.name,
-          document_type: file.type.split('/')[0] || 'file',
+          document_name: documentForm.document_name,
+          document_type: documentForm.document_type,
           file_path: fileName,
           file_size: file.size,
           mime_type: file.type,
-          uploaded_by: profile.id
+          uploaded_by: profile.id,
+          notes: documentForm.notes || null
         });
 
-      if (dbError) throw dbError;
+      if (insertError) throw insertError;
 
       toast.success('تم رفع المستند بنجاح');
+      setDocumentForm({ document_name: '', document_type: '', notes: '' });
       await fetchDocuments();
-      event.target.value = '';
     } catch (error) {
-      console.error('Error uploading document:', error);
-      toast.error('حدث خطأ أثناء رفع المستند');
+      console.error('Error uploading file:', error);
+      toast.error('حدث خطأ أثناء رفع الملف');
     } finally {
       setUploadingFile(false);
+      event.target.value = '';
     }
   };
 
   const handleDeleteDocument = async (doc: any) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المستند؟')) return;
+
     try {
       const { error: storageError } = await supabase.storage
         .from('judicial-documents')
@@ -222,6 +245,23 @@ const JudicialCaseRecord = () => {
     } catch (error) {
       console.error('Error deleting document:', error);
       toast.error('حدث خطأ أثناء حذف المستند');
+    }
+  };
+
+  const handleDownloadDocument = async (doc: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('judicial-documents')
+        .createSignedUrl(doc.file_path, 3600);
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+        toast.success('جاري تحميل المستند');
+      }
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error('حدث خطأ أثناء تحميل المستند');
     }
   };
 
@@ -245,22 +285,6 @@ const JudicialCaseRecord = () => {
     }
   };
 
-  const handleDownloadDocument = async (doc: any) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('judicial-documents')
-        .createSignedUrl(doc.file_path, 3600);
-
-      if (error) throw error;
-      if (data?.signedUrl) {
-        window.open(data.signedUrl, '_blank');
-        toast.success('جاري تحميل المستند');
-      }
-    } catch (error) {
-      console.error('Error downloading document:', error);
-      toast.error('حدث خطأ أثناء تحميل المستند');
-    }
-  };
 
   const handleActionClick = async (action: string) => {
     switch (action) {
