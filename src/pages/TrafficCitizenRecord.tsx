@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useUserRoles } from '@/hooks/useUserRoles';
 
 const TrafficCitizenRecord = () => {
   const { id } = useParams();
@@ -30,6 +31,8 @@ const TrafficCitizenRecord = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<{url: string; name: string; type: string} | null>(null);
+  const { hasRole } = useUserRoles();
   
   // New violation form
   const [violationForm, setViolationForm] = useState({
@@ -289,6 +292,22 @@ const TrafficCitizenRecord = () => {
     }
   };
 
+  const handlePreviewDocument = async (filePath: string, fileName: string, mimeType: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('citizen-documents')
+        .download(filePath);
+
+      if (error) throw error;
+
+      const url = window.URL.createObjectURL(data);
+      setPreviewDocument({ url, name: fileName, type: mimeType });
+    } catch (error) {
+      console.error('Error previewing document:', error);
+      toast.error('حدث خطأ أثناء معاينة المستند');
+    }
+  };
+
   const handleActionClick = async (action: string) => {
     switch (action) {
       case 'vehicles':
@@ -308,9 +327,6 @@ const TrafficCitizenRecord = () => {
       case 'documents':
         await fetchDocuments();
         setActiveDialog('documents');
-        break;
-      case 'notification':
-        setActiveDialog('notification');
         break;
       case 'add-violation':
         await fetchVehicles();
@@ -421,25 +437,36 @@ const TrafficCitizenRecord = () => {
 
   const handleSaveEdit = async () => {
     try {
+      const isAdmin = hasRole('admin');
+      
       if (!editForm.full_name) {
         toast.error('الاسم الكامل مطلوب');
         return;
       }
 
+      // Prepare update object based on role
+      const updateData: any = {
+        last_modified_at: new Date().toISOString()
+      };
+
+      if (isAdmin) {
+        // Admin can update all fields
+        updateData.full_name = editForm.full_name;
+        updateData.first_name = editForm.first_name;
+        updateData.second_name = editForm.second_name;
+        updateData.third_name = editForm.third_name;
+        updateData.family_name = editForm.family_name;
+        updateData.date_of_birth = editForm.date_of_birth || null;
+        updateData.gender = editForm.gender || null;
+      }
+      
+      // All users can update phone and address
+      updateData.phone = editForm.phone;
+      updateData.address = editForm.address;
+
       const { error } = await supabase
         .from('citizens')
-        .update({
-          full_name: editForm.full_name,
-          first_name: editForm.first_name,
-          second_name: editForm.second_name,
-          third_name: editForm.third_name,
-          family_name: editForm.family_name,
-          phone: editForm.phone,
-          address: editForm.address,
-          date_of_birth: editForm.date_of_birth || null,
-          gender: editForm.gender || null,
-          last_modified_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', citizen.id);
 
       if (error) throw error;
@@ -585,8 +612,8 @@ const TrafficCitizenRecord = () => {
             onClick={() => handleActionClick('add-violation')}
           >
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
-              <Camera className="h-12 w-12 mb-4 text-pink-500" />
-              <p className="text-sm md:text-base font-semibold text-center">رصد مخالفة جديدة</p>
+              <Bell className="h-12 w-12 mb-4 text-pink-500" />
+              <p className="text-sm md:text-base font-semibold text-center">إرسال مخالفة مرورية</p>
             </CardContent>
           </Card>
 
@@ -607,16 +634,6 @@ const TrafficCitizenRecord = () => {
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <FolderOpen className="h-12 w-12 mb-4 text-orange-500" />
               <p className="text-sm md:text-base font-semibold text-center">الوثائق والملفات</p>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
-            onClick={() => handleActionClick('notification')}
-          >
-            <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
-              <Bell className="h-12 w-12 mb-4 text-primary" />
-              <p className="text-sm md:text-base font-semibold text-center">إرسال إشعار</p>
             </CardContent>
           </Card>
 
@@ -895,7 +912,16 @@ const TrafficCitizenRecord = () => {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => handlePreviewDocument(doc.file_path, doc.document_name, doc.mime_type)}
+                          title="معاينة"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => handleDownloadDocument(doc.file_path, doc.document_name)}
+                          title="تحميل"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -903,6 +929,7 @@ const TrafficCitizenRecord = () => {
                           size="sm"
                           variant="destructive"
                           onClick={() => handleDeleteDocument(doc.id, doc.file_path)}
+                          title="حذف"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -923,35 +950,46 @@ const TrafficCitizenRecord = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Notification Dialog */}
-      <Dialog open={activeDialog === 'notification'} onOpenChange={() => setActiveDialog(null)}>
-        <DialogContent>
+      {/* Document Preview Dialog */}
+      <Dialog open={previewDocument !== null} onOpenChange={() => {
+        if (previewDocument?.url) {
+          window.URL.revokeObjectURL(previewDocument.url);
+        }
+        setPreviewDocument(null);
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Bell className="h-6 w-6" />
-              إرسال إشعار
+              <Eye className="h-6 w-6" />
+              معاينة: {previewDocument?.name}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm mb-2">المستلم:</p>
-              <p className="font-semibold">{citizen.full_name}</p>
-              <p className="text-sm text-muted-foreground">{citizen.phone || 'رقم الهاتف غير متوفر'}</p>
-            </div>
-            <Button 
-              className="w-full"
-              onClick={() => {
-                if (citizen.phone) {
-                  toast.success(`سيتم إرسال إشعار إلى ${citizen.phone}`);
-                  setActiveDialog(null);
-                } else {
-                  toast.error('رقم الهاتف غير متوفر');
-                }
-              }}
-            >
-              إرسال الإشعار
-            </Button>
+          <div className="w-full h-[70vh] overflow-auto">
+            {previewDocument && (
+              previewDocument.type.startsWith('image/') ? (
+                <img 
+                  src={previewDocument.url} 
+                  alt={previewDocument.name}
+                  className="w-full h-auto object-contain"
+                />
+              ) : previewDocument.type === 'application/pdf' ? (
+                <iframe
+                  src={previewDocument.url}
+                  className="w-full h-full"
+                  title={previewDocument.name}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4">
+                  <FileText className="h-16 w-16 text-muted-foreground" />
+                  <p className="text-muted-foreground">لا يمكن معاينة هذا النوع من الملفات</p>
+                  <Button onClick={() => handleDownloadDocument(previewDocument.url, previewDocument.name)}>
+                    <Download className="h-4 w-4 ml-2" />
+                    تحميل الملف
+                  </Button>
+                </div>
+              )
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -961,11 +999,11 @@ const TrafficCitizenRecord = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Camera className="h-6 w-6" />
-              رصد مخالفة جديدة
+              <Bell className="h-6 w-6" />
+              إرسال مخالفة مرورية
             </DialogTitle>
             <DialogDescription>
-              رصد مخالفة لـ: {citizen.full_name}
+              إرسال مخالفة لـ: {citizen.full_name}
             </DialogDescription>
           </DialogHeader>
           
@@ -1182,6 +1220,14 @@ const TrafficCitizenRecord = () => {
           </DialogHeader>
           
           <div className="space-y-4">
+            {!hasRole('admin') && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  ملاحظة: يمكنك تعديل رقم الهاتف والعنوان فقط. الحقول الأخرى للقراءة فقط.
+                </p>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="full_name">الاسم الكامل *</Label>
               <Input
@@ -1189,6 +1235,7 @@ const TrafficCitizenRecord = () => {
                 value={editForm.full_name}
                 onChange={(e) => setEditForm(prev => ({ ...prev, full_name: e.target.value }))}
                 placeholder="أدخل الاسم الكامل"
+                disabled={!hasRole('admin')}
               />
             </div>
 
@@ -1199,6 +1246,7 @@ const TrafficCitizenRecord = () => {
                   id="first_name"
                   value={editForm.first_name}
                   onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
+                  disabled={!hasRole('admin')}
                 />
               </div>
               <div>
@@ -1207,6 +1255,7 @@ const TrafficCitizenRecord = () => {
                   id="second_name"
                   value={editForm.second_name}
                   onChange={(e) => setEditForm(prev => ({ ...prev, second_name: e.target.value }))}
+                  disabled={!hasRole('admin')}
                 />
               </div>
             </div>
@@ -1218,6 +1267,7 @@ const TrafficCitizenRecord = () => {
                   id="third_name"
                   value={editForm.third_name}
                   onChange={(e) => setEditForm(prev => ({ ...prev, third_name: e.target.value }))}
+                  disabled={!hasRole('admin')}
                 />
               </div>
               <div>
@@ -1226,6 +1276,7 @@ const TrafficCitizenRecord = () => {
                   id="family_name"
                   value={editForm.family_name}
                   onChange={(e) => setEditForm(prev => ({ ...prev, family_name: e.target.value }))}
+                  disabled={!hasRole('admin')}
                 />
               </div>
             </div>
@@ -1247,6 +1298,7 @@ const TrafficCitizenRecord = () => {
                   type="date"
                   value={editForm.date_of_birth}
                   onChange={(e) => setEditForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                  disabled={!hasRole('admin')}
                 />
               </div>
             </div>
@@ -1256,6 +1308,7 @@ const TrafficCitizenRecord = () => {
               <Select
                 value={editForm.gender}
                 onValueChange={(value) => setEditForm(prev => ({ ...prev, gender: value }))}
+                disabled={!hasRole('admin')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="اختر الجنس" />
