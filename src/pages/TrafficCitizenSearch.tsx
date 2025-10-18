@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,30 @@ const TrafficCitizenSearch = () => {
   const [searchType, setSearchType] = useState<'name' | 'id'>('id');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchAllCitizens();
+  }, []);
+
+  const fetchAllCitizens = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('citizens')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      setResults(data || []);
+    } catch (error) {
+      console.error('Error fetching citizens:', error);
+      toast.error('حدث خطأ أثناء جلب البيانات');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
