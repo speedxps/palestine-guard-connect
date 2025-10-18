@@ -61,10 +61,10 @@ const JudicialPoliceDepartment = () => {
       stats: `${stats.judicialPoliceTickets} Tickets`
     },
     {
-      title: 'سجل القضايا القضائية',
+      title: 'إدارة القضايا القضائية',
       description: 'إدارة ملفات القضايا والمعاملات القضائية',
       icon: FolderOpen,
-      path: '/department/judicial-police/case-record',
+      path: '/judicial-case-management',
       color: 'from-violet-500 to-violet-600'
     }
   ];

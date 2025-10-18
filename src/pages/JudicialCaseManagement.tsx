@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Scale, Plus, Send, FileText } from 'lucide-react';
+import { Scale, Plus, Send, FileText, Eye } from 'lucide-react';
 
 const JudicialCaseManagement = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const [cases, setCases] = useState<any[]>([]);
@@ -357,6 +359,14 @@ const JudicialCaseManagement = () => {
                     <TableCell>{new Date(caseItem.created_at).toLocaleDateString('ar')}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/department/judicial-police/case-record/${caseItem.id}`)}
+                        >
+                          <Eye className="h-4 w-4 ml-2" />
+                          عرض التفاصيل
+                        </Button>
                         {caseItem.status === 'open' && (
                           <>
                             <Button
