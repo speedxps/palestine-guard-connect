@@ -270,17 +270,25 @@ const CIDSuspectRecord = () => {
     }
 
     try {
+      console.log('Starting closure request...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      console.log('User authenticated:', user.id);
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, full_name')
         .eq('user_id', user.id)
         .single();
 
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw profileError;
+      }
       if (!profile) throw new Error('Profile not found');
+      console.log('Profile found:', profile);
 
+      console.log('Inserting closure request...');
       const { error: requestError } = await supabase
         .from('investigation_closure_requests')
         .insert({
@@ -289,18 +297,21 @@ const CIDSuspectRecord = () => {
           requested_by: profile.id
         });
 
-      if (requestError) throw requestError;
+      if (requestError) {
+        console.error('Request insert error:', requestError);
+        throw requestError;
+      }
+      console.log('Closure request inserted successfully');
 
       // إرسال إشعار للأدمن
+      console.log('Sending notification to admin...');
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
           sender_id: profile.id,
-          receiver_id: null,
           title: 'طلب إغلاق تحقيق',
-          message: `طلب إغلاق تحقيق للمشتبه: ${citizen.full_name} (${citizen.national_id})\n\nالسبب: ${closureReason}`,
+          message: `طلب إغلاق تحقيق للمشتبه: ${citizen.full_name} (${citizen.national_id})\n\nالسبب: ${closureReason}\n\nمقدم الطلب: ${profile.full_name}`,
           priority: 'high',
-          status: 'unread',
           is_system_wide: false,
           target_departments: ['admin'],
           action_url: `/investigation-closure-management`
@@ -310,10 +321,14 @@ const CIDSuspectRecord = () => {
         console.error('Notification error:', notificationError);
         throw notificationError;
       }
+      console.log('Notification sent successfully');
 
       toast.success('تم إرسال طلب إغلاق التحقيق للموافقة');
       setClosureReason('');
       setActiveDialog(null);
+      
+      // إعادة جلب طلبات الإغلاق لتحديث العرض
+      await fetchClosureRequests();
     } catch (error) {
       console.error('Error closing investigation:', error);
       toast.error('حدث خطأ أثناء إرسال طلب الإغلاق');
