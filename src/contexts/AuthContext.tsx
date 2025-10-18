@@ -117,6 +117,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         console.log('AuthContext: Login successful');
         
+        // Log the login event to track security
+        try {
+          const { error: logError } = await supabase.functions.invoke('log-login-event', {
+            body: {
+              userId: data.user.id,
+              success: true,
+              route: window.location.pathname
+            }
+          });
+          
+          if (logError) {
+            console.error('Failed to log login event:', logError);
+          } else {
+            console.log('Login event logged successfully');
+          }
+        } catch (logError) {
+          console.error('Error logging login event:', logError);
+          // Don't block login if logging fails
+        }
+        
         // Log login activity
         try {
           const { data: profile } = await supabase
