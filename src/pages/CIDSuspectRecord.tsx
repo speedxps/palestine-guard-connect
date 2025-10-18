@@ -26,6 +26,10 @@ const CIDSuspectRecord = () => {
   const [forensicEvidence, setForensicEvidence] = useState<any[]>([]);
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [notes, setNotes] = useState('');
+  const [previousNotes, setPreviousNotes] = useState<any[]>([]);
+  const [closureRequests, setClosureRequests] = useState<any[]>([]);
+  const [closureReason, setClosureReason] = useState('');
+  const [faceRecognitionImage, setFaceRecognitionImage] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
 
   useEffect(() => {
@@ -64,9 +68,11 @@ const CIDSuspectRecord = () => {
     
     setLoadingData(true);
     try {
+      // جلب البلاغات المرتبطة بالمشتبه - البلاغات التي يحتوي وصفها أو عنوانها على اسم المشتبه أو رقم هويته
       const { data, error } = await supabase
         .from('incidents')
         .select('*')
+        .or(`description.ilike.%${citizen.full_name}%,description.ilike.%${citizen.national_id}%,title.ilike.%${citizen.full_name}%,title.ilike.%${citizen.national_id}%`)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -121,6 +127,136 @@ const CIDSuspectRecord = () => {
     }
   };
 
+  const fetchPreviousNotes = async () => {
+    if (!citizen) return;
+    
+    setLoadingData(true);
+    try {
+      const { data, error } = await supabase
+        .from('investigation_notes')
+        .select('*, profiles!investigation_notes_created_by_fkey(full_name)')
+        .eq('citizen_id', citizen.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPreviousNotes(data || []);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      toast.error('حدث خطأ أثناء جلب الملاحظات');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const fetchClosureRequests = async () => {
+    if (!citizen) return;
+    
+    setLoadingData(true);
+    try {
+      const { data, error } = await supabase
+        .from('investigation_closure_requests')
+        .select('*, requested_profile:profiles!investigation_closure_requests_requested_by_fkey(full_name), reviewed_profile:profiles!investigation_closure_requests_reviewed_by_fkey(full_name)')
+        .eq('citizen_id', citizen.id)
+        .order('requested_at', { ascending: false });
+
+      if (error) throw error;
+      setClosureRequests(data || []);
+    } catch (error) {
+      console.error('Error fetching closure requests:', error);
+      toast.error('حدث خطأ أثناء جلب سجلات الإغلاق');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    if (!notes.trim()) {
+      toast.error('الرجاء إدخال ملاحظات');
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) throw new Error('Profile not found');
+
+      const { error } = await supabase
+        .from('investigation_notes')
+        .insert({
+          citizen_id: citizen.id,
+          note_text: notes,
+          created_by: profile.id
+        });
+
+      if (error) throw error;
+
+      toast.success('تم حفظ الملاحظات بنجاح');
+      setNotes('');
+      await fetchPreviousNotes();
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast.error('حدث خطأ أثناء حفظ الملاحظات');
+    }
+  };
+
+  const handleCloseInvestigation = async () => {
+    if (!closureReason.trim()) {
+      toast.error('الرجاء إدخال سبب الإغلاق');
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) throw new Error('Profile not found');
+
+      const { error: requestError } = await supabase
+        .from('investigation_closure_requests')
+        .insert({
+          citizen_id: citizen.id,
+          reason: closureReason,
+          requested_by: profile.id
+        });
+
+      if (requestError) throw requestError;
+
+      // إرسال إشعار للأدمن
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          sender_id: profile.id,
+          title: 'طلب إغلاق تحقيق',
+          message: `طلب إغلاق تحقيق للمشتبه: ${citizen.full_name} (${citizen.national_id})`,
+          is_system_wide: false,
+          target_departments: ['admin'],
+          action_url: `/department/cid/suspect-record/${citizen.id}`
+        });
+
+      if (notificationError) throw notificationError;
+
+      toast.success('تم إرسال طلب إغلاق التحقيق للموافقة');
+      setClosureReason('');
+      setActiveDialog(null);
+    } catch (error) {
+      console.error('Error closing investigation:', error);
+      toast.error('حدث خطأ أثناء إرسال طلب الإغلاق');
+    }
+  };
+
   const handleActionClick = async (action: string) => {
     switch (action) {
       case 'incidents':
@@ -136,9 +272,10 @@ const CIDSuspectRecord = () => {
         setActiveDialog('family');
         break;
       case 'face':
-        navigate('/face-recognition');
+        setActiveDialog('face');
         break;
       case 'notes':
+        await fetchPreviousNotes();
         setActiveDialog('notes');
         break;
       case 'files':
@@ -148,6 +285,7 @@ const CIDSuspectRecord = () => {
         setActiveDialog('notification');
         break;
       case 'close':
+        await fetchClosureRequests();
         setActiveDialog('close');
         break;
       default:
@@ -508,38 +646,80 @@ const CIDSuspectRecord = () => {
 
       {/* Notes Dialog */}
       <Dialog open={activeDialog === 'notes'} onOpenChange={() => setActiveDialog(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileEdit className="h-6 w-6" />
               ملاحظات التحقيق
             </DialogTitle>
             <DialogDescription>
-              إضافة ملاحظات حول التحقيق الجاري
+              إضافة ومشاهدة ملاحظات التحقيق
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <Textarea
-              placeholder="اكتب ملاحظاتك هنا..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={6}
-            />
-            <Button 
-              className="w-full"
-              onClick={() => {
-                if (notes.trim()) {
-                  toast.success('تم حفظ الملاحظات بنجاح');
-                  setNotes('');
-                  setActiveDialog(null);
-                } else {
-                  toast.error('الرجاء إدخال ملاحظات');
-                }
-              }}
-            >
-              حفظ الملاحظات
-            </Button>
+          <div className="space-y-6">
+            {/* إضافة ملاحظة جديدة */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">إضافة ملاحظة جديدة</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  placeholder="اكتب ملاحظاتك هنا..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={4}
+                />
+                <Button 
+                  className="w-full"
+                  onClick={handleSaveNote}
+                >
+                  حفظ الملاحظة
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* الملاحظات السابقة */}
+            <div>
+              <h3 className="font-semibold mb-4 text-lg">الملاحظات السابقة</h3>
+              {loadingData ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
+                </div>
+              ) : previousNotes.length > 0 ? (
+                <div className="space-y-3">
+                  {previousNotes.map((note) => (
+                    <Card key={note.id}>
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-semibold text-primary">
+                              {note.profiles?.full_name || 'محقق'}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(note.created_at).toLocaleDateString('ar', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-sm">{note.note_text}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  لا توجد ملاحظات سابقة
+                </div>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -607,47 +787,222 @@ const CIDSuspectRecord = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Close Investigation Dialog */}
-      <Dialog open={activeDialog === 'close'} onOpenChange={() => setActiveDialog(null)}>
-        <DialogContent>
+      {/* Face Recognition Dialog */}
+      <Dialog open={activeDialog === 'face'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <XCircle className="h-6 w-6" />
-              إغلاق التحقيق
+            <DialogTitle className="flex items-center gap-2">
+              <ScanFace className="h-6 w-6" />
+              التعرف على الوجه
             </DialogTitle>
             <DialogDescription>
-              هل أنت متأكد من إغلاق التحقيق مع هذا المشتبه؟
+              التعرف على وجه المشتبه باستخدام الكاميرا أو رفع صورة
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">
-                ⚠️ تحذير: إغلاق التحقيق يتطلب موافقة المدير ولا يمكن التراجع عنه
-              </p>
-            </div>
-            <Textarea
-              placeholder="سبب إغلاق التحقيق..."
-              rows={4}
-            />
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => setActiveDialog(null)}
-              >
-                إلغاء
-              </Button>
-              <Button 
-                variant="destructive" 
-                className="flex-1"
-                onClick={() => {
-                  toast.info('تم إرسال طلب إغلاق التحقيق للموافقة');
-                  setActiveDialog(null);
-                }}
-              >
-                إرسال طلب الإغلاق
-              </Button>
+            {citizen.photo_url && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">صورة المشتبه</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <img 
+                    src={citizen.photo_url} 
+                    alt={citizen.full_name}
+                    className="w-full max-w-md mx-auto rounded-lg shadow-lg"
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">التعرف باستخدام الكاميرا</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center">
+                  <ScanFace className="h-16 w-16 mx-auto text-primary mb-4" />
+                  <p className="text-muted-foreground mb-4">قم بتوجيه الكاميرا للتعرف على الوجه</p>
+                  <Button onClick={() => toast.info('قريباً: التعرف عبر الكاميرا')}>
+                    <ScanFace className="h-4 w-4 ml-2" />
+                    فتح الكاميرا
+                  </Button>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">أو</p>
+                  <Button variant="outline" onClick={() => document.getElementById('face-upload')?.click()}>
+                    رفع صورة للتعرف
+                  </Button>
+                  <input 
+                    id="face-upload" 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          setFaceRecognitionImage(e.target?.result as string);
+                          toast.success('تم رفع الصورة');
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </div>
+
+                {faceRecognitionImage && (
+                  <div className="mt-4">
+                    <img 
+                      src={faceRecognitionImage} 
+                      alt="Face Recognition"
+                      className="w-full max-w-md mx-auto rounded-lg shadow-lg"
+                    />
+                    <div className="flex gap-2 mt-4">
+                      <Button 
+                        className="flex-1" 
+                        onClick={() => toast.success('تتم عملية التعرف...')}
+                      >
+                        التعرف الآن
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => setFaceRecognitionImage(null)}
+                      >
+                        إلغاء
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Close Investigation Dialog */}
+      <Dialog open={activeDialog === 'close'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="h-6 w-6" />
+              إغلاق التحقيق وسجلات الإغلاق
+            </DialogTitle>
+            <DialogDescription>
+              طلب إغلاق التحقيق ومشاهدة السجلات السابقة
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* طلب إغلاق جديد */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">طلب إغلاق تحقيق</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    ⚠️ تحذير: إغلاق التحقيق يتطلب موافقة المدير ولا يمكن التراجع عنه
+                  </p>
+                </div>
+                <Textarea
+                  placeholder="سبب إغلاق التحقيق..."
+                  value={closureReason}
+                  onChange={(e) => setClosureReason(e.target.value)}
+                  rows={4}
+                />
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setActiveDialog(null)}
+                  >
+                    إلغاء
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    className="flex-1"
+                    onClick={handleCloseInvestigation}
+                  >
+                    إرسال طلب الإغلاق
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* سجلات الإغلاق السابقة */}
+            <div>
+              <h3 className="font-semibold mb-4 text-lg">سجلات طلبات الإغلاق</h3>
+              {loadingData ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-32 w-full" />
+                  ))}
+                </div>
+              ) : closureRequests.length > 0 ? (
+                <div className="space-y-3">
+                  {closureRequests.map((request) => (
+                    <Card key={request.id}>
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-sm font-semibold text-primary">
+                                طلب من: {request.requested_profile?.full_name || 'محقق'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(request.requested_at).toLocaleDateString('ar', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                            <Badge variant={
+                              request.status === 'approved' ? 'default' :
+                              request.status === 'rejected' ? 'destructive' :
+                              'secondary'
+                            }>
+                              {request.status === 'approved' ? 'تمت الموافقة' :
+                               request.status === 'rejected' ? 'مرفوض' :
+                               'قيد المراجعة'}
+                            </Badge>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold">السبب:</p>
+                            <p className="text-sm">{request.reason}</p>
+                          </div>
+                          {request.reviewed_by && (
+                            <div className="border-t pt-2">
+                              <p className="text-xs font-semibold text-muted-foreground">
+                                تمت المراجعة من: {request.reviewed_profile?.full_name || 'المدير'}
+                              </p>
+                              {request.admin_notes && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  ملاحظات المدير: {request.admin_notes}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-1">
+                                بتاريخ: {new Date(request.reviewed_at).toLocaleDateString('ar')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  لا توجد طلبات إغلاق سابقة
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
