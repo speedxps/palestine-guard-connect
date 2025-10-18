@@ -17,6 +17,7 @@ import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
+import ProfileWithHistory from "@/pages/ProfileWithHistory";
 import About from "@/pages/About";
 import News from "@/pages/News";
 import NewsManagementPage from "@/pages/NewsManagementPage";
@@ -170,7 +171,7 @@ const App = () => {
                   path="/profile"
                   element={
                     <ProtectedRoute>
-                      <Profile />
+                      <ProfileWithHistory />
                     </ProtectedRoute>
                   }
                 />

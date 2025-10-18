@@ -1470,6 +1470,69 @@ export type Database = {
           },
         ]
       }
+      login_events: {
+        Row: {
+          acknowledged_at: string | null
+          cf_connecting_ip: string | null
+          created_at: string
+          device_info: Json | null
+          forwarded: string | null
+          geolocation: Json | null
+          id: string
+          ip_address: string | null
+          is_acknowledged: boolean | null
+          is_suspicious: boolean | null
+          referer: string | null
+          route: string | null
+          session_id: string | null
+          success: boolean
+          timestamp: string
+          user_agent: string | null
+          user_id: string
+          x_forwarded_for: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          cf_connecting_ip?: string | null
+          created_at?: string
+          device_info?: Json | null
+          forwarded?: string | null
+          geolocation?: Json | null
+          id?: string
+          ip_address?: string | null
+          is_acknowledged?: boolean | null
+          is_suspicious?: boolean | null
+          referer?: string | null
+          route?: string | null
+          session_id?: string | null
+          success?: boolean
+          timestamp?: string
+          user_agent?: string | null
+          user_id: string
+          x_forwarded_for?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          cf_connecting_ip?: string | null
+          created_at?: string
+          device_info?: Json | null
+          forwarded?: string | null
+          geolocation?: Json | null
+          id?: string
+          ip_address?: string | null
+          is_acknowledged?: boolean | null
+          is_suspicious?: boolean | null
+          referer?: string | null
+          route?: string | null
+          session_id?: string | null
+          success?: boolean
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string
+          x_forwarded_for?: string | null
+        }
+        Relationships: []
+      }
       news: {
         Row: {
           author_id: string

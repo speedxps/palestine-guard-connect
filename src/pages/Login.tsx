@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Users, Eye, EyeOff } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -67,6 +68,23 @@ const Login = () => {
     try {
       const success = await login(username, password);
       if (success) {
+        // Log the login event
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.functions.invoke('log-login-event', {
+              body: {
+                userId: user.id,
+                success: true,
+                route: window.location.pathname
+              }
+            });
+          }
+        } catch (logError) {
+          console.error('Failed to log login event:', logError);
+          // Don't block login if logging fails
+        }
+
         if (rememberMe) {
           localStorage.setItem(
             "savedCredentials",
