@@ -41,8 +41,12 @@ const JudicialCaseRecord = () => {
   useEffect(() => {
     if (id) {
       fetchCaseData();
+    } else {
+      // No ID provided, redirect to case management
+      toast.error('لم يتم تحديد القضية');
+      navigate('/judicial-case-management');
     }
-  }, [id]);
+  }, [id, navigate]);
 
   const fetchCaseData = async () => {
     try {
