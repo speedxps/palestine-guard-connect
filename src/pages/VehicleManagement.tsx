@@ -26,7 +26,6 @@ interface VehicleData {
   chassis_number: string;
   registration_date: string;
   status: string;
-  owner_national_id?: string;
 }
 
 interface OwnerData {
@@ -75,8 +74,7 @@ export default function VehicleManagement() {
     year: new Date().getFullYear(),
     engine_number: '',
     chassis_number: '',
-    status: 'active',
-    owner_national_id: ''
+    status: 'active'
   });
   
   const [ownerForm, setOwnerForm] = useState({
@@ -362,8 +360,7 @@ export default function VehicleManagement() {
       year: new Date().getFullYear(),
       engine_number: '',
       chassis_number: '',
-      status: 'active',
-      owner_national_id: ''
+      status: 'active'
     });
   };
 
@@ -474,10 +471,7 @@ export default function VehicleManagement() {
                           variant="outline"
                           onClick={() => {
                           setEditingItem(vehicle);
-                          setVehicleForm({
-                            ...vehicle,
-                            owner_national_id: vehicle.owner_national_id || ''
-                          });
+                          setVehicleForm({ ...vehicle });
                           setShowVehicleDialog(true);
                           }}
                         >

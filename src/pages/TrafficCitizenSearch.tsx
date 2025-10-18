@@ -15,30 +15,6 @@ const TrafficCitizenSearch = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetchAllCitizens();
-  }, []);
-
-  const fetchAllCitizens = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('citizens')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-
-      setResults(data || []);
-    } catch (error) {
-      console.error('Error fetching citizens:', error);
-      toast.error('حدث خطأ أثناء جلب البيانات');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
       toast.error('الرجاء إدخال قيمة للبحث');
@@ -181,17 +157,7 @@ const TrafficCitizenSearch = () => {
               </Card>
             ))}
           </div>
-        ) : (
-          <Card className="shadow-lg">
-            <CardContent className="p-12 text-center">
-              <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">لا توجد نتائج</h3>
-              <p className="text-muted-foreground">
-                لم يتم العثور على أي مواطنين. يرجى التحقق من الصلاحيات أو إضافة بيانات جديدة.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        ) : null}
       </div>
     </div>
   );
