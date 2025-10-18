@@ -76,7 +76,7 @@ const CIDDepartment = () => {
       title: 'سجل المشتبهين والمتهمين',
       description: 'إدارة ملفات المشتبهين والتحقيقات',
       icon: FolderOpen,
-      path: '/department/cid/suspect-record',
+      path: '/department/cid/suspect-search',
       color: 'from-rose-500 to-rose-600'
     },
     {

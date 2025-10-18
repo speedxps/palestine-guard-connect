@@ -69,7 +69,9 @@ import CIDUsers from "@/pages/CIDUsers";
 import SpecialPoliceUsers from "@/pages/SpecialPoliceUsers";
 import CybercrimeUsers from "@/pages/CybercrimeUsers";
 import TrafficCitizenRecord from "@/pages/TrafficCitizenRecord";
+import TrafficCitizenSearch from "@/pages/TrafficCitizenSearch";
 import CIDSuspectRecord from "@/pages/CIDSuspectRecord";
+import CIDSuspectSearch from "@/pages/CIDSuspectSearch";
 import JudicialCaseRecord from "@/pages/JudicialCaseRecord";
 import NotificationManagement from "@/pages/NotificationManagement";
 import UserPermissions from "@/pages/UserPermissions";
@@ -114,10 +116,12 @@ const App = () => {
                 <Route path="/department/cybercrime/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cybercrime"]}><CybercrimeUsers /></RoleBasedRoute></ProtectedRoute>} />
                 <Route path="/department/judicial-police/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "judicial_police"]}><JudicialPoliceUsers /></RoleBasedRoute></ProtectedRoute>} />
 
-                {/* Citizen Record Pages */}
-                <Route path="/department/traffic/citizen-record" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><TrafficCitizenRecord /></RoleBasedRoute></ProtectedRoute>} />
-                <Route path="/department/cid/suspect-record" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDSuspectRecord /></RoleBasedRoute></ProtectedRoute>} />
-                <Route path="/department/judicial-police/case-record" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "judicial_police"]}><JudicialCaseRecord /></RoleBasedRoute></ProtectedRoute>} />
+              {/* Citizen Record Pages */}
+              <Route path="/department/traffic/citizen-search" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><TrafficCitizenSearch /></RoleBasedRoute></ProtectedRoute>} />
+              <Route path="/department/traffic/citizen-record/:id" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><TrafficCitizenRecord /></RoleBasedRoute></ProtectedRoute>} />
+              <Route path="/department/cid/suspect-search" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDSuspectSearch /></RoleBasedRoute></ProtectedRoute>} />
+              <Route path="/department/cid/suspect-record/:id" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDSuspectRecord /></RoleBasedRoute></ProtectedRoute>} />
+              <Route path="/department/judicial-police/case-record" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "judicial_police"]}><JudicialCaseRecord /></RoleBasedRoute></ProtectedRoute>} />
 
                 {/* Notification & Permissions - Admin */}
                 <Route

@@ -76,7 +76,7 @@ const TrafficDepartment = () => {
       title: 'سجل المواطنين المركزي',
       description: 'إدارة سجلات المواطنين ومركباتهم',
       icon: FolderOpen,
-      path: '/department/traffic/citizen-record',
+      path: '/department/traffic/citizen-search',
       color: 'from-emerald-500 to-emerald-600'
     },
     {
