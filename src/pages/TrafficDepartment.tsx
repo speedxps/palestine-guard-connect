@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Car, FileText, Settings, Users, Search, Activity, Newspaper, MessageCircle, Ticket } from 'lucide-react';
+import { Car, FileText, Settings, Users, Search, Activity, Newspaper, MessageCircle, Ticket, FolderOpen } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const TrafficDepartment = () => {
@@ -71,6 +71,13 @@ const TrafficDepartment = () => {
       icon: Ticket,
       path: '/tickets',
       color: 'from-amber-500 to-amber-600'
+    },
+    {
+      title: 'سجل المواطنين المركزي',
+      description: 'إدارة سجلات المواطنين ومركباتهم',
+      icon: FolderOpen,
+      path: '/department/traffic/citizen-record',
+      color: 'from-emerald-500 to-emerald-600'
     },
     {
       title: 'مستخدمي القسم',

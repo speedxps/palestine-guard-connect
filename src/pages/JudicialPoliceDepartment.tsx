@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BackButton } from '@/components/BackButton';
-import { Scale, FileText, MessageSquare, TrendingUp, Shield, Ticket, MessageCircle, Newspaper } from 'lucide-react';
+import { Scale, FileText, MessageSquare, TrendingUp, Shield, Ticket, MessageCircle, Newspaper, FolderOpen } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const JudicialPoliceDepartment = () => {
@@ -59,6 +59,13 @@ const JudicialPoliceDepartment = () => {
       path: '/tickets',
       color: 'from-amber-500 to-amber-600',
       stats: `${stats.judicialPoliceTickets} Tickets`
+    },
+    {
+      title: 'سجل القضايا القضائية',
+      description: 'إدارة ملفات القضايا والمعاملات القضائية',
+      icon: FolderOpen,
+      path: '/department/judicial-police/case-record',
+      color: 'from-violet-500 to-violet-600'
     }
   ];
 
