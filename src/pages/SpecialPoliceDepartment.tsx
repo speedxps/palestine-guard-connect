@@ -10,6 +10,14 @@ const SpecialPoliceDepartment = () => {
 
   const specialPoliceTools = [
     {
+      title: 'المهام المطلوبة',
+      description: 'المهام الموكلة للقسم من الإدارة العامة',
+      icon: CheckSquare,
+      path: '/department-tasks',
+      color: 'from-yellow-500 to-yellow-600',
+      highlighted: true
+    },
+    {
       title: 'المهام',
       description: 'إدارة ومتابعة المهام الخاصة',
       icon: CheckSquare,

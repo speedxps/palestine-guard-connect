@@ -11,6 +11,14 @@ const JudicialPoliceDepartment = () => {
 
   const tools = [
     {
+      title: 'المهام المطلوبة',
+      description: 'المهام الموكلة للقسم من الإدارة العامة',
+      icon: FileText,
+      path: '/department-tasks',
+      color: 'from-yellow-500 to-yellow-600',
+      highlighted: true
+    },
+    {
       title: 'البحث عن القضايا',
       description: 'البحث عن القضايا وإنشاء قضايا جديدة',
       icon: Scale,

@@ -10,6 +10,14 @@ const TrafficDepartment = () => {
 
   const trafficTools = [
     {
+      title: 'المهام المطلوبة',
+      description: 'المهام الموكلة للقسم من الإدارة العامة',
+      icon: FileText,
+      path: '/department-tasks',
+      color: 'from-yellow-500 to-yellow-600',
+      highlighted: true
+    },
+    {
       title: 'المخالفات',
       description: 'عرض وإدارة مخالفات المرور',
       icon: FileText,

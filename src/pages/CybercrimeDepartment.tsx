@@ -10,6 +10,14 @@ const CybercrimeDepartment = () => {
 
   const cybercrimeTools = [
     {
+      title: 'المهام المطلوبة',
+      description: 'المهام الموكلة للقسم من الإدارة العامة',
+      icon: Shield,
+      path: '/department-tasks',
+      color: 'from-yellow-500 to-yellow-600',
+      highlighted: true
+    },
+    {
       title: 'الجرائم الإلكترونية',
       description: 'إدارة ومعالجة الجرائم الإلكترونية',
       icon: Shield,

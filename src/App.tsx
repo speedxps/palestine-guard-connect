@@ -39,6 +39,7 @@ import SmartCivilRegistry from "@/pages/SmartCivilRegistry";
 import AdvancedFaceRecognition from "@/pages/AdvancedFaceRecognition";
 import FaceRecognition from "@/pages/FaceRecognition";
 import Tasks from "@/pages/Tasks";
+import DepartmentTasks from "@/pages/DepartmentTasks";
 import Patrol from "@/pages/Patrol";
 import Feed from "@/pages/Feed";
 import Chat from "@/pages/Chat";
@@ -386,12 +387,24 @@ const App = () => {
                   }
                 />
 
-                {/* Special Police */}
+                {/* Tasks Management - Admin Only */}
                 <Route
                   path="/tasks"
                   element={
                     <ProtectedRoute>
-                      <Tasks />
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <Tasks />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Department Tasks - All Departments */}
+                <Route
+                  path="/department-tasks"
+                  element={
+                    <ProtectedRoute>
+                      <DepartmentTasks />
                     </ProtectedRoute>
                   }
                 />

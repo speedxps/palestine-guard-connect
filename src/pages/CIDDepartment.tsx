@@ -10,6 +10,14 @@ const CIDDepartment = () => {
 
   const cidTools = [
     {
+      title: 'المهام المطلوبة',
+      description: 'المهام الموكلة للقسم من الإدارة العامة',
+      icon: AlertTriangle,
+      path: '/department-tasks',
+      color: 'from-yellow-500 to-yellow-600',
+      highlighted: true
+    },
+    {
       title: 'البلاغات',
       description: 'عرض ومتابعة البلاغات الواردة',
       icon: AlertTriangle,

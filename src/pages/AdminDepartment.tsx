@@ -13,6 +13,14 @@ const AdminDepartment = () => {
 
   const adminTools = [
     {
+      title: 'توزيع المهام والدوريات',
+      description: 'إنشاء وتوزيع المهام على الأقسام والموظفين',
+      icon: FileText,
+      path: '/tasks',
+      color: 'from-yellow-500 to-yellow-600',
+      highlighted: true
+    },
+    {
       title: 'إدارة المستخدمين',
       description: 'إضافة وتعديل وحذف المستخدمين',
       icon: Users,
