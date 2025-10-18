@@ -298,12 +298,16 @@ const CIDSuspectRecord = () => {
           sender_id: profile.id,
           title: 'طلب إغلاق تحقيق',
           message: `طلب إغلاق تحقيق للمشتبه: ${citizen.full_name} (${citizen.national_id})`,
+          priority: 'high',
           is_system_wide: false,
           target_departments: ['admin'],
-          action_url: `/department/cid/suspect-record/${citizen.id}`
+          action_url: `/investigation-closure-management`
         });
 
-      if (notificationError) throw notificationError;
+      if (notificationError) {
+        console.error('Notification error:', notificationError);
+        throw notificationError;
+      }
 
       toast.success('تم إرسال طلب إغلاق التحقيق للموافقة');
       setClosureReason('');

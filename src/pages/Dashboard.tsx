@@ -11,6 +11,7 @@ import policeLogo from "@/assets/police-logo.png";
 import ModernSidebar from "@/components/layout/ModernSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
@@ -218,20 +219,25 @@ const Dashboard = () => {
       {/* Tickets */}
       <div className="px-6 pb-3 w-full">
         <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
-        <div className="grid grid-cols-2 gap-2 mb-5">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 mb-5">
           {tickets.map((ticket, index) => {
             // ✅ السماح للإدمن برؤية جميع الأقسام
             if (ticket.roles.length > 0 && user?.role !== "admin" && !hasAccess(ticket.roles as any[])) return null;
 
             return (
-              <div
+              <Card
                 key={index}
                 onClick={() => navigate(ticket.path)}
-                className={`${ticket.color} rounded-xl p-2 flex flex-col items-center justify-center text-white min-h-[70px] shadow-sm cursor-pointer hover:opacity-90 active:scale-95 transition-all`}
+                className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
               >
-                <h3 className="font-bold text-base leading-tight text-center">{ticket.title}</h3>
-                <p className="text-xs opacity-90 mt-0.5">{ticket.subtitle}</p>
-              </div>
+                <CardContent className="flex flex-col items-center justify-center p-6 md:p-8 min-h-[120px]">
+                  <div className={`${ticket.color} w-12 h-12 rounded-full flex items-center justify-center mb-3`}>
+                    <span className="text-white text-2xl">📋</span>
+                  </div>
+                  <h3 className="font-bold text-base leading-tight text-center text-foreground">{ticket.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{ticket.subtitle}</p>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

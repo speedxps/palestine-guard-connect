@@ -82,6 +82,7 @@ import SetupTestUsers from "@/pages/SetupTestUsers";
 import CreateUser from "@/pages/CreateUser";
 import Tickets from "@/pages/Tickets";
 import InternalNews from "@/pages/InternalNews";
+import InvestigationClosureManagement from "@/pages/InvestigationClosureManagement";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,16 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin"]}>
                         <NotificationManagement />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/investigation-closure-management"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <InvestigationClosureManagement />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

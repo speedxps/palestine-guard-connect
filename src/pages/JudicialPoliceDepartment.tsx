@@ -97,28 +97,17 @@ const JudicialPoliceDepartment = () => {
         </Card>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-4 md:gap-6">
           {tools.map((tool) => (
             <Card
               key={tool.path}
-              className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-primary/30"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <CardHeader>
-                <div className={`inline-flex p-4 bg-gradient-to-br ${tool.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                  <tool.icon className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                  {tool.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  {tool.description}
-                </p>
-                {tool.stats && (
-                  <p className="text-sm font-semibold text-primary mt-2">{tool.stats}</p>
-                )}
+              <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
+                <tool.icon className="h-12 w-12 mb-4 text-primary" />
+                <p className="text-sm md:text-base font-semibold text-center">{tool.title}</p>
+                {tool.stats && <p className="text-xs text-muted-foreground mt-1">{tool.stats}</p>}
               </CardContent>
             </Card>
           ))}

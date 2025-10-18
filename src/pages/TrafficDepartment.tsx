@@ -104,28 +104,18 @@ const TrafficDepartment = () => {
       </div>
 
       {/* Tools Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 gap-4 md:gap-6">
         {trafficTools.map((tool, index) => {
           const Icon = tool.icon;
           return (
-            <Card key={index} className="hover:shadow-lg transition-shadow duration-300 cursor-pointer group">
-              <CardHeader className="text-center">
-                <div className={`mx-auto p-4 rounded-full bg-gradient-to-r ${tool.color} w-fit group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="font-arabic text-xl">{tool.title}</CardTitle>
-                <CardDescription className="font-arabic text-gray-600">
-                  {tool.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => navigate(tool.path)}
-                  className="w-full font-arabic"
-                  variant="outline"
-                >
-                  الدخول للقسم
-                </Button>
+            <Card 
+              key={index} 
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
+              onClick={() => navigate(tool.path)}
+            >
+              <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
+                <Icon className="h-12 w-12 mb-4 text-primary" />
+                <p className="text-sm md:text-base font-semibold text-center">{tool.title}</p>
               </CardContent>
             </Card>
           );

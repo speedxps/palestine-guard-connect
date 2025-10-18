@@ -171,14 +171,21 @@ export const NotificationBell = () => {
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
     if (notification.status === 'unread') {
-      markNotificationAsViewed(notification.id);
+      await markNotificationAsViewed(notification.id);
+    }
+    
+    // للإشعارات الخاصة بطلبات إغلاق التحقيق، وجّه للصفحة الإدارية
+    if (notification.title === 'طلب إغلاق تحقيق' && roles.includes('admin')) {
+      setIsOpen(false);
+      navigate('/investigation-closure-management');
+      return;
     }
     
     // Navigate if action_url is provided
     if (notification.action_url) {
-      setIsOpen(false); // Close the sheet
+      setIsOpen(false);
       navigate(notification.action_url);
     }
   };
