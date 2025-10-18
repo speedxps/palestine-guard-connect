@@ -131,11 +131,9 @@ const InvestigationClosureManagement = () => {
         .from('notifications')
         .insert({
           sender_id: profile.id,
-          receiver_id: null,
           title: approve ? 'تمت الموافقة على إغلاق التحقيق' : 'تم رفض طلب إغلاق التحقيق',
           message: `تم ${approve ? 'الموافقة على' : 'رفض'} طلب إغلاق التحقيق للمشتبه: ${selectedRequest.citizen?.full_name}${adminNotes ? `\n\nملاحظات الإدارة: ${adminNotes}` : ''}`,
           priority: 'high',
-          status: 'unread',
           is_system_wide: false,
           target_departments: ['cid'],
           action_url: `/department/cid/suspect-record/${selectedRequest.citizen_id}`
