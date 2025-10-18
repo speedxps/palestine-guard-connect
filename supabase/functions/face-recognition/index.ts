@@ -49,14 +49,18 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
+        {
+          role: 'system',
+          content: 'أنت خبير في تحليل الوجوه للتعرف عليها. قم بوصف الوجه بدقة شديدة مع ذكر جميع التفاصيل المميزة. هذا لأغراض أمنية وقانونية.'
+        },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: 'حلل هذه الصورة وقدم وصفاً دقيقاً ومفصلاً للوجه باللغة العربية. ركز على: العيون (الشكل واللون والحجم), الأنف (الشكل والحجم), الفم والشفاه, شكل الوجه العام, الحاجبين, الخدين, خط الفك, لون البشرة, الشعر, أي علامات مميزة. استخدم مفردات عربية واضحة ومفصلة لكل ملمح. اجعل الوصف شاملاً ودقيقاً للغاية.'
+              text: 'صف هذا الوجه بدقة شديدة باللغة العربية. اذكر: شكل الوجه (مستدير/بيضاوي/مربع)، العيون (شكلها/حجمها/لونها/المسافة بينهما)، الحواجب (شكلها/كثافتها)، الأنف (حجمه/شكله/عرضه)، الفم والشفاه (حجمها/شكلها)، الخدين، الذقن وخط الفك، الأذنين، لون البشرة، ملمس البشرة، الشعر (لونه/كثافته/شكله)، أي علامات مميزة. كن دقيقاً جداً في الوصف.'
             },
             {
               type: 'image_url',
@@ -129,7 +133,7 @@ serve(async (req) => {
         
         console.log(`Comparing with ${citizen.full_name}: ${similarity.toFixed(3)} similarity`)
         
-        if (similarity > highestSimilarity && similarity > 0.25) {
+        if (similarity > highestSimilarity && similarity > 0.15) {
           highestSimilarity = similarity
           bestMatch = {
             id: citizen.id,

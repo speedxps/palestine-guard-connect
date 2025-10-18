@@ -33,9 +33,44 @@ const CIDSuspectRecord = () => {
   const [faceRecognitionImage, setFaceRecognitionImage] = useState<string | null>(null);
   const [faceRecognitionResults, setFaceRecognitionResults] = useState<any[]>([]);
   const [recognitionLoading, setRecognitionLoading] = useState(false);
+  const [regeneratingEmbedding, setRegeneratingEmbedding] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   
   const { searchFaces } = useFaceRecognition();
+
+  const regenerateFaceEmbedding = async () => {
+    if (!citizen?.photo_url) {
+      toast.error('لا توجد صورة للمشتبه لتوليد embedding');
+      return;
+    }
+
+    setRegeneratingEmbedding(true);
+    try {
+      // تحويل URL الصورة إلى base64
+      const response = await fetch(citizen.photo_url);
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      // استدعاء edge function لتوليد embedding
+      const { data, error } = await supabase.functions.invoke('generate-face-embedding', {
+        body: { citizenId: citizen.id, imageBase64: base64 }
+      });
+
+      if (error) throw error;
+
+      toast.success('تم تحديث بيانات التعرف على الوجه بنجاح');
+      await fetchData(); // إعادة تحميل البيانات
+    } catch (error) {
+      console.error('Error regenerating face embedding:', error);
+      toast.error('حدث خطأ أثناء تحديث بيانات التعرف على الوجه');
+    } finally {
+      setRegeneratingEmbedding(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -806,6 +841,30 @@ const CIDSuspectRecord = () => {
           </DialogHeader>
           
           <div className="space-y-4">
+            {/* زر إعادة توليد Embedding */}
+            {citizen.photo_url && (
+              <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm mb-1">تحديث بيانات التعرف</p>
+                      <p className="text-xs text-muted-foreground">
+                        إذا كان التعرف لا يعمل بشكل صحيح، قم بتحديث بيانات التعرف أولاً
+                      </p>
+                    </div>
+                    <Button
+                      onClick={regenerateFaceEmbedding}
+                      disabled={regeneratingEmbedding}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {regeneratingEmbedding ? 'جارٍ التحديث...' : 'تحديث البيانات'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {citizen.photo_url && (
               <Card>
                 <CardHeader>
