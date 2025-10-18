@@ -40,7 +40,7 @@ export const NotificationBell = () => {
       const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
         .select('*')
-        .or(`is_system_wide.eq.true,target_departments.cs.{${roles.join(',')}}`)
+        .or(`is_system_wide.eq.true,target_departments.ov.{${roles.join(',')}}`)
         .order('created_at', { ascending: false })
         .limit(20);
 
