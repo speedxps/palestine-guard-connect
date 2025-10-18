@@ -76,6 +76,12 @@ serve(async (req) => {
       .single();
 
     if (profile && success) {
+      // Get user roles to send notification to their departments
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
       // Create notification
       const locationStr = geolocation?.city && geolocation?.country 
         ? `${geolocation.city}, ${geolocation.country}`
@@ -88,17 +94,23 @@ serve(async (req) => {
       const notificationMessage = `تم تسجيل الدخول من IP: ${ipAddress || 'غير متوفر'}
 الموقع التقريبي: ${locationStr}
 المتصفح: ${deviceStr}
-الوقت: ${new Date().toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh' })}`;
+الوقت: ${new Date().toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh' })}
+
+${profile.full_name ? `المستخدم: ${profile.full_name}` : ''}`;
+
+      // Extract roles array for target_departments
+      const targetDepts = userRoles?.map(r => r.role) || [];
 
       const { error: notifError } = await supabase
         .from('notifications')
         .insert({
-          recipient_id: profile.id,
-          sender_id: profile.id, // System notification from user's own profile
+          sender_id: profile.id,
           title: 'تنبيه أمني: تسجيل دخول جديد',
           message: notificationMessage,
           priority: 'high',
           status: 'unread',
+          is_system_wide: false,
+          target_departments: targetDepts,
           action_url: `/profile?tab=login-history&event=${loginEvent.id}`
         });
 
