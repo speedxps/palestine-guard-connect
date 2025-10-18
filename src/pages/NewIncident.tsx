@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  ArrowLeft, 
   Camera, 
   MapPin, 
   AlertTriangle,
@@ -16,6 +15,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { BackButton } from '@/components/BackButton';
 
 const NewIncident = () => {
   const navigate = useNavigate();
@@ -148,7 +148,7 @@ const NewIncident = () => {
       setAttachedFiles([]);
       
       // Navigate back
-      navigate(-1);
+      navigate('/incidents');
     } catch (error) {
       console.error('Error submitting incident:', error);
       toast({
@@ -298,14 +298,7 @@ const NewIncident = () => {
       {/* Header */}
       <div className="page-header">
         <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/dashboard')}
-            className="text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <BackButton to="/dashboard" />
           <div>
             <h1 className="text-xl font-bold font-arabic">بلاغ جديد</h1>
             <p className="text-sm text-muted-foreground">New Incident Report</p>

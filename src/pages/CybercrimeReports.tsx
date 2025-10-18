@@ -18,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
+import { BackButton } from '@/components/BackButton';
 
 interface CybercrimeReport {
   id: string;
@@ -166,14 +167,7 @@ const CybercrimeReports = () => {
       {/* Header */}
       <div className="page-header">
         <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/cybercrime')}
-            className="text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <BackButton to="/department/cybercrime" />
           <div>
             <h1 className="text-xl font-bold font-arabic">تقارير الجرائم الإلكترونية</h1>
             <p className="text-sm text-muted-foreground">Cybercrime Reports - Hebron</p>

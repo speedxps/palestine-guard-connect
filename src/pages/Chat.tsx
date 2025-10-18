@@ -14,7 +14,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  ArrowLeft, 
   Send, 
   Shield,
   Plus,
@@ -24,6 +23,7 @@ import {
   UserPlus,
   X
 } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 
 interface ChatRoom {
   id: string;
@@ -468,7 +468,7 @@ const Chat = () => {
                 size="icon"
                 onClick={() => setSelectedRoom(null)}
               >
-                <ArrowLeft className="h-5 w-5" />
+                <Users className="h-5 w-5" />
               </Button>
               <div>
                 <h3 className="font-semibold font-arabic">{selectedRoom.name}</h3>
@@ -699,14 +699,7 @@ const Chat = () => {
       {/* Header */}
       <div className="page-header">
         <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <BackButton />
           <div className="flex-1">
             <h1 className="text-xl font-bold font-arabic">المحادثات</h1>
             <p className="text-sm text-muted-foreground">

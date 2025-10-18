@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import MapboxComponent from '@/components/MapboxComponent';
 import { useTickets } from '@/hooks/useTickets';
+import { BackButton } from '@/components/BackButton';
 
 interface Profile {
   id: string;

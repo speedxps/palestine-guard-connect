@@ -113,7 +113,7 @@ const News = () => {
       setSelectedNews(null);
       navigate('/news');
     } else {
-      navigate(-1);
+      navigate('/dashboard');
     }
   };
 

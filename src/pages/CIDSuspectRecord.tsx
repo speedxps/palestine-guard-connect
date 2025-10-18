@@ -6,12 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from '@/components/ui/textarea';
 import { 
   FileText, TestTube, Users, ScanFace, 
-  FileEdit, FolderOpen, Megaphone, XCircle, ArrowRight, Phone
+  FileEdit, FolderOpen, Megaphone, XCircle, Phone
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { BackButton } from '@/components/BackButton';
 
 const CIDSuspectRecord = () => {
   const { id } = useParams();
@@ -180,13 +181,7 @@ const CIDSuspectRecord = () => {
       <div className="bg-white dark:bg-gray-800 border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+            <BackButton to="/department/cid/suspect-search" />
             
             <h1 className="text-xl md:text-2xl font-bold text-red-600 flex-1 text-center">
               المشتبه: {citizen.full_name}

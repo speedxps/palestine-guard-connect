@@ -11,8 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Plus, Edit, Trash2, Printer, Shield, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Printer, Shield, Users } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { BackButton } from '@/components/BackButton';
 
 type UserRole = Database['public']['Enums']['user_role'];
 
@@ -328,14 +329,7 @@ const DepartmentUsersManagement: React.FC<DepartmentUsersManagementProps> = ({ d
   return (
     <div className="mobile-container p-6">
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 ml-2" />
-          رجوع
-        </Button>
+        <BackButton className="mb-4" />
 
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
