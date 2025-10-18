@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   Car, FileText, MapPin, Camera, User, 
   FolderOpen, Bell, Settings, Phone, X, PlusCircle,
-  Upload, Download, Trash2, Eye
+  Upload, Download, Trash2, Eye, Navigation
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { BackButton } from '@/components/BackButton';
+import CitizenLocationMap from '@/components/CitizenLocationMap';
 
 const TrafficCitizenRecord = () => {
   const { id } = useParams();
@@ -69,6 +70,13 @@ const TrafficCitizenRecord = () => {
     address: '',
     date_of_birth: '',
     gender: ''
+  });
+
+  // Location form
+  const [locationForm, setLocationForm] = useState({
+    latitude: '',
+    longitude: '',
+    address: ''
   });
 
   useEffect(() => {
@@ -320,6 +328,11 @@ const TrafficCitizenRecord = () => {
         setActiveDialog('violations');
         break;
       case 'location':
+        setLocationForm({
+          latitude: citizen.latitude?.toString() || '',
+          longitude: citizen.longitude?.toString() || '',
+          address: citizen.address || ''
+        });
         setActiveDialog('location');
         break;
       case 'details':
@@ -478,6 +491,41 @@ const TrafficCitizenRecord = () => {
     } catch (error) {
       console.error('Error updating citizen:', error);
       toast.error('حدث خطأ أثناء تحديث البيانات');
+    }
+  };
+
+  const handleSaveLocation = async () => {
+    try {
+      const isAdmin = hasRole('admin');
+      
+      if (!isAdmin) {
+        toast.error('فقط المسؤول يمكنه تحديث الموقع');
+        return;
+      }
+
+      if (!locationForm.latitude || !locationForm.longitude) {
+        toast.error('يرجى إدخال خطوط الطول والعرض');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('citizens')
+        .update({
+          latitude: parseFloat(locationForm.latitude),
+          longitude: parseFloat(locationForm.longitude),
+          address: locationForm.address,
+          last_modified_at: new Date().toISOString()
+        })
+        .eq('id', citizen.id);
+
+      if (error) throw error;
+
+      toast.success('تم تحديث الموقع بنجاح');
+      setActiveDialog(null);
+      await fetchCitizenData();
+    } catch (error) {
+      console.error('Error updating location:', error);
+      toast.error('حدث خطأ أثناء تحديث الموقع');
     }
   };
 
@@ -829,21 +877,84 @@ const TrafficCitizenRecord = () => {
 
       {/* Location Dialog */}
       <Dialog open={activeDialog === 'location'} onOpenChange={() => setActiveDialog(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MapPin className="h-6 w-6" />
-              العنوان على الخريطة
+              موقع المواطن
             </DialogTitle>
+            <DialogDescription>
+              عرض وتحديث موقع: {citizen.full_name}
+            </DialogDescription>
           </DialogHeader>
           
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">
-              العنوان: {citizen.address || 'غير متوفر'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              قريباً: عرض الموقع على الخريطة التفاعلية
-            </p>
+          <div className="space-y-6">
+            {/* Current Location Map */}
+            <div>
+              <Label className="mb-2 block">الموقع الحالي</Label>
+              <CitizenLocationMap
+                latitude={citizen.latitude}
+                longitude={citizen.longitude}
+                address={citizen.address}
+              />
+            </div>
+
+            {/* Update Location Form (Admin Only) */}
+            {hasRole('admin') && (
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 mb-4">
+                  <Navigation className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">تحديث الموقع</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="latitude">خط العرض (Latitude)</Label>
+                    <Input
+                      id="latitude"
+                      type="number"
+                      step="0.000001"
+                      placeholder="31.952162"
+                      value={locationForm.latitude}
+                      onChange={(e) => setLocationForm({ ...locationForm, latitude: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="longitude">خط الطول (Longitude)</Label>
+                    <Input
+                      id="longitude"
+                      type="number"
+                      step="0.000001"
+                      placeholder="35.233154"
+                      value={locationForm.longitude}
+                      onChange={(e) => setLocationForm({ ...locationForm, longitude: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="location-address">العنوان</Label>
+                  <Textarea
+                    id="location-address"
+                    placeholder="أدخل العنوان التفصيلي..."
+                    value={locationForm.address}
+                    onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })}
+                    rows={2}
+                  />
+                </div>
+
+                <Button onClick={handleSaveLocation} className="w-full">
+                  <MapPin className="h-4 w-4 ml-2" />
+                  حفظ الموقع
+                </Button>
+              </div>
+            )}
+
+            {!hasRole('admin') && (
+              <div className="p-4 bg-muted rounded-lg text-center text-sm text-muted-foreground">
+                فقط المسؤول يمكنه تحديث الموقع
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

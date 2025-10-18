@@ -355,6 +355,8 @@ export type Database = {
           id: string
           last_modified_at: string | null
           last_modified_by: string | null
+          latitude: number | null
+          longitude: number | null
           national_id: string
           phone: string | null
           photo_url: string | null
@@ -377,6 +379,8 @@ export type Database = {
           id?: string
           last_modified_at?: string | null
           last_modified_by?: string | null
+          latitude?: number | null
+          longitude?: number | null
           national_id: string
           phone?: string | null
           photo_url?: string | null
@@ -399,6 +403,8 @@ export type Database = {
           id?: string
           last_modified_at?: string | null
           last_modified_by?: string | null
+          latitude?: number | null
+          longitude?: number | null
           national_id?: string
           phone?: string | null
           photo_url?: string | null
