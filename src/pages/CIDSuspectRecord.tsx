@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
+import { useFaceRecognition } from '@/hooks/useFaceRecognition';
 
 const CIDSuspectRecord = () => {
   const { id } = useParams();
@@ -30,7 +31,11 @@ const CIDSuspectRecord = () => {
   const [closureRequests, setClosureRequests] = useState<any[]>([]);
   const [closureReason, setClosureReason] = useState('');
   const [faceRecognitionImage, setFaceRecognitionImage] = useState<string | null>(null);
+  const [faceRecognitionResults, setFaceRecognitionResults] = useState<any[]>([]);
+  const [recognitionLoading, setRecognitionLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
+  
+  const { searchFaces } = useFaceRecognition();
 
   useEffect(() => {
     if (id) {
@@ -864,19 +869,93 @@ const CIDSuspectRecord = () => {
                     <div className="flex gap-2 mt-4">
                       <Button 
                         className="flex-1" 
-                        onClick={() => toast.success('تتم عملية التعرف...')}
+                        onClick={async () => {
+                          setRecognitionLoading(true);
+                          setFaceRecognitionResults([]);
+                          try {
+                            const result = await searchFaces(faceRecognitionImage);
+                            if (result.success && result.matches && result.matches.length > 0) {
+                              setFaceRecognitionResults(result.matches);
+                              toast.success(`تم العثور على ${result.matches.length} تطابق`);
+                            } else {
+                              toast.error('لم يتم العثور على أي تطابق');
+                            }
+                          } catch (error) {
+                            console.error('Face recognition error:', error);
+                            toast.error('حدث خطأ أثناء التعرف على الوجه');
+                          } finally {
+                            setRecognitionLoading(false);
+                          }
+                        }}
+                        disabled={recognitionLoading}
                       >
-                        التعرف الآن
+                        {recognitionLoading ? 'جارٍ التعرف...' : 'التعرف الآن'}
                       </Button>
                       <Button 
                         variant="outline" 
                         className="flex-1"
-                        onClick={() => setFaceRecognitionImage(null)}
+                        onClick={() => {
+                          setFaceRecognitionImage(null);
+                          setFaceRecognitionResults([]);
+                        }}
                       >
                         إلغاء
                       </Button>
                     </div>
                   </div>
+                )}
+
+                {/* عرض نتائج التعرف على الوجه */}
+                {faceRecognitionResults.length > 0 && (
+                  <Card className="mt-4 border-green-200 bg-green-50 dark:bg-green-950">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-green-700 dark:text-green-300">
+                        نتائج التعرف ({faceRecognitionResults.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {faceRecognitionResults.map((match, index) => (
+                        <Card key={index} className="bg-white dark:bg-gray-800">
+                          <CardContent className="p-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-sm text-muted-foreground">الاسم</p>
+                                <p className="font-semibold">{match.name || match.full_name}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">نسبة التطابق</p>
+                                <Badge variant={match.similarity > 0.8 ? 'default' : 'secondary'}>
+                                  {(match.similarity * 100).toFixed(2)}%
+                                </Badge>
+                              </div>
+                              {match.nationalId && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">رقم الهوية</p>
+                                  <p className="text-sm">{match.nationalId}</p>
+                                </div>
+                              )}
+                              {match.role && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">الوظيفة</p>
+                                  <p className="text-sm">{match.role}</p>
+                                </div>
+                              )}
+                              {match.photo_url && (
+                                <div className="col-span-2">
+                                  <p className="text-sm text-muted-foreground mb-2">الصورة</p>
+                                  <img 
+                                    src={match.photo_url} 
+                                    alt={match.name || match.full_name}
+                                    className="w-32 h-32 object-cover rounded-lg shadow-md"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </CardContent>
+                  </Card>
                 )}
               </CardContent>
             </Card>
