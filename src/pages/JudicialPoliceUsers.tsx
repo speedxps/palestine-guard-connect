@@ -26,7 +26,7 @@ interface JudicialUser {
 const JudicialPoliceUsers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin, hasRole } = useUserRoles();
+  const { isAdmin, hasRole, loading: rolesLoading } = useUserRoles();
   const [users, setUsers] = useState<JudicialUser[]>([]);
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,14 +34,28 @@ const JudicialPoliceUsers = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin && !hasRole('judicial_police')) {
+    // Wait for roles to load before checking permissions
+    if (rolesLoading) {
+      return;
+    }
+
+    const hasJudicialRole = hasRole('judicial_police');
+    
+    console.log('JudicialPoliceUsers - Permission check:', {
+      isAdmin,
+      hasJudicialRole,
+      rolesLoading
+    });
+
+    if (!isAdmin && !hasJudicialRole) {
+      console.log('Access denied - redirecting to /access-denied');
       navigate('/access-denied');
       return;
     }
 
     fetchJudicialUsers();
     fetchAllProfiles();
-  }, [isAdmin, hasRole, navigate]);
+  }, [isAdmin, rolesLoading, navigate]);
 
   const fetchJudicialUsers = async () => {
     try {
@@ -173,6 +187,18 @@ const JudicialPoliceUsers = () => {
     user.profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Show loading state while checking permissions
+  if (rolesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">جاري التحقق من الصلاحيات...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-6">
