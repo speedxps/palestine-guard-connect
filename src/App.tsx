@@ -47,8 +47,6 @@ import CybercrimeReports from "@/pages/CybercrimeReports";
 import Reports from "@/pages/Reports";
 import ReportsManagement from "@/pages/ReportsManagement";
 import OverviewPage from "@/pages/OverviewPage";
-import DepartmentUserManagement from "@/pages/DepartmentUserManagement";
-import DepartmentUsersManagement from "@/pages/DepartmentUsersManagement";
 import Backup from "@/pages/Backup";
 import CitizenRecords from "@/pages/CitizenRecords";
 import CybercrimeAdvanced from "@/pages/CybercrimeAdvanced";
@@ -66,6 +64,10 @@ import JudicialCommunications from "@/pages/JudicialCommunications";
 import JudicialTracking from "@/pages/JudicialTracking";
 import JudicialPoliceDepartment from "@/pages/JudicialPoliceDepartment";
 import JudicialPoliceUsers from "@/pages/JudicialPoliceUsers";
+import TrafficPoliceUsers from "@/pages/TrafficPoliceUsers";
+import CIDUsers from "@/pages/CIDUsers";
+import SpecialPoliceUsers from "@/pages/SpecialPoliceUsers";
+import CybercrimeUsers from "@/pages/CybercrimeUsers";
 import NotificationManagement from "@/pages/NotificationManagement";
 import UserPermissions from "@/pages/UserPermissions";
 import NotFound from "@/pages/NotFound";
@@ -76,12 +78,6 @@ import Tickets from "@/pages/Tickets";
 import InternalNews from "@/pages/InternalNews";
 
 const queryClient = new QueryClient();
-
-// Department user management wrappers
-const DepartmentUserManagementTraffic = () => <DepartmentUserManagement department="traffic" />;
-const DepartmentUserManagementCID = () => <DepartmentUserManagement department="cid" />;
-const DepartmentUserManagementSpecial = () => <DepartmentUserManagement department="special" />;
-const DepartmentUserManagementCybercrime = () => <DepartmentUserManagement department="cybercrime" />;
 
 const App = () => {
   React.useEffect(() => {
@@ -109,10 +105,10 @@ const App = () => {
                 } />
 
                 {/* Department User Management Routes */}
-                <Route path="/department/traffic/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><DepartmentUserManagementTraffic /></RoleBasedRoute></ProtectedRoute>} />
-                <Route path="/department/cid/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><DepartmentUserManagementCID /></RoleBasedRoute></ProtectedRoute>} />
-                <Route path="/department/special/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "special_police"]}><DepartmentUserManagementSpecial /></RoleBasedRoute></ProtectedRoute>} />
-                <Route path="/department/cybercrime/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cybercrime"]}><DepartmentUserManagementCybercrime /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/traffic/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><TrafficPoliceUsers /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/cid/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDUsers /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/special/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "special_police"]}><SpecialPoliceUsers /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/cybercrime/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cybercrime"]}><CybercrimeUsers /></RoleBasedRoute></ProtectedRoute>} />
                 <Route path="/department/judicial-police/users" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "judicial_police"]}><JudicialPoliceUsers /></RoleBasedRoute></ProtectedRoute>} />
 
                 {/* Notification & Permissions - Admin */}
@@ -468,7 +464,7 @@ const App = () => {
                   path="/department-users/traffic"
                   element={
                     <ProtectedRoute>
-                      <DepartmentUserManagementTraffic />
+                      <TrafficPoliceUsers />
                     </ProtectedRoute>
                   }
                 />
@@ -476,7 +472,7 @@ const App = () => {
                   path="/department-users/cid"
                   element={
                     <ProtectedRoute>
-                      <DepartmentUserManagementCID />
+                      <CIDUsers />
                     </ProtectedRoute>
                   }
                 />
@@ -484,7 +480,7 @@ const App = () => {
                   path="/department-users/special"
                   element={
                     <ProtectedRoute>
-                      <DepartmentUserManagementSpecial />
+                      <SpecialPoliceUsers />
                     </ProtectedRoute>
                   }
                 />
@@ -492,7 +488,7 @@ const App = () => {
                   path="/department-users/cybercrime"
                   element={
                     <ProtectedRoute>
-                      <DepartmentUserManagementCybercrime />
+                      <CybercrimeUsers />
                     </ProtectedRoute>
                   }
                 />
