@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Car, FileText, MapPin, Camera, User, 
-  FolderOpen, Bell, Settings, ArrowRight, Phone, X, PlusCircle
+  FolderOpen, Bell, Settings, ArrowRight, Phone, X, PlusCircle,
+  Upload, Download, Trash2, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +27,9 @@ const TrafficCitizenRecord = () => {
   // Data states
   const [violations, setViolations] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
   
   // New violation form
   const [violationForm, setViolationForm] = useState({
@@ -49,6 +52,19 @@ const TrafficCitizenRecord = () => {
     engine_number: '',
     chassis_number: '',
     status: 'active'
+  });
+  
+  // Edit citizen form
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    first_name: '',
+    second_name: '',
+    third_name: '',
+    family_name: '',
+    phone: '',
+    address: '',
+    date_of_birth: '',
+    gender: ''
   });
 
   useEffect(() => {
@@ -153,6 +169,126 @@ const TrafficCitizenRecord = () => {
     }
   };
 
+  const fetchDocuments = async () => {
+    if (!citizen) return;
+    
+    setLoadingData(true);
+    try {
+      const { data, error } = await supabase
+        .from('citizen_documents')
+        .select('*')
+        .eq('citizen_id', citizen.id)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast.error('حدث خطأ أثناء جلب الوثائق');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('حجم الملف يجب أن لا يتجاوز 10 ميجابايت');
+      return;
+    }
+
+    setUploadingFile(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${citizen.id}/${Date.now()}.${fileExt}`;
+      
+      // Upload file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('citizen-documents')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Create document record
+      const { error: dbError } = await supabase
+        .from('citizen_documents')
+        .insert({
+          citizen_id: citizen.id,
+          document_type: file.type.startsWith('image/') ? 'صورة' : 'مستند',
+          document_name: file.name,
+          file_path: fileName,
+          file_size: file.size,
+          mime_type: file.type
+        });
+
+      if (dbError) throw dbError;
+
+      toast.success('تم رفع الملف بنجاح');
+      await fetchDocuments();
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      toast.error('حدث خطأ أثناء رفع الملف');
+    } finally {
+      setUploadingFile(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleDownloadDocument = async (filePath: string, fileName: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('citizen-documents')
+        .download(filePath);
+
+      if (error) throw error;
+
+      // Create download link
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('تم تحميل الملف بنجاح');
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('حدث خطأ أثناء تحميل الملف');
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string, filePath: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المستند؟')) return;
+
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('citizen-documents')
+        .remove([filePath]);
+
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('citizen_documents')
+        .delete()
+        .eq('id', docId);
+
+      if (dbError) throw dbError;
+
+      toast.success('تم حذف المستند بنجاح');
+      await fetchDocuments();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('حدث خطأ أثناء حذف المستند');
+    }
+  };
+
   const handleActionClick = async (action: string) => {
     switch (action) {
       case 'vehicles':
@@ -170,6 +306,7 @@ const TrafficCitizenRecord = () => {
         setActiveDialog('details');
         break;
       case 'documents':
+        await fetchDocuments();
         setActiveDialog('documents');
         break;
       case 'notification':
@@ -181,6 +318,20 @@ const TrafficCitizenRecord = () => {
         break;
       case 'add-vehicle':
         setActiveDialog('add-vehicle');
+        break;
+      case 'edit-data':
+        setEditForm({
+          full_name: citizen.full_name || '',
+          first_name: citizen.first_name || '',
+          second_name: citizen.second_name || '',
+          third_name: citizen.third_name || '',
+          family_name: citizen.family_name || '',
+          phone: citizen.phone || '',
+          address: citizen.address || '',
+          date_of_birth: citizen.date_of_birth || '',
+          gender: citizen.gender || ''
+        });
+        setActiveDialog('edit-data');
         break;
       default:
         toast.info(`قريباً: ${action}`);
@@ -265,6 +416,40 @@ const TrafficCitizenRecord = () => {
     } catch (error: any) {
       console.error('Error saving vehicle:', error);
       toast.error(error.message.includes('duplicate') ? 'رقم المركبة موجود مسبقاً' : 'حدث خطأ أثناء حفظ المركبة');
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      if (!editForm.full_name) {
+        toast.error('الاسم الكامل مطلوب');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('citizens')
+        .update({
+          full_name: editForm.full_name,
+          first_name: editForm.first_name,
+          second_name: editForm.second_name,
+          third_name: editForm.third_name,
+          family_name: editForm.family_name,
+          phone: editForm.phone,
+          address: editForm.address,
+          date_of_birth: editForm.date_of_birth || null,
+          gender: editForm.gender || null,
+          last_modified_at: new Date().toISOString()
+        })
+        .eq('id', citizen.id);
+
+      if (error) throw error;
+
+      toast.success('تم تحديث البيانات بنجاح');
+      setActiveDialog(null);
+      await fetchCitizenData();
+    } catch (error) {
+      console.error('Error updating citizen:', error);
+      toast.error('حدث خطأ أثناء تحديث البيانات');
     }
   };
 
@@ -447,7 +632,7 @@ const TrafficCitizenRecord = () => {
 
           <Card
             className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
-            onClick={() => navigate('/civil-registry')}
+            onClick={() => handleActionClick('edit-data')}
           >
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <Settings className="h-12 w-12 mb-4 text-pink-500" />
@@ -653,16 +838,87 @@ const TrafficCitizenRecord = () => {
 
       {/* Documents Dialog */}
       <Dialog open={activeDialog === 'documents'} onOpenChange={() => setActiveDialog(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FolderOpen className="h-6 w-6" />
               الوثائق والملفات
             </DialogTitle>
+            <DialogDescription>
+              الوثائق المرفقة لـ: {citizen.full_name}
+            </DialogDescription>
           </DialogHeader>
           
-          <div className="text-center py-8 text-muted-foreground">
-            قريباً: عرض الوثائق والملفات المرتبطة بالمواطن
+          <div className="space-y-4">
+            {/* Upload Button */}
+            <div className="flex justify-end">
+              <Label htmlFor="file-upload" className="cursor-pointer">
+                <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                  <Upload className="h-4 w-4" />
+                  <span>{uploadingFile ? 'جاري الرفع...' : 'رفع ملف جديد'}</span>
+                </div>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  disabled={uploadingFile}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                />
+              </Label>
+            </div>
+
+            {/* Documents List */}
+            {loadingData ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-20 w-full" />
+                ))}
+              </div>
+            ) : documents.length > 0 ? (
+              <div className="space-y-3">
+                {documents.map((doc) => (
+                  <Card key={doc.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <FileText className="h-8 w-8 text-primary" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold truncate">{doc.document_name}</p>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                            <Badge variant="outline">{doc.document_type}</Badge>
+                            <span>{(doc.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                            <span>{new Date(doc.uploaded_at).toLocaleDateString('ar')}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadDocument(doc.file_path, doc.document_name)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteDocument(doc.id, doc.file_path)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    {doc.notes && (
+                      <p className="mt-2 text-sm text-muted-foreground">{doc.notes}</p>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                لا توجد وثائق مرفقة
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -906,6 +1162,128 @@ const TrafficCitizenRecord = () => {
               </Button>
               <Button onClick={handleSaveVehicle}>
                 حفظ المركبة
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Citizen Data Dialog */}
+      <Dialog open={activeDialog === 'edit-data'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-6 w-6" />
+              تعديل بيانات المواطن
+            </DialogTitle>
+            <DialogDescription>
+              تعديل بيانات: {citizen.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="full_name">الاسم الكامل *</Label>
+              <Input
+                id="full_name"
+                value={editForm.full_name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, full_name: e.target.value }))}
+                placeholder="أدخل الاسم الكامل"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="first_name">الاسم الأول</Label>
+                <Input
+                  id="first_name"
+                  value={editForm.first_name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="second_name">الاسم الثاني</Label>
+                <Input
+                  id="second_name"
+                  value={editForm.second_name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, second_name: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="third_name">الاسم الثالث</Label>
+                <Input
+                  id="third_name"
+                  value={editForm.third_name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, third_name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="family_name">اسم العائلة</Label>
+                <Input
+                  id="family_name"
+                  value={editForm.family_name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, family_name: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone">رقم الهاتف</Label>
+                <Input
+                  id="phone"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="مثال: 0599123456"
+                />
+              </div>
+              <div>
+                <Label htmlFor="date_of_birth">تاريخ الميلاد</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  value={editForm.date_of_birth}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="gender">الجنس</Label>
+              <Select
+                value={editForm.gender}
+                onValueChange={(value) => setEditForm(prev => ({ ...prev, gender: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الجنس" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ذكر">ذكر</SelectItem>
+                  <SelectItem value="أنثى">أنثى</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="address">العنوان</Label>
+              <Textarea
+                id="address"
+                value={editForm.address}
+                onChange={(e) => setEditForm(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="أدخل العنوان الكامل"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setActiveDialog(null)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                حفظ التعديلات
               </Button>
             </div>
           </div>
