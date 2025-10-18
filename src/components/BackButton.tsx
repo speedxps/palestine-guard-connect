@@ -20,7 +20,12 @@ export const BackButton: React.FC<BackButtonProps> = ({
     if (to) {
       navigate(to);
     } else {
-      navigate('/dashboard');
+      // Go back in history, or to dashboard if no history
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/dashboard');
+      }
     }
   };
 
