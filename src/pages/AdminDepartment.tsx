@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Crown, Settings, Users, FileText, Database, Shield, Ticket, MessageCircle, Newspaper } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { DepartmentIcon } from '@/components/DepartmentIcon';
 
 const AdminDepartment = () => {
   const navigate = useNavigate();
@@ -82,9 +83,12 @@ const AdminDepartment = () => {
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <BackButton />
-        <div className="p-3 rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600">
-          <Crown className="h-8 w-8 text-white" />
-        </div>
+        <DepartmentIcon 
+          icon={Crown}
+          gradient="from-yellow-400 via-yellow-500 to-yellow-600"
+          size="xl"
+          animated={true}
+        />
         <div>
           <h1 className="text-3xl font-bold text-gray-900 font-arabic">الإدارة العامة</h1>
           <p className="text-gray-600 font-arabic">أدوات الإدارة والتحكم في النظام</p>
@@ -98,13 +102,29 @@ const AdminDepartment = () => {
           return (
             <Card 
               key={index} 
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
+              className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-primary/50 bg-gradient-to-br from-white to-gray-50/50 overflow-hidden relative"
               onClick={() => navigate(tool.path)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
-                <Icon className="h-12 w-12 mb-4 text-primary" />
-                <p className="text-sm md:text-base font-semibold text-center">{tool.title}</p>
-                {tool.stats && <p className="text-xs text-muted-foreground mt-1">{tool.stats}</p>}
+              {/* Background gradient effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <CardContent className="relative flex flex-col items-center justify-center p-6 md:p-8">
+                <div className="mb-4 transform transition-transform duration-300 group-hover:scale-110">
+                  <DepartmentIcon 
+                    icon={Icon}
+                    gradient={tool.color}
+                    size="lg"
+                    animated={true}
+                  />
+                </div>
+                <p className="text-sm md:text-base font-bold text-center font-arabic group-hover:text-primary transition-colors duration-300">
+                  {tool.title}
+                </p>
+                {tool.stats && (
+                  <p className="text-xs text-muted-foreground mt-1 font-arabic">
+                    {tool.stats}
+                  </p>
+                )}
               </CardContent>
             </Card>
           );
