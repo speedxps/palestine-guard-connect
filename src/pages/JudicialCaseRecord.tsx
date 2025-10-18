@@ -130,6 +130,138 @@ const JudicialCaseRecord = () => {
     }
   };
 
+  const fetchDocuments = async () => {
+    if (!judicialCase) return;
+    
+    setLoadingData(true);
+    try {
+      const { data, error } = await supabase
+        .from('judicial_documents')
+        .select('*')
+        .eq('case_id', judicialCase.id)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast.error('حدث خطأ أثناء جلب المستندات');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !judicialCase) return;
+
+    setUploadingFile(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) throw new Error('Profile not found');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${judicialCase.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('judicial-documents')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase
+        .from('judicial_documents')
+        .insert({
+          case_id: judicialCase.id,
+          document_name: file.name,
+          document_type: file.type.split('/')[0] || 'file',
+          file_path: fileName,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_by: profile.id
+        });
+
+      if (dbError) throw dbError;
+
+      toast.success('تم رفع المستند بنجاح');
+      await fetchDocuments();
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error('حدث خطأ أثناء رفع المستند');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleDeleteDocument = async (doc: any) => {
+    try {
+      const { error: storageError } = await supabase.storage
+        .from('judicial-documents')
+        .remove([doc.file_path]);
+
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from('judicial_documents')
+        .delete()
+        .eq('id', doc.id);
+
+      if (dbError) throw dbError;
+
+      toast.success('تم حذف المستند بنجاح');
+      await fetchDocuments();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('حدث خطأ أثناء حذف المستند');
+    }
+  };
+
+  const handlePreviewDocument = async (doc: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('judicial-documents')
+        .createSignedUrl(doc.file_path, 3600);
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        setPreviewDocument({
+          url: data.signedUrl,
+          name: doc.document_name,
+          type: doc.mime_type || 'application/octet-stream'
+        });
+      }
+    } catch (error) {
+      console.error('Error previewing document:', error);
+      toast.error('حدث خطأ أثناء معاينة المستند');
+    }
+  };
+
+  const handleDownloadDocument = async (doc: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('judicial-documents')
+        .createSignedUrl(doc.file_path, 3600);
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+        toast.success('جاري تحميل المستند');
+      }
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error('حدث خطأ أثناء تحميل المستند');
+    }
+  };
+
   const handleActionClick = async (action: string) => {
     switch (action) {
       case 'details':
@@ -140,6 +272,7 @@ const JudicialCaseRecord = () => {
         setActiveDialog('transfers');
         break;
       case 'documents':
+        await fetchDocuments();
         setActiveDialog('documents');
         break;
       case 'messages':
@@ -483,19 +616,108 @@ const JudicialCaseRecord = () => {
 
       {/* Documents Dialog */}
       <Dialog open={activeDialog === 'documents'} onOpenChange={() => setActiveDialog(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FolderOpen className="h-6 w-6" />
               المستندات القضائية
             </DialogTitle>
+            <DialogDescription>
+              إدارة المستندات الخاصة بالقضية: {judicialCase.case_number}
+            </DialogDescription>
           </DialogHeader>
           
-          <div className="text-center py-8">
-            <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
-              قريباً: إدارة المستندات القضائية
-            </p>
+          <div className="space-y-4">
+            {/* Upload Section */}
+            <div className="border-2 border-dashed border-primary/30 rounded-lg p-6">
+              <div className="flex items-center justify-center">
+                <Label 
+                  htmlFor="file-upload" 
+                  className="flex items-center gap-2 cursor-pointer text-primary hover:text-primary/80"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span className="font-semibold">
+                    {uploadingFile ? 'جاري الرفع...' : 'رفع مستند جديد'}
+                  </span>
+                </Label>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  disabled={uploadingFile}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                PDF, Word, Excel, الصور والمستندات الأخرى
+              </p>
+            </div>
+
+            {/* Documents List */}
+            {loadingData ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : documents.length > 0 ? (
+              <div className="space-y-3">
+                {documents.map((doc) => (
+                  <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <FileText className="h-8 w-8 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">{doc.document_name}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{(doc.file_size / 1024).toFixed(2)} KB</span>
+                              <span>•</span>
+                              <span>{new Date(doc.uploaded_at).toLocaleDateString('ar')}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handlePreviewDocument(doc)}
+                            title="معاينة"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDownloadDocument(doc)}
+                            title="تحميل"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteDocument(doc)}
+                            className="text-destructive hover:text-destructive"
+                            title="حذف"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <FolderOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">لا توجد مستندات مرفوعة</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  ابدأ برفع مستند جديد باستخدام الزر أعلاه
+                </p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
