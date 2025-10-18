@@ -11,10 +11,10 @@ const JudicialPoliceDepartment = () => {
 
   const tools = [
     {
-      title: 'إدارة القضايا القضائية',
-      description: 'إنشاء ومتابعة القضايا وإرسالها للمحكمة أو النيابة',
+      title: 'البحث عن القضايا',
+      description: 'البحث عن القضايا وإنشاء قضايا جديدة',
       icon: Scale,
-      path: '/judicial-case-management',
+      path: '/department/judicial-police/case-search',
       color: 'from-blue-500 to-blue-600'
     },
     {

@@ -64,6 +64,7 @@ import JudicialCommunications from "@/pages/JudicialCommunications";
 import JudicialTracking from "@/pages/JudicialTracking";
 import JudicialPoliceDepartment from "@/pages/JudicialPoliceDepartment";
 import JudicialPoliceUsers from "@/pages/JudicialPoliceUsers";
+import JudicialCaseSearch from "@/pages/JudicialCaseSearch";
 import TrafficPoliceUsers from "@/pages/TrafficPoliceUsers";
 import CIDUsers from "@/pages/CIDUsers";
 import SpecialPoliceUsers from "@/pages/SpecialPoliceUsers";
@@ -624,6 +625,26 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
                         <JudicialPoliceDepartment />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department/judicial-police/case-search"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
+                        <JudicialCaseSearch />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department/judicial-police/case-record/:id"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
+                        <JudicialCaseRecord />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }
