@@ -84,7 +84,9 @@ export const NotificationBell = () => {
   };
 
   useEffect(() => {
-    fetchNotifications();
+    if (roles.length > 0) {
+      fetchNotifications();
+    }
 
     // Subscribe to new notifications
     const channel = supabase
@@ -97,6 +99,7 @@ export const NotificationBell = () => {
           table: 'notifications'
         },
         () => {
+          console.log('New notification received, refreshing...');
           fetchNotifications();
         }
       )

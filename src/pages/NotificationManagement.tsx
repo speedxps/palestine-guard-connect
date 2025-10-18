@@ -154,13 +154,45 @@ const NotificationManagement = () => {
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
+    console.log('Attempting to delete notification:', notificationId);
+    
     try {
-      const { error } = await supabase
+      // التحقق من البروفايل أولاً
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (profileError || !profileData) {
+        console.error('Profile error:', profileError);
+        throw new Error('لم يتم العثور على بيانات المستخدم');
+      }
+
+      console.log('Profile ID:', profileData.id);
+
+      // حذف المشاهدات المرتبطة بالإشعار أولاً
+      const { error: viewsError } = await supabase
+        .from('notification_views')
+        .delete()
+        .eq('notification_id', notificationId);
+
+      if (viewsError) {
+        console.error('Error deleting notification views:', viewsError);
+      }
+
+      // حذف الإشعار
+      const { error: deleteError } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId);
 
-      if (error) throw error;
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        throw deleteError;
+      }
+
+      console.log('Notification deleted successfully');
 
       toast({
         title: 'نجح',
@@ -169,6 +201,7 @@ const NotificationManagement = () => {
 
       fetchSentNotifications();
     } catch (error: any) {
+      console.error('Error in handleDeleteNotification:', error);
       toast({
         title: 'خطأ',
         description: error.message || 'فشل في حذف الإشعار',
