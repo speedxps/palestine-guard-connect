@@ -3,9 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Car, FileText, MapPin, Camera, User, 
-  FolderOpen, Bell, Settings, ArrowRight, Phone, X
+  FolderOpen, Bell, Settings, ArrowRight, Phone, X, PlusCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +27,29 @@ const TrafficCitizenRecord = () => {
   const [violations, setViolations] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  
+  // New violation form
+  const [violationForm, setViolationForm] = useState({
+    vehicle_id: '',
+    violation_type: '',
+    violation_date: new Date().toISOString().split('T')[0],
+    location: '',
+    fine_amount: 0,
+    status: 'pending',
+    notes: ''
+  });
+  
+  // New vehicle form
+  const [vehicleForm, setVehicleForm] = useState({
+    plate_number: '',
+    vehicle_type: 'سيارة',
+    color: '',
+    model: '',
+    year: new Date().getFullYear(),
+    engine_number: '',
+    chassis_number: '',
+    status: 'active'
+  });
 
   useEffect(() => {
     if (id) {
@@ -61,13 +88,14 @@ const TrafficCitizenRecord = () => {
     setLoadingData(true);
     try {
       // First get vehicles owned by this citizen
-      const { data: vehiclesData } = await supabase
-        .from('vehicles')
-        .select('id')
-        .eq('owner_id', citizen.national_id);
+      const { data: ownersData } = await supabase
+        .from('vehicle_owners')
+        .select('vehicle_id')
+        .eq('national_id', citizen.national_id)
+        .eq('is_current_owner', true);
 
-      if (vehiclesData && vehiclesData.length > 0) {
-        const vehicleIds = vehiclesData.map(v => v.id);
+      if (ownersData && ownersData.length > 0) {
+        const vehicleIds = ownersData.map(o => o.vehicle_id);
         
         // Then get violations for these vehicles
         const { data, error } = await supabase
@@ -94,13 +122,29 @@ const TrafficCitizenRecord = () => {
     
     setLoadingData(true);
     try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('*')
-        .eq('owner_id', citizen.national_id);
+      // البحث عن المركبات المملوكة من قبل هذا المواطن
+      const { data: ownersData, error: ownersError } = await supabase
+        .from('vehicle_owners')
+        .select('vehicle_id')
+        .eq('national_id', citizen.national_id)
+        .eq('is_current_owner', true);
 
-      if (error) throw error;
-      setVehicles(data || []);
+      if (ownersError) throw ownersError;
+
+      if (ownersData && ownersData.length > 0) {
+        const vehicleIds = ownersData.map(o => o.vehicle_id);
+        
+        // جلب بيانات المركبات
+        const { data, error } = await supabase
+          .from('vehicle_registrations')
+          .select('*')
+          .in('id', vehicleIds);
+
+        if (error) throw error;
+        setVehicles(data || []);
+      } else {
+        setVehicles([]);
+      }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('حدث خطأ أثناء جلب المركبات');
@@ -131,8 +175,96 @@ const TrafficCitizenRecord = () => {
       case 'notification':
         setActiveDialog('notification');
         break;
+      case 'add-violation':
+        await fetchVehicles();
+        setActiveDialog('add-violation');
+        break;
+      case 'add-vehicle':
+        setActiveDialog('add-vehicle');
+        break;
       default:
         toast.info(`قريباً: ${action}`);
+    }
+  };
+
+  const handleSaveViolation = async () => {
+    try {
+      if (!violationForm.vehicle_id || !violationForm.violation_type) {
+        toast.error('يرجى تعبئة جميع الحقول المطلوبة');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('vehicle_violations')
+        .insert([violationForm]);
+
+      if (error) throw error;
+
+      toast.success('تم رصد المخالفة بنجاح');
+      setActiveDialog(null);
+      setViolationForm({
+        vehicle_id: '',
+        violation_type: '',
+        violation_date: new Date().toISOString().split('T')[0],
+        location: '',
+        fine_amount: 0,
+        status: 'pending',
+        notes: ''
+      });
+      await fetchViolations();
+    } catch (error) {
+      console.error('Error saving violation:', error);
+      toast.error('حدث خطأ أثناء حفظ المخالفة');
+    }
+  };
+
+  const handleSaveVehicle = async () => {
+    try {
+      if (!vehicleForm.plate_number || !vehicleForm.model) {
+        toast.error('يرجى تعبئة جميع الحقول المطلوبة');
+        return;
+      }
+
+      // Insert vehicle
+      const { data: vehicleData, error: vehicleError } = await supabase
+        .from('vehicle_registrations')
+        .insert([vehicleForm])
+        .select()
+        .single();
+
+      if (vehicleError) throw vehicleError;
+
+      // Create owner record
+      const { error: ownerError } = await supabase
+        .from('vehicle_owners')
+        .insert([{
+          vehicle_id: vehicleData.id,
+          owner_name: citizen.full_name,
+          national_id: citizen.national_id,
+          phone: citizen.phone || '',
+          address: citizen.address || '',
+          ownership_start_date: new Date().toISOString().split('T')[0],
+          is_current_owner: true
+        }]);
+
+      if (ownerError) throw ownerError;
+
+      toast.success('تم إضافة المركبة بنجاح');
+      setActiveDialog(null);
+      setVehicleForm({
+        plate_number: '',
+        vehicle_type: 'سيارة',
+        color: '',
+        model: '',
+        year: new Date().getFullYear(),
+        engine_number: '',
+        chassis_number: '',
+        status: 'active'
+      });
+      await fetchVehicles();
+    } catch (error: any) {
+      console.error('Error saving vehicle:', error);
+      toast.error(error.message.includes('duplicate') ? 'رقم المركبة موجود مسبقاً' : 'حدث خطأ أثناء حفظ المركبة');
     }
   };
 
@@ -265,7 +397,7 @@ const TrafficCitizenRecord = () => {
 
           <Card
             className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
-            onClick={() => navigate('/violations-admin')}
+            onClick={() => handleActionClick('add-violation')}
           >
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <Camera className="h-12 w-12 mb-4 text-pink-500" />
@@ -300,6 +432,16 @@ const TrafficCitizenRecord = () => {
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <Bell className="h-12 w-12 mb-4 text-primary" />
               <p className="text-sm md:text-base font-semibold text-center">إرسال إشعار</p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
+            onClick={() => handleActionClick('add-vehicle')}
+          >
+            <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
+              <PlusCircle className="h-12 w-12 mb-4 text-green-500" />
+              <p className="text-sm md:text-base font-semibold text-center">إضافة مركبة جديدة</p>
             </CardContent>
           </Card>
 
@@ -340,9 +482,9 @@ const TrafficCitizenRecord = () => {
                 <Card key={vehicle.id}>
                   <CardContent className="p-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
+                       <div>
                         <p className="text-sm text-muted-foreground">رقم المركبة</p>
-                        <p className="font-semibold">{vehicle.license_plate || 'غير محدد'}</p>
+                        <p className="font-semibold">{vehicle.plate_number || 'غير محدد'}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">نوع المركبة</p>
@@ -353,10 +495,16 @@ const TrafficCitizenRecord = () => {
                         <p className="font-semibold">{vehicle.model || 'غير محدد'}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">تاريخ الشراء</p>
-                        <p className="font-semibold">
-                          {vehicle.purchase_date ? new Date(vehicle.purchase_date).toLocaleDateString('ar') : 'غير محدد'}
-                        </p>
+                        <p className="text-sm text-muted-foreground">السنة</p>
+                        <p className="font-semibold">{vehicle.year || 'غير محدد'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">اللون</p>
+                        <p className="font-semibold">{vehicle.color || 'غير محدد'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">رقم المحرك</p>
+                        <p className="font-semibold">{vehicle.engine_number || 'غير محدد'}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -406,9 +554,9 @@ const TrafficCitizenRecord = () => {
                           {violation.status === 'paid' ? 'مدفوعة' : violation.status === 'pending' ? 'معلقة' : 'غير مدفوعة'}
                         </Badge>
                       </div>
-                      <div>
+                       <div>
                         <p className="text-sm text-muted-foreground">المبلغ</p>
-                        <p className="font-semibold">{violation.amount} ₪</p>
+                        <p className="font-semibold">{violation.fine_amount || violation.amount || 0} ₪</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">التاريخ</p>
@@ -548,6 +696,218 @@ const TrafficCitizenRecord = () => {
             >
               إرسال الإشعار
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Violation Dialog */}
+      <Dialog open={activeDialog === 'add-violation'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-6 w-6" />
+              رصد مخالفة جديدة
+            </DialogTitle>
+            <DialogDescription>
+              رصد مخالفة لـ: {citizen.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="vehicle">المركبة</Label>
+              <Select
+                value={violationForm.vehicle_id}
+                onValueChange={(value) => setViolationForm(prev => ({ ...prev, vehicle_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر المركبة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.plate_number} - {vehicle.model}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="violation_type">نوع المخالفة</Label>
+              <Select
+                value={violationForm.violation_type}
+                onValueChange={(value) => setViolationForm(prev => ({ ...prev, violation_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر نوع المخالفة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="تجاوز السرعة">تجاوز السرعة</SelectItem>
+                  <SelectItem value="عدم ربط حزام الأمان">عدم ربط حزام الأمان</SelectItem>
+                  <SelectItem value="استخدام الهاتف">استخدام الهاتف</SelectItem>
+                  <SelectItem value="مخالفة إشارة مرورية">مخالفة إشارة مرورية</SelectItem>
+                  <SelectItem value="وقوف خاطئ">وقوف خاطئ</SelectItem>
+                  <SelectItem value="أخرى">أخرى</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="fine_amount">مبلغ الغرامة (₪)</Label>
+                <Input
+                  id="fine_amount"
+                  type="number"
+                  value={violationForm.fine_amount}
+                  onChange={(e) => setViolationForm(prev => ({ ...prev, fine_amount: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="violation_date">تاريخ المخالفة</Label>
+                <Input
+                  id="violation_date"
+                  type="date"
+                  value={violationForm.violation_date}
+                  onChange={(e) => setViolationForm(prev => ({ ...prev, violation_date: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="location">الموقع</Label>
+              <Input
+                id="location"
+                value={violationForm.location}
+                onChange={(e) => setViolationForm(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="أدخل موقع المخالفة"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes">ملاحظات</Label>
+              <Textarea
+                id="notes"
+                value={violationForm.notes}
+                onChange={(e) => setViolationForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="أدخل أي ملاحظات إضافية"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setActiveDialog(null)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleSaveViolation}>
+                حفظ المخالفة
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Vehicle Dialog */}
+      <Dialog open={activeDialog === 'add-vehicle'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Car className="h-6 w-6" />
+              إضافة مركبة جديدة
+            </DialogTitle>
+            <DialogDescription>
+              إضافة مركبة جديدة باسم: {citizen.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="plate_number">رقم المركبة</Label>
+                <Input
+                  id="plate_number"
+                  value={vehicleForm.plate_number}
+                  onChange={(e) => setVehicleForm(prev => ({ ...prev, plate_number: e.target.value }))}
+                  placeholder="مثال: 12345"
+                />
+              </div>
+              <div>
+                <Label htmlFor="vehicle_type">نوع المركبة</Label>
+                <Select
+                  value={vehicleForm.vehicle_type}
+                  onValueChange={(value) => setVehicleForm(prev => ({ ...prev, vehicle_type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="سيارة">سيارة</SelectItem>
+                    <SelectItem value="دراجة نارية">دراجة نارية</SelectItem>
+                    <SelectItem value="شاحنة">شاحنة</SelectItem>
+                    <SelectItem value="حافلة">حافلة</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="model">الطراز</Label>
+                <Input
+                  id="model"
+                  value={vehicleForm.model}
+                  onChange={(e) => setVehicleForm(prev => ({ ...prev, model: e.target.value }))}
+                  placeholder="مثال: تويوتا كامري"
+                />
+              </div>
+              <div>
+                <Label htmlFor="year">السنة</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  value={vehicleForm.year}
+                  onChange={(e) => setVehicleForm(prev => ({ ...prev, year: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="color">اللون</Label>
+                <Input
+                  id="color"
+                  value={vehicleForm.color}
+                  onChange={(e) => setVehicleForm(prev => ({ ...prev, color: e.target.value }))}
+                  placeholder="مثال: أبيض"
+                />
+              </div>
+              <div>
+                <Label htmlFor="engine_number">رقم المحرك</Label>
+                <Input
+                  id="engine_number"
+                  value={vehicleForm.engine_number}
+                  onChange={(e) => setVehicleForm(prev => ({ ...prev, engine_number: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="chassis_number">رقم الشاسيه</Label>
+              <Input
+                id="chassis_number"
+                value={vehicleForm.chassis_number}
+                onChange={(e) => setVehicleForm(prev => ({ ...prev, chassis_number: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setActiveDialog(null)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleSaveVehicle}>
+                حفظ المركبة
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
