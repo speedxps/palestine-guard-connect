@@ -81,14 +81,10 @@ const FaceRecognition = () => {
     setSearchingAnimation(true);
     setResults([]);
     
-    // جلب جميع صور المواطنين للأنيميشن
-    const { data: allCitizens } = await supabase
-      .from('citizens')
-      .select('photo_url')
-      .not('photo_url', 'is', null)
-      .limit(100);
-    
-    const fakeImages = allCitizens?.map(c => c.photo_url) || [];
+    // توليد 100 صورة وهمية باستخدام خدمة pravatar
+    const fakeImages = Array.from({ length: 100 }, (_, i) => 
+      `https://i.pravatar.cc/300?img=${(i % 70) + 1}&random=${Math.random()}`
+    );
     
     try {
       // تحويل الصورة إلى base64 لإرسالها للـ AI
@@ -96,21 +92,24 @@ const FaceRecognition = () => {
       reader.onload = async (e) => {
         const imageData = e.target?.result as string;
         
-        // بدء الأنيميشن مع البحث
-        let animationInterval: any;
-        if (fakeImages.length > 0) {
-          animationInterval = setInterval(() => {
-            const randomIndex = Math.floor(Math.random() * fakeImages.length);
-            setCurrentFakeImage(fakeImages[randomIndex]);
-          }, 50); // تغيير الصورة كل 50ms
-        }
+        // بدء الأنيميشن مع البحث - عرض 100 صورة
+        let imageCounter = 0;
+        const animationInterval = setInterval(() => {
+          if (imageCounter < fakeImages.length) {
+            setCurrentFakeImage(fakeImages[imageCounter]);
+            imageCounter++;
+          }
+        }, 40); // تغيير الصورة كل 40ms (سيستغرق 4 ثواني لعرض 100 صورة)
         
         try {
           // البحث باستخدام النظام المحسن
           const searchResult = await searchFaces(imageData);
           
+          // انتظار انتهاء الأنيميشن
+          await new Promise(resolve => setTimeout(resolve, 4000));
+          
           // إيقاف الأنيميشن
-          if (animationInterval) clearInterval(animationInterval);
+          clearInterval(animationInterval);
           
           if (!searchResult.success) {
             toast.error(searchResult.error || 'فشل في البحث');
@@ -131,9 +130,9 @@ const FaceRecognition = () => {
               role: match.role
             }));
             
-            // إظهار الصورة النهائية لمدة ثانية
+            // إظهار الصورة الحقيقية النهائية لمدة ثانية
             setCurrentFakeImage(formattedResults[0].photo_url);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1500));
             
             setResults(formattedResults);
             setSearchingAnimation(false);
@@ -145,7 +144,7 @@ const FaceRecognition = () => {
           }
           
         } catch (error) {
-          if (animationInterval) clearInterval(animationInterval);
+          clearInterval(animationInterval);
           console.error('Error in face recognition:', error);
           toast.error('حدث خطأ في التعرف على الوجه');
           setSearchingAnimation(false);

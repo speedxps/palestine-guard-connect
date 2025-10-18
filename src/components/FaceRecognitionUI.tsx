@@ -41,23 +41,20 @@ const FaceRecognitionUI: React.FC = () => {
     setMatches([]);
     setError("");
 
-    // جلب صور المواطنين للأنيميشن
-    const { data: allCitizens } = await supabase
-      .from('citizens')
-      .select('photo_url')
-      .not('photo_url', 'is', null)
-      .limit(100);
-    
-    const citizenImages = allCitizens?.map(c => c.photo_url) || [];
-    setFakeCitizenImages(citizenImages);
+    // توليد 100 صورة وهمية
+    const fakeImages = Array.from({ length: 100 }, (_, i) => 
+      `https://i.pravatar.cc/300?img=${(i % 70) + 1}&random=${Math.random()}`
+    );
+    setFakeCitizenImages(fakeImages);
 
+    let imageCounter = 0;
     const animationInterval = setInterval(() => {
-      if (citizenImages.length > 0) {
-        const randomIndex = Math.floor(Math.random() * citizenImages.length);
-        setCurrentAnimationIndex(randomIndex);
+      if (imageCounter < fakeImages.length) {
+        setCurrentAnimationIndex(imageCounter);
+        imageCounter++;
+        setProgress(Math.min((imageCounter / fakeImages.length) * 100, 95));
       }
-      setProgress((prev) => Math.min(prev + 2, 100));
-    }, 50);
+    }, 40);
 
     try {
       const reader = new FileReader();
@@ -69,6 +66,11 @@ const FaceRecognitionUI: React.FC = () => {
 
       const result = await searchFaces(imageBase64);
 
+      // انتظار انتهاء الأنيميشن
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      clearInterval(animationInterval);
+      setProgress(100);
+
       if (!result.success || !result.matches || result.matches.length === 0) {
         setError(result.error || "لم يتم العثور على وجه مطابق.");
       } else {
@@ -76,9 +78,8 @@ const FaceRecognitionUI: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء البحث.");
-    } finally {
       clearInterval(animationInterval);
-      setProgress(100);
+    } finally {
       setSearching(false);
     }
   };
