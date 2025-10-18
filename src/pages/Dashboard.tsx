@@ -6,7 +6,7 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useTicketsCount } from "@/hooks/useTicketsCount";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Menu, RotateCw, Phone, Badge as BadgeIcon } from "lucide-react";
+import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Bot, Newspaper, Lock, Users, AlertCircle } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import ModernSidebar from "@/components/layout/ModernSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -86,77 +86,88 @@ const Dashboard = () => {
     {
       title: "شرطة المرور",
       subtitle: getTicketsSubtitle('traffic_police'),
-      color: "bg-[#2B9BF4]",
+      color: "bg-gradient-to-br from-blue-500 to-blue-600",
+      icon: Car,
       path: "/department/traffic",
       roles: ["admin", "traffic_police"],
     },
     {
       title: "الشرطة الخاصة",
       subtitle: getTicketsSubtitle('special_police'),
-      color: "bg-[#E91E63]",
+      color: "bg-gradient-to-br from-pink-500 to-pink-600",
+      icon: Shield,
       path: "/department/special",
       roles: ["admin", "special_police"],
     },
     {
       title: "الشرطة القضائية",
       subtitle: getTicketsSubtitle('judicial_police'),
-      color: "bg-[#4CAF50]",
+      color: "bg-gradient-to-br from-green-500 to-green-600",
+      icon: Scale,
       path: "/department/judicial-police",
       roles: ["admin", "judicial_police"],
     },
     {
       title: "الإدارة العامة",
       subtitle: getTicketsSubtitle('admin'),
-      color: "bg-[#F5A623]",
+      color: "bg-gradient-to-br from-amber-500 to-amber-600",
+      icon: Settings,
       path: "/department/admin",
       roles: ["admin"],
     },
     {
       title: "المباحث الجنائية",
       subtitle: getTicketsSubtitle('cid'),
-      color: "bg-[#03A9F4]",
+      color: "bg-gradient-to-br from-sky-500 to-sky-600",
+      icon: Search,
       path: "/department/cid",
       roles: ["admin", "cid"],
     },
     {
       title: "الجرائم الإلكترونية",
       subtitle: getTicketsSubtitle('cybercrime'),
-      color: "bg-[#00BCD4]",
+      color: "bg-gradient-to-br from-cyan-500 to-cyan-600",
+      icon: Wifi,
       path: "/department/cybercrime",
       roles: ["admin", "cybercrime"],
     },
     { 
       title: "المساعد الذكي", 
       subtitle: "AI Assistant",
-      color: "bg-[#9C27B0]", 
+      color: "bg-gradient-to-br from-purple-500 to-purple-600", 
+      icon: Bot,
       path: "/police-assistant", 
       roles: [] 
     },
     { 
       title: "الأخبار", 
       subtitle: "News",
-      color: "bg-[#FF9800]", 
+      color: "bg-gradient-to-br from-orange-500 to-orange-600", 
+      icon: Newspaper,
       path: "/news", 
       roles: [] 
     },
     { 
       title: "الصلاحيات", 
       subtitle: "Permissions",
-      color: "bg-[#8BC34A]", 
+      color: "bg-gradient-to-br from-lime-500 to-lime-600", 
+      icon: Lock,
       path: "/user-permissions", 
       roles: ["admin"] 
     },
     { 
       title: "سجلات المواطنين", 
       subtitle: getTicketsSubtitle('cid'),
-      color: "bg-[#607D8B]", 
+      color: "bg-gradient-to-br from-slate-500 to-slate-600", 
+      icon: Users,
       path: "/citizen-records", 
       roles: ["admin", "cybercrime"] 
     },
     { 
       title: "الحوادث والبلاغات", 
       subtitle: getTicketsSubtitle('cid'),
-      color: "bg-[#FF5722]", 
+      color: "bg-gradient-to-br from-red-500 to-red-600", 
+      icon: AlertCircle,
       path: "/incidents", 
       roles: [] 
     },
@@ -228,14 +239,16 @@ const Dashboard = () => {
               <Card
                 key={index}
                 onClick={() => navigate(ticket.path)}
-                className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
+                className="group cursor-pointer hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 overflow-hidden relative bg-gradient-to-br from-white to-gray-50/50"
               >
-                <CardContent className="flex flex-col items-center justify-center p-6 md:p-8 min-h-[120px]">
-                  <div className={`${ticket.color} w-12 h-12 rounded-full flex items-center justify-center mb-3`}>
-                    <span className="text-white text-2xl">📋</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <CardContent className="flex flex-col items-center justify-center p-6 md:p-8 min-h-[140px] relative">
+                  <div className={`${ticket.color} w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-500 relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-white/20 group-hover:bg-white/30 transition-colors duration-500" />
+                    <ticket.icon className="text-white w-8 h-8 relative z-10 group-hover:rotate-12 transition-transform duration-500" />
                   </div>
-                  <h3 className="font-bold text-base leading-tight text-center text-foreground">{ticket.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{ticket.subtitle}</p>
+                  <h3 className="font-bold text-base leading-tight text-center text-foreground group-hover:text-primary transition-colors duration-300">{ticket.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1 group-hover:text-primary/70 transition-colors duration-300">{ticket.subtitle}</p>
                 </CardContent>
               </Card>
             );
