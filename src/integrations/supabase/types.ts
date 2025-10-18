@@ -1109,6 +1109,20 @@ export type Database = {
             referencedRelation: "citizens"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "investigation_closure_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investigation_closure_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       investigation_notes: {
@@ -1142,6 +1156,13 @@ export type Database = {
             columns: ["citizen_id"]
             isOneToOne: false
             referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investigation_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

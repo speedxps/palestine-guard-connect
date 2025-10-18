@@ -174,11 +174,19 @@ const CIDSuspectRecord = () => {
     try {
       const { data, error } = await supabase
         .from('investigation_notes')
-        .select('*, profiles!investigation_notes_created_by_fkey(full_name)')
+        .select(`
+          *,
+          creator:profiles!investigation_notes_created_by_fkey(full_name)
+        `)
         .eq('citizen_id', citizen.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching notes:', error);
+        throw error;
+      }
+      
+      console.log('Fetched notes:', data);
       setPreviousNotes(data || []);
     } catch (error) {
       console.error('Error fetching notes:', error);
@@ -195,11 +203,20 @@ const CIDSuspectRecord = () => {
     try {
       const { data, error } = await supabase
         .from('investigation_closure_requests')
-        .select('*, requested_profile:profiles!investigation_closure_requests_requested_by_fkey(full_name), reviewed_profile:profiles!investigation_closure_requests_reviewed_by_fkey(full_name)')
+        .select(`
+          *,
+          requester:profiles!investigation_closure_requests_requested_by_fkey(full_name),
+          reviewer:profiles!investigation_closure_requests_reviewed_by_fkey(full_name)
+        `)
         .eq('citizen_id', citizen.id)
         .order('requested_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching closure requests:', error);
+        throw error;
+      }
+      
+      console.log('Fetched closure requests:', data);
       setClosureRequests(data || []);
     } catch (error) {
       console.error('Error fetching closure requests:', error);
@@ -736,7 +753,7 @@ const CIDSuspectRecord = () => {
                         <div className="space-y-2">
                           <div className="flex justify-between items-start">
                             <span className="text-sm font-semibold text-primary">
-                              {note.profiles?.full_name || 'محقق'}
+                              {note.creator?.full_name || 'محقق'}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {new Date(note.created_at).toLocaleDateString('ar', {
@@ -1090,7 +1107,7 @@ const CIDSuspectRecord = () => {
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="text-sm font-semibold text-primary">
-                                طلب من: {request.requested_profile?.full_name || 'محقق'}
+                                طلب من: {request.requester?.full_name || 'محقق'}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {new Date(request.requested_at).toLocaleDateString('ar', {
@@ -1119,7 +1136,7 @@ const CIDSuspectRecord = () => {
                           {request.reviewed_by && (
                             <div className="border-t pt-2">
                               <p className="text-xs font-semibold text-muted-foreground">
-                                تمت المراجعة من: {request.reviewed_profile?.full_name || 'المدير'}
+                                تمت المراجعة من: {request.reviewer?.full_name || 'المدير'}
                               </p>
                               {request.admin_notes && (
                                 <p className="text-xs text-muted-foreground mt-1">
