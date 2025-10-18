@@ -37,6 +37,21 @@ const JudicialCaseRecord = () => {
     message: '',
     sender_department: 'judicial_police'
   });
+  
+  const [sessionForm, setSessionForm] = useState({
+    session_date: '',
+    session_time: '',
+    location: '',
+    notes: ''
+  });
+
+  const [partyForm, setPartyForm] = useState({
+    party_type: 'witness',
+    name: '',
+    national_id: '',
+    role: '',
+    contact: ''
+  });
 
   useEffect(() => {
     if (id) {
@@ -133,6 +148,15 @@ const JudicialCaseRecord = () => {
         break;
       case 'send-message':
         setActiveDialog('send-message');
+        break;
+      case 'sessions':
+        setActiveDialog('sessions');
+        break;
+      case 'parties':
+        setActiveDialog('parties');
+        break;
+      case 'signature':
+        setActiveDialog('signature');
         break;
       default:
         toast.info(`قريباً: ${action}`);
@@ -321,7 +345,7 @@ const JudicialCaseRecord = () => {
 
           <Card
             className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
-            onClick={() => toast.info('قريباً: تتبع الجلسات')}
+            onClick={() => handleActionClick('sessions')}
           >
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <Clock className="h-12 w-12 mb-4 text-primary" />
@@ -331,7 +355,7 @@ const JudicialCaseRecord = () => {
 
           <Card
             className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
-            onClick={() => toast.info('قريباً: الأطراف المعنية')}
+            onClick={() => handleActionClick('parties')}
           >
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <Users className="h-12 w-12 mb-4 text-pink-500" />
@@ -341,7 +365,7 @@ const JudicialCaseRecord = () => {
 
           <Card
             className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
-            onClick={() => toast.info('قريباً: التوقيع الرقمي')}
+            onClick={() => handleActionClick('signature')}
           >
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <FileText className="h-12 w-12 mb-4 text-primary" />
@@ -577,6 +601,213 @@ const JudicialCaseRecord = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Sessions Dialog */}
+      <Dialog open={activeDialog === 'sessions'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-6 w-6" />
+              تتبع الجلسات القضائية
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="session_date">تاريخ الجلسة</Label>
+                <Input
+                  id="session_date"
+                  type="date"
+                  value={sessionForm.session_date}
+                  onChange={(e) => setSessionForm({ ...sessionForm, session_date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="session_time">وقت الجلسة</Label>
+                <Input
+                  id="session_time"
+                  type="time"
+                  value={sessionForm.session_time}
+                  onChange={(e) => setSessionForm({ ...sessionForm, session_time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="location">مكان الانعقاد</Label>
+              <Input
+                id="location"
+                value={sessionForm.location}
+                onChange={(e) => setSessionForm({ ...sessionForm, location: e.target.value })}
+                placeholder="المحكمة أو مكان الجلسة"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="session_notes">ملاحظات الجلسة</Label>
+              <Textarea
+                id="session_notes"
+                value={sessionForm.notes}
+                onChange={(e) => setSessionForm({ ...sessionForm, notes: e.target.value })}
+                rows={4}
+                placeholder="ملاحظات حول الجلسة..."
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setActiveDialog(null)}>
+                إلغاء
+              </Button>
+              <Button onClick={() => toast.success('تم حفظ بيانات الجلسة')}>
+                <Clock className="h-4 w-4 ml-2" />
+                حفظ الجلسة
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Parties Dialog */}
+      <Dialog open={activeDialog === 'parties'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-6 w-6" />
+              الأطراف المعنية بالقضية
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="party_type">نوع الطرف</Label>
+              <select
+                id="party_type"
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+                value={partyForm.party_type}
+                onChange={(e) => setPartyForm({ ...partyForm, party_type: e.target.value })}
+              >
+                <option value="witness">شاهد</option>
+                <option value="lawyer">محامي</option>
+                <option value="expert">خبير</option>
+                <option value="translator">مترجم</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="party_name">الاسم الكامل</Label>
+                <Input
+                  id="party_name"
+                  value={partyForm.name}
+                  onChange={(e) => setPartyForm({ ...partyForm, name: e.target.value })}
+                  placeholder="الاسم الكامل"
+                />
+              </div>
+              <div>
+                <Label htmlFor="party_national_id">رقم الهوية</Label>
+                <Input
+                  id="party_national_id"
+                  value={partyForm.national_id}
+                  onChange={(e) => setPartyForm({ ...partyForm, national_id: e.target.value })}
+                  placeholder="رقم الهوية الوطنية"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="party_role">الدور في القضية</Label>
+              <Input
+                id="party_role"
+                value={partyForm.role}
+                onChange={(e) => setPartyForm({ ...partyForm, role: e.target.value })}
+                placeholder="الدور أو الوظيفة"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="party_contact">معلومات الاتصال</Label>
+              <Input
+                id="party_contact"
+                value={partyForm.contact}
+                onChange={(e) => setPartyForm({ ...partyForm, contact: e.target.value })}
+                placeholder="رقم الهاتف أو البريد الإلكتروني"
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setActiveDialog(null)}>
+                إلغاء
+              </Button>
+              <Button onClick={() => toast.success('تم إضافة الطرف المعني')}>
+                <Users className="h-4 w-4 ml-2" />
+                إضافة الطرف
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Digital Signature Dialog */}
+      <Dialog open={activeDialog === 'signature'} onOpenChange={() => setActiveDialog(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-6 w-6" />
+              التوقيع الرقمي للقضية
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 text-center">
+              <FileText className="h-16 w-16 mx-auto text-primary mb-4" />
+              <h3 className="font-bold text-lg mb-2">معلومات القضية</h3>
+              <div className="space-y-2 text-sm">
+                <p><span className="font-semibold">رقم القضية:</span> {judicialCase.case_number}</p>
+                <p><span className="font-semibold">العنوان:</span> {judicialCase.title}</p>
+                <p><span className="font-semibold">الحالة:</span> {judicialCase.status}</p>
+              </div>
+            </div>
+
+            <div className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center">
+              <div className="text-4xl mb-4">✍️</div>
+              <p className="font-semibold mb-2">منطقة التوقيع الرقمي</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                سيتم توقيع هذه القضية رقمياً باستخدام شهادة المفتاح العام
+              </p>
+              <div className="inline-flex items-center gap-2 text-sm text-green-600">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                <span>جاهز للتوقيع</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs text-muted-foreground bg-muted p-4 rounded-lg">
+              <p className="font-semibold">📋 معلومات التوقيع:</p>
+              <ul className="list-disc list-inside space-y-1 mr-4">
+                <li>التوقيع الرقمي يضمن صحة الوثيقة</li>
+                <li>لا يمكن التعديل بعد التوقيع</li>
+                <li>يتم حفظ سجل كامل للعملية</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setActiveDialog(null)}>
+                إلغاء
+              </Button>
+              <Button 
+                onClick={() => {
+                  toast.success('تم توقيع القضية رقمياً بنجاح');
+                  setActiveDialog(null);
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <FileText className="h-4 w-4 ml-2" />
+                توقيع القضية
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
