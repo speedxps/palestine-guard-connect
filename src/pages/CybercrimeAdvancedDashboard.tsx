@@ -68,7 +68,9 @@ export default function CybercrimeAdvancedDashboard() {
   
   const [showCaseDialog, setShowCaseDialog] = useState(false);
   const [showEvidenceDialog, setShowEvidenceDialog] = useState(false);
+  const [showEvidenceDetailsDialog, setShowEvidenceDetailsDialog] = useState(false);
   const [selectedCase, setSelectedCase] = useState<CybercrimeCase | null>(null);
+  const [selectedEvidence, setSelectedEvidence] = useState<Evidence | null>(null);
   
   const [caseForm, setCaseForm] = useState({
     title: '',
@@ -514,12 +516,23 @@ export default function CybercrimeAdvancedDashboard() {
                       
                       <div className="flex gap-2 justify-end">
                         {item.file_url && (
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open(item.file_url, '_blank')}
+                          >
                             <Download className="h-3 w-3 md:h-4 md:w-4" />
                             <span className="mr-1 hidden sm:inline">تحميل</span>
                           </Button>
                         )}
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedEvidence(item);
+                            setShowEvidenceDetailsDialog(true);
+                          }}
+                        >
                           <Eye className="h-3 w-3 md:h-4 md:w-4" />
                           <span className="mr-1 hidden sm:inline">عرض</span>
                         </Button>
@@ -850,6 +863,80 @@ export default function CybercrimeAdvancedDashboard() {
               size="sm"
             >
               حفظ الدليل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Evidence Details Dialog */}
+      <Dialog open={showEvidenceDetailsDialog} onOpenChange={setShowEvidenceDetailsDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base md:text-lg">تفاصيل الدليل الرقمي</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
+              معلومات تفصيلية عن الدليل
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedEvidence && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label className="text-sm font-semibold">نوع الدليل</Label>
+                <Badge variant="outline" className="w-fit text-xs">
+                  {getEvidenceTypeText(selectedEvidence.evidence_type)}
+                </Badge>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label className="text-sm font-semibold">الوصف</Label>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  {selectedEvidence.description}
+                </p>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label className="text-sm font-semibold">تاريخ الجمع</Label>
+                <p className="text-sm">
+                  {new Date(selectedEvidence.collected_at).toLocaleString('ar-SA', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+              
+              {selectedEvidence.file_url && (
+                <div className="grid gap-2">
+                  <Label className="text-sm font-semibold">الملف المرفق</Label>
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm text-blue-700 flex-1 truncate">
+                      {selectedEvidence.file_url}
+                    </span>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.open(selectedEvidence.file_url, '_blank')}
+                    >
+                      <Download className="h-4 w-4" />
+                      <span className="mr-1 hidden sm:inline">تحميل</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              onClick={() => setShowEvidenceDetailsDialog(false)}
+              variant="outline"
+              className="w-full sm:w-auto"
+              size="sm"
+            >
+              إغلاق
             </Button>
           </DialogFooter>
         </DialogContent>
