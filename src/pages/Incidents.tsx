@@ -227,7 +227,7 @@ const Incidents = () => {
             <h1 className="text-xl md:text-3xl font-bold">الأحداث والبلاغات</h1>
           </div>
           <Button 
-            onClick={() => navigate('/incidents/new')}
+            onClick={() => navigate('/new-incident')}
             className="bg-gradient-to-r from-primary to-primary/80"
           >
             بلاغ جديد
@@ -336,7 +336,7 @@ const Incidents = () => {
               <Card 
                 key={incident.id} 
                 className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border-l-4 border-primary"
-                onClick={() => navigate(`/incidents/${incident.id}`)}
+                onClick={() => navigate(`/activity/${incident.id}/incident`)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start gap-3">
