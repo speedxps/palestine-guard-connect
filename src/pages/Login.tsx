@@ -43,11 +43,12 @@ const Login = () => {
     setPassword(password);
     setTestUsersOpen(false);
 
-    setTimeout(async () => {
-      const success = await login(email, password);
-      if (success) {
-        toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
-        setTimeout(() => window.location.replace("/dashboard"), 600);
+    // استدعاء handleSubmit بدلاً من login مباشرة لضمان فحص الموقع
+    setTimeout(() => {
+      // trigger the form submission which will check location
+      const form = document.querySelector('form');
+      if (form) {
+        form.requestSubmit();
       }
     }, 100);
   };
@@ -132,6 +133,7 @@ const Login = () => {
 
       console.log('✅ Location verified - proceeding with login');
 
+      // محاولة تسجيل الدخول فقط بعد التحقق من الموقع
       const success = await login(username, password);
       if (success) {
         if (rememberMe) {
@@ -143,9 +145,13 @@ const Login = () => {
           localStorage.removeItem("savedCredentials");
         }
 
+        console.log('✅ Login successful - redirecting to dashboard');
         toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
-        setTimeout(() => window.location.replace("/dashboard"), 600);
+        setTimeout(() => {
+          window.location.replace("/dashboard");
+        }, 600);
       } else {
+        console.log('❌ Login failed - wrong credentials');
         toast({
           title: "فشل تسجيل الدخول",
           description: "تحقق من اسم المستخدم وكلمة المرور",
@@ -154,12 +160,15 @@ const Login = () => {
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء تسجيل الدخول",
-        variant: "destructive",
+      console.error('❌ Login error:', error);
+      
+      // في حالة خطأ غير متوقع، نفترض أنه محظور للأمان
+      setBlockInfo({
+        location: { country: 'Unknown', city: 'Unknown' },
+        ip: 'Unknown',
+        timestamp: new Date().toISOString()
       });
+      setIsBlocked(true);
       setIsLoading(false);
     }
   };

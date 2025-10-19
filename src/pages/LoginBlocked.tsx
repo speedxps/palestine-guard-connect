@@ -28,6 +28,29 @@ const LoginBlocked: React.FC<LoginBlockedProps> = ({ location, ip, timestamp }) 
 
   useEffect(() => {
     fetchActiveFile();
+    
+    // منع أي محاولة للتنقل أو العودة
+    const preventNavigation = (e: PopStateEvent) => {
+      e.preventDefault();
+      window.history.pushState(null, '', window.location.href);
+    };
+    
+    // إضافة entry جديد للـ history لمنع العودة
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', preventNavigation);
+    
+    // منع refresh بدون تأكيد
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('popstate', preventNavigation);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   const fetchActiveFile = async () => {
