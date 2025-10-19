@@ -88,6 +88,7 @@ import CreateUser from "@/pages/CreateUser";
 import Tickets from "@/pages/Tickets";
 import InternalNews from "@/pages/InternalNews";
 import InvestigationClosureManagement from "@/pages/InvestigationClosureManagement";
+import ExternalAccessManagement from "@/pages/ExternalAccessManagement";
 
 const queryClient = new QueryClient();
 
@@ -594,6 +595,16 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
                         <CybercrimeTrendAnalysis />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/external-access-management"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <ExternalAccessManagement />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

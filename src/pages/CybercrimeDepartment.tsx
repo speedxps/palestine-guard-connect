@@ -60,6 +60,14 @@ const CybercrimeDepartment = () => {
       color: 'from-indigo-500 to-indigo-600'
     },
     {
+      title: 'إدارة الوصول الخارجي',
+      description: 'رفع وإدارة تطبيق الإداريين خارج فلسطين',
+      icon: FileText,
+      path: '/external-access-management',
+      color: 'from-orange-500 to-orange-600',
+      adminOnly: true
+    },
+    {
       title: 'الأخبار الداخلية',
       description: 'آخر الأخبار والتحديثات',
       icon: Newspaper,

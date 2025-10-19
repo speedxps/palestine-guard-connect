@@ -1,7 +1,9 @@
-import React from 'react';
-import { AlertTriangle, MapPin, Clock, Shield } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { AlertTriangle, MapPin, Clock, Shield, Download, FileDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import policeLogo from '@/assets/police-logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LoginBlockedProps {
   location?: {
@@ -12,7 +14,50 @@ interface LoginBlockedProps {
   timestamp?: string;
 }
 
+interface ExternalAccessFile {
+  id: string;
+  file_name: string;
+  file_path: string;
+  version: string;
+  description: string;
+}
+
 const LoginBlocked: React.FC<LoginBlockedProps> = ({ location, ip, timestamp }) => {
+  const [downloadFile, setDownloadFile] = useState<ExternalAccessFile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActiveFile();
+  }, []);
+
+  const fetchActiveFile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('external_access_files')
+        .select('*')
+        .eq('is_active', true)
+        .order('uploaded_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching file:', error);
+      } else if (data) {
+        setDownloadFile(data);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDownloadUrl = (filePath: string) => {
+    const { data } = supabase.storage
+      .from('external-access-apps')
+      .getPublicUrl(filePath);
+    return data.publicUrl;
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl border-red-200 shadow-2xl">
@@ -124,6 +169,55 @@ const LoginBlocked: React.FC<LoginBlockedProps> = ({ location, ip, timestamp }) 
               للوصول عن بُعد.
             </p>
           </div>
+
+          {/* تحميل تطبيق الوصول الخارجي */}
+          {!loading && downloadFile && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-6">
+              <div className="flex items-start gap-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <FileDown className="w-8 h-8 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-blue-900 text-lg mb-2">
+                    📱 تطبيق خاص للإداريين خارج فلسطين
+                  </h4>
+                  <p className="text-blue-800 text-sm mb-4 leading-relaxed">
+                    إذا كنت مسؤولاً أو إدارياً معتمداً وتحتاج للوصول للنظام من خارج فلسطين،
+                    يمكنك تحميل التطبيق الخاص المخصص للوصول الآمن عن بُعد. هذا التطبيق مصرح به
+                    للمستخدمين المعتمدين فقط.
+                  </p>
+                  
+                  <div className="bg-white rounded-lg p-4 mb-4 border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-gray-900">{downloadFile.file_name}</span>
+                      <span className="text-sm px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        الإصدار {downloadFile.version}
+                      </span>
+                    </div>
+                    {downloadFile.description && (
+                      <p className="text-sm text-gray-600 mb-3">{downloadFile.description}</p>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={() => window.open(getDownloadUrl(downloadFile.file_path), '_blank')}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    size="lg"
+                  >
+                    <Download className="ml-2 h-5 w-5" />
+                    تحميل التطبيق الآن
+                  </Button>
+
+                  <div className="mt-4 bg-amber-50 border border-amber-200 rounded p-3">
+                    <p className="text-xs text-amber-800">
+                      ⚠️ تنبيه: هذا التطبيق مخصص فقط للإداريين المعتمدين. استخدامه دون تصريح
+                      يعتبر مخالفة أمنية ويعرضك للمساءلة القانونية.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* معلومات الاتصال */}
           <div className="text-center pt-4 border-t border-red-200">

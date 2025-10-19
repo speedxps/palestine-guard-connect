@@ -837,6 +837,51 @@ export type Database = {
         }
         Relationships: []
       }
+      external_access_files: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          is_active: boolean
+          mime_type: string | null
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_active?: boolean
+          mime_type?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_active?: boolean
+          mime_type?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string
+          version?: string
+        }
+        Relationships: []
+      }
       face_data: {
         Row: {
           created_at: string
