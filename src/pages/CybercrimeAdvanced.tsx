@@ -59,8 +59,12 @@ const CybercrimeAdvanced = () => {
     title: '',
     description: '',
     case_type: 'phishing',
-    priority: 'medium'
+    priority: 'medium',
+    contact_name: '',
+    contact_phone: '',
+    national_id: ''
   });
+  const [searchingCitizen, setSearchingCitizen] = useState(false);
 
   // Filter and search cases
   const filteredCases = useMemo(() => {
@@ -185,7 +189,10 @@ const CybercrimeAdvanced = () => {
         title: '',
         description: '',
         case_type: 'phishing',
-        priority: 'medium'
+        priority: 'medium',
+        contact_name: '',
+        contact_phone: '',
+        national_id: ''
       });
     } catch (error) {
       console.error('Error creating case:', error);
@@ -193,12 +200,58 @@ const CybercrimeAdvanced = () => {
   };
 
   const handleViewCase = (caseId: string) => {
-    navigate(`/cybercrime-reports?caseId=${caseId}`);
+    navigate(`/cybercrime-advanced-case-detail?caseId=${caseId}`);
+  };
+
+  const searchCitizenByNationalId = async (nationalId: string) => {
+    if (!nationalId) return;
+    
+    try {
+      setSearchingCitizen(true);
+      const { data, error } = await supabase
+        .from('citizens')
+        .select('full_name, phone, national_id')
+        .eq('national_id', nationalId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setNewCase(prev => ({
+          ...prev,
+          contact_name: data.full_name,
+          contact_phone: data.phone || '',
+          national_id: data.national_id
+        }));
+        
+        toast({
+          title: 'نجح',
+          description: 'تم استيراد معلومات المواطن بنجاح',
+        });
+      }
+    } catch (error) {
+      console.error('Error searching citizen:', error);
+      toast({
+        title: 'خطأ',
+        description: 'لم يتم العثور على المواطن',
+        variant: 'destructive',
+      });
+    } finally {
+      setSearchingCitizen(false);
+    }
   };
 
   const generateMonthlyReport = async () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Set RTL direction and configure for Arabic
+      doc.setR2L(true);
+      doc.setLanguage('ar');
       
       // إضافة الشعار
       const logoImg = '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png';
@@ -211,11 +264,11 @@ const CybercrimeAdvanced = () => {
       // العنوان - بالعربية
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.text('جهاز الشرطة الفلسطينية', 105, 20, { align: 'center' });
+      doc.text('جهاز الشرطة الفلسطينية', doc.internal.pageSize.width / 2, 20, { align: 'center' });
       doc.setFontSize(16);
-      doc.text('وحدة الجرائم الإلكترونية', 105, 28, { align: 'center' });
+      doc.text('وحدة الجرائم الإلكترونية', doc.internal.pageSize.width / 2, 28, { align: 'center' });
       doc.setFontSize(14);
-      doc.text('التقرير الشهري للجرائم الإلكترونية', 105, 36, { align: 'center' });
+      doc.text('التقرير الشهري للجرائم الإلكترونية', doc.internal.pageSize.width / 2, 36, { align: 'center' });
       
       // التاريخ
       doc.setFontSize(10);
@@ -225,7 +278,7 @@ const CybercrimeAdvanced = () => {
         month: 'long', 
         day: 'numeric' 
       });
-      doc.text(`تاريخ التقرير: ${arabicDate}`, 105, 44, { align: 'center' });
+      doc.text(`تاريخ التقرير: ${arabicDate}`, doc.internal.pageSize.width / 2, 44, { align: 'center' });
       
       // خط فاصل
       doc.setLineWidth(0.5);
@@ -422,7 +475,7 @@ const CybercrimeAdvanced = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(-1)}
                 className="rounded-full"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -710,6 +763,49 @@ const CybercrimeAdvanced = () => {
                               <SelectItem value="critical">عالي جداً</SelectItem>
                             </SelectContent>
                           </Select>
+                        </div>
+                        
+                        <div className="border-t pt-4 space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="national_id">رقم الهوية</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="national_id"
+                                value={newCase.national_id}
+                                onChange={(e) => setNewCase({ ...newCase, national_id: e.target.value })}
+                                placeholder="رقم الهوية الوطنية"
+                              />
+                              <Button 
+                                type="button"
+                                onClick={() => searchCitizenByNationalId(newCase.national_id)}
+                                disabled={searchingCitizen || !newCase.national_id}
+                              >
+                                {searchingCitizen ? <Loader2 className="h-4 w-4 animate-spin" /> : 'استيراد'}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-gray-500">أدخل رقم الهوية للاستيراد التلقائي من السجل</p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="contact_name">اسم الشخص</Label>
+                            <Input
+                              id="contact_name"
+                              value={newCase.contact_name}
+                              onChange={(e) => setNewCase({ ...newCase, contact_name: e.target.value })}
+                              placeholder="الاسم الكامل"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="contact_phone">رقم الهاتف</Label>
+                            <Input
+                              id="contact_phone"
+                              value={newCase.contact_phone}
+                              onChange={(e) => setNewCase({ ...newCase, contact_phone: e.target.value })}
+                              placeholder="رقم الهاتف للتواصل"
+                              type="tel"
+                            />
+                          </div>
                         </div>
                       </div>
                       <div className="flex justify-end gap-3">

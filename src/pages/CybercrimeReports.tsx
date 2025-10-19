@@ -13,12 +13,15 @@ import {
   CheckCircle,
   XCircle,
   Shield,
-  Search
+  Search,
+  Download,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { BackButton } from '@/components/BackButton';
+import jsPDF from 'jspdf';
 
 interface CybercrimeReport {
   id: string;
@@ -87,6 +90,100 @@ const CybercrimeReports = () => {
     }
 
     setFilteredReports(filtered);
+  };
+
+  const exportPDF = async () => {
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      doc.setR2L(true);
+      doc.setLanguage('ar');
+      
+      // Header
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('تقرير الجرائم الإلكترونية', doc.internal.pageSize.width / 2, 20, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const arabicDate = new Date().toLocaleDateString('ar-EG', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      doc.text(`تاريخ التقرير: ${arabicDate}`, doc.internal.pageSize.width / 2, 28, { align: 'center' });
+      
+      doc.setLineWidth(0.5);
+      doc.line(15, 32, 195, 32);
+      
+      let yPos = 40;
+      
+      // Statistics
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('الإحصائيات:', 15, yPos);
+      yPos += 8;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.text(`إجمالي التقارير: ${reports.length}`, 20, yPos);
+      yPos += 6;
+      doc.text(`جديدة: ${reports.filter(r => r.status === 'new').length}`, 20, yPos);
+      yPos += 6;
+      doc.text(`قيد المعالجة: ${reports.filter(r => r.status === 'in_progress').length}`, 20, yPos);
+      yPos += 6;
+      doc.text(`محلولة: ${reports.filter(r => r.status === 'resolved').length}`, 20, yPos);
+      yPos += 12;
+      
+      // Reports list
+      doc.setFont('helvetica', 'bold');
+      doc.text('القضايا:', 15, yPos);
+      yPos += 8;
+      
+      const statusMap: Record<string, string> = {
+        'new': 'جديدة',
+        'in_progress': 'قيد المعالجة',
+        'resolved': 'محلولة'
+      };
+      
+      doc.setFont('helvetica', 'normal');
+      filteredReports.forEach((report, index) => {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.text(`${index + 1}. ${getCrimeTypeDisplayName(report.crime_type)}`, 20, yPos);
+        yPos += 5;
+        doc.text(`   الحالة: ${statusMap[report.status] || report.status}`, 20, yPos);
+        yPos += 5;
+        doc.text(`   المنصة: ${report.platform}`, 20, yPos);
+        yPos += 5;
+        doc.text(`   التاريخ: ${new Date(report.created_at).toLocaleDateString('ar-EG')}`, 20, yPos);
+        yPos += 8;
+      });
+      
+      doc.save(`تقرير_الجرائم_الإلكترونية_${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      toast({
+        title: 'نجح',
+        description: 'تم تحميل التقرير بنجاح',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل في إنشاء التقرير',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const viewReport = (reportId: string) => {
+    navigate(`/cybercrime-advanced-case-detail?caseId=${reportId}`);
   };
 
   const getStatusIcon = (status: string) => {
@@ -195,17 +292,24 @@ const CybercrimeReports = () => {
             />
           </div>
           
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="تصفية حسب الحالة" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">جميع التقارير</SelectItem>
-              <SelectItem value="new">جديدة</SelectItem>
-              <SelectItem value="in_progress">قيد المعالجة</SelectItem>
-              <SelectItem value="resolved">محلولة</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="تصفية حسب الحالة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع التقارير</SelectItem>
+                <SelectItem value="new">جديدة</SelectItem>
+                <SelectItem value="in_progress">قيد المعالجة</SelectItem>
+                <SelectItem value="resolved">محلولة</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button onClick={exportPDF} variant="outline">
+              <Download className="h-4 w-4 ml-2" />
+              تصدير PDF
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Cards */}
@@ -239,7 +343,7 @@ const CybercrimeReports = () => {
               <Card key={report.id} className="glass-card p-4">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex-1">
                       <Badge variant="outline" className="font-arabic">
                         {getCrimeTypeDisplayName(report.crime_type)}
                       </Badge>
@@ -263,8 +367,8 @@ const CybercrimeReports = () => {
                     {report.description}
                   </p>
                   
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-xs">
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         <span>{report.platform}</span>
@@ -276,6 +380,14 @@ const CybercrimeReports = () => {
                         </div>
                       )}
                     </div>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => viewReport(report.id)}
+                    >
+                      <Eye className="h-4 w-4 ml-2" />
+                      عرض
+                    </Button>
                   </div>
                 </div>
               </Card>

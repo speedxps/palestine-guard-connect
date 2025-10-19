@@ -487,10 +487,13 @@ export type Database = {
           assigned_officer_id: string | null
           case_number: string
           case_type: string
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string
           description: string
           evidence_files: string[] | null
           id: string
+          national_id: string | null
           priority: string
           reporter_id: string
           status: string
@@ -501,10 +504,13 @@ export type Database = {
           assigned_officer_id?: string | null
           case_number: string
           case_type: string
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           description: string
           evidence_files?: string[] | null
           id?: string
+          national_id?: string | null
           priority?: string
           reporter_id: string
           status?: string
@@ -515,10 +521,13 @@ export type Database = {
           assigned_officer_id?: string | null
           case_number?: string
           case_type?: string
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           description?: string
           evidence_files?: string[] | null
           id?: string
+          national_id?: string | null
           priority?: string
           reporter_id?: string
           status?: string
