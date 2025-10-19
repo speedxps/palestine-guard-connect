@@ -115,7 +115,10 @@ const DepartmentTasks = () => {
         .update({ status: newStatus })
         .eq('id', taskId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating task:', error);
+        throw error;
+      }
 
       toast({
         title: 'تم التحديث',
@@ -124,9 +127,10 @@ const DepartmentTasks = () => {
 
       loadTasks();
     } catch (error: any) {
+      console.error('Task update failed:', error);
       toast({
         title: 'خطأ',
-        description: 'فشل في تحديث المهمة',
+        description: error?.message || 'فشل في تحديث المهمة',
         variant: 'destructive'
       });
     }
