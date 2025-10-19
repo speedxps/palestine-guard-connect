@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
 
-export type UserRole = 'admin' | 'traffic_police' | 'cid' | 'special_police' | 'cybercrime' | 'judicial_police' | 'officer' | 'user';
+export type UserRole = 'admin' | 'traffic_police' | 'cid' | 'special_police' | 'cybercrime' | 'judicial_police' | 'officer' | 'user' | 'operations_system' | 'borders' | 'tourism_police' | 'joint_operations';
 
 export interface Department {
   id: string;
@@ -16,6 +16,12 @@ export const departments: Department[] = [
     title: 'الإدارة العامة',
     roles: ['admin'],
     path: '/department/admin'
+  },
+  {
+    id: 'operations_system',
+    title: 'العمليات وإدارة الجهاز',
+    roles: ['admin', 'operations_system'],
+    path: '/department/operations-system'
   },
   {
     id: 'traffic_police',
@@ -46,6 +52,24 @@ export const departments: Department[] = [
     title: 'الشرطة القضائية',
     roles: ['admin', 'judicial_police'],
     path: '/department/judicial-police'
+  },
+  {
+    id: 'borders',
+    title: 'المعابر والحدود',
+    roles: ['admin', 'borders'],
+    path: '/department/borders'
+  },
+  {
+    id: 'tourism_police',
+    title: 'الشرطة السياحية',
+    roles: ['admin', 'tourism_police'],
+    path: '/department/tourism'
+  },
+  {
+    id: 'joint_operations',
+    title: 'العمليات المشتركة',
+    roles: ['admin', 'joint_operations'],
+    path: '/department/joint-operations'
   }
 ];
 

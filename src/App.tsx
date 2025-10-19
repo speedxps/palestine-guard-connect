@@ -61,6 +61,10 @@ import TrafficDepartment from "@/pages/TrafficDepartment";
 import CIDDepartment from "@/pages/CIDDepartment";
 import SpecialPoliceDepartment from "@/pages/SpecialPoliceDepartment";
 import CybercrimeDepartment from "@/pages/CybercrimeDepartment";
+import OperationsSystemDepartment from "@/pages/OperationsSystemDepartment";
+import BordersDepartment from "@/pages/BordersDepartment";
+import TourismPoliceDepartment from "@/pages/TourismPoliceDepartment";
+import JointOperationsDepartment from "@/pages/JointOperationsDepartment";
 import UserDashboard from "@/pages/UserDashboard";
 import PoliceAssistant from "@/pages/PoliceAssistant";
 import ForensicLabs from "@/pages/ForensicLabs";
@@ -715,6 +719,46 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "judicial_police"]}>
                         <JudicialPoliceDepartment />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department/operations-system"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "operations_system"]}>
+                        <OperationsSystemDepartment />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department/borders"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "borders"]}>
+                        <BordersDepartment />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department/tourism"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "tourism_police"]}>
+                        <TourismPoliceDepartment />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/department/joint-operations"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOperationsDepartment />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

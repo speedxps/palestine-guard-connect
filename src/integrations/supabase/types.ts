@@ -2829,6 +2829,10 @@ export type Database = {
         | "special_manager"
         | "cybercrime_manager"
         | "judicial_police"
+        | "operations_system"
+        | "borders"
+        | "tourism_police"
+        | "joint_operations"
       case_status:
         | "open"
         | "under_investigation"
@@ -2876,6 +2880,10 @@ export type Database = {
         | "officer"
         | "user"
         | "judicial_police"
+        | "operations_system"
+        | "borders"
+        | "tourism_police"
+        | "joint_operations"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3016,6 +3024,10 @@ export const Constants = {
         "special_manager",
         "cybercrime_manager",
         "judicial_police",
+        "operations_system",
+        "borders",
+        "tourism_police",
+        "joint_operations",
       ],
       case_status: [
         "open",
@@ -3069,6 +3081,10 @@ export const Constants = {
         "officer",
         "user",
         "judicial_police",
+        "operations_system",
+        "borders",
+        "tourism_police",
+        "joint_operations",
       ],
     },
   },

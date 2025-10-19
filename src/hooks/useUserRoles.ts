@@ -10,7 +10,11 @@ export type UserRole =
   | 'cybercrime'
   | 'judicial_police'
   | 'officer'
-  | 'user';
+  | 'user'
+  | 'operations_system'
+  | 'borders'
+  | 'tourism_police'
+  | 'joint_operations';
 
 export const useUserRoles = () => {
   const { user, session } = useAuth();
