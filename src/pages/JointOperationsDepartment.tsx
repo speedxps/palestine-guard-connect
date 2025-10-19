@@ -11,6 +11,7 @@ import {
   GitBranch
 } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
+import jointOpsCover from '@/assets/joint-operations-cover.jpg';
 
 export default function JointOperationsDepartment() {
   const navigate = useNavigate();
@@ -90,28 +91,34 @@ export default function JointOperationsDepartment() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <BackButton />
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg">
-                <GitBranch className="h-8 w-8 text-white" />
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                قسم العمليات المشتركة
-              </h1>
-            </div>
-            <p className="text-muted-foreground text-lg mr-14">
+        {/* Cover Image */}
+        <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden rounded-b-3xl shadow-2xl">
+          <img 
+            src={jointOpsCover} 
+            alt="غلاف قسم العمليات المشتركة" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute bottom-8 right-8">
+            <h1 className="text-3xl md:text-5xl font-bold text-white drop-shadow-2xl">
+              قسم العمليات المشتركة
+            </h1>
+            <p className="text-white/90 text-lg md:text-xl mt-2 drop-shadow-lg">
               التنسيق والتواصل مع جميع الأجهزة الأمنية والعسكرية الفلسطينية
             </p>
           </div>
         </div>
 
+        {/* Header with Back Button */}
+        <div className="px-4 md:px-8 pt-4">
+          <BackButton />
+        </div>
+
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="px-4 md:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {jointOpsTools.map((tool, index) => (
             <Card
               key={index}
@@ -136,10 +143,12 @@ export default function JointOperationsDepartment() {
               </div>
             </Card>
           ))}
+          </div>
         </div>
 
         {/* Security Agencies Section */}
-        <Card className="p-6 mt-8">
+        <div className="px-4 md:px-8">
+          <Card className="p-6 mt-8">
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
             الأجهزة الأمنية المنسقة
@@ -156,9 +165,11 @@ export default function JointOperationsDepartment() {
             ))}
           </div>
         </Card>
+        </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="px-4 md:px-8 pb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200/50">
             <div className="flex items-center justify-between">
               <div>
@@ -198,6 +209,7 @@ export default function JointOperationsDepartment() {
               <Phone className="h-10 w-10 text-red-500 opacity-70" />
             </div>
           </Card>
+          </div>
         </div>
       </div>
     </div>

@@ -125,15 +125,47 @@ export default function LoginHistoryBell() {
     return date.toLocaleDateString('ar-EG');
   };
 
-  const getPriorityBadge = (description: string) => {
-    if (description.includes('محظور') || description.includes('blocked')) {
-      return { text: 'محظور', color: 'bg-emergency' };
-    } else if (description.includes('فشل') || description.includes('failed')) {
-      return { text: 'فشل', color: 'bg-warning' };
-    } else if (description.includes('ناجح') || description.includes('success')) {
-      return { text: 'ناجح', color: 'bg-success' };
+  const getPriorityBadge = (description: string, metadata: any) => {
+    // محاولات محظورة أو مشبوهة من خارج فلسطين
+    if (description.includes('محظور') || description.includes('blocked') || description.includes('مشبوه')) {
+      return { text: 'عاجل', color: 'bg-emergency', priority: 'urgent' };
+    } 
+    // محاولات فاشلة
+    else if (description.includes('فشل') || description.includes('failed')) {
+      return { text: 'مهم', color: 'bg-warning', priority: 'high' };
+    } 
+    // محاولات ناجحة
+    else if (description.includes('ناجح') || description.includes('success')) {
+      return { text: 'عادي', color: 'bg-primary', priority: 'normal' };
     }
-    return { text: 'تحذير', color: 'bg-muted' };
+    return { text: 'عادي', color: 'bg-muted', priority: 'normal' };
+  };
+
+  const getDetailedMessage = (log: LoginLog) => {
+    let message = '';
+    
+    // إضافة معلومات البريد الإلكتروني
+    if (log.payload?.email) {
+      message += `📧 البريد: ${log.payload.email}\n`;
+    }
+    
+    // إضافة معلومات الموقع
+    if (log.metadata?.location) {
+      const location = log.metadata.location;
+      message += `🌍 الدولة: ${location.country || 'غير معروف'}\n`;
+      message += `🏙️ المدينة: ${location.city || 'غير معروف'}\n`;
+    }
+    
+    // إضافة IP
+    if (log.metadata?.ip) {
+      message += `📍 IP: ${log.metadata.ip}\n`;
+    }
+    
+    // إضافة الوقت
+    const date = new Date(log.created_at);
+    message += `⏰ الوقت: ${date.toLocaleDateString('ar-EG')} ${date.toLocaleTimeString('ar-EG')}`;
+    
+    return message;
   };
 
   const handleLogClick = (log: LoginLog) => {
@@ -188,46 +220,44 @@ export default function LoginHistoryBell() {
             <div className="space-y-3">
               {loginLogs.map((log) => {
                 const StatusIcon = getStatusIcon(log.activity_description);
-                const priorityBadge = getPriorityBadge(log.activity_description);
+                const priorityBadge = getPriorityBadge(log.activity_description, log.metadata);
+                const detailedMessage = getDetailedMessage(log);
+                
                 return (
                   <div
                     key={log.id}
                     onClick={() => handleLogClick(log)}
-                    className={`p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md ${
+                    className={`p-4 rounded-lg border transition-all cursor-pointer hover:shadow-md ${
                       new Date(log.created_at) > new Date(Date.now() - 60 * 60 * 1000)
                         ? 'bg-primary/5 border-primary/30'
                         : 'bg-card border-border'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="flex items-center gap-2 flex-1">
-                        <StatusIcon className={`h-5 w-5 ${getStatusColor(log.activity_description)}`} />
-                        <h4 className="font-bold text-foreground">{log.activity_description}</h4>
+                        <StatusIcon className={`h-5 w-5 flex-shrink-0 ${getStatusColor(log.activity_description)}`} />
+                        <h4 className="font-bold text-foreground leading-tight">
+                          {log.activity_description.includes('محظور') || log.activity_description.includes('مشبوه') 
+                            ? '🚨 تنبيه عاجل: محاولة دخول مشبوهة' 
+                            : log.activity_description}
+                        </h4>
                       </div>
-                      <Badge className={`${priorityBadge.color} text-primary-foreground text-xs`}>
+                      <Badge className={`${priorityBadge.color} text-primary-foreground text-xs flex-shrink-0`}>
                         {priorityBadge.text}
                       </Badge>
                     </div>
                     
-                    <div className="text-sm space-y-1 mb-2">
-                      {log.payload?.email && (
-                        <p className="text-foreground/80">
-                          <span className="font-semibold">البريد:</span> {log.payload.email}
-                        </p>
-                      )}
-                      
-                      {log.metadata?.ip && (
-                        <p className="text-foreground/80">
-                          <span className="font-semibold">IP:</span> {log.metadata.ip}
-                        </p>
-                      )}
-                      
-                      {log.metadata?.location && (
-                        <p className="text-foreground/80">
-                          <span className="font-semibold">الموقع:</span> {log.metadata.location.city || 'غير معروف'}, {log.metadata.location.country || 'غير معروف'}
-                        </p>
-                      )}
+                    <div className="text-sm mb-3 leading-relaxed whitespace-pre-line text-foreground/90">
+                      {detailedMessage}
                     </div>
+                    
+                    {(log.activity_description.includes('محظور') || log.activity_description.includes('مشبوه')) && (
+                      <div className="bg-emergency/10 border border-emergency/30 rounded-md p-2 mb-2">
+                        <p className="text-xs text-emergency font-semibold">
+                          ⚠️ يجب التحقق من هذه المحاولة فوراً والتعامل معها
+                        </p>
+                      </div>
+                    )}
                     
                     <p className="text-xs text-muted-foreground">
                       {formatDate(log.created_at)}

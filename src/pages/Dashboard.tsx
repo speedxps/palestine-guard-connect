@@ -6,7 +6,7 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useTicketsCount } from "@/hooks/useTicketsCount";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Bot, Newspaper, Lock, Users, AlertCircle } from "lucide-react";
+import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Bot, Newspaper, Lock, Users, AlertCircle, Radio, MapPin, Palmtree, GitBranch } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import ModernSidebar from "@/components/layout/ModernSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -172,6 +172,38 @@ const Dashboard = () => {
       path: "/incidents", 
       roles: [] 
     },
+    { 
+      title: "العمليات وإدارة الجهاز", 
+      subtitle: "Operations",
+      color: "bg-gradient-to-br from-blue-600 to-indigo-600", 
+      icon: Radio,
+      path: "/department/operations-system", 
+      roles: ["admin", "operations_system"] 
+    },
+    { 
+      title: "المعابر والحدود", 
+      subtitle: "Borders",
+      color: "bg-gradient-to-br from-teal-500 to-teal-600", 
+      icon: MapPin,
+      path: "/department/borders", 
+      roles: ["admin", "borders"] 
+    },
+    { 
+      title: "شرطة السياحة", 
+      subtitle: "Tourism",
+      color: "bg-gradient-to-br from-emerald-500 to-emerald-600", 
+      icon: Palmtree,
+      path: "/department/tourism", 
+      roles: ["admin", "tourism_police"] 
+    },
+    { 
+      title: "العمليات المشتركة", 
+      subtitle: "Joint Ops",
+      color: "bg-gradient-to-br from-purple-600 to-pink-600", 
+      icon: GitBranch,
+      path: "/department/joint-operations", 
+      roles: ["admin", "joint_operations"] 
+    },
   ];
 
   const newsItems = [
@@ -244,12 +276,12 @@ const Dashboard = () => {
                 className="group cursor-pointer hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 overflow-hidden relative bg-gradient-to-br from-white to-gray-50/50"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <CardContent className="flex flex-col items-center justify-center p-6 md:p-8 min-h-[140px] relative">
-                  <div className={`${ticket.color} w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-500 relative overflow-hidden`}>
+                <CardContent className="flex flex-col items-center justify-center p-4 md:p-6 min-h-[120px] relative">
+                  <div className={`${ticket.color} w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-500 relative overflow-hidden`}>
                     <div className="absolute inset-0 bg-white/20 group-hover:bg-white/30 transition-colors duration-500" />
-                    <ticket.icon className="text-white w-8 h-8 relative z-10 group-hover:rotate-12 transition-transform duration-500" />
+                    <ticket.icon className="text-white w-6 h-6 md:w-7 md:h-7 relative z-10 group-hover:rotate-12 transition-transform duration-500" />
                   </div>
-                  <h3 className="font-bold text-base leading-tight text-center text-foreground group-hover:text-primary transition-colors duration-300">{ticket.title}</h3>
+                  <h3 className="font-bold text-sm leading-tight text-center text-foreground group-hover:text-primary transition-colors duration-300">{ticket.title}</h3>
                   <p className="text-xs text-muted-foreground mt-1 group-hover:text-primary/70 transition-colors duration-300">{ticket.subtitle}</p>
                 </CardContent>
               </Card>
