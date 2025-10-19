@@ -73,11 +73,13 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       )
 
+      console.log('Login blocked - IP from outside Palestine:', ip, locationData?.country)
+
       // الحصول على معلومات المستخدم
       const { data: userData } = await supabaseAdmin.auth.admin.getUserByEmail(email)
 
       // تسجيل المحاولة المشبوهة
-      const { error: insertError } = await supabaseAdmin
+      const { data: suspiciousAttempt, error: insertError } = await supabaseAdmin
         .from('suspicious_login_attempts')
         .insert({
           user_id: userData?.user?.id || null,
@@ -92,31 +94,45 @@ serve(async (req) => {
           severity: 'high',
           status: 'pending',
         })
+        .select()
+        .single()
 
       if (insertError) {
         console.error('Error logging suspicious attempt:', insertError)
+      } else {
+        console.log('Suspicious attempt logged:', suspiciousAttempt)
       }
 
-      // إرسال إشعار للأدمن
+      // الحصول على جميع الأدمن
       const { data: adminProfiles } = await supabaseAdmin
         .from('profiles')
         .select('id, user_id')
-        .limit(1)
+        .or('role.eq.admin,role.eq.cybercrime')
 
       if (adminProfiles && adminProfiles.length > 0) {
-        const adminProfileId = adminProfiles[0].id
+        console.log('Sending notifications to', adminProfiles.length, 'admins')
+        
+        // إرسال إشعار لكل أدمن
+        const notifications = adminProfiles.map(admin => ({
+          sender_id: admin.id,
+          recipient_id: admin.id,
+          title: '🚨 محاولة دخول مشبوهة - عاجل',
+          message: `محاولة دخول محظورة من خارج فلسطين!\n\nالبريد: ${email}\nالدولة: ${locationData?.country || 'Unknown'}\nالمدينة: ${locationData?.city || 'Unknown'}\nIP: ${ip}\n\nيجب التحقق من هذه المحاولة فوراً`,
+          priority: 'high',
+          target_departments: ['admin', 'cybercrime'],
+          status: 'unread',
+          action_url: '/cybercrime-advanced',
+        }))
 
-        await supabaseAdmin
+        const { error: notifError } = await supabaseAdmin
           .from('notifications')
-          .insert({
-            sender_id: adminProfileId,
-            title: '⚠️ محاولة دخول مشبوهة',
-            message: `محاولة دخول من خارج فلسطين: ${email} من ${locationData?.country || 'Unknown'} - ${locationData?.city || 'Unknown'}`,
-            priority: 'high',
-            target_departments: ['admin', 'cybercrime'],
-            status: 'unread',
-            action_url: '/cybercrime-advanced',
-          })
+          .insert(notifications)
+
+        if (notifError) {
+          console.error('Error sending admin notifications:', notifError)
+        } else {
+          console.log('Admin notifications sent successfully')
+        }
       }
 
       // إشعار المستخدم إذا كان موجوداً
@@ -133,11 +149,13 @@ serve(async (req) => {
             .insert({
               sender_id: userProfile.id,
               recipient_id: userProfile.id,
-              title: '⚠️ محاولة دخول مشبوهة',
-              message: `تم رصد محاولة دخول مشبوهة لحسابك من ${locationData?.country || 'Unknown'}`,
+              title: '⚠️ محاولة دخول مشبوهة لحسابك',
+              message: `تم رصد محاولة دخول مشبوهة لحسابك من:\n\nالدولة: ${locationData?.country || 'Unknown'}\nالمدينة: ${locationData?.city || 'Unknown'}\nIP: ${ip}\n\nإذا لم تكن أنت من حاول الدخول، يرجى تغيير كلمة المرور فوراً`,
               priority: 'high',
               status: 'unread',
             })
+          
+          console.log('User notification sent')
         }
       }
     }

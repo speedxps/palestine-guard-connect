@@ -66,6 +66,25 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // التحقق من الموقع الجغرافي قبل تسجيل الدخول
+      const userAgent = navigator.userAgent;
+      const { data: locationCheck, error: locationError } = await supabase.functions.invoke('verify-login-location', {
+        body: { email: username, userAgent }
+      });
+
+      console.log('Location check result:', locationCheck);
+
+      // إذا كان الموقع غير مسموح (خارج فلسطين)
+      if (locationCheck && !locationCheck.allowed) {
+        toast({
+          title: "⛔ تم رفض تسجيل الدخول",
+          description: locationCheck.message || "الدخول مسموح فقط من داخل فلسطين",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const success = await login(username, password);
       if (success) {
         if (rememberMe) {
@@ -88,6 +107,7 @@ const Login = () => {
         setIsLoading(false);
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء تسجيل الدخول",
