@@ -169,8 +169,19 @@ export default function LoginHistoryBell() {
   };
 
   const handleLogClick = (log: LoginLog) => {
+    // Navigate to login history page with the log details
     setIsOpen(false);
-    navigate('/login-history');
+    
+    // If there's a specific action URL, navigate to it
+    // Otherwise, navigate to the general login history page
+    if (log.activity_description.includes('محظور') || log.activity_description.includes('blocked') || 
+        log.activity_description.includes('مشبوه') || log.activity_description.includes('suspicious')) {
+      // For blocked/suspicious logins, go to login history for review
+      navigate('/login-history');
+    } else {
+      // For normal logins, go to login history
+      navigate('/login-history');
+    }
   };
 
   return (

@@ -21,28 +21,28 @@ export default function JointOperationsDepartment() {
       title: 'التنسيق مع الأجهزة',
       description: 'التواصل والتنسيق مع جميع الأجهزة الأمنية',
       icon: GitBranch,
-      path: '/department/joint-ops/coordination',
+      path: '/joint-ops/coordination',
       color: 'from-blue-500 to-cyan-500'
     },
     {
       title: 'العمليات المشتركة',
       description: 'إدارة ومتابعة العمليات المشتركة',
       icon: Users,
-      path: '/department/joint-ops/operations',
+      path: '/joint-ops/operations',
       color: 'from-purple-500 to-pink-500'
     },
     {
       title: 'غرفة العمليات',
       description: 'مركز قيادة العمليات والاتصالات',
       icon: Radio,
-      path: '/department/joint-ops/command-center',
+      path: '/joint-ops/command-center',
       color: 'from-red-500 to-orange-500'
     },
     {
       title: 'الملفات المشتركة',
       description: 'قاعدة بيانات القضايا والملفات المشتركة',
       icon: Database,
-      path: '/department/joint-ops/shared-files',
+      path: '/joint-ops/shared-files',
       color: 'from-green-500 to-emerald-500'
     },
     {
@@ -56,38 +56,38 @@ export default function JointOperationsDepartment() {
       title: 'الاتصالات العاجلة',
       description: 'خطوط الاتصال المباشر مع الأجهزة',
       icon: Phone,
-      path: '/department/joint-ops/hotlines',
+      path: '/joint-ops/hotlines',
       color: 'from-teal-500 to-cyan-500'
     },
     {
       title: 'مراقبة الأنشطة',
       description: 'متابعة أنشطة الأجهزة المختلفة',
       icon: Activity,
-      path: '/department/joint-ops/monitoring',
+      path: '/joint-ops/monitoring',
       color: 'from-amber-500 to-yellow-500'
     },
     {
       title: 'التدريب المشترك',
       description: 'برامج وتدريبات مشتركة بين الأجهزة',
       icon: Shield,
-      path: '/department/joint-ops/training',
+      path: '/joint-ops/training',
       color: 'from-rose-500 to-red-500'
     }
   ];
 
   const securityAgencies = [
-    'الأمن الوقائي',
-    'المخابرات العامة',
-    'قوات الأمن الوطني',
-    'الحرس الرئاسي',
-    'الدفاع المدني',
-    'قوات حماية المنشآت',
-    'الشرطة الخاصة',
-    'الشرطة البحرية',
-    'الشرطة النسائية',
-    'المرور (إدارة السير)',
-    'الأمن الدبلوماسي',
-    'جهاز الاستخبارات العسكرية'
+    { name: 'الأمن الوقائي', id: 'preventive-security' },
+    { name: 'المخابرات العامة', id: 'general-intelligence' },
+    { name: 'قوات الأمن الوطني', id: 'national-security' },
+    { name: 'الحرس الرئاسي', id: 'presidential-guard' },
+    { name: 'الدفاع المدني', id: 'civil-defense' },
+    { name: 'قوات حماية المنشآت', id: 'facility-protection' },
+    { name: 'الشرطة الخاصة', id: 'special-police' },
+    { name: 'الشرطة البحرية', id: 'marine-police' },
+    { name: 'الشرطة النسائية', id: 'women-police' },
+    { name: 'المرور (إدارة السير)', id: 'traffic' },
+    { name: 'الأمن الدبلوماسي', id: 'diplomatic-security' },
+    { name: 'جهاز الاستخبارات العسكرية', id: 'military-intelligence' }
   ];
 
   return (
@@ -157,10 +157,11 @@ export default function JointOperationsDepartment() {
             {securityAgencies.map((agency, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                onClick={() => navigate(`/security-agency/${agency.id}`)}
+                className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
               >
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span className="text-sm font-medium">{agency}</span>
+                <span className="text-sm font-medium">{agency.name}</span>
               </div>
             ))}
           </div>
