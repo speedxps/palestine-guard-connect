@@ -45,11 +45,40 @@ interface CitizenData {
   id: string;
   national_id: string;
   full_name: string;
+  first_name?: string;
+  second_name?: string;
+  third_name?: string;
+  family_name?: string;
+  father_name?: string;
   phone?: string;
   address?: string;
+  date_of_birth?: string;
+  gender?: string;
   vehicles?: any[];
   violations?: any[];
   properties?: any[];
+  cybercrimeCases?: any[];
+  judicialCases?: any[];
+  incidents?: any[];
+  familyMembers?: any[];
+}
+
+interface IPLocationData {
+  ip: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  country_name?: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
+  isp?: string;
+  org?: string;
+  as?: string;
+  asname?: string;
+  mobile?: boolean;
+  proxy?: boolean;
+  hosting?: boolean;
 }
 
 interface Investigation {
@@ -71,8 +100,11 @@ const Cybercrime = () => {
   const [citizenData, setCitizenData] = useState<CitizenData | null>(null);
   const [searchNationalId, setSearchNationalId] = useState('');
   const [searchIp, setSearchIp] = useState('');
+  const [ipLocationData, setIpLocationData] = useState<IPLocationData | null>(null);
+  const [ipRelatedCases, setIpRelatedCases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
+  const [searchingIp, setSearchingIp] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   
   useEffect(() => {
@@ -113,31 +145,55 @@ const Cybercrime = () => {
     try {
       setSearching(true);
       
-      // Get citizen data
+      // Get citizen data with all related information
       const { data: citizen, error: citizenError } = await supabase
         .from('citizens')
-        .select(`
-          *,
-          citizen_vehicles:citizen_id(*),
-          violations:citizen_id(*),
-          citizen_properties:citizen_id(*)
-        `)
+        .select('*')
         .eq('national_id', searchNationalId)
         .single();
 
       if (citizenError) throw citizenError;
       
       if (citizen) {
+        // Get all related data in parallel
+        const vehiclesQuery = supabase.from('citizen_vehicles' as any).select('*').eq('citizen_id', citizen.id);
+        const violationsQuery = supabase.from('violations' as any).select('*').eq('citizen_id', citizen.id);
+        const propertiesQuery = supabase.from('citizen_properties').select('*').eq('citizen_id', citizen.id);
+        const cybercrimeQuery = supabase.from('cybercrime_cases').select('*').eq('national_id', searchNationalId);
+        const judicialQuery = supabase.from('judicial_cases').select('*').eq('national_id', searchNationalId);
+        const familyQuery = supabase.from('citizens').select('*').or(`father_name.eq.${citizen.father_name},family_name.eq.${citizen.family_name}`).neq('id', citizen.id);
+
+        const [
+          { data: vehicles },
+          { data: violations },
+          { data: properties },
+          { data: cybercrimeCases },
+          { data: judicialCases },
+          { data: familyMembers }
+        ] = await Promise.all([
+          vehiclesQuery,
+          violationsQuery,
+          propertiesQuery,
+          cybercrimeQuery,
+          judicialQuery,
+          familyQuery
+        ]);
+
+        
         setCitizenData({
           ...citizen,
-          vehicles: citizen.citizen_vehicles || [],
-          violations: citizen.violations || [],
-          properties: citizen.citizen_properties || []
+          vehicles: vehicles || [],
+          violations: violations || [],
+          properties: properties || [],
+          cybercrimeCases: cybercrimeCases || [],
+          judicialCases: judicialCases || [],
+          incidents: [],
+          familyMembers: familyMembers || []
         });
         
         toast({
           title: 'نجح',
-          description: 'تم العثور على بيانات المواطن',
+          description: 'تم العثور على بيانات المواطن الكاملة',
         });
       }
     } catch (error) {
@@ -150,6 +206,55 @@ const Cybercrime = () => {
       setCitizenData(null);
     } finally {
       setSearching(false);
+    }
+  };
+
+  const searchIpAddress = async () => {
+    if (!searchIp) {
+      toast({
+        title: 'خطأ',
+        description: 'الرجاء إدخال عنوان IP',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setSearchingIp(true);
+      
+      // Use free IP geolocation API
+      const response = await fetch(`https://ipapi.co/${searchIp}/json/`);
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.reason || 'فشل في تحديد موقع IP');
+      }
+
+      setIpLocationData(data);
+
+      // Search for cases with this IP in investigations table
+      const { data: investigations } = await supabase
+        .from('investigations')
+        .select('*, cybercrime_cases(*)')
+        .contains('ip_addresses', [searchIp]);
+
+      setIpRelatedCases(investigations || []);
+      
+      toast({
+        title: 'نجح',
+        description: 'تم تحديد موقع عنوان IP بنجاح',
+      });
+    } catch (error: any) {
+      console.error('Error searching IP:', error);
+      toast({
+        title: 'خطأ',
+        description: error.message || 'فشل في البحث عن عنوان IP',
+        variant: 'destructive',
+      });
+      setIpLocationData(null);
+      setIpRelatedCases([]);
+    } finally {
+      setSearchingIp(false);
     }
   };
 
@@ -444,49 +549,142 @@ const Cybercrime = () => {
                   </div>
 
                   {citizenData && (
-                    <div className="space-y-3 pt-3 border-t">
-                      <div>
-                        <p className="text-xs text-gray-500">معلومات المواطن</p>
-                        <div className="mt-2 space-y-2">
+                    <div className="space-y-4 pt-3 border-t max-h-[600px] overflow-y-auto">
+                      {/* Basic Info */}
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-xs font-semibold text-blue-900 mb-2">المعلومات الأساسية</p>
+                        <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-500" />
+                            <User className="h-4 w-4 text-blue-600" />
                             <span className="text-sm font-medium">{citizenData.full_name}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div><span className="font-semibold">الاسم الأول:</span> {citizenData.first_name}</div>
+                            <div><span className="font-semibold">اسم الأب:</span> {citizenData.father_name}</div>
+                            <div><span className="font-semibold">اسم الجد:</span> {citizenData.third_name}</div>
+                            <div><span className="font-semibold">العائلة:</span> {citizenData.family_name}</div>
+                            {citizenData.date_of_birth && <div><span className="font-semibold">تاريخ الميلاد:</span> {new Date(citizenData.date_of_birth).toLocaleDateString('ar-EG')}</div>}
+                            {citizenData.gender && <div><span className="font-semibold">الجنس:</span> {citizenData.gender}</div>}
                           </div>
                           {citizenData.phone && (
                             <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-gray-500" />
+                              <Phone className="h-4 w-4 text-blue-600" />
                               <span className="text-sm">{citizenData.phone}</span>
                             </div>
                           )}
                           {citizenData.address && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              {citizenData.address}
+                            <div className="text-sm text-gray-600">
+                              <span className="font-semibold">العنوان:</span> {citizenData.address}
                             </div>
                           )}
                         </div>
                       </div>
 
+                      {/* Family Members */}
+                      {citizenData.familyMembers && citizenData.familyMembers.length > 0 && (
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-purple-900 mb-2">أفراد العائلة ({citizenData.familyMembers.length})</p>
+                          <div className="space-y-2">
+                            {citizenData.familyMembers.slice(0, 3).map((member: any, idx: number) => (
+                              <div key={idx} className="text-sm bg-white p-2 rounded border border-purple-200">
+                                <div className="font-medium">{member.full_name}</div>
+                                <div className="text-xs text-gray-600">الهوية: {member.national_id}</div>
+                              </div>
+                            ))}
+                            {citizenData.familyMembers.length > 3 && (
+                              <div className="text-xs text-purple-700">+ {citizenData.familyMembers.length - 3} آخرين</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Vehicles */}
                       {citizenData.vehicles && citizenData.vehicles.length > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs text-gray-500 mb-2">المركبات</p>
-                          {citizenData.vehicles.map((vehicle: any, idx: number) => (
-                            <div key={idx} className="flex items-center gap-2 text-sm">
-                              <Car className="h-4 w-4 text-blue-500" />
-                              <span>{vehicle.license_plate || 'غير معروف'}</span>
-                            </div>
-                          ))}
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-green-900 mb-2">المركبات ({citizenData.vehicles.length})</p>
+                          <div className="space-y-1">
+                            {citizenData.vehicles.map((vehicle: any, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                <Car className="h-4 w-4 text-green-600" />
+                                <span>{vehicle.license_plate || 'غير معروف'} - {vehicle.vehicle_type || ''}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
+                      {/* Violations */}
                       {citizenData.violations && citizenData.violations.length > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs text-gray-500">المخالفات: {citizenData.violations.length}</p>
+                        <div className="bg-orange-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-orange-900 mb-2">المخالفات ({citizenData.violations.length})</p>
+                          <div className="space-y-1">
+                            {citizenData.violations.slice(0, 3).map((violation: any, idx: number) => (
+                              <div key={idx} className="text-xs bg-white p-2 rounded border border-orange-200">
+                                <div>{violation.violation_type}</div>
+                                <div className="text-gray-600">{new Date(violation.created_at).toLocaleDateString('ar-EG')}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
+                      {/* Properties */}
                       {citizenData.properties && citizenData.properties.length > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs text-gray-500">الممتلكات: {citizenData.properties.length}</p>
+                        <div className="bg-yellow-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-yellow-900 mb-2">الممتلكات ({citizenData.properties.length})</p>
+                          <div className="space-y-1">
+                            {citizenData.properties.map((property: any, idx: number) => (
+                              <div key={idx} className="text-xs bg-white p-2 rounded border border-yellow-200">
+                                <div className="font-medium">{property.property_type}</div>
+                                <div className="text-gray-600">{property.property_description}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Cybercrime Cases */}
+                      {citizenData.cybercrimeCases && citizenData.cybercrimeCases.length > 0 && (
+                        <div className="bg-red-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-red-900 mb-2">قضايا الجرائم الإلكترونية ({citizenData.cybercrimeCases.length})</p>
+                          <div className="space-y-1">
+                            {citizenData.cybercrimeCases.map((case_: any, idx: number) => (
+                              <div key={idx} className="text-xs bg-white p-2 rounded border border-red-200">
+                                <div className="font-medium">{case_.title}</div>
+                                <div className="text-gray-600">الحالة: {case_.status}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Judicial Cases */}
+                      {citizenData.judicialCases && citizenData.judicialCases.length > 0 && (
+                        <div className="bg-indigo-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-indigo-900 mb-2">القضايا القضائية ({citizenData.judicialCases.length})</p>
+                          <div className="space-y-1">
+                            {citizenData.judicialCases.map((case_: any, idx: number) => (
+                              <div key={idx} className="text-xs bg-white p-2 rounded border border-indigo-200">
+                                <div className="font-medium">{case_.title}</div>
+                                <div className="text-gray-600">الرقم: {case_.case_number}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Incidents */}
+                      {citizenData.incidents && citizenData.incidents.length > 0 && (
+                        <div className="bg-pink-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-pink-900 mb-2">البلاغات ({citizenData.incidents.length})</p>
+                          <div className="space-y-1">
+                            {citizenData.incidents.slice(0, 3).map((incident: any, idx: number) => (
+                              <div key={idx} className="text-xs bg-white p-2 rounded border border-pink-200">
+                                <div className="font-medium">{incident.title}</div>
+                                <div className="text-gray-600">{incident.incident_type}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -508,15 +706,102 @@ const Cybercrime = () => {
                       <Input
                         value={searchIp}
                         onChange={(e) => setSearchIp(e.target.value)}
-                        placeholder="عنوان IP"
+                        placeholder="عنوان IP (مثال: 8.8.8.8)"
+                        onKeyPress={(e) => e.key === 'Enter' && searchIpAddress()}
                       />
-                      <Button>
-                        <Search className="h-4 w-4" />
+                      <Button onClick={searchIpAddress} disabled={searchingIp}>
+                        {searchingIp ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      أدخل عنوان IP للبحث عن القضايا والأنشطة المرتبطة
-                    </p>
+
+                    {ipLocationData && (
+                      <div className="space-y-3 pt-3 border-t">
+                        {/* Location Info */}
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-blue-900 mb-2">معلومات الموقع</p>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Globe className="h-4 w-4 text-blue-600" />
+                              <span className="font-medium">{ipLocationData.ip}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              {ipLocationData.city && <div><span className="font-semibold">المدينة:</span> {ipLocationData.city}</div>}
+                              {ipLocationData.region && <div><span className="font-semibold">المنطقة:</span> {ipLocationData.region}</div>}
+                              {ipLocationData.country_name && <div><span className="font-semibold">الدولة:</span> {ipLocationData.country_name}</div>}
+                              {ipLocationData.timezone && <div><span className="font-semibold">المنطقة الزمنية:</span> {ipLocationData.timezone}</div>}
+                            </div>
+                            {(ipLocationData.latitude && ipLocationData.longitude) && (
+                              <div className="text-xs">
+                                <span className="font-semibold">الإحداثيات:</span> {ipLocationData.latitude}, {ipLocationData.longitude}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* ISP Info */}
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-green-900 mb-2">معلومات الشبكة</p>
+                          <div className="space-y-1 text-xs">
+                            {ipLocationData.isp && <div><span className="font-semibold">مزود الخدمة:</span> {ipLocationData.isp}</div>}
+                            {ipLocationData.org && <div><span className="font-semibold">المنظمة:</span> {ipLocationData.org}</div>}
+                            {ipLocationData.asname && <div><span className="font-semibold">AS Name:</span> {ipLocationData.asname}</div>}
+                          </div>
+                        </div>
+
+                        {/* Device Type Indicators */}
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                          <p className="text-xs font-semibold text-purple-900 mb-2">نوع الاتصال</p>
+                          <div className="flex gap-2 flex-wrap">
+                            {ipLocationData.mobile && (
+                              <Badge className="bg-purple-500 text-white">جهاز محمول</Badge>
+                            )}
+                            {ipLocationData.proxy && (
+                              <Badge className="bg-orange-500 text-white">بروكسي</Badge>
+                            )}
+                            {ipLocationData.hosting && (
+                              <Badge className="bg-red-500 text-white">استضافة</Badge>
+                            )}
+                            {!ipLocationData.mobile && !ipLocationData.proxy && !ipLocationData.hosting && (
+                              <Badge className="bg-green-500 text-white">اتصال عادي</Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Related Cases */}
+                        {ipRelatedCases.length > 0 && (
+                          <div className="bg-red-50 p-3 rounded-lg">
+                            <p className="text-xs font-semibold text-red-900 mb-2">القضايا المرتبطة ({ipRelatedCases.length})</p>
+                            <div className="space-y-2">
+                              {ipRelatedCases.map((investigation: any, idx: number) => (
+                                <div key={idx} className="text-xs bg-white p-2 rounded border border-red-200">
+                                  <div className="font-medium">تحقيق #{investigation.id.substring(0, 8)}</div>
+                                  {investigation.cybercrime_cases && (
+                                    <div className="text-gray-600">القضية: {investigation.cybercrime_cases.title}</div>
+                                  )}
+                                  <div className="text-gray-500">الحالة: {investigation.status}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {ipRelatedCases.length === 0 && (
+                          <div className="text-center text-sm text-gray-500 py-4">
+                            لا توجد قضايا مرتبطة بهذا العنوان
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!ipLocationData && (
+                      <p className="text-sm text-gray-500">
+                        أدخل عنوان IP للحصول على معلومات الموقع ومزود الخدمة والقضايا المرتبطة
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -525,21 +810,140 @@ const Cybercrime = () => {
 
           {/* Tracking Tab */}
           <TabsContent value="tracking" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  نظام التتبع المتقدم
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <Activity className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p>نظام التتبع المتقدم قيد التطوير</p>
-                  <p className="text-sm mt-2">سيتم دمج أنظمة تتبع IP، المواقع، والبيانات الرقمية</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Active Investigations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    التحقيقات النشطة
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {cases.filter(c => c.status === 'investigating').map((case_) => (
+                      <div key={case_.id} className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <Badge variant="outline" className="text-xs mb-1">{case_.case_number}</Badge>
+                            <h4 className="font-semibold text-sm">{case_.title}</h4>
+                          </div>
+                          <Badge className="bg-blue-500 text-white text-xs">{case_.priority}</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">{case_.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">
+                            {new Date(case_.created_at).toLocaleDateString('ar-EG')}
+                          </span>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => navigate(`/cybercrime-advanced-case-detail?caseId=${case_.id}`)}
+                          >
+                            التفاصيل
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {cases.filter(c => c.status === 'investigating').length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <Activity className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">لا توجد تحقيقات نشطة حالياً</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* IP Tracking Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    ملخص تتبع IP
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {ipLocationData ? (
+                    <div className="space-y-3">
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-mono text-lg font-bold">{ipLocationData.ip}</span>
+                          <Badge className="bg-blue-600 text-white">نشط</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="bg-white p-2 rounded">
+                            <div className="text-xs text-gray-500">الموقع</div>
+                            <div className="font-medium">{ipLocationData.city}, {ipLocationData.country_name}</div>
+                          </div>
+                          <div className="bg-white p-2 rounded">
+                            <div className="text-xs text-gray-500">مزود الخدمة</div>
+                            <div className="font-medium text-xs">{ipLocationData.isp || 'غير معروف'}</div>
+                          </div>
+                        </div>
+                        {ipRelatedCases.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-blue-200">
+                            <div className="text-xs font-semibold text-red-600 mb-1">
+                              ⚠️ {ipRelatedCases.length} قضية مرتبطة
+                            </div>
+                            <div className="flex gap-1">
+                              {ipRelatedCases.slice(0, 3).map((inv: any, idx: number) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {inv.id.substring(0, 6)}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Globe className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">قم بالبحث عن عنوان IP في تبويب "التحقيق"</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Statistics */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    إحصائيات التتبع
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-blue-700">
+                        {cases.filter(c => c.status === 'investigating').length}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">تحقيقات نشطة</div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-green-700">
+                        {cases.filter(c => c.status === 'resolved').length}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">قضايا محلولة</div>
+                    </div>
+                    <div className="bg-orange-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-orange-700">
+                        {cases.filter(c => c.priority === 'high' || c.priority === 'critical').length}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">أولوية عالية</div>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-purple-700">
+                        {ipRelatedCases.length}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">قضايا IP متتبعة</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
