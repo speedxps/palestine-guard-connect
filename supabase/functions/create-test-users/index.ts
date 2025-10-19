@@ -8,12 +8,16 @@ const corsHeaders = {
 };
 
 const TEST_USERS: Array<{ email: string; password: string; role: string; fullName: string }> = [
-  { email: "admin@test.com",    password: "admin123",    role: "admin",             fullName: "مدير النظام" },
-  { email: "traffic@test.com",  password: "traffic123",  role: "traffic_police",    fullName: "شرطة المرور" },
-  { email: "cid@test.com",      password: "cid123",      role: "cid",               fullName: "المباحث الجنائية" },
-  { email: "special@test.com",  password: "special123",  role: "special_police",    fullName: "الشرطة الخاصة" },
-  { email: "cyber@test.com",    password: "cyber123",    role: "cybercrime",        fullName: "الجرائم الإلكترونية" },
-  { email: "judicial@test.com", password: "judicial123", role: "judicial_police",   fullName: "الشرطة القضائية" },
+  { email: "admin@test.com",         password: "admin123",    role: "admin",             fullName: "مدير النظام" },
+  { email: "admin_ops@test.com",     password: "123123",      role: "operations_system", fullName: "مدير العمليات والجهاز" },
+  { email: "traffic@test.com",       password: "traffic123",  role: "traffic_police",    fullName: "شرطة المرور" },
+  { email: "cid@test.com",           password: "cid123",      role: "cid",               fullName: "المباحث الجنائية" },
+  { email: "special@test.com",       password: "special123",  role: "special_police",    fullName: "الشرطة الخاصة" },
+  { email: "cyber@test.com",         password: "cyber123",    role: "cybercrime",        fullName: "الجرائم الإلكترونية" },
+  { email: "judicial@test.com",      password: "judicial123", role: "judicial_police",   fullName: "الشرطة القضائية" },
+  { email: "border_admin@test.com",  password: "123123",      role: "borders",           fullName: "مدير المعابر والحدود" },
+  { email: "tourism_admin@test.com", password: "123123",      role: "tourism_police",    fullName: "مدير الشرطة السياحية" },
+  { email: "joint_admin@test.com",   password: "123123",      role: "joint_operations",  fullName: "مدير العمليات المشتركة" },
 ];
 
 serve(async (req) => {
