@@ -84,9 +84,10 @@ const Login = () => {
       console.log('📍 Location check result:', locationCheck);
       console.log('❌ Location check error:', locationError);
 
-      // إذا حدث خطأ في التحقق من الموقع، نرفض الدخول
-      if (locationError) {
-        console.error('Location verification failed:', locationError);
+      // إذا كان هناك خطأ، تحقق من البيانات أولاً
+      // لأن edge function يرجع status 403 عندما يكون محظور وهذا يعتبر error في invoke
+      if (locationError && !locationCheck) {
+        console.error('Location verification failed with no data:', locationError);
         toast({
           title: "⛔ فشل التحقق من الموقع",
           description: "حدث خطأ في التحقق من موقعك. يرجى المحاولة مرة أخرى.",
@@ -96,14 +97,17 @@ const Login = () => {
         return;
       }
 
+      // التحقق من الحظر - سواء كان في data أو error
+      const checkData = locationCheck || (locationError as any)?.context;
+      
       // إذا كان الموقع محظور أو غير مسموح - عرض صفحة الحظر
-      if (locationCheck?.blocked === true || locationCheck?.allowed === false) {
-        console.warn('🚫 Login BLOCKED - outside Palestine');
+      if (checkData?.blocked === true || checkData?.allowed === false) {
+        console.warn('🚫 Login BLOCKED - outside Palestine', checkData);
         
         // حفظ معلومات الحظر لعرضها في صفحة الحظر
         setBlockInfo({
-          location: locationCheck.location,
-          ip: locationCheck.ip,
+          location: checkData.location,
+          ip: checkData.ip,
           timestamp: new Date().toISOString()
         });
         
@@ -113,11 +117,12 @@ const Login = () => {
       }
 
       // تأكيد أن الموقع مسموح صراحةً
-      if (locationCheck?.allowed !== true) {
-        console.warn('⚠️ Location check returned unexpected result');
+      if (checkData?.allowed !== true) {
+        console.warn('⚠️ Location check returned unexpected result:', checkData);
+        // إذا لم يكن هناك بيانات واضحة، نرفض الدخول للأمان
         setBlockInfo({
-          location: locationCheck?.location,
-          ip: locationCheck?.ip,
+          location: checkData?.location,
+          ip: checkData?.ip,
           timestamp: new Date().toISOString()
         });
         setIsBlocked(true);

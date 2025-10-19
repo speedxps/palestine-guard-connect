@@ -187,11 +187,13 @@ serve(async (req) => {
 
     console.log('Response:', responseData)
 
+    // نرجع دائماً status 200 مع البيانات
+    // الكود الأمامي سيتحقق من blocked flag
     return new Response(
       JSON.stringify(responseData),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: isBlocked ? 403 : 200
+        status: 200
       }
     )
   } catch (error) {
