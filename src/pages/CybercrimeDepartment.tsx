@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Computer, Shield, FileText, BarChart3, Activity, Users, Newspaper, MessageCircle, Ticket } from 'lucide-react';
+import { Computer, Shield, FileText, BarChart3, Activity, Users, Newspaper, MessageCircle, Ticket, Plus } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const CybercrimeDepartment = () => {
@@ -16,6 +16,13 @@ const CybercrimeDepartment = () => {
       path: '/department-tasks',
       color: 'from-yellow-500 to-yellow-600',
       highlighted: true
+    },
+    {
+      title: 'بلاغ جديد',
+      description: 'إضافة بلاغ جديد للنظام',
+      icon: Plus,
+      path: '/new-incident',
+      color: 'from-green-500 to-green-600'
     },
     {
       title: 'الجرائم الإلكترونية',

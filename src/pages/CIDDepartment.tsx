@@ -18,13 +18,6 @@ const CIDDepartment = () => {
       highlighted: true
     },
     {
-      title: 'البلاغات',
-      description: 'عرض ومتابعة البلاغات الواردة',
-      icon: AlertTriangle,
-      path: '/incidents',
-      color: 'from-red-500 to-red-600'
-    },
-    {
       title: 'بلاغ جديد',
       description: 'إضافة بلاغ جديد للنظام',
       icon: Plus,
