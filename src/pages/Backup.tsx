@@ -125,7 +125,7 @@ export default function Backup() {
   };
 
   const generatePrintContent = (data: any) => {
-    const currentDate = new Date().toLocaleDateString('ar-SA');
+    const currentDate = new Date().toLocaleDateString('en-US');
     
     return `
       <!DOCTYPE html>
@@ -251,7 +251,7 @@ export default function Backup() {
 
         <div class="footer">
           <p>هذه النسخة الاحتياطية تم إنشاؤها من نظام إدارة الأمن - وزارة الداخلية</p>
-          <p>تم الإنشاء في: ${new Date().toLocaleString('ar-SA')}</p>
+          <p>تم الإنشاء في: ${new Date().toLocaleString('en-US')}</p>
         </div>
       </body>
       </html>

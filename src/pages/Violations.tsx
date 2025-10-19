@@ -357,7 +357,7 @@ export default function Violations() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const currentDate = new Date().toLocaleDateString('ar-SA', {
+    const currentDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -508,12 +508,12 @@ export default function Violations() {
             <div class="wanted-title">⚠️ شخص مطلوب للسلطات</div>
             <div class="info-row">
               <span class="info-label">بداية المراقبة:</span>
-              <span class="info-value">${new Date(isWanted.monitor_start_date).toLocaleDateString('ar-SA')}</span>
+              <span class="info-value">${new Date(isWanted.monitor_start_date).toLocaleDateString('en-US')}</span>
             </div>
             ${isWanted.monitor_end_date ? `
               <div class="info-row">
                 <span class="info-label">نهاية المراقبة:</span>
-                <span class="info-value">${new Date(isWanted.monitor_end_date).toLocaleDateString('ar-SA')}</span>
+                <span class="info-value">${new Date(isWanted.monitor_end_date).toLocaleDateString('en-US')}</span>
               </div>
             ` : ''}
             ${isWanted.reason ? `
@@ -576,7 +576,7 @@ export default function Violations() {
 
         <div class="footer">
           <p>هذا التقرير صادر من نظام إدارة المخالفات والقضايا - وزارة الداخلية</p>
-          <p>تم إنشاء التقرير في: ${new Date().toLocaleString('ar-SA')}</p>
+          <p>تم إنشاء التقرير في: ${new Date().toLocaleString('en-US')}</p>
         </div>
       </body>
       </html>
@@ -705,8 +705,8 @@ export default function Violations() {
                               {isWanted && (
                                 <div className="text-xs text-muted-foreground mt-1">
                                   <Calendar className="w-3 h-3 inline mr-1" />
-                                  مراقبة: {new Date(isWanted.monitor_start_date).toLocaleDateString('ar-SA')}
-                                  {isWanted.monitor_end_date && ` - ${new Date(isWanted.monitor_end_date).toLocaleDateString('ar-SA')}`}
+                                  مراقبة: {new Date(isWanted.monitor_start_date).toLocaleDateString('en-US')}
+                                  {isWanted.monitor_end_date && ` - ${new Date(isWanted.monitor_end_date).toLocaleDateString('en-US')}`}
                                 </div>
                               )}
                             </div>
@@ -768,9 +768,9 @@ export default function Violations() {
                     <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
                       <p className="text-red-700 dark:text-red-300 font-medium mb-2">معلومات المطلوب:</p>
                       <div className="space-y-1 text-red-600 dark:text-red-400">
-                        <p><span className="font-medium">بداية المراقبة:</span> {new Date(wantedPersons[selected.national_id].monitor_start_date).toLocaleDateString('ar-SA')}</p>
+                        <p><span className="font-medium">بداية المراقبة:</span> {new Date(wantedPersons[selected.national_id].monitor_start_date).toLocaleDateString('en-US')}</p>
                         {wantedPersons[selected.national_id].monitor_end_date && (
-                          <p><span className="font-medium">نهاية المراقبة:</span> {new Date(wantedPersons[selected.national_id].monitor_end_date).toLocaleDateString('ar-SA')}</p>
+                          <p><span className="font-medium">نهاية المراقبة:</span> {new Date(wantedPersons[selected.national_id].monitor_end_date).toLocaleDateString('en-US')}</p>
                         )}
                         {wantedPersons[selected.national_id].reason && (
                           <p><span className="font-medium">السبب:</span> {wantedPersons[selected.national_id].reason}</p>

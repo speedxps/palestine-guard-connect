@@ -411,8 +411,8 @@ const SmartCivilRegistry: React.FC = () => {
 الممتلكات:
 ${properties.map(p => `- ${p.property_description} (${p.property_type})`).join('\n') || 'لا توجد ممتلكات مسجلة'}
 
-تاريخ الإنشاء: ${new Date(citizen.created_at).toLocaleDateString('ar-SA')}
-آخر تحديث: ${citizen.last_modified_at ? new Date(citizen.last_modified_at).toLocaleDateString('ar-SA') : 'لم يتم التحديث'}
+تاريخ الإنشاء: ${new Date(citizen.created_at).toLocaleDateString('en-US')}
+آخر تحديث: ${citizen.last_modified_at ? new Date(citizen.last_modified_at).toLocaleDateString('en-US') : 'لم يتم التحديث'}
       `;
 
       const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
@@ -663,7 +663,7 @@ ${properties.map(p => `- ${p.property_description} (${p.property_type})`).join('
                         <TableCell className="font-semibold">{citizen.full_name}</TableCell>
                         <TableCell>{citizen.father_name || '-'}</TableCell>
                         <TableCell>{citizen.phone || '-'}</TableCell>
-                        <TableCell>{new Date(citizen.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                        <TableCell>{new Date(citizen.created_at).toLocaleDateString('en-US')}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-green-50 text-green-700">
                             نشط
@@ -917,7 +917,7 @@ ${properties.map(p => `- ${p.property_description} (${p.property_type})`).join('
                                      log.action_type === 'delete' ? 'حذف' : 'عرض'}
                                   </Badge>
                                   <p className="text-sm text-muted-foreground mt-1">
-                                    {new Date(log.performed_at).toLocaleString('ar-SA')}
+                                    {new Date(log.performed_at).toLocaleString('en-US')}
                                   </p>
                                 </div>
                               </div>

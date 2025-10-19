@@ -94,7 +94,7 @@ serve(async (req) => {
       const notificationMessage = `تم تسجيل الدخول من IP: ${ipAddress || 'غير متوفر'}
 الموقع التقريبي: ${locationStr}
 المتصفح: ${deviceStr}
-الوقت: ${new Date().toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh' })}
+الوقت: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Riyadh' })}
 
 ${profile.full_name ? `المستخدم: ${profile.full_name}` : ''}`;
 

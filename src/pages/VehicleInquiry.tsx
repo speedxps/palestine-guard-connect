@@ -320,7 +320,7 @@ export default function VehicleInquiry() {
             ` : ''}
             <tr>
               <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">تاريخ الترخيص:</td>
-              <td style="padding: 10px;">${new Date(vehicleData.registration_date).toLocaleDateString('ar-SA')}</td>
+              <td style="padding: 10px;">${new Date(vehicleData.registration_date).toLocaleDateString('en-US')}</td>
             </tr>
           </table>
         </div>
@@ -351,7 +351,7 @@ export default function VehicleInquiry() {
             ` : ''}
             <tr>
               <td style="padding: 10px; font-weight: bold; background: #f3f4f6;">تاريخ بداية الملكية:</td>
-              <td style="padding: 10px;">${new Date(currentOwner.ownership_start_date).toLocaleDateString('ar-SA')}</td>
+              <td style="padding: 10px;">${new Date(currentOwner.ownership_start_date).toLocaleDateString('en-US')}</td>
             </tr>
           </table>
         </div>
@@ -374,8 +374,8 @@ export default function VehicleInquiry() {
                 <tr style="background: ${index % 2 === 0 ? '#f9fafb' : 'white'};">
                   <td style="padding: 10px; border: 1px solid #e5e7eb;">${owner.owner_name}</td>
                   <td style="padding: 10px; border: 1px solid #e5e7eb;">${owner.national_id}</td>
-                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${new Date(owner.ownership_start_date).toLocaleDateString('ar-SA')}</td>
-                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${owner.ownership_end_date ? new Date(owner.ownership_end_date).toLocaleDateString('ar-SA') : 'مستمر'}</td>
+                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${new Date(owner.ownership_start_date).toLocaleDateString('en-US')}</td>
+                  <td style="padding: 10px; border: 1px solid #e5e7eb;">${owner.ownership_end_date ? new Date(owner.ownership_end_date).toLocaleDateString('en-US') : 'مستمر'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -400,7 +400,7 @@ export default function VehicleInquiry() {
                 ${violations.map((violation, index) => `
                   <tr style="background: ${index % 2 === 0 ? '#fef2f2' : 'white'};">
                     <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${violation.violation_type}</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb;">${new Date(violation.violation_date).toLocaleDateString('ar-SA')}</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">${new Date(violation.violation_date).toLocaleDateString('en-US')}</td>
                     <td style="padding: 10px; border: 1px solid #e5e7eb;">${violation.location || 'غير محدد'}</td>
                     <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${violation.fine_amount || 0} ش.ج</td>
                     <td style="padding: 10px; border: 1px solid #e5e7eb;">
@@ -560,7 +560,7 @@ export default function VehicleInquiry() {
                 )}
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">تاريخ الترخيص</Label>
-                  <p className="text-lg">{new Date(vehicleData.registration_date).toLocaleDateString('ar-SA')}</p>
+                  <p className="text-lg">{new Date(vehicleData.registration_date).toLocaleDateString('en-US')}</p>
                 </div>
               </div>
             </CardContent>
@@ -599,7 +599,7 @@ export default function VehicleInquiry() {
                   )}
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">تاريخ بداية الملكية</Label>
-                    <p className="text-lg">{new Date(currentOwner.ownership_start_date).toLocaleDateString('ar-SA')}</p>
+                    <p className="text-lg">{new Date(currentOwner.ownership_start_date).toLocaleDateString('en-US')}</p>
                   </div>
                 </div>
               ) : (
@@ -630,8 +630,8 @@ export default function VehicleInquiry() {
                         <div>
                           <Label className="text-sm font-medium text-muted-foreground">فترة الملكية</Label>
                           <p>
-                            من {new Date(owner.ownership_start_date).toLocaleDateString('ar-SA')} 
-                            {owner.ownership_end_date && ` إلى ${new Date(owner.ownership_end_date).toLocaleDateString('ar-SA')}`}
+                            من {new Date(owner.ownership_start_date).toLocaleDateString('en-US')} 
+                            {owner.ownership_end_date && ` إلى ${new Date(owner.ownership_end_date).toLocaleDateString('en-US')}`}
                           </p>
                         </div>
                       </div>
@@ -685,7 +685,7 @@ export default function VehicleInquiry() {
                             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                               <div>
                                 <Label className="text-muted-foreground">التاريخ</Label>
-                                <p>{new Date(violation.violation_date).toLocaleDateString('ar-SA')}</p>
+                                <p>{new Date(violation.violation_date).toLocaleDateString('en-US')}</p>
                               </div>
                               {violation.location && (
                                 <div>

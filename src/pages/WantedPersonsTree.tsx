@@ -211,7 +211,7 @@ export default function WantedPersonsTree() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const currentDate = new Date().toLocaleDateString('ar-SA', {
+    const currentDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -375,12 +375,12 @@ export default function WantedPersonsTree() {
           </div>
           <div class="info-row">
             <span class="info-label">بداية المراقبة:</span>
-            <span class="info-value">${new Date(selectedPerson.monitor_start_date).toLocaleDateString('ar-SA')}</span>
+            <span class="info-value">${new Date(selectedPerson.monitor_start_date).toLocaleDateString('en-US')}</span>
           </div>
           ${selectedPerson.monitor_end_date ? `
             <div class="info-row">
               <span class="info-label">نهاية المراقبة:</span>
-              <span class="info-value">${new Date(selectedPerson.monitor_end_date).toLocaleDateString('ar-SA')}</span>
+              <span class="info-value">${new Date(selectedPerson.monitor_end_date).toLocaleDateString('en-US')}</span>
             </div>
           ` : ''}
           <div class="info-row">
@@ -475,7 +475,7 @@ export default function WantedPersonsTree() {
 
         <div class="footer">
           <p>هذا التقرير صادر من نظام إدارة المطلوبين - وزارة الداخلية</p>
-          <p>تم إنشاء التقرير في: ${new Date().toLocaleString('ar-SA')}</p>
+          <p>تم إنشاء التقرير في: ${new Date().toLocaleString('en-US')}</p>
           <p style="color: #dc2626; font-weight: bold; margin-top: 10px;">تحذير: هذا الشخص مطلوب للسلطات - يرجى الحذر والتواصل مع الجهات المختصة</p>
         </div>
       </body>
@@ -676,7 +676,7 @@ export default function WantedPersonsTree() {
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <p><span className="font-medium">رقم الهوية:</span> {selectedPerson.citizen.national_id}</p>
                     <p><span className="font-medium">تاريخ الميلاد:</span> {selectedPerson.citizen.date_of_birth || "غير محدد"}</p>
-                    <p><span className="font-medium">بداية المراقبة:</span> {new Date(selectedPerson.monitor_start_date).toLocaleDateString('ar-SA')}</p>
+                    <p><span className="font-medium">بداية المراقبة:</span> {new Date(selectedPerson.monitor_start_date).toLocaleDateString('en-US')}</p>
                     <p><span className="font-medium">السبب:</span> {selectedPerson.reason || "غير محدد"}</p>
                   </div>
                 </div>

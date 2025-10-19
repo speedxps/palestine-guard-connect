@@ -482,7 +482,7 @@ export default function CybercrimeAdvancedDashboard() {
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">تاريخ الإبلاغ</Label>
-                            <p className="text-xs md:text-sm">{new Date(case_.created_at).toLocaleDateString('ar-SA')}</p>
+                            <p className="text-xs md:text-sm">{new Date(case_.created_at).toLocaleDateString('en-US')}</p>
                           </div>
                         </div>
                         
@@ -595,7 +595,7 @@ export default function CybercrimeAdvancedDashboard() {
                         </div>
                         <p className="text-xs md:text-sm line-clamp-2">{item.description}</p>
                         <p className="text-xs text-muted-foreground">
-                          تم جمعه في: {new Date(item.collected_at).toLocaleString('ar-SA')}
+                          تم جمعه في: {new Date(item.collected_at).toLocaleString('en-US')}
                         </p>
                       </div>
                       
@@ -686,7 +686,7 @@ export default function CybercrimeAdvancedDashboard() {
                             {alert.description}
                           </p>
                           <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(alert.created_at).toLocaleDateString('ar-SA')}
+                            {new Date(alert.created_at).toLocaleDateString('en-US')}
                           </p>
                         </div>
                       </div>
@@ -751,7 +751,7 @@ export default function CybercrimeAdvancedDashboard() {
                               <Eye className="h-3 w-3" />
                               {material.views_count} مشاهدة
                             </span>
-                            <span>{new Date(material.created_at).toLocaleDateString('ar-SA')}</span>
+                            <span>{new Date(material.created_at).toLocaleDateString('en-US')}</span>
                           </div>
                         </Card>
                       );
@@ -820,9 +820,9 @@ export default function CybercrimeAdvancedDashboard() {
                             </div>
                           )}
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>تم البدء: {new Date(investigation.created_at).toLocaleDateString('ar-SA')}</span>
+                            <span>تم البدء: {new Date(investigation.created_at).toLocaleDateString('en-US')}</span>
                             {investigation.completion_date && (
-                              <span>تم الإكمال: {new Date(investigation.completion_date).toLocaleDateString('ar-SA')}</span>
+                              <span>تم الإكمال: {new Date(investigation.completion_date).toLocaleDateString('en-US')}</span>
                             )}
                           </div>
                         </div>
@@ -899,7 +899,7 @@ export default function CybercrimeAdvancedDashboard() {
                           )}
                           
                           <p className="text-xs text-muted-foreground">
-                            تم التقييم: {new Date(assessment.assessed_at).toLocaleDateString('ar-SA')}
+                            تم التقييم: {new Date(assessment.assessed_at).toLocaleDateString('en-US')}
                           </p>
                         </div>
                       </Card>
@@ -1248,7 +1248,7 @@ export default function CybercrimeAdvancedDashboard() {
               <div className="grid gap-2">
                 <Label className="text-sm font-semibold">تاريخ الجمع</Label>
                 <p className="text-sm">
-                  {new Date(selectedEvidence.collected_at).toLocaleString('ar-SA', {
+                  {new Date(selectedEvidence.collected_at).toLocaleString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -1358,7 +1358,7 @@ export default function CybercrimeAdvancedDashboard() {
                   {selectedMaterial.views_count} مشاهدة
                 </span>
                 <span>
-                  {new Date(selectedMaterial.created_at).toLocaleDateString('ar-SA')}
+                  {new Date(selectedMaterial.created_at).toLocaleDateString('en-US')}
                 </span>
               </div>
             </div>

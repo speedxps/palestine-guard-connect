@@ -377,7 +377,7 @@ const JudicialCaseSearch = () => {
                         <div>
                           <span className="text-muted-foreground">تاريخ الإنشاء:</span>
                           <p className="font-semibold">
-                            {new Date(caseItem.created_at).toLocaleDateString('ar-SA')}
+                            {new Date(caseItem.created_at).toLocaleDateString('en-US')}
                           </p>
                         </div>
                       </div>

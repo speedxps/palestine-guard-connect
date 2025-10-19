@@ -260,7 +260,7 @@ const JudicialCommunications = () => {
                               {senderName}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {new Date(msg.created_at).toLocaleString('ar-SA', {
+                              {new Date(msg.created_at).toLocaleString('en-US', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric',

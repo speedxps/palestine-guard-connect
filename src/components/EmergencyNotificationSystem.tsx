@@ -167,7 +167,7 @@ const EmergencyNotificationSystem = () => {
                   من: {selectedPost.profiles?.full_name || 'غير معروف'}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  التاريخ: {new Date(selectedPost.created_at).toLocaleString('ar-SA')}
+                  التاريخ: {new Date(selectedPost.created_at).toLocaleString('en-US')}
                 </p>
                 <div className="font-medium text-gray-900">
                   {selectedPost.content}

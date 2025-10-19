@@ -537,7 +537,7 @@ export default function VehicleManagement() {
                             )}
                             <div>
                               <Label className="text-muted-foreground">تاريخ الملكية</Label>
-                              <p>{new Date(owner.ownership_start_date).toLocaleDateString('ar-SA')}</p>
+                              <p>{new Date(owner.ownership_start_date).toLocaleDateString('en-US')}</p>
                             </div>
                           </div>
                         </div>
@@ -606,7 +606,7 @@ export default function VehicleManagement() {
                             </div>
                             <div>
                               <Label className="text-muted-foreground">التاريخ</Label>
-                              <p>{new Date(violation.violation_date).toLocaleDateString('ar-SA')}</p>
+                              <p>{new Date(violation.violation_date).toLocaleDateString('en-US')}</p>
                             </div>
                             {violation.location && (
                               <div>

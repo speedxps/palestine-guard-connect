@@ -127,7 +127,7 @@ export default function LoginHistory() {
   };
 
   const formatTimestamp = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString('ar-SA', {
+    return new Date(timestamp).toLocaleString('en-US', {
       timeZone: 'Asia/Riyadh',
       year: 'numeric',
       month: 'long',

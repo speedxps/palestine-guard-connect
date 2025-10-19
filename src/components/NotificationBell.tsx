@@ -152,7 +152,7 @@ export const NotificationBell = () => {
     if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
     if (diffHours < 24) return `منذ ${diffHours} ساعة`;
     if (diffDays < 7) return `منذ ${diffDays} يوم`;
-    return date.toLocaleDateString('ar-SA');
+    return date.toLocaleDateString('en-US');
   };
 
   const markNotificationAsViewed = async (notificationId: string) => {

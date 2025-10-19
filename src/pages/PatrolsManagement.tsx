@@ -434,7 +434,7 @@ export default function PatrolsManagement() {
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            <span>{new Date(patrol.created_at).toLocaleDateString('ar-SA')}</span>
+                            <span>{new Date(patrol.created_at).toLocaleDateString('en-US')}</span>
                           </div>
                         </div>
                       </div>
@@ -544,8 +544,8 @@ export default function PatrolsManagement() {
                       )}
                       
                       <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t">
-                        <span>تم إنشاؤها: {new Date(patrol.created_at).toLocaleString('ar-SA')}</span>
-                        <span>آخر تحديث: {new Date(patrol.updated_at).toLocaleString('ar-SA')}</span>
+                        <span>تم إنشاؤها: {new Date(patrol.created_at).toLocaleString('en-US')}</span>
+                        <span>آخر تحديث: {new Date(patrol.updated_at).toLocaleString('en-US')}</span>
                       </div>
                     </div>
                   </CardContent>

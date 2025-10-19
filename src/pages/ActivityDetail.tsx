@@ -245,16 +245,16 @@ const ActivityDetail = () => {
         
         <div class="section">
           <span class="label">تاريخ الإنشاء:</span>
-          <span class="value">${new Date(activity.created_at).toLocaleString('ar-SA')}</span>
+          <span class="value">${new Date(activity.created_at).toLocaleString('en-US')}</span>
         </div>
         
         <div class="section">
           <span class="label">آخر تحديث:</span>
-          <span class="value">${new Date(activity.updated_at).toLocaleString('ar-SA')}</span>
+          <span class="value">${new Date(activity.updated_at).toLocaleString('en-US')}</span>
         </div>
         
         <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #666;">
-          طُبع بتاريخ: ${new Date().toLocaleString('ar-SA')}
+          طُبع بتاريخ: ${new Date().toLocaleString('en-US')}
         </div>
       </body>
       </html>
