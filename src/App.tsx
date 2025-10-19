@@ -53,6 +53,8 @@ import Backup from "@/pages/Backup";
 import CitizenRecords from "@/pages/CitizenRecords";
 import CybercrimeAdvanced from "@/pages/CybercrimeAdvanced";
 import CybercrimeAdvancedDashboard from "@/pages/CybercrimeAdvancedDashboard";
+import CybercrimeSecurityReport from "@/pages/CybercrimeSecurityReport";
+import CybercrimeTrendAnalysis from "@/pages/CybercrimeTrendAnalysis";
 import AdminDepartment from "@/pages/AdminDepartment";
 import TrafficDepartment from "@/pages/TrafficDepartment";
 import CIDDepartment from "@/pages/CIDDepartment";
@@ -571,6 +573,26 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
                         <CybercrimeAdvancedDashboard />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cybercrime-security-report"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <CybercrimeSecurityReport />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cybercrime-trend-analysis"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cybercrime"]}>
+                        <CybercrimeTrendAnalysis />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }
