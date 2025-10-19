@@ -66,16 +66,29 @@ export default function LoginHistoryBell() {
       const viewedIds = new Set(viewsData?.map(v => v.notification_id) || []);
 
       // Mark notifications as read/unread based on views
-      // تصفية الإشعارات - استبعاد إشعارات تسجيل الدخول التي تظهر في زر الجرس
+      // تصفية الإشعارات - استبعاد إشعارات تسجيل الدخول (بما فيها المشبوهة) التي تظهر في زر الجرس
       const notificationsWithStatus = (notificationsData?.map(notification => ({
         ...notification,
         status: viewedIds.has(notification.id) ? 'read' : 'unread'
-      })) || []).filter(notification => 
-        !notification.title?.toLowerCase().includes('تسجيل دخول') &&
-        !notification.title?.toLowerCase().includes('login') &&
-        !notification.message?.toLowerCase().includes('تسجيل دخول') &&
-        !notification.message?.toLowerCase().includes('login')
-      );
+      })) || []).filter(notification => {
+        const title = notification.title?.toLowerCase() || '';
+        const message = notification.message?.toLowerCase() || '';
+        
+        // استبعاد جميع إشعارات تسجيل الدخول (العادية والمشبوهة)
+        return !(
+          title.includes('تسجيل دخول') ||
+          title.includes('login') ||
+          title.includes('محاولة دخول') ||
+          title.includes('تنبيه عاجل') ||
+          title.includes('مشبوه') ||
+          message.includes('تسجيل دخول') ||
+          message.includes('login') ||
+          message.includes('محاولة دخول') ||
+          message.includes('suspicious') ||
+          message.includes('blocked') ||
+          message.includes('محظور')
+        );
+      });
 
       console.log('Notifications with status:', notificationsWithStatus);
       console.log('Unread count:', notificationsWithStatus.filter(n => n.status === 'unread').length);
