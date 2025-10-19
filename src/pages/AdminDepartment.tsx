@@ -42,6 +42,34 @@ const AdminDepartment = () => {
       color: 'from-red-500 to-red-600'
     },
     {
+      title: 'العمليات وإدارة الجهاز',
+      description: 'الإشراف الكامل على النظام والبلاغات',
+      icon: Shield,
+      path: '/department/operations-system',
+      color: 'from-blue-600 to-indigo-600'
+    },
+    {
+      title: 'المعابر والحدود',
+      description: 'مراقبة حركة الدخول والخروج',
+      icon: Shield,
+      path: '/department/borders',
+      color: 'from-cyan-500 to-blue-500'
+    },
+    {
+      title: 'الشرطة السياحية',
+      description: 'حفظ أمن المواقع السياحية',
+      icon: Shield,
+      path: '/department/tourism',
+      color: 'from-green-500 to-emerald-500'
+    },
+    {
+      title: 'العمليات المشتركة',
+      description: 'التنسيق مع الأجهزة الأمنية',
+      icon: Shield,
+      path: '/department/joint-operations',
+      color: 'from-purple-500 to-pink-500'
+    },
+    {
       title: 'إدارة الإشعارات',
       description: 'إرسال إشعارات للأقسام والمستخدمين',
       icon: Shield,
@@ -156,7 +184,7 @@ const AdminDepartment = () => {
         </Card>
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-green-600">5</CardTitle>
+            <CardTitle className="text-2xl font-bold text-green-600">10</CardTitle>
             <CardDescription className="font-arabic">الأقسام النشطة</CardDescription>
           </CardHeader>
         </Card>

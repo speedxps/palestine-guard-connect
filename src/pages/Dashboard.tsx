@@ -10,6 +10,7 @@ import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings
 import policeLogo from "@/assets/police-logo.png";
 import ModernSidebar from "@/components/layout/ModernSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
+import LoginHistoryBell from "@/components/LoginHistoryBell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -209,6 +210,7 @@ const Dashboard = () => {
           <button onClick={() => window.location.reload()}>
             <RotateCw className="w-7 h-7 text-[#2B9BF4]" />
           </button>
+          <LoginHistoryBell />
           <NotificationBell />
           <button onClick={() => (window.location.href = "tel:100")}>
             <Phone className="w-7 h-7 text-[#2B9BF4]" />

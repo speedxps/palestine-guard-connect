@@ -42,7 +42,7 @@ export const NotificationBell = () => {
         .select('*')
         .or(`is_system_wide.eq.true,target_departments.ov.{${roles.join(',')}}`)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(100); // زيادة الحد لعرض المزيد من الإشعارات القديمة
 
       if (notificationsError) {
         console.error('Error fetching notifications:', notificationsError);

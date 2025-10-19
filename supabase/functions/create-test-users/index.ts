@@ -64,10 +64,26 @@ serve(async (req) => {
         continue;
       }
 
-      // 1) Insert role into public.user_roles (idempotent)
-      const { error: roleErr } = await admin
-        .from("user_roles")
-        .upsert({ user_id: userId, role: u.role as any }, { onConflict: "user_id,role" });
+  // 1) Insert role into public.user_roles (idempotent) - add admin role for admin_ops
+      let roleErr;
+      
+      // If user is admin_ops, give both operations_system AND admin roles
+      if (u.email === 'admin_ops@test.com') {
+        const { error: adminRoleErr } = await admin
+          .from("user_roles")
+          .upsert({ user_id: userId, role: 'admin' as any }, { onConflict: "user_id,role" });
+        
+        const { error: opsRoleErr } = await admin
+          .from("user_roles")
+          .upsert({ user_id: userId, role: u.role as any }, { onConflict: "user_id,role" });
+          
+        roleErr = adminRoleErr || opsRoleErr;
+      } else {
+        const { error: err } = await admin
+          .from("user_roles")
+          .upsert({ user_id: userId, role: u.role as any }, { onConflict: "user_id,role" });
+        roleErr = err;
+      }
       
       if (roleErr && !String(roleErr.message || "").includes("duplicate")) {
         results.push({ email: u.email, status: "created", role_assigned: false, role_error: roleErr.message });

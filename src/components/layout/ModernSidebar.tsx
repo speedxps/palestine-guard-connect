@@ -57,6 +57,13 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
       path: '/department/admin'
     },
     {
+      id: 'operations_system',
+      title: 'العمليات وإدارة الجهاز',
+      icon: Shield,
+      color: 'from-blue-600 to-indigo-600',
+      path: '/department/operations-system'
+    },
+    {
       id: 'traffic_police',
       title: 'شرطة المرور',
       icon: Car,
@@ -90,6 +97,27 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
       icon: Scale,
       color: 'from-emerald-500 to-emerald-600',
       path: '/department/judicial-police'
+    },
+    {
+      id: 'borders',
+      title: 'المعابر والحدود',
+      icon: Shield,
+      color: 'from-cyan-500 to-blue-500',
+      path: '/department/borders'
+    },
+    {
+      id: 'tourism_police',
+      title: 'الشرطة السياحية',
+      icon: Shield,
+      color: 'from-green-500 to-emerald-500',
+      path: '/department/tourism'
+    },
+    {
+      id: 'joint_operations',
+      title: 'العمليات المشتركة',
+      icon: Shield,
+      color: 'from-purple-500 to-pink-500',
+      path: '/department/joint-operations'
     }
   ];
 
