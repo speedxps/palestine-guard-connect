@@ -438,6 +438,50 @@ export type Database = {
         }
         Relationships: []
       }
+      cybercrime_case_files: {
+        Row: {
+          case_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cybercrime_case_files_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cybercrime_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cybercrime_cases: {
         Row: {
           assigned_officer_id: string | null
@@ -2178,6 +2222,60 @@ export type Database = {
           total_patrols?: number | null
           total_tasks?: number | null
           total_violations?: number | null
+        }
+        Relationships: []
+      }
+      suspicious_login_attempts: {
+        Row: {
+          attempt_time: string
+          blocked: boolean
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string
+          id: string
+          ip_address: unknown
+          latitude: number | null
+          longitude: number | null
+          notes: string | null
+          severity: string
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempt_time?: string
+          blocked?: boolean
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          ip_address: unknown
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          severity?: string
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempt_time?: string
+          blocked?: boolean
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: unknown
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          severity?: string
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

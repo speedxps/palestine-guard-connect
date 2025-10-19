@@ -13,6 +13,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useCybercrimeCases } from '@/hooks/useCybercrimeCases';
 import { useTickets } from '@/hooks/useTickets';
+import { useSuspiciousLogins } from '@/hooks/useSuspiciousLogins';
+import FileUploadDialog from '@/components/FileUploadDialog';
 import { 
   ArrowLeft, 
   Shield, 
@@ -46,8 +48,10 @@ const CybercrimeAdvanced = () => {
   const { toast } = useToast();
   const { logTicket } = useTickets();
   const { cases, stats, loading, createCase, updateCaseStatus } = useCybercrimeCases();
+  const { suspiciousLogins, updateLoginStatus } = useSuspiciousLogins();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newCase, setNewCase] = useState({
@@ -195,31 +199,101 @@ const CybercrimeAdvanced = () => {
     try {
       const doc = new jsPDF();
       
-      // Set font for Arabic
-      doc.text('تقرير الجرائم الإلكترونية الشهري', 105, 20, { align: 'center' });
+      // إضافة الشعار
+      const logoImg = '/lovable-uploads/b1560465-346a-4180-a2b3-7f08124d1116.png';
+      try {
+        doc.addImage(logoImg, 'PNG', 15, 10, 30, 30);
+      } catch (e) {
+        console.log('Could not add logo');
+      }
+
+      // العنوان
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Palestinian Police Force', 105, 20, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text('Cybercrime Unit', 105, 28, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text('Monthly Cybercrime Report', 105, 36, { align: 'center' });
+      
+      // التاريخ
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 105, 44, { align: 'center' });
+      
+      // خط فاصل
+      doc.setLineWidth(0.5);
+      doc.line(15, 48, 195, 48);
+      
+      let yPos = 60;
+      
+      // الإحصائيات الرئيسية
       doc.setFontSize(12);
-      
-      let yPos = 40;
-      doc.text(`إجمالي القضايا: ${cases.length}`, 20, yPos);
-      yPos += 10;
-      doc.text(`القضايا النشطة: ${stats?.activeCases || 0}`, 20, yPos);
-      yPos += 10;
-      doc.text(`القضايا المحلولة: ${stats?.solvedCases || 0}`, 20, yPos);
-      yPos += 10;
-      doc.text(`معدل الحل: ${stats?.resolutionRate || 0}%`, 20, yPos);
-      yPos += 20;
-      
-      doc.text('آخر 10 قضايا:', 20, yPos);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Key Statistics:', 15, yPos);
       yPos += 10;
       
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total Cases: ${cases.length}`, 20, yPos);
+      yPos += 8;
+      doc.text(`Active Cases: ${stats?.activeCases || 0}`, 20, yPos);
+      yPos += 8;
+      doc.text(`Solved Cases: ${stats?.solvedCases || 0}`, 20, yPos);
+      yPos += 8;
+      doc.text(`Resolution Rate: ${stats?.resolutionRate || 0}%`, 20, yPos);
+      yPos += 8;
+      doc.text(`Investigators: ${stats?.investigators || 0}`, 20, yPos);
+      yPos += 15;
+      
+      // توزيع أنواع الجرائم
+      doc.setFont('helvetica', 'bold');
+      doc.text('Case Type Distribution:', 15, yPos);
+      yPos += 10;
+      
+      const caseTypes: Record<string, number> = {};
+      cases.forEach(c => {
+        caseTypes[c.case_type] = (caseTypes[c.case_type] || 0) + 1;
+      });
+      
+      doc.setFont('helvetica', 'normal');
+      Object.entries(caseTypes).forEach(([type, count]) => {
+        doc.text(`- ${type}: ${count} cases`, 20, yPos);
+        yPos += 7;
+      });
+      
+      yPos += 10;
+      
+      // آخر 10 قضايا
+      doc.setFont('helvetica', 'bold');
+      doc.text('Recent Cases (Last 10):', 15, yPos);
+      yPos += 10;
+      
+      doc.setFont('helvetica', 'normal');
       cases.slice(0, 10).forEach((case_, index) => {
-        doc.text(`${index + 1}. ${case_.case_number} - ${case_.title}`, 30, yPos);
-        yPos += 8;
         if (yPos > 270) {
           doc.addPage();
           yPos = 20;
         }
+        doc.text(`${index + 1}. ${case_.case_number}`, 20, yPos);
+        yPos += 6;
+        doc.text(`   ${case_.title}`, 20, yPos);
+        yPos += 6;
+        doc.text(`   Status: ${case_.status} | Priority: ${case_.priority}`, 20, yPos);
+        yPos += 10;
       });
+      
+      // Footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(
+          `Confidential - Page ${i} of ${pageCount}`,
+          105,
+          285,
+          { align: 'center' }
+        );
+      }
 
       doc.save(`cybercrime_report_${new Date().toISOString().split('T')[0]}.pdf`);
       
@@ -659,30 +733,26 @@ const CybercrimeAdvanced = () => {
                 <Button size="sm" className="w-full">تحميل PDF</Button>
               </Card>
 
-              <Card className="bg-white/80 backdrop-blur-sm p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
+              <Card 
+                className="bg-white/80 backdrop-blur-sm p-6 text-center hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => navigate('/cybercrime-trend-analysis')}
+              >
                 <BarChart3 className="h-8 w-8 text-green-500 mx-auto mb-3" />
                 <h3 className="font-semibold font-arabic mb-2">تحليل الاتجاهات</h3>
                 <p className="text-sm text-gray-600 mb-4">تحليل إحصائي للجرائم</p>
-                <Button 
-                  size="sm" 
-                  className="w-full" 
-                  variant="outline"
-                  onClick={() => toast({ title: 'قريباً', description: 'هذه الميزة قيد التطوير' })}
-                >
+                <Button size="sm" className="w-full" variant="outline">
                   عرض التحليل
                 </Button>
               </Card>
 
-              <Card className="bg-white/80 backdrop-blur-sm p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
+              <Card 
+                className="bg-white/80 backdrop-blur-sm p-6 text-center hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => navigate('/cybercrime-security-report')}
+              >
                 <Shield className="h-8 w-8 text-purple-500 mx-auto mb-3" />
                 <h3 className="font-semibold font-arabic mb-2">تقرير الأمان</h3>
                 <p className="text-sm text-gray-600 mb-4">حالة الأمن السيبراني</p>
-                <Button 
-                  size="sm" 
-                  className="w-full" 
-                  variant="outline"
-                  onClick={() => toast({ title: 'قريباً', description: 'هذه الميزة قيد التطوير' })}
-                >
+                <Button size="sm" className="w-full" variant="outline">
                   عرض التقرير
                 </Button>
               </Card>
@@ -691,6 +761,65 @@ const CybercrimeAdvanced = () => {
 
           {/* Alerts Tab */}
           <TabsContent value="alerts" className="space-y-4">
+            {/* Suspicious Login Attempts */}
+            {suspiciousLogins.filter(l => l.status === 'pending').length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-red-800 font-arabic flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  محاولات دخول مشبوهة ({suspiciousLogins.filter(l => l.status === 'pending').length})
+                </h3>
+                {suspiciousLogins.filter(l => l.status === 'pending').slice(0, 5).map((login) => (
+                  <Card key={login.id} className="bg-red-50/80 backdrop-blur-sm border-red-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Globe className="h-5 w-5 text-red-500 mt-1" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-red-800 font-arabic">
+                            ⚠️ محاولة دخول من خارج فلسطين
+                          </h4>
+                          <div className="text-red-700 text-sm space-y-1 mt-2">
+                            <p><strong>البريد:</strong> {login.email}</p>
+                            <p><strong>الموقع:</strong> {login.country} - {login.city}</p>
+                            <p><strong>IP:</strong> {login.ip_address}</p>
+                            {login.latitude && login.longitude && (
+                              <p><strong>الإحداثيات:</strong> {login.latitude}, {login.longitude}</p>
+                            )}
+                            <p><strong>الوقت:</strong> {new Date(login.attempt_time).toLocaleString('ar-EG')}</p>
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => {
+                                updateLoginStatus(login.id, 'investigated', 'تم التحقق من المحاولة');
+                                toast({ title: 'تم', description: 'تم وضع علامة كـ"تم التحقق"' });
+                              }}
+                            >
+                              تم التحقق
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                updateLoginStatus(login.id, 'ignored', 'محاولة آمنة');
+                                toast({ title: 'تم', description: 'تم تجاهل التنبيه' });
+                              }}
+                            >
+                              تجاهل
+                            </Button>
+                          </div>
+                        </div>
+                        <Badge variant="destructive" className="whitespace-nowrap">
+                          {login.severity === 'high' ? 'عالي' : login.severity}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Critical Cases */}
             {filteredCases.filter(c => c.priority === 'critical').length > 0 ? (
               <Card className="bg-red-50/80 backdrop-blur-sm border-red-200">
                 <CardContent className="p-4">
@@ -738,7 +867,9 @@ const CybercrimeAdvanced = () => {
               </Card>
             ) : null}
 
-            {filteredCases.filter(c => c.priority === 'critical').length === 0 && (!stats || stats.weeklyIncrease <= 5) ? (
+            {suspiciousLogins.filter(l => l.status === 'pending').length === 0 && 
+             filteredCases.filter(c => c.priority === 'critical').length === 0 && 
+             (!stats || stats.weeklyIncrease <= 5) ? (
               <Card className="bg-green-50/80 backdrop-blur-sm border-green-200">
                 <CardContent className="p-8 text-center">
                   <Lock className="h-12 w-12 text-green-500 mx-auto mb-3" />
@@ -751,6 +882,15 @@ const CybercrimeAdvanced = () => {
             ) : null}
           </TabsContent>
         </Tabs>
+
+        <FileUploadDialog
+          open={isFileUploadOpen}
+          onOpenChange={setIsFileUploadOpen}
+          cases={cases.map(c => ({ id: c.id, case_number: c.case_number, title: c.title }))}
+          onUploadComplete={() => {
+            toast({ title: 'نجح', description: 'تم رفع الملفات بنجاح' });
+          }}
+        />
 
         {/* Quick Action Buttons */}
         <div className="fixed bottom-6 left-6 flex flex-col gap-3">
@@ -765,7 +905,7 @@ const CybercrimeAdvanced = () => {
             size="lg" 
             variant="outline"
             className="rounded-full shadow-lg bg-white"
-            onClick={() => toast({ title: 'قريباً', description: 'ميزة رفع الملفات قيد التطوير' })}
+            onClick={() => setIsFileUploadOpen(true)}
           >
             <Upload className="h-5 w-5" />
           </Button>
