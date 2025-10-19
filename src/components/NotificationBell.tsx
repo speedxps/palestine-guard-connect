@@ -66,10 +66,16 @@ export const NotificationBell = () => {
       const viewedIds = new Set(viewsData?.map(v => v.notification_id) || []);
 
       // Mark notifications as read/unread based on views
-      const notificationsWithStatus = notificationsData?.map(notification => ({
+      // تصفية إشعارات تسجيل الدخول - هذه تظهر في زر الرسائل فقط
+      const notificationsWithStatus = (notificationsData?.map(notification => ({
         ...notification,
         status: viewedIds.has(notification.id) ? 'read' : 'unread'
-      })) || [];
+      })) || []).filter(notification => 
+        !notification.title?.toLowerCase().includes('تسجيل دخول') &&
+        !notification.title?.toLowerCase().includes('login') &&
+        !notification.message?.toLowerCase().includes('تسجيل دخول') &&
+        !notification.message?.toLowerCase().includes('login')
+      );
 
       console.log('Notifications with status:', notificationsWithStatus);
       console.log('Unread count:', notificationsWithStatus.filter(n => n.status === 'unread').length);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, Shield } from 'lucide-react';
+import { MessageSquare, Shield, UserCheck, UserX, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
@@ -93,6 +93,17 @@ export default function LoginHistoryBell() {
     return 'text-gray-600';
   };
 
+  const getStatusIcon = (description: string) => {
+    if (description.includes('ناجح') || description.includes('success')) {
+      return UserCheck;
+    } else if (description.includes('محظور') || description.includes('blocked')) {
+      return UserX;
+    } else if (description.includes('فشل') || description.includes('failed')) {
+      return AlertTriangle;
+    }
+    return Shield;
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={handleOpen}>
       <SheetTrigger asChild>
@@ -101,9 +112,9 @@ export default function LoginHistoryBell() {
           size="icon"
           className="relative hover:bg-accent"
         >
-          <Bell className="h-5 w-5" />
+          <MessageSquare className="h-5 w-5 text-primary" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -112,7 +123,7 @@ export default function LoginHistoryBell() {
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="text-xl flex items-center gap-2">
-            <Bell className="h-5 w-5" />
+            <MessageSquare className="h-5 w-5 text-primary" />
             سجل تسجيلات الدخول
           </SheetTitle>
         </SheetHeader>
@@ -120,51 +131,54 @@ export default function LoginHistoryBell() {
         <div className="mt-6 space-y-3">
           {loginLogs.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>لا توجد سجلات تسجيل دخول</p>
             </div>
           ) : (
-            loginLogs.map((log) => (
-              <div
-                key={log.id}
-                className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-primary" />
-                      <span className={`font-semibold ${getStatusColor(log.activity_description)}`}>
-                        {log.activity_description}
-                      </span>
+            loginLogs.map((log) => {
+              const StatusIcon = getStatusIcon(log.activity_description);
+              return (
+                <div
+                  key={log.id}
+                  className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <StatusIcon className={`h-4 w-4 ${getStatusColor(log.activity_description)}`} />
+                        <span className={`font-semibold ${getStatusColor(log.activity_description)}`}>
+                          {log.activity_description}
+                        </span>
+                      </div>
+                    
+                      <div className="text-sm space-y-1">
+                        {log.payload?.email && (
+                          <div className="text-muted-foreground">
+                            البريد: {log.payload.email}
+                          </div>
+                        )}
+                        
+                        {log.metadata?.ip && (
+                          <div className="text-muted-foreground">
+                            IP: {log.metadata.ip}
+                          </div>
+                        )}
+                        
+                        {log.metadata?.location && (
+                          <div className="text-muted-foreground">
+                            الموقع: {log.metadata.location.city || 'غير معروف'}, {log.metadata.location.country || 'غير معروف'}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
-                    <div className="text-sm space-y-1">
-                      {log.payload?.email && (
-                        <div className="text-muted-foreground">
-                          البريد: {log.payload.email}
-                        </div>
-                      )}
-                      
-                      {log.metadata?.ip && (
-                        <div className="text-muted-foreground">
-                          IP: {log.metadata.ip}
-                        </div>
-                      )}
-                      
-                      {log.metadata?.location && (
-                        <div className="text-muted-foreground">
-                          الموقع: {log.metadata.location.city || 'غير معروف'}, {log.metadata.location.country || 'غير معروف'}
-                        </div>
-                      )}
+                    <div className="text-xs text-muted-foreground text-left">
+                      {format(new Date(log.created_at), 'PPp', { locale: ar })}
                     </div>
                   </div>
-                  
-                  <div className="text-xs text-muted-foreground text-left">
-                    {format(new Date(log.created_at), 'PPp', { locale: ar })}
-                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </SheetContent>
