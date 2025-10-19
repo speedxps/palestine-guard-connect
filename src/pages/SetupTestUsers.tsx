@@ -43,8 +43,17 @@ const SetupTestUsers: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm opacity-80">
-              سيقوم هذا الإجراء بإنشاء الحسابات التالية (admin@test.com، traffic@test.com، cid@test.com، special@test.com، cyber@test.com، judicial@test.com)
-              بكلمات المرور المحددة مسبقًا.
+              سيقوم هذا الإجراء بإنشاء جميع الحسابات التجريبية التالية:
+              <br />• admin@test.com (مدير النظام)
+              <br />• admin_ops@test.com (العمليات وإدارة الجهاز)
+              <br />• traffic@test.com (شرطة المرور)
+              <br />• cid@test.com (المباحث الجنائية)
+              <br />• special@test.com (الشرطة الخاصة)
+              <br />• cyber@test.com (الجرائم الإلكترونية)
+              <br />• judicial@test.com (الشرطة القضائية)
+              <br />• border_admin@test.com (المعابر والحدود)
+              <br />• tourism_admin@test.com (الشرطة السياحية)
+              <br />• joint_admin@test.com (العمليات المشتركة)
             </p>
             <Button onClick={handleCreate} disabled={loading} className="w-full">
               {loading ? "جارٍ التنفيذ..." : "إنشاء/مزامنة المستخدمين الآن"}
