@@ -31,11 +31,15 @@ const Login = () => {
 
   const testUsers = [
     { email: "admin@test.com", password: "admin123", role: "مدير النظام" },
+    { email: "admin_ops@test.com", password: "123123", role: "العمليات وإدارة الجهاز" },
     { email: "traffic@test.com", password: "traffic123", role: "شرطة المرور" },
     { email: "cid@test.com", password: "cid123", role: "المباحث الجنائية" },
     { email: "special@test.com", password: "special123", role: "الشرطة الخاصة" },
     { email: "cyber@test.com", password: "cyber123", role: "الجرائم الإلكترونية" },
     { email: "judicial@test.com", password: "judicial123", role: "الشرطة القضائية" },
+    { email: "border_admin@test.com", password: "123123", role: "المعابر والحدود" },
+    { email: "tourism_admin@test.com", password: "123123", role: "الشرطة السياحية" },
+    { email: "joint_admin@test.com", password: "123123", role: "العمليات المشتركة" },
   ];
 
   const handleTestUserLogin = async (email: string, password: string) => {
