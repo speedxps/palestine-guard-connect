@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,7 +20,8 @@ import {
   CheckCircle,
   Search,
   FileText,
-  Calendar
+  Calendar,
+  Eye
 } from 'lucide-react';
 
 interface Task {
@@ -50,6 +53,8 @@ const DepartmentTasks = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   useEffect(() => {
     loadUserRoles();
@@ -274,7 +279,14 @@ const DepartmentTasks = () => {
             const StatusIcon = getStatusIcon(task.status);
             
             return (
-              <Card key={task.id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-t-4 border-primary">
+              <Card 
+                key={task.id} 
+                className="shadow-lg hover:shadow-xl transition-all duration-300 border-t-4 border-primary cursor-pointer"
+                onClick={() => {
+                  setSelectedTask(task);
+                  setDetailsDialogOpen(true);
+                }}
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
@@ -285,6 +297,17 @@ const DepartmentTasks = () => {
                         </Badge>
                       )}
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTask(task);
+                        setDetailsDialogOpen(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -303,7 +326,7 @@ const DepartmentTasks = () => {
                     {task.due_date && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        <span>{new Date(task.due_date).toLocaleString('ar')}</span>
+                        <span>{new Date(task.due_date).toLocaleString('en-US')}</span>
                       </div>
                     )}
 
@@ -330,19 +353,23 @@ const DepartmentTasks = () => {
                     </div>
 
                     {task.status !== 'completed' && (
-                      <Select
-                        value={task.status}
-                        onValueChange={(value) => updateTaskStatus(task.id, value as 'pending' | 'in_progress' | 'completed')}
-                      >
-                        <SelectTrigger className="w-32 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">قيد الانتظار</SelectItem>
-                          <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                          <SelectItem value="completed">مكتملة</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value={task.status}
+                          onValueChange={(value) => {
+                            updateTaskStatus(task.id, value as 'pending' | 'in_progress' | 'completed');
+                          }}
+                        >
+                          <SelectTrigger className="w-32 h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">قيد الانتظار</SelectItem>
+                            <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                            <SelectItem value="completed">مكتملة</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -362,6 +389,150 @@ const DepartmentTasks = () => {
           </Card>
         )}
       </div>
+
+      {/* Task Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold font-arabic">تفاصيل المهمة</DialogTitle>
+            <DialogDescription className="font-arabic">
+              جميع التفاصيل والملاحظات الخاصة بالمهمة
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTask && (
+            <div className="space-y-6 pt-4">
+              {/* Status Badge */}
+              <div className="flex items-center justify-between">
+                <Badge className={`${getStatusColor(selectedTask.status)} text-lg px-4 py-2`}>
+                  {selectedTask.status === 'pending' ? 'قيد الانتظار' :
+                   selectedTask.status === 'in_progress' ? 'قيد التنفيذ' :
+                   selectedTask.status === 'completed' ? 'مكتملة' : selectedTask.status}
+                </Badge>
+                {selectedTask.department && (
+                  <Badge variant="outline" className="text-base px-3 py-1">
+                    {getDepartmentName(selectedTask.department)}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Title */}
+              <div>
+                <Label className="text-base font-semibold mb-2 block">عنوان المهمة</Label>
+                <p className="text-lg font-arabic bg-muted p-3 rounded-lg">
+                  {selectedTask.title}
+                </p>
+              </div>
+
+              {/* Description */}
+              <div>
+                <Label className="text-base font-semibold mb-2 block">وصف المهمة وملاحظات الإدارة</Label>
+                <div className="bg-muted p-4 rounded-lg space-y-2">
+                  <p className="text-base font-arabic whitespace-pre-wrap">
+                    {selectedTask.description || 'لا يوجد وصف'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Location */}
+              {selectedTask.location_address && (
+                <div>
+                  <Label className="text-base font-semibold mb-2 block">الموقع</Label>
+                  <div className="flex items-center gap-2 bg-muted p-3 rounded-lg">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <p className="text-base font-arabic">{selectedTask.location_address}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-base font-semibold mb-2 block">تاريخ الإنشاء</Label>
+                  <div className="flex items-center gap-2 bg-muted p-3 rounded-lg">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <p className="text-sm">
+                      {new Date(selectedTask.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedTask.due_date && (
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">موعد الاستحقاق</Label>
+                    <div className="flex items-center gap-2 bg-muted p-3 rounded-lg">
+                      <Clock className="h-5 w-5 text-primary" />
+                      <p className="text-sm">
+                        {new Date(selectedTask.due_date).toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Assigner */}
+              {selectedTask.assigner_profile && (
+                <div>
+                  <Label className="text-base font-semibold mb-2 block">تم التكليف بواسطة</Label>
+                  <div className="flex items-center gap-2 bg-muted p-3 rounded-lg">
+                    <Users className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-base font-semibold">{selectedTask.assigner_profile.full_name}</p>
+                      {selectedTask.assigner_profile.badge_number && (
+                        <p className="text-sm text-muted-foreground">
+                          الرقم الوظيفي: {selectedTask.assigner_profile.badge_number}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Update Status */}
+              {selectedTask.status !== 'completed' && (
+                <div>
+                  <Label className="text-base font-semibold mb-2 block">تحديث حالة المهمة</Label>
+                  <Select
+                    value={selectedTask.status}
+                    onValueChange={(value) => {
+                      updateTaskStatus(selectedTask.id, value as 'pending' | 'in_progress' | 'completed');
+                      setDetailsDialogOpen(false);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">قيد الانتظار</SelectItem>
+                      <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                      <SelectItem value="completed">مكتملة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Close Button */}
+              <div className="flex justify-end pt-4">
+                <Button onClick={() => setDetailsDialogOpen(false)} variant="outline">
+                  إغلاق
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
