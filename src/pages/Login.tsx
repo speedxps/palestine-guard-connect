@@ -68,22 +68,52 @@ const Login = () => {
     try {
       // التحقق من الموقع الجغرافي قبل تسجيل الدخول
       const userAgent = navigator.userAgent;
+      
+      console.log('🔍 Checking login location...');
       const { data: locationCheck, error: locationError } = await supabase.functions.invoke('verify-login-location', {
         body: { email: username, userAgent }
       });
 
-      console.log('Location check result:', locationCheck);
+      console.log('📍 Location check result:', locationCheck);
+      console.log('❌ Location check error:', locationError);
 
-      // إذا كان الموقع غير مسموح (خارج فلسطين)
-      if (locationCheck && !locationCheck.allowed) {
+      // إذا حدث خطأ في التحقق من الموقع، نرفض الدخول
+      if (locationError) {
+        console.error('Location verification failed:', locationError);
         toast({
-          title: "⛔ تم رفض تسجيل الدخول",
-          description: locationCheck.message || "الدخول مسموح فقط من داخل فلسطين",
+          title: "⛔ فشل التحقق من الموقع",
+          description: "حدث خطأ في التحقق من موقعك. يرجى المحاولة مرة أخرى.",
           variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
+
+      // إذا كان الموقع محظور أو غير مسموح
+      if (locationCheck?.blocked === true || locationCheck?.allowed === false) {
+        console.warn('🚫 Login blocked - outside Palestine');
+        toast({
+          title: "⛔ تم رفض تسجيل الدخول",
+          description: locationCheck.message || "الدخول مسموح فقط من داخل فلسطين. تم إرسال تنبيه للإدارة.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // تأكيد أن الموقع مسموح صراحةً
+      if (locationCheck?.allowed !== true) {
+        console.warn('⚠️ Location check returned unexpected result');
+        toast({
+          title: "⚠️ خطأ في التحقق",
+          description: "لم نتمكن من التحقق من موقعك. يرجى المحاولة مرة أخرى.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('✅ Location verified - proceeding with login');
 
       const success = await login(username, password);
       if (success) {

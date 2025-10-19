@@ -66,23 +66,32 @@ serve(async (req) => {
       }
     }
 
-    // إذا كان محظوراً، سجل المحاولة
+    // إذا كان محظوراً، سجل المحاولة ومنع الدخول
     if (isBlocked) {
       const supabaseAdmin = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       )
 
-      console.log('Login blocked - IP from outside Palestine:', ip, locationData?.country)
+      console.log('🚫 Login BLOCKED - IP from outside Palestine:', ip, locationData?.country)
 
-      // الحصول على معلومات المستخدم
-      const { data: userData } = await supabaseAdmin.auth.admin.getUserByEmail(email)
+      // الحصول على معلومات المستخدم باستخدام الطريقة الصحيحة
+      let userId: string | null = null
+      try {
+        const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
+        if (!usersError && users) {
+          const user = users.find(u => u.email === email)
+          userId = user?.id || null
+        }
+      } catch (err) {
+        console.error('Error fetching user:', err)
+      }
 
       // تسجيل المحاولة المشبوهة
       const { data: suspiciousAttempt, error: insertError } = await supabaseAdmin
         .from('suspicious_login_attempts')
         .insert({
-          user_id: userData?.user?.id || null,
+          user_id: userId,
           email,
           ip_address: ip,
           country: locationData?.country || 'Unknown',
@@ -98,9 +107,9 @@ serve(async (req) => {
         .single()
 
       if (insertError) {
-        console.error('Error logging suspicious attempt:', insertError)
+        console.error('❌ Error logging suspicious attempt:', insertError)
       } else {
-        console.log('Suspicious attempt logged:', suspiciousAttempt)
+        console.log('✅ Suspicious attempt logged:', suspiciousAttempt?.id)
       }
 
       // الحصول على جميع الأدمن
@@ -110,14 +119,14 @@ serve(async (req) => {
         .or('role.eq.admin,role.eq.cybercrime')
 
       if (adminProfiles && adminProfiles.length > 0) {
-        console.log('Sending notifications to', adminProfiles.length, 'admins')
+        console.log('📢 Sending notifications to', adminProfiles.length, 'admins/cybercrime officers')
         
-        // إرسال إشعار لكل أدمن
+        // إرسال إشعار لكل أدمن وموظف في قسم الجرائم الإلكترونية
         const notifications = adminProfiles.map(admin => ({
           sender_id: admin.id,
           recipient_id: admin.id,
-          title: '🚨 محاولة دخول مشبوهة - عاجل',
-          message: `محاولة دخول محظورة من خارج فلسطين!\n\nالبريد: ${email}\nالدولة: ${locationData?.country || 'Unknown'}\nالمدينة: ${locationData?.city || 'Unknown'}\nIP: ${ip}\n\nيجب التحقق من هذه المحاولة فوراً`,
+          title: '🚨 تنبيه عاجل: محاولة دخول مشبوهة',
+          message: `⛔ تم رفض محاولة دخول من خارج فلسطين!\n\n📧 البريد: ${email}\n🌍 الدولة: ${locationData?.country || 'Unknown'}\n🏙️ المدينة: ${locationData?.city || 'Unknown'}\n📍 IP: ${ip}\n⏰ الوقت: ${new Date().toLocaleString('ar-PS')}\n\n⚠️ يجب التحقق من هذه المحاولة فوراً والتعامل معها`,
           priority: 'high',
           target_departments: ['admin', 'cybercrime'],
           status: 'unread',
@@ -129,60 +138,77 @@ serve(async (req) => {
           .insert(notifications)
 
         if (notifError) {
-          console.error('Error sending admin notifications:', notifError)
+          console.error('❌ Error sending admin notifications:', notifError)
         } else {
-          console.log('Admin notifications sent successfully')
+          console.log('✅ Admin notifications sent successfully to', adminProfiles.length, 'users')
         }
+      } else {
+        console.warn('⚠️ No admin or cybercrime users found to send notifications')
       }
 
       // إشعار المستخدم إذا كان موجوداً
-      if (userData?.user?.id) {
+      if (userId) {
         const { data: userProfile } = await supabaseAdmin
           .from('profiles')
           .select('id')
-          .eq('user_id', userData.user.id)
+          .eq('user_id', userId)
           .single()
 
         if (userProfile) {
-          await supabaseAdmin
+          const { error: userNotifError } = await supabaseAdmin
             .from('notifications')
             .insert({
               sender_id: userProfile.id,
               recipient_id: userProfile.id,
-              title: '⚠️ محاولة دخول مشبوهة لحسابك',
-              message: `تم رصد محاولة دخول مشبوهة لحسابك من:\n\nالدولة: ${locationData?.country || 'Unknown'}\nالمدينة: ${locationData?.city || 'Unknown'}\nIP: ${ip}\n\nإذا لم تكن أنت من حاول الدخول، يرجى تغيير كلمة المرور فوراً`,
+              title: '⚠️ تحذير أمني: محاولة دخول مشبوهة',
+              message: `🔒 تم رصد محاولة دخول مشبوهة لحسابك من:\n\n🌍 الدولة: ${locationData?.country || 'Unknown'}\n🏙️ المدينة: ${locationData?.city || 'Unknown'}\n📍 IP: ${ip}\n⏰ الوقت: ${new Date().toLocaleString('ar-PS')}\n\n❌ تم رفض المحاولة تلقائياً\n\n⚠️ إذا لم تكن أنت من حاول الدخول، يرجى تغيير كلمة المرور فوراً والتواصل مع الإدارة`,
               priority: 'high',
               status: 'unread',
             })
           
-          console.log('User notification sent')
+          if (userNotifError) {
+            console.error('❌ Error sending user notification:', userNotifError)
+          } else {
+            console.log('✅ User notification sent successfully')
+          }
         }
       }
     }
 
+    const responseData = {
+      allowed: !isBlocked,
+      location: locationData,
+      message: isBlocked 
+        ? '⛔ تم رفض محاولة الدخول. الدخول مسموح فقط من داخل فلسطين.'
+        : '✅ الموقع مسموح',
+      ip: ip,
+      blocked: isBlocked
+    }
+
+    console.log('Response:', responseData)
+
     return new Response(
-      JSON.stringify({
-        allowed: !isBlocked,
-        location: locationData,
-        message: isBlocked 
-          ? 'تم رفض محاولة الدخول. الدخول مسموح فقط من داخل فلسطين.'
-          : 'الموقع مسموح',
-      }),
+      JSON.stringify(responseData),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: isBlocked ? 403 : 200
       }
     )
   } catch (error) {
-    console.error('Error in verify-login-location:', error)
+    console.error('❌ Critical error in verify-login-location:', error)
     
+    // في حالة الخطأ، نرفض الدخول للأمان (fail secure)
+    // إلا إذا كان الخطأ في الحصول على الموقع الجغرافي فقط
     return new Response(
       JSON.stringify({
-        allowed: true, // في حالة الخطأ، نسمح بالدخول لتجنب حظر المستخدمين الشرعيين
-        error: error.message,
+        allowed: false,
+        blocked: true,
+        error: 'حدث خطأ في التحقق من الموقع. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.',
+        message: '⛔ تم رفض الدخول مؤقتاً لأسباب أمنية',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+        status: 500,
       }
     )
   }
