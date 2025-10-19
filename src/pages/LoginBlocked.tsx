@@ -156,42 +156,6 @@ const LoginBlocked: React.FC<LoginBlockedProps> = ({ location, ip, timestamp }) 
             )}
           </div>
 
-          {/* إجراءات تم اتخاذها */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 mb-3">
-              🔒 الإجراءات الأمنية المتخذة
-            </h4>
-            <ul className="space-y-2 text-sm text-blue-800">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-1">•</span>
-                <span>تم تسجيل محاولة الدخول في نظام المراقبة الأمنية</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-1">•</span>
-                <span>تم إرسال تنبيه عاجل لإدارة النظام وقسم الجرائم الإلكترونية</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-1">•</span>
-                <span>تم حفظ جميع تفاصيل المحاولة للمراجعة والتحقيق</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-1">•</span>
-                <span>سيتم اتخاذ الإجراءات اللازمة في حال كانت هذه محاولة اختراق</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* رسالة للمستخدمين الشرعيين */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <h4 className="font-semibold text-amber-900 mb-2">
-              💡 إذا كنت موظفاً شرعياً
-            </h4>
-            <p className="text-sm text-amber-800 leading-relaxed">
-              إذا كنت موظفاً في الشرطة الفلسطينية وتحاول الدخول من خارج فلسطين لأسباب رسمية،
-              يرجى التواصل مع إدارة النظام أو قسم تكنولوجيا المعلومات للحصول على تصريح خاص
-              للوصول عن بُعد.
-            </p>
-          </div>
 
           {/* تحميل تطبيق الوصول الخارجي */}
           {!loading && downloadFile && (
