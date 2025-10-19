@@ -771,6 +771,89 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+
+                {/* Joint Operations Sub-pages */}
+                <Route
+                  path="/joint-ops/coordination"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOpsCoordination />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/joint-ops/operations"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOpsOperations />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/joint-ops/command-center"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOpsCommandCenter />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/joint-ops/shared-files"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOpsSharedFiles />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/joint-ops/hotlines"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOpsHotlines />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/joint-ops/monitoring"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOpsMonitoring />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/joint-ops/training"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <JointOpsTraining />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/security-agency/:agencyId"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <SecurityAgency />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+
                 <Route
                   path="/department/judicial-police/case-search"
                   element={
