@@ -239,7 +239,7 @@ const Login = () => {
                 <SheetHeader>
                   <SheetTitle className="text-[#2B9BF4] text-xl">المستخدمون التجريبيون</SheetTitle>
                 </SheetHeader>
-                <div className="mt-6 space-y-3">
+                <div className="mt-6 max-h-[calc(100vh-120px)] overflow-y-auto overflow-x-hidden pr-2 space-y-3">
                   {testUsers.map((user, index) => (
                     <button
                       key={index}
