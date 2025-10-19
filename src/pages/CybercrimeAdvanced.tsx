@@ -15,6 +15,7 @@ import { useCybercrimeCases } from '@/hooks/useCybercrimeCases';
 import { useTickets } from '@/hooks/useTickets';
 import { useSuspiciousLogins } from '@/hooks/useSuspiciousLogins';
 import FileUploadDialog from '@/components/FileUploadDialog';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   ArrowLeft, 
   Shield, 
@@ -207,19 +208,24 @@ const CybercrimeAdvanced = () => {
         console.log('Could not add logo');
       }
 
-      // العنوان
+      // العنوان - بالعربية
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.text('Palestinian Police Force', 105, 20, { align: 'center' });
+      doc.text('جهاز الشرطة الفلسطينية', 105, 20, { align: 'center' });
       doc.setFontSize(16);
-      doc.text('Cybercrime Unit', 105, 28, { align: 'center' });
+      doc.text('وحدة الجرائم الإلكترونية', 105, 28, { align: 'center' });
       doc.setFontSize(14);
-      doc.text('Monthly Cybercrime Report', 105, 36, { align: 'center' });
+      doc.text('التقرير الشهري للجرائم الإلكترونية', 105, 36, { align: 'center' });
       
       // التاريخ
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 105, 44, { align: 'center' });
+      const arabicDate = new Date().toLocaleDateString('ar-EG', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      doc.text(`تاريخ التقرير: ${arabicDate}`, 105, 44, { align: 'center' });
       
       // خط فاصل
       doc.setLineWidth(0.5);
@@ -230,34 +236,45 @@ const CybercrimeAdvanced = () => {
       // الإحصائيات الرئيسية
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('Key Statistics:', 15, yPos);
+      doc.text('الإحصائيات الرئيسية:', 15, yPos);
       yPos += 10;
       
       doc.setFont('helvetica', 'normal');
-      doc.text(`Total Cases: ${cases.length}`, 20, yPos);
+      doc.text(`إجمالي القضايا: ${cases.length}`, 20, yPos);
       yPos += 8;
-      doc.text(`Active Cases: ${stats?.activeCases || 0}`, 20, yPos);
+      doc.text(`القضايا النشطة: ${stats?.activeCases || 0}`, 20, yPos);
       yPos += 8;
-      doc.text(`Solved Cases: ${stats?.solvedCases || 0}`, 20, yPos);
+      doc.text(`القضايا المحلولة: ${stats?.solvedCases || 0}`, 20, yPos);
       yPos += 8;
-      doc.text(`Resolution Rate: ${stats?.resolutionRate || 0}%`, 20, yPos);
+      doc.text(`معدل الحل: ${stats?.resolutionRate || 0}%`, 20, yPos);
       yPos += 8;
-      doc.text(`Investigators: ${stats?.investigators || 0}`, 20, yPos);
+      doc.text(`المحققون: ${stats?.investigators || 0}`, 20, yPos);
       yPos += 15;
       
       // توزيع أنواع الجرائم
       doc.setFont('helvetica', 'bold');
-      doc.text('Case Type Distribution:', 15, yPos);
+      doc.text('توزيع أنواع الجرائم:', 15, yPos);
       yPos += 10;
       
       const caseTypes: Record<string, number> = {};
+      const typeMap: Record<string, string> = {
+        'phishing': 'ابتزاز إلكتروني',
+        'fraud': 'احتيال مالي',
+        'hacking': 'اختراق أنظمة',
+        'cyberbullying': 'تهديد إلكتروني',
+        'identity_theft': 'سرقة هوية',
+        'malware': 'برمجيات خبيثة',
+        'other': 'أخرى'
+      };
+      
       cases.forEach(c => {
-        caseTypes[c.case_type] = (caseTypes[c.case_type] || 0) + 1;
+        const arabicType = typeMap[c.case_type] || c.case_type;
+        caseTypes[arabicType] = (caseTypes[arabicType] || 0) + 1;
       });
       
       doc.setFont('helvetica', 'normal');
       Object.entries(caseTypes).forEach(([type, count]) => {
-        doc.text(`- ${type}: ${count} cases`, 20, yPos);
+        doc.text(`- ${type}: ${count} قضية`, 20, yPos);
         yPos += 7;
       });
       
@@ -265,8 +282,22 @@ const CybercrimeAdvanced = () => {
       
       // آخر 10 قضايا
       doc.setFont('helvetica', 'bold');
-      doc.text('Recent Cases (Last 10):', 15, yPos);
+      doc.text('القضايا الأخيرة (آخر 10):', 15, yPos);
       yPos += 10;
+      
+      const priorityMap: Record<string, string> = {
+        'critical': 'عالية جداً',
+        'high': 'عالية',
+        'medium': 'متوسطة',
+        'low': 'منخفضة'
+      };
+      
+      const statusMap: Record<string, string> = {
+        'open': 'مفتوحة',
+        'investigating': 'قيد التحقيق',
+        'resolved': 'محلولة',
+        'closed': 'مغلقة'
+      };
       
       doc.setFont('helvetica', 'normal');
       cases.slice(0, 10).forEach((case_, index) => {
@@ -278,7 +309,9 @@ const CybercrimeAdvanced = () => {
         yPos += 6;
         doc.text(`   ${case_.title}`, 20, yPos);
         yPos += 6;
-        doc.text(`   Status: ${case_.status} | Priority: ${case_.priority}`, 20, yPos);
+        doc.text(`   الحالة: ${statusMap[case_.status] || case_.status} | الأولوية: ${priorityMap[case_.priority] || case_.priority}`, 20, yPos);
+        yPos += 6;
+        doc.text(`   التاريخ: ${new Date(case_.created_at).toLocaleDateString('ar-EG')}`, 20, yPos);
         yPos += 10;
       });
       
@@ -288,14 +321,14 @@ const CybercrimeAdvanced = () => {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.text(
-          `Confidential - Page ${i} of ${pageCount}`,
+          `سري - صفحة ${i} من ${pageCount}`,
           105,
           285,
           { align: 'center' }
         );
       }
 
-      doc.save(`cybercrime_report_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`تقرير_الجرائم_الإلكترونية_${new Date().toISOString().split('T')[0]}.pdf`);
       
       await logTicket({
         section: 'cybercrime_advanced',
@@ -319,6 +352,36 @@ const CybercrimeAdvanced = () => {
 
   const sendEmergencyNotification = async () => {
     try {
+      // إرسال إشعار لجميع الأدمن ومستخدمي الجرائم الإلكترونية
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (!profile) {
+        toast({
+          title: 'خطأ',
+          description: 'لم يتم العثور على الملف الشخصي',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          sender_id: profile.id,
+          title: '🚨 إشعار طوارئ من الجرائم الإلكترونية',
+          message: 'تم إرسال إشعار طوارئ من لوحة التحكم المتقدمة. يرجى التحقق فوراً.',
+          priority: 'high',
+          target_departments: ['admin', 'cybercrime'],
+          status: 'unread',
+          action_url: '/cybercrime-advanced',
+        });
+
+      if (error) throw error;
+
       await logTicket({
         section: 'cybercrime_advanced',
         action_type: 'create',
@@ -327,12 +390,17 @@ const CybercrimeAdvanced = () => {
       });
 
       toast({ 
-        title: "طوارئ!", 
-        description: "تم إرسال إشعار للفريق",
+        title: "🚨 طوارئ!", 
+        description: "تم إرسال إشعار للأدمن وجميع مستخدمي الجرائم الإلكترونية",
         variant: 'destructive'
       });
     } catch (error) {
       console.error('Error sending notification:', error);
+      toast({
+        title: 'خطأ',
+        description: 'فشل في إرسال الإشعار',
+        variant: 'destructive',
+      });
     }
   };
 
