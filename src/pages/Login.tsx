@@ -9,14 +9,21 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Users, Eye, EyeOff } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import LoginBlocked from "./LoginBlocked";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👁️ حالة إظهار كلمة المرور
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [testUsersOpen, setTestUsersOpen] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockInfo, setBlockInfo] = useState<{
+    location?: { country: string; city: string };
+    ip?: string;
+    timestamp?: string;
+  }>({});
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -89,14 +96,18 @@ const Login = () => {
         return;
       }
 
-      // إذا كان الموقع محظور أو غير مسموح
+      // إذا كان الموقع محظور أو غير مسموح - عرض صفحة الحظر
       if (locationCheck?.blocked === true || locationCheck?.allowed === false) {
-        console.warn('🚫 Login blocked - outside Palestine');
-        toast({
-          title: "⛔ تم رفض تسجيل الدخول",
-          description: locationCheck.message || "الدخول مسموح فقط من داخل فلسطين. تم إرسال تنبيه للإدارة.",
-          variant: "destructive",
+        console.warn('🚫 Login BLOCKED - outside Palestine');
+        
+        // حفظ معلومات الحظر لعرضها في صفحة الحظر
+        setBlockInfo({
+          location: locationCheck.location,
+          ip: locationCheck.ip,
+          timestamp: new Date().toISOString()
         });
+        
+        setIsBlocked(true);
         setIsLoading(false);
         return;
       }
@@ -104,11 +115,12 @@ const Login = () => {
       // تأكيد أن الموقع مسموح صراحةً
       if (locationCheck?.allowed !== true) {
         console.warn('⚠️ Location check returned unexpected result');
-        toast({
-          title: "⚠️ خطأ في التحقق",
-          description: "لم نتمكن من التحقق من موقعك. يرجى المحاولة مرة أخرى.",
-          variant: "destructive",
+        setBlockInfo({
+          location: locationCheck?.location,
+          ip: locationCheck?.ip,
+          timestamp: new Date().toISOString()
         });
+        setIsBlocked(true);
         setIsLoading(false);
         return;
       }
@@ -146,6 +158,11 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  // إذا كان محظوراً، عرض صفحة الحظر
+  if (isBlocked) {
+    return <LoginBlocked location={blockInfo.location} ip={blockInfo.ip} timestamp={blockInfo.timestamp} />;
+  }
 
   return (
     <div className="w-screen h-screen bg-white flex flex-col justify-start items-center overflow-hidden relative">
