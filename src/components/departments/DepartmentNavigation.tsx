@@ -37,7 +37,7 @@ export const DepartmentNavigation = () => {
       description: 'البلاغات والتحقيقات',
       icon: ShieldCheck,
       color: 'from-red-500 to-red-600',
-      pages: ['incidents', 'incidents-management', 'new-incident', 'wanted-persons-tree', 'face-recognition']
+      pages: ['incidents', 'new-incident', 'wanted-persons-tree', 'face-recognition']
     },
     {
       id: 'special_police',

@@ -325,7 +325,9 @@ const App = () => {
                   path="/incidents-management"
                   element={
                     <ProtectedRoute>
-                      <IncidentsManagement />
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <IncidentsManagement />
+                      </RoleBasedRoute>
                     </ProtectedRoute>
                   }
                 />

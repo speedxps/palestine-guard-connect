@@ -25,13 +25,6 @@ const CIDDepartment = () => {
       color: 'from-red-500 to-red-600'
     },
     {
-      title: 'إدارة البلاغات',
-      description: 'تعديل وتوزيع البلاغات',
-      icon: Settings,
-      path: '/incidents-management',
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
       title: 'بلاغ جديد',
       description: 'إضافة بلاغ جديد للنظام',
       icon: Plus,

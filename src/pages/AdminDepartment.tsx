@@ -21,6 +21,13 @@ const AdminDepartment = () => {
       highlighted: true
     },
     {
+      title: 'إدارة البلاغات',
+      description: 'مراجعة وتوزيع البلاغات كمهام',
+      icon: Shield,
+      path: '/incidents-management',
+      color: 'from-red-500 to-red-600'
+    },
+    {
       title: 'إدارة المستخدمين',
       description: 'إضافة وتعديل وحذف المستخدمين',
       icon: Users,

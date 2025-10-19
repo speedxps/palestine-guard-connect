@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Search, Filter, FileText, Phone, User, MapPin, Calendar, Clock, AlertCircle, CheckCircle, Eye, Edit, Trash2 } from 'lucide-react';
+import { ArrowRight, Search, Filter, FileText, Phone, User, MapPin, Calendar, Clock, AlertCircle, CheckCircle, Eye, Edit, Trash2, Users as UsersIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface Incident {
   id: string;
@@ -43,10 +44,31 @@ const IncidentsManagement = () => {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [assignmentType, setAssignmentType] = useState<'department' | 'individual'>('department');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [selectedUser, setSelectedUser] = useState<string>('');
+  const [profiles, setProfiles] = useState<Array<{ id: string; full_name: string; user_id: string }>>([]);
 
   useEffect(() => {
     fetchIncidents();
+    loadProfiles();
   }, []);
+
+  const loadProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, user_id')
+        .eq('is_active', true)
+        .order('full_name');
+      
+      if (error) throw error;
+      setProfiles(data || []);
+    } catch (error) {
+      console.error('Error loading profiles:', error);
+    }
+  };
 
   const fetchIncidents = async () => {
     try {
@@ -124,7 +146,9 @@ const IncidentsManagement = () => {
     }
   };
 
-  const publishAsTask = async (incident: Incident) => {
+  const publishAsTask = async () => {
+    if (!selectedIncident) return;
+
     try {
       // الحصول على معرف الأدمن الحالي
       const { data: profileData, error: profileError } = await supabase
@@ -136,25 +160,54 @@ const IncidentsManagement = () => {
       if (profileError) throw profileError;
 
       // إنشاء مهمة جديدة بناءً على البلاغ
-      const { error } = await supabase
-        .from('tasks')
-        .insert({
-          title: `مهمة: ${incident.title}`,
-          description: `${incident.description}\n\nهذه المهمة تم إنشاؤها من البلاغ رقم: ${incident.id}`,
-          location_address: incident.location_address,
-          location_lat: incident.location_lat,
-          location_lng: incident.location_lng,
-          assigned_to: null, // سيتم تعيينها لاحقاً
-          assigned_by: profileData.id,
-          status: 'pending',
-          due_date: null
-        });
+      const taskData: any = {
+        title: `مهمة: ${selectedIncident.title}`,
+        description: `${selectedIncident.description}\n\nهذه المهمة تم إنشاؤها من البلاغ رقم: ${selectedIncident.id}`,
+        location_address: selectedIncident.location_address,
+        location_lat: selectedIncident.location_lat,
+        location_lng: selectedIncident.location_lng,
+        assigned_by: profileData.id,
+        status: 'pending',
+        due_date: null
+      };
 
-      if (error) throw error;
+      // تعيين القسم أو الفرد
+      if (assignmentType === 'department') {
+        taskData.department = selectedDepartment;
+        taskData.assigned_to = null;
+      } else {
+        taskData.assigned_to = selectedUser;
+        taskData.department = null;
+      }
+
+      const { data: taskResult, error: taskError } = await supabase
+        .from('tasks')
+        .insert(taskData)
+        .select()
+        .single();
+
+      if (taskError) throw taskError;
+
+      // إرسال إشعار للأدمن
+      await supabase.from('notifications').insert({
+        sender_id: profileData.id,
+        title: 'مهمة جديدة من بلاغ',
+        message: `تم نشر مهمة جديدة من البلاغ: ${selectedIncident.title}`,
+        priority: 'high',
+        target_departments: ['admin'],
+        status: 'unread',
+        action_url: '/tasks'
+      });
+
+      setPublishDialogOpen(false);
+      setSelectedIncident(null);
+      setAssignmentType('department');
+      setSelectedDepartment('');
+      setSelectedUser('');
 
       toast({
         title: "تم النشر",
-        description: "تم نشر البلاغ كمهمة جديدة بنجاح",
+        description: "تم نشر البلاغ كمهمة جديدة وإرسال إشعار للإدارة",
       });
     } catch (error) {
       console.error('Error publishing as task:', error);
@@ -380,7 +433,10 @@ const IncidentsManagement = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => publishAsTask(incident)}
+                      onClick={() => {
+                        setSelectedIncident(incident);
+                        setPublishDialogOpen(true);
+                      }}
                       className="text-blue-600 hover:text-blue-700"
                     >
                       نشر كمهمة
@@ -446,6 +502,102 @@ const IncidentsManagement = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Publish As Task Dialog */}
+      <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-arabic">نشر البلاغ كمهمة</DialogTitle>
+            <DialogDescription className="font-arabic">
+              اختر نوع التعيين والقسم أو الشخص المطلوب
+            </DialogDescription>
+          </DialogHeader>
+          {selectedIncident && (
+            <div className="space-y-4">
+              {/* Assignment Type */}
+              <div className="space-y-2">
+                <Label className="font-arabic">نوع التعيين</Label>
+                <RadioGroup value={assignmentType} onValueChange={(value: any) => setAssignmentType(value)}>
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <RadioGroupItem value="department" id="department" />
+                    <Label htmlFor="department" className="font-arabic cursor-pointer">
+                      تعيين لقسم
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <RadioGroupItem value="individual" id="individual" />
+                    <Label htmlFor="individual" className="font-arabic cursor-pointer">
+                      تعيين لشخص محدد
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Department Selection */}
+              {assignmentType === 'department' && (
+                <div className="space-y-2">
+                  <Label htmlFor="department-select" className="font-arabic">اختر القسم</Label>
+                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                    <SelectTrigger id="department-select">
+                      <SelectValue placeholder="اختر القسم" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="traffic_police">شرطة المرور</SelectItem>
+                      <SelectItem value="cid">المباحث الجنائية</SelectItem>
+                      <SelectItem value="special_police">الشرطة الخاصة</SelectItem>
+                      <SelectItem value="cybercrime">الجرائم الإلكترونية</SelectItem>
+                      <SelectItem value="judicial_police">الشرطة القضائية</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Individual Selection */}
+              {assignmentType === 'individual' && (
+                <div className="space-y-2">
+                  <Label htmlFor="user-select" className="font-arabic">اختر الشخص</Label>
+                  <Select value={selectedUser} onValueChange={setSelectedUser}>
+                    <SelectTrigger id="user-select">
+                      <SelectValue placeholder="اختر الشخص" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {profiles.map((profile) => (
+                        <SelectItem key={profile.id} value={profile.id}>
+                          {profile.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Task Summary */}
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <h4 className="font-semibold text-sm font-arabic">ملخص المهمة:</h4>
+                <p className="text-sm font-arabic"><strong>العنوان:</strong> {selectedIncident.title}</p>
+                <p className="text-sm font-arabic"><strong>الموقع:</strong> {selectedIncident.location_address}</p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  onClick={publishAsTask}
+                  disabled={!selectedDepartment && !selectedUser}
+                  className="flex-1"
+                >
+                  نشر المهمة
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setPublishDialogOpen(false)}
+                  className="flex-1"
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-lg">
@@ -457,7 +609,7 @@ const IncidentsManagement = () => {
               <div>
                 <Label htmlFor="status">الحالة</Label>
                 <Select 
-                  value={selectedIncident.status} 
+                  value={selectedIncident.status}
                   onValueChange={(value) => updateIncidentStatus(selectedIncident.id, value as 'new' | 'in_progress' | 'resolved')}
                 >
                   <SelectTrigger>
