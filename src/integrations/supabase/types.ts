@@ -61,6 +61,70 @@ export type Database = {
           },
         ]
       }
+      agency_communications: {
+        Row: {
+          agency_id: string
+          attachments: Json | null
+          created_at: string
+          id: string
+          message: string
+          priority: string
+          reply_to: string | null
+          sender_id: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          priority?: string
+          reply_to?: string | null
+          sender_id: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          priority?: string
+          reply_to?: string | null
+          sender_id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_communications_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "security_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_communications_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "agency_communications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_communications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_user_roles: {
         Row: {
           role: string | null
@@ -1357,6 +1421,87 @@ export type Database = {
           },
         ]
       }
+      joint_operations: {
+        Row: {
+          commander_id: string | null
+          coordinates: Json | null
+          created_at: string
+          created_by: string
+          description: string
+          end_date: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          objectives: string[] | null
+          operation_code: string
+          operation_name: string
+          operation_type: string
+          participating_agencies: string[]
+          priority: string
+          resources_needed: string[] | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          commander_id?: string | null
+          coordinates?: Json | null
+          created_at?: string
+          created_by: string
+          description: string
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          objectives?: string[] | null
+          operation_code: string
+          operation_name: string
+          operation_type: string
+          participating_agencies?: string[]
+          priority?: string
+          resources_needed?: string[] | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          commander_id?: string | null
+          coordinates?: Json | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          objectives?: string[] | null
+          operation_code?: string
+          operation_name?: string
+          operation_type?: string
+          participating_agencies?: string[]
+          priority?: string
+          resources_needed?: string[] | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "joint_operations_commander_id_fkey"
+            columns: ["commander_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "joint_operations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       judicial_cases: {
         Row: {
           assigned_to: string | null
@@ -1789,6 +1934,51 @@ export type Database = {
           },
         ]
       }
+      operation_updates: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          operation_id: string
+          title: string
+          update_type: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          operation_id: string
+          title: string
+          update_type: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          operation_id?: string
+          title?: string
+          update_type?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_updates_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "joint_operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_updates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       password_resets: {
         Row: {
           admin_notes: string | null
@@ -2197,6 +2387,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_agencies: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          headquarters_address: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          name_en: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          headquarters_address?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          name_en: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          headquarters_address?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          name_en?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       security_alerts: {
         Row: {

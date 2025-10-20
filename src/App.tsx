@@ -101,6 +101,7 @@ import Tickets from "@/pages/Tickets";
 import InternalNews from "@/pages/InternalNews";
 import InvestigationClosureManagement from "@/pages/InvestigationClosureManagement";
 import ExternalAccessManagement from "@/pages/ExternalAccessManagement";
+import AgencyCommunications from "@/pages/AgencyCommunications";
 
 const queryClient = new QueryClient();
 
@@ -839,6 +840,16 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
                         <JointOpsTraining />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/joint-ops/agency-communications"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <AgencyCommunications />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

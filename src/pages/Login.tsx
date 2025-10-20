@@ -78,6 +78,40 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // إجبار تفعيل GPS أولاً
+      console.log('📍 Requesting GPS location...');
+      let userLocation: { latitude: number; longitude: number } | null = null;
+
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error('GPS غير مدعوم في هذا المتصفح'));
+          }
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+
+        userLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+        console.log('✅ GPS location obtained:', userLocation);
+      } catch (gpsError: any) {
+        console.error('❌ GPS error:', gpsError);
+        toast({
+          title: "⛔ خطأ في تحديد الموقع",
+          description: gpsError.code === 1 
+            ? "يجب السماح بالوصول إلى الموقع الجغرافي GPS من أجل تسجيل الدخول. يرجى تفعيل GPS من إعدادات المتصفح والمحاولة مرة أخرى."
+            : "حدث خطأ في تحديد موقعك. يرجى التأكد من تفعيل GPS والمحاولة مرة أخرى.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // التحقق من الموقع الجغرافي قبل تسجيل الدخول
       const userAgent = navigator.userAgent;
       

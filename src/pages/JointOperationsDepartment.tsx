@@ -17,13 +17,13 @@ export default function JointOperationsDepartment() {
   const navigate = useNavigate();
 
   const jointOpsTools = [
-    {
-      title: 'التنسيق مع الأجهزة',
-      description: 'التواصل والتنسيق مع جميع الأجهزة الأمنية',
-      icon: GitBranch,
-      path: '/joint-ops/coordination',
-      color: 'from-blue-500 to-cyan-500'
-    },
+      {
+        title: 'التنسيق مع الأجهزة',
+        description: 'التواصل والتنسيق مع جميع الأجهزة الأمنية',
+        icon: GitBranch,
+        path: '/joint-ops/agency-communications',
+        color: 'from-blue-500 to-cyan-500'
+      },
     {
       title: 'العمليات المشتركة',
       description: 'إدارة ومتابعة العمليات المشتركة',
