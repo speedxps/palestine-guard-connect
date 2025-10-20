@@ -102,6 +102,7 @@ import InternalNews from "@/pages/InternalNews";
 import InvestigationClosureManagement from "@/pages/InvestigationClosureManagement";
 import ExternalAccessManagement from "@/pages/ExternalAccessManagement";
 import AgencyCommunications from "@/pages/AgencyCommunications";
+import AgencyDetail from "@/pages/AgencyDetail";
 
 const queryClient = new QueryClient();
 

@@ -1,26 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { BackButton } from '@/components/BackButton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Shield, 
-  Upload, 
-  Send, 
+  MessageSquare, 
   Phone, 
   Mail,
   MapPin,
-  Edit2,
-  Users
+  Edit3
 } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import genericLogo from '@/assets/generic-police-logo.png';
 
 interface SecurityAgency {
   id: string;
@@ -38,82 +33,47 @@ interface SecurityAgency {
 export default function AgencyCommunications() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [agencies, setAgencies] = useState<SecurityAgency[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedAgency, setSelectedAgency] = useState<SecurityAgency | null>(null);
-  const [messageSubject, setMessageSubject] = useState('');
-  const [messageContent, setMessageContent] = useState('');
-  const [messagePriority, setMessagePriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
-  const [logoUploadOpen, setLogoUploadOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadingAgency, setUploadingAgency] = useState<string | null>(null);
+  const [logoDialogOpen, setLogoDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  // جلب الأجهزة الأمنية
-  const { data: agencies, isLoading } = useQuery({
-    queryKey: ['security-agencies'],
-    queryFn: async () => {
+  useEffect(() => {
+    fetchAgencies();
+  }, []);
+
+  const fetchAgencies = async () => {
+    try {
       const { data, error } = await supabase
         .from('security_agencies')
         .select('*')
         .eq('is_active', true)
         .order('name');
-      
-      if (error) throw error;
-      return data as SecurityAgency[];
-    }
-  });
-
-  // إرسال رسالة
-  const sendMessageMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedAgency) throw new Error('لم يتم اختيار جهاز');
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('غير مصرح');
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profile) throw new Error('لم يتم العثور على الملف الشخصي');
-
-      const { error } = await supabase
-        .from('agency_communications')
-        .insert({
-          agency_id: selectedAgency.id,
-          sender_id: profile.id,
-          subject: messageSubject,
-          message: messageContent,
-          priority: messagePriority
-        });
 
       if (error) throw error;
-    },
-    onSuccess: () => {
+      setAgencies(data || []);
+    } catch (error) {
+      console.error('Error fetching agencies:', error);
       toast({
-        title: '✅ تم إرسال الرسالة',
-        description: 'تم إرسال الرسالة بنجاح إلى ' + selectedAgency?.name
-      });
-      setMessageSubject('');
-      setMessageContent('');
-      setMessagePriority('normal');
-      setSelectedAgency(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: '❌ خطأ',
-        description: 'فشل إرسال الرسالة: ' + error.message,
+        title: 'خطأ',
+        description: 'فشل في تحميل الأجهزة الأمنية',
         variant: 'destructive'
       });
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  // رفع شعار
-  const uploadLogoMutation = useMutation({
-    mutationFn: async ({ agencyId, file }: { agencyId: string; file: File }) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || !event.target.files[0] || !selectedAgency) return;
+
+    const file = event.target.files[0];
+    setUploading(true);
+
+    try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${agencyId}-${Date.now()}.${fileExt}`;
+      const fileName = `${selectedAgency.slug}-${Date.now()}.${fileExt}`;
       const filePath = `agency-logos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -129,59 +89,33 @@ export default function AgencyCommunications() {
       const { error: updateError } = await supabase
         .from('security_agencies')
         .update({ logo_url: publicUrl })
-        .eq('id', agencyId);
+        .eq('id', selectedAgency.id);
 
       if (updateError) throw updateError;
-    },
-    onSuccess: () => {
+
       toast({
-        title: '✅ تم رفع الشعار',
-        description: 'تم تحديث شعار الجهاز بنجاح'
+        title: 'تم بنجاح',
+        description: 'تم تحديث شعار الجهاز'
       });
-      queryClient.invalidateQueries({ queryKey: ['security-agencies'] });
-      setLogoUploadOpen(false);
-      setSelectedFile(null);
-      setUploadingAgency(null);
-    },
-    onError: (error: any) => {
+
+      fetchAgencies();
+      setLogoDialogOpen(false);
+    } catch (error) {
+      console.error('Error uploading logo:', error);
       toast({
-        title: '❌ خطأ',
-        description: 'فشل رفع الشعار: ' + error.message,
+        title: 'خطأ',
+        description: 'فشل في رفع الشعار',
         variant: 'destructive'
       });
-    }
-  });
-
-  const handleLogoUpload = async (agencyId: string) => {
-    if (!selectedFile) {
-      toast({
-        title: '⚠️ تنبيه',
-        description: 'يرجى اختيار صورة أولاً',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    uploadLogoMutation.mutate({ agencyId, file: selectedFile });
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'normal': return 'bg-blue-500';
-      case 'low': return 'bg-gray-500';
-      default: return 'bg-blue-500';
+    } finally {
+      setUploading(false);
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <BackButton />
-          <div className="text-center py-12">جاري التحميل...</div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -190,178 +124,146 @@ export default function AgencyCommunications() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-8">
           <BackButton />
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                <Users className="h-8 w-8 text-white" />
+                <Shield className="h-8 w-8 text-white" />
               </div>
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 التواصل مع الأجهزة الأمنية
               </h1>
             </div>
             <p className="text-muted-foreground text-lg mr-14">
-              إدارة التواصل والتنسيق مع جميع الأجهزة الأمنية الفلسطينية
+              التنسيق والتواصل المباشر مع جميع الأجهزة الأمنية والعسكرية الفلسطينية
             </p>
           </div>
         </div>
 
         {/* Agencies Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {agencies?.map((agency) => (
+          {agencies.map((agency) => (
             <Card
               key={agency.id}
               className="group relative overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
               <div className="p-6 space-y-4">
+                {/* Logo Section */}
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    {agency.logo_url ? (
-                      <img
-                        src={agency.logo_url}
-                        alt={agency.name}
-                        className="w-16 h-16 rounded-xl object-cover shadow-lg"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                        <Shield className="h-8 w-8 text-white" />
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="text-xl font-bold">{agency.name}</h3>
-                      <p className="text-sm text-muted-foreground">{agency.name_en}</p>
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg overflow-hidden">
+                      {agency.logo_url ? (
+                        <img 
+                          src={agency.logo_url} 
+                          alt={agency.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img 
+                          src={genericLogo} 
+                          alt="شعار عام"
+                          className="w-12 h-12 object-contain opacity-80"
+                        />
+                      )}
                     </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                      onClick={() => {
+                        setSelectedAgency(agency);
+                        setLogoDialogOpen(true);
+                      }}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  
-                  <Dialog open={logoUploadOpen && uploadingAgency === agency.id} onOpenChange={(open) => {
-                    setLogoUploadOpen(open);
-                    if (!open) setUploadingAgency(null);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setUploadingAgency(agency.id)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>تغيير شعار {agency.name}</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>اختر صورة الشعار</Label>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                          />
-                        </div>
-                        <Button
-                          onClick={() => handleLogoUpload(agency.id)}
-                          disabled={uploadLogoMutation.isPending || !selectedFile}
-                          className="w-full"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {uploadLogoMutation.isPending ? 'جاري الرفع...' : 'رفع الشعار'}
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
                 </div>
 
-                {agency.description && (
-                  <p className="text-sm text-muted-foreground">{agency.description}</p>
-                )}
+                {/* Agency Info */}
+                <div>
+                  <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                    {agency.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {agency.name_en}
+                  </p>
+                  {agency.description && (
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {agency.description}
+                    </p>
+                  )}
+                </div>
 
-                <div className="space-y-2 text-sm">
+                {/* Contact Info */}
+                <div className="space-y-2 pt-3 border-t">
                   {agency.contact_phone && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Phone className="h-4 w-4" />
-                      <span>{agency.contact_phone}</span>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">{agency.contact_phone}</span>
                     </div>
                   )}
                   {agency.contact_email && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="h-4 w-4" />
-                      <span className="truncate">{agency.contact_email}</span>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">{agency.contact_email}</span>
                     </div>
                   )}
                   {agency.headquarters_address && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span className="truncate">{agency.headquarters_address}</span>
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">{agency.headquarters_address}</span>
                     </div>
                   )}
                 </div>
 
-                <Button
-                  onClick={() => setSelectedAgency(agency)}
-                  className="w-full"
-                  variant="default"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  إرسال رسالة
-                </Button>
+                {/* Actions */}
+                <div className="flex gap-2 pt-3">
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => navigate(`/agency/${agency.slug}`)}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    فتح التواصل
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
         </div>
 
-        {/* Send Message Dialog */}
-        <Dialog open={!!selectedAgency} onOpenChange={(open) => !open && setSelectedAgency(null)}>
-          <DialogContent className="max-w-2xl">
+        {/* Logo Upload Dialog */}
+        <Dialog open={logoDialogOpen} onOpenChange={setLogoDialogOpen}>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>إرسال رسالة إلى {selectedAgency?.name}</DialogTitle>
+              <DialogTitle>تغيير شعار الجهاز</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>الموضوع</Label>
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg overflow-hidden">
+                  {selectedAgency?.logo_url ? (
+                    <img 
+                      src={selectedAgency.logo_url} 
+                      alt={selectedAgency.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Shield className="h-16 w-16 text-white" />
+                  )}
+                </div>
                 <Input
-                  value={messageSubject}
-                  onChange={(e) => setMessageSubject(e.target.value)}
-                  placeholder="أدخل موضوع الرسالة"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  disabled={uploading}
+                  className="cursor-pointer"
                 />
+                {uploading && (
+                  <p className="text-sm text-muted-foreground">جاري الرفع...</p>
+                )}
               </div>
-
-              <div>
-                <Label>الأولوية</Label>
-                <Select value={messagePriority} onValueChange={(value: any) => setMessagePriority(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">منخفضة</SelectItem>
-                    <SelectItem value="normal">عادية</SelectItem>
-                    <SelectItem value="high">عالية</SelectItem>
-                    <SelectItem value="urgent">عاجلة</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>الرسالة</Label>
-                <Textarea
-                  value={messageContent}
-                  onChange={(e) => setMessageContent(e.target.value)}
-                  placeholder="أدخل محتوى الرسالة"
-                  rows={6}
-                />
-              </div>
-
-              <Button
-                onClick={() => sendMessageMutation.mutate()}
-                disabled={sendMessageMutation.isPending || !messageSubject || !messageContent}
-                className="w-full"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {sendMessageMutation.isPending ? 'جاري الإرسال...' : 'إرسال الرسالة'}
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
