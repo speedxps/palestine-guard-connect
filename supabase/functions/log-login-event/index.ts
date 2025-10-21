@@ -16,7 +16,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { userId, success, route } = await req.json();
+    const { userId, success, route, gpsLocation } = await req.json();
     
     // Extract IP and headers
     const xForwardedFor = req.headers.get('X-Forwarded-For');
@@ -40,6 +40,15 @@ serve(async (req) => {
     
     // Get geolocation (simplified - in production use a proper geolocation service)
     const geolocation = await getGeolocation(ipAddress || '');
+    
+    // Merge GPS location with IP geolocation
+    const finalGeolocation = gpsLocation ? {
+      ...geolocation,
+      gps_latitude: gpsLocation.latitude,
+      gps_longitude: gpsLocation.longitude,
+      gps_accuracy: gpsLocation.accuracy,
+      has_gps: true
+    } : geolocation;
 
     // Log the login event
     const { data: loginEvent, error: loginError } = await supabase
@@ -54,7 +63,7 @@ serve(async (req) => {
         referer: referer,
         route: route || '/login',
         success: success,
-        geolocation: geolocation,
+        geolocation: finalGeolocation,
         device_info: deviceInfo,
         is_acknowledged: false
       })
@@ -90,9 +99,13 @@ serve(async (req) => {
       const deviceStr = deviceInfo?.browser && deviceInfo?.os
         ? `${deviceInfo.browser} على ${deviceInfo.os}`
         : 'جهاز غير معروف';
+        
+      const gpsCoords = gpsLocation 
+        ? `\n📍 GPS: ${gpsLocation.latitude.toFixed(6)}, ${gpsLocation.longitude.toFixed(6)}`
+        : '';
 
       const notificationMessage = `تم تسجيل الدخول من IP: ${ipAddress || 'غير متوفر'}
-الموقع التقريبي: ${locationStr}
+الموقع التقريبي: ${locationStr}${gpsCoords}
 المتصفح: ${deviceStr}
 الوقت: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Riyadh' })}
 

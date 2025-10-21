@@ -103,6 +103,11 @@ import InvestigationClosureManagement from "@/pages/InvestigationClosureManageme
 import ExternalAccessManagement from "@/pages/ExternalAccessManagement";
 import AgencyCommunications from "@/pages/AgencyCommunications";
 import AgencyDetail from "@/pages/AgencyDetail";
+import TourismSites from "@/pages/TourismSites";
+import TourismAssistance from "@/pages/TourismAssistance";
+import BordersMonitoring from "@/pages/BordersMonitoring";
+import BordersDatabase from "@/pages/BordersDatabase";
+import BordersPermits from "@/pages/BordersPermits";
 
 const queryClient = new QueryClient();
 
@@ -855,6 +860,21 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/joint-ops/agency/:slug"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "joint_operations"]}>
+                        <AgencyDetail />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/department/tourism/sites" element={<ProtectedRoute><RoleBasedRoute allowedRoles={['admin', 'tourism_police']}><TourismSites /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/tourism/assistance" element={<ProtectedRoute><RoleBasedRoute allowedRoles={['admin', 'tourism_police']}><TourismAssistance /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/borders/monitoring" element={<ProtectedRoute><RoleBasedRoute allowedRoles={['admin', 'borders']}><BordersMonitoring /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/borders/database" element={<ProtectedRoute><RoleBasedRoute allowedRoles={['admin', 'borders']}><BordersDatabase /></RoleBasedRoute></ProtectedRoute>} />
+                <Route path="/department/borders/permits" element={<ProtectedRoute><RoleBasedRoute allowedRoles={['admin', 'borders']}><BordersPermits /></RoleBasedRoute></ProtectedRoute>} />
                 <Route
                   path="/security-agency/:agencyId"
                   element={

@@ -152,21 +152,21 @@ export default function AgencyCommunications() {
                 {/* Logo Section */}
                 <div className="flex items-start justify-between">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg overflow-hidden">
-                      {agency.logo_url ? (
-                        <img 
-                          src={agency.logo_url} 
-                          alt={agency.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
+                    {agency.logo_url ? (
+                      <img 
+                        src={agency.logo_url} 
+                        alt={agency.name}
+                        className="w-20 h-20 object-contain"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg overflow-hidden">
                         <img 
                           src={genericLogo} 
                           alt="شعار عام"
                           className="w-12 h-12 object-contain opacity-80"
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <Button
                       size="sm"
                       variant="secondary"
@@ -223,7 +223,7 @@ export default function AgencyCommunications() {
                   <Button
                     size="sm"
                     className="flex-1"
-                    onClick={() => navigate(`/agency/${agency.slug}`)}
+                    onClick={() => navigate(`/joint-ops/agency/${agency.slug}`)}
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     فتح التواصل
@@ -242,17 +242,17 @@ export default function AgencyCommunications() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg overflow-hidden">
-                  {selectedAgency?.logo_url ? (
-                    <img 
-                      src={selectedAgency.logo_url} 
-                      alt={selectedAgency.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
+                {selectedAgency?.logo_url ? (
+                  <img 
+                    src={selectedAgency.logo_url} 
+                    alt={selectedAgency.name}
+                    className="w-32 h-32 object-contain"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
                     <Shield className="h-16 w-16 text-white" />
-                  )}
-                </div>
+                  </div>
+                )}
                 <Input
                   type="file"
                   accept="image/*"

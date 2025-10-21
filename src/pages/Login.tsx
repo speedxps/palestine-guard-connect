@@ -80,7 +80,7 @@ const Login = () => {
     try {
       // إجبار تفعيل GPS أولاً
       console.log('📍 Requesting GPS location...');
-      let userLocation: { latitude: number; longitude: number } | null = null;
+      let userLocation: { latitude: number; longitude: number; accuracy?: number } | null = null;
 
       try {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -96,7 +96,8 @@ const Login = () => {
 
         userLocation = {
           latitude: position.coords.latitude,
-          longitude: position.coords.longitude
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
         };
         console.log('✅ GPS location obtained:', userLocation);
       } catch (gpsError: any) {
@@ -172,23 +173,12 @@ const Login = () => {
       console.log('✅ Location verified - proceeding with login');
 
       // محاولة تسجيل الدخول فقط بعد التحقق من الموقع
-      const success = await login(username, password);
-      if (success) {
-        if (rememberMe) {
-          localStorage.setItem(
-            "savedCredentials",
-            JSON.stringify({ email: username, rememberMe: true, timestamp: Date.now() }),
-          );
-        } else {
-          localStorage.removeItem("savedCredentials");
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username,
+        password: password,
+      });
 
-        console.log('✅ Login successful - redirecting to dashboard');
-        toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
-        setTimeout(() => {
-          window.location.replace("/dashboard");
-        }, 600);
-      } else {
+      if (error || !data.user) {
         console.log('❌ Login failed - wrong credentials');
         toast({
           title: "فشل تسجيل الدخول",
@@ -196,7 +186,33 @@ const Login = () => {
           variant: "destructive",
         });
         setIsLoading(false);
+        return;
       }
+
+      // Log the login event via edge function with GPS location
+      await supabase.functions.invoke('log-login-event', {
+        body: { 
+          userId: data.user.id,
+          success: true,
+          route: '/login',
+          gpsLocation: userLocation
+        }
+      });
+
+      if (rememberMe) {
+        localStorage.setItem(
+          "savedCredentials",
+          JSON.stringify({ email: username, rememberMe: true, timestamp: Date.now() }),
+        );
+      } else {
+        localStorage.removeItem("savedCredentials");
+      }
+
+      console.log('✅ Login successful - redirecting to dashboard');
+      toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في النظام" });
+      setTimeout(() => {
+        window.location.replace("/dashboard");
+      }, 600);
     } catch (error) {
       console.error('❌ Login error:', error);
       
