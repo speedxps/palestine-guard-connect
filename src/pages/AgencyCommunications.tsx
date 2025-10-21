@@ -76,14 +76,18 @@ export default function AgencyCommunications() {
       const fileName = `${selectedAgency.slug}-${Date.now()}.${fileExt}`;
       const filePath = `agency-logos/${fileName}`;
 
+      // Use post-images bucket which is public
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
+        .from('post-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('post-images')
         .getPublicUrl(filePath);
 
       const { error: updateError } = await supabase
@@ -153,11 +157,13 @@ export default function AgencyCommunications() {
                 <div className="flex items-start justify-between">
                   <div className="relative">
                     {agency.logo_url ? (
-                      <img 
-                        src={agency.logo_url} 
-                        alt={agency.name}
-                        className="w-20 h-20 object-contain"
-                      />
+                      <div className="w-20 h-20 flex items-center justify-center">
+                        <img 
+                          src={agency.logo_url} 
+                          alt={agency.name}
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
                     ) : (
                       <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg overflow-hidden">
                         <img 
@@ -170,7 +176,7 @@ export default function AgencyCommunications() {
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 shadow-lg"
                       onClick={() => {
                         setSelectedAgency(agency);
                         setLogoDialogOpen(true);

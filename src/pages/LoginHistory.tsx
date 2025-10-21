@@ -219,6 +219,30 @@ export default function LoginHistory() {
                   </div>
                 </div>
 
+                {/* GPS Location Button */}
+                {event.geolocation?.gps_latitude && event.geolocation?.gps_longitude && (
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        const lat = event.geolocation.gps_latitude;
+                        const lng = event.geolocation.gps_longitude;
+                        window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+                      }}
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      عرض الموقع على خرائط جوجل
+                      {event.geolocation.gps_accuracy && (
+                        <span className="text-xs text-muted-foreground mr-2">
+                          (دقة: {Math.round(event.geolocation.gps_accuracy)}م)
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                )}
+
                 {!event.is_acknowledged && event.success && (
                   <div className="flex gap-2 pt-2">
                     <Button
