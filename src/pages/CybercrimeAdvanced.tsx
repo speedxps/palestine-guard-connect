@@ -38,7 +38,8 @@ import {
   Computer,
   CreditCard,
   Mail,
-  Loader2
+  Loader2,
+  MapPin
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import jsPDF from 'jspdf';
@@ -55,6 +56,8 @@ const CybercrimeAdvanced = () => {
   const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [newCase, setNewCase] = useState({
     title: '',
     description: '',
@@ -971,6 +974,19 @@ const CybercrimeAdvanced = () => {
                             >
                               تجاهل
                             </Button>
+                            {login.latitude && login.longitude && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedLocation({ lat: login.latitude!, lng: login.longitude! });
+                                  setMapDialogOpen(true);
+                                }}
+                              >
+                                <MapPin className="h-4 w-4 mr-1" />
+                                عرض الموقع
+                              </Button>
+                            )}
                           </div>
                         </div>
                         <Badge variant="destructive" className="whitespace-nowrap">
@@ -1055,6 +1071,25 @@ const CybercrimeAdvanced = () => {
             toast({ title: 'نجح', description: 'تم رفع الملفات بنجاح' });
           }}
         />
+
+        {/* Map Dialog */}
+        <Dialog open={mapDialogOpen} onOpenChange={setMapDialogOpen}>
+          <DialogContent className="max-w-4xl h-[600px]">
+            <DialogHeader>
+              <DialogTitle>موقع محاولة الدخول المشبوهة</DialogTitle>
+            </DialogHeader>
+            {selectedLocation && (
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=15&output=embed`}
+                allowFullScreen
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Quick Action Buttons */}
         <div className="fixed bottom-6 left-6 flex flex-col gap-3">

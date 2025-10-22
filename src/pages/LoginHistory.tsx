@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertTriangle, CheckCircle, Monitor, MapPin, Clock, XCircle } from 'lucide-react';
@@ -36,6 +37,8 @@ export default function LoginHistory() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<LoginEvent | null>(null);
   const [showSecurityDialog, setShowSecurityDialog] = useState(false);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const highlightEventId = searchParams.get('event');
@@ -229,11 +232,12 @@ export default function LoginHistory() {
                       onClick={() => {
                         const lat = event.geolocation.gps_latitude;
                         const lng = event.geolocation.gps_longitude;
-                        window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+                        setSelectedLocation({ lat, lng });
+                        setMapDialogOpen(true);
                       }}
                     >
                       <MapPin className="h-4 w-4 mr-2" />
-                      عرض الموقع على خرائط جوجل
+                      عرض الموقع على الخريطة
                       {event.geolocation.gps_accuracy && (
                         <span className="text-xs text-muted-foreground mr-2">
                           (دقة: {Math.round(event.geolocation.gps_accuracy)}م)

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -29,6 +30,8 @@ export default function LoginHistoryBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const fetchNotifications = async () => {
     if (!user || roles.length === 0) return;
@@ -245,8 +248,8 @@ export default function LoginHistoryBell() {
     }
   };
 
-
   return (
+    <>
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button 
@@ -313,6 +316,27 @@ export default function LoginHistoryBell() {
                   <p className="text-xs text-muted-foreground">
                     {formatDate(notification.created_at)}
                   </p>
+                  
+                  {/* GPS Location Button */}
+                  {notification.message.includes('GPS:') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const gpsMatch = notification.message.match(/GPS:\s*([-\d.]+),\s*([-\d.]+)/);
+                        if (gpsMatch) {
+                          const [, lat, lng] = gpsMatch;
+                          setSelectedLocation({ lat: parseFloat(lat), lng: parseFloat(lng) });
+                          setMapDialogOpen(true);
+                        }
+                      }}
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      عرض على الخريطة
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -320,5 +344,25 @@ export default function LoginHistoryBell() {
         </ScrollArea>
       </SheetContent>
     </Sheet>
+
+    {/* Map Dialog */}
+    <Dialog open={mapDialogOpen} onOpenChange={setMapDialogOpen}>
+      <DialogContent className="max-w-4xl h-[600px]">
+        <DialogHeader>
+          <DialogTitle>موقع تسجيل الدخول</DialogTitle>
+        </DialogHeader>
+        {selectedLocation && (
+          <iframe
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            style={{ border: 0 }}
+            src={`https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=15&output=embed`}
+            allowFullScreen
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
