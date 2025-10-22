@@ -10,8 +10,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Shield, Users, MapPin, Clock, Plus, Edit, Eye, Navigation, CheckCircle, AlertCircle, Pause } from 'lucide-react';
+import { Shield, Users, MapPin, Clock, Plus, Edit, Eye, Navigation, CheckCircle, AlertCircle, Pause, Radio } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
+import { useGPSTracking } from '@/hooks/useGPSTracking';
 
 interface Patrol {
   id: string;
@@ -39,6 +40,7 @@ interface PatrolMember {
 export default function PatrolsManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isTracking, startTracking, stopTracking, currentPosition } = useGPSTracking();
   const [patrols, setPatrols] = useState<Patrol[]>([]);
   const [patrolMembers, setPatrolMembers] = useState<PatrolMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -230,7 +232,16 @@ export default function PatrolsManagement() {
           </div>
         </div>
         
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <div className="flex gap-2">
+          <Button
+            onClick={isTracking ? stopTracking : startTracking}
+            className={isTracking ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}
+          >
+            <Radio className={`h-4 w-4 ml-2 ${isTracking ? 'animate-pulse' : ''}`} />
+            {isTracking ? 'إيقاف التتبع GPS' : 'تفعيل التتبع GPS'}
+          </Button>
+          
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90">
               <Plus className="h-4 w-4 ml-2" />
@@ -335,6 +346,7 @@ export default function PatrolsManagement() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Statistics Cards */}

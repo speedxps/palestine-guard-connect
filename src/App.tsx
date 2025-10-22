@@ -108,6 +108,7 @@ import TourismAssistance from "@/pages/TourismAssistance";
 import BordersMonitoring from "@/pages/BordersMonitoring";
 import BordersDatabase from "@/pages/BordersDatabase";
 import BordersPermits from "@/pages/BordersPermits";
+import LiveTracking from "@/pages/LiveTracking";
 
 const queryClient = new QueryClient();
 
@@ -272,6 +273,17 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin"]}>
                         <AdminPanel />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/admin/live-tracking"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <LiveTracking />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

@@ -1121,6 +1121,62 @@ export type Database = {
           },
         ]
       }
+      gps_tracking: {
+        Row: {
+          accuracy: number | null
+          altitude: number | null
+          created_at: string
+          device_info: Json | null
+          heading: number | null
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          profile_id: string | null
+          speed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          altitude?: number | null
+          created_at?: string
+          device_info?: Json | null
+          heading?: number | null
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          profile_id?: string | null
+          speed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          altitude?: number | null
+          created_at?: string
+          device_info?: Json | null
+          heading?: number | null
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          profile_id?: string | null
+          speed?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_tracking_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incident_files: {
         Row: {
           created_at: string

@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Crown, Settings, Users, FileText, Database, Shield, Ticket, MessageCircle, Newspaper } from 'lucide-react';
+import { Crown, Settings, Users, FileText, Database, Shield, Ticket, MessageCircle, Newspaper, Radio } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { DepartmentIcon } from '@/components/DepartmentIcon';
@@ -12,6 +12,14 @@ const AdminDepartment = () => {
   const stats = useDashboardStats();
 
   const adminTools = [
+    {
+      title: 'التتبع المباشر GPS',
+      description: 'مراقبة المواقع الجغرافية المباشرة للمستخدمين',
+      icon: Radio,
+      path: '/admin/live-tracking',
+      color: 'from-green-500 to-emerald-600',
+      highlighted: true
+    },
     {
       title: 'توزيع المهام والدوريات',
       description: 'إنشاء وتوزيع المهام على الأقسام والموظفين',
