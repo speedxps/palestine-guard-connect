@@ -90,8 +90,8 @@ export const useGPSTracking = () => {
 
     const options: PositionOptions = {
       enableHighAccuracy: true,
-      timeout: 30000,
-      maximumAge: 0
+      timeout: 5000,
+      maximumAge: 0 // تحديث فوري بدون cache
     };
 
     // بدء المراقبة المستمرة

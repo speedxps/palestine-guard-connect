@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useTicketsCount } from "@/hooks/useTicketsCount";
+import { useGPSTracking } from "@/hooks/useGPSTracking";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Bot, Newspaper, Lock, Users, AlertCircle, Radio, MapPin, Palmtree, GitBranch } from "lucide-react";
@@ -21,10 +22,18 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const stats = useDashboardStats();
   const { ticketsCounts } = useTicketsCount();
-  const [patrolActive, setPatrolActive] = useState(false);
+  const { isTracking, startTracking, stopTracking } = useGPSTracking();
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
+
+  const handleTrackingToggle = (checked: boolean) => {
+    if (checked) {
+      startTracking();
+    } else {
+      stopTracking();
+    }
+  };
 
   useEffect(() => {
     fetchUnreadNewsCount();
@@ -292,11 +301,11 @@ const Dashboard = () => {
         {/* Toggle */}
         <div className="bg-white border border-gray-300 rounded-xl p-3 flex items-center justify-between mb-4">
           <Switch
-            checked={patrolActive}
-            onCheckedChange={setPatrolActive}
-            className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-gray-400"
+            checked={isTracking}
+            onCheckedChange={handleTrackingToggle}
+            className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-400"
           />
-          <span className="text-base font-medium text-[#7CB342]">تفعيل / إيقاف عمل الدورية</span>
+          <span className="text-base font-medium text-[#7CB342]">تفعيل / إيقاف تتبع الموقع GPS</span>
         </div>
 
         {/* Map */}

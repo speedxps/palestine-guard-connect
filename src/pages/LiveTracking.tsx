@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Radio, Users, MapPin, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import MapboxComponent from '@/components/MapboxComponent';
 import { BackButton } from '@/components/BackButton';
+
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
 
 interface TrackedUser {
   id: string;
@@ -27,12 +32,128 @@ interface TrackedUser {
   };
 }
 
+interface UserPath {
+  user_id: string;
+  positions: Array<{ lat: number; lng: number; timestamp: string }>;
+}
+
 const LiveTracking = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [trackedUsers, setTrackedUsers] = useState<TrackedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCount, setActiveCount] = useState(0);
+  const [userPaths, setUserPaths] = useState<Map<string, UserPath>>(new Map());
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const polylinesRef = useRef<Map<string, google.maps.Polyline>>(new Map());
+
+  // تهيئة الخريطة
+  useEffect(() => {
+    const initMap = () => {
+      const mapElement = document.getElementById('live-tracking-map');
+      if (!mapElement || !window.google) return;
+
+      const map = new google.maps.Map(mapElement, {
+        center: { lat: 31.5017, lng: 34.4668 },
+        zoom: 12,
+        mapTypeControl: true,
+        fullscreenControl: true,
+        streetViewControl: false,
+      });
+
+      mapRef.current = map;
+    };
+
+    if (window.google && window.google.maps) {
+      initMap();
+    } else {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDjpkLCYOR_TS6EveG28bEoNUIHED6VLfo&language=ar`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initMap;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  // تحديث المسارات والعلامات
+  const updateMapMarkers = (users: TrackedUser[]) => {
+    if (!mapRef.current) return;
+
+    users.forEach(user => {
+      const position = { lat: Number(user.latitude), lng: Number(user.longitude) };
+      let marker = markersRef.current.get(user.user_id);
+
+      // إنشاء أو تحديث العلامة
+      if (!marker) {
+        marker = new google.maps.Marker({
+          position,
+          map: mapRef.current!,
+          title: user.profile?.full_name || 'مستخدم',
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#22c55e',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+          },
+        });
+        markersRef.current.set(user.user_id, marker);
+      } else {
+        marker.setPosition(position);
+      }
+
+      // تحديث المسار
+      setUserPaths(prev => {
+        const newPaths = new Map(prev);
+        const userPath = newPaths.get(user.user_id) || { user_id: user.user_id, positions: [] };
+        
+        // إضافة الموقع الجديد للمسار
+        userPath.positions.push({
+          lat: Number(user.latitude),
+          lng: Number(user.longitude),
+          timestamp: user.created_at
+        });
+
+        // الاحتفاظ بآخر 100 نقطة فقط
+        if (userPath.positions.length > 100) {
+          userPath.positions = userPath.positions.slice(-100);
+        }
+
+        newPaths.set(user.user_id, userPath);
+        return newPaths;
+      });
+
+      // رسم المسار
+      let polyline = polylinesRef.current.get(user.user_id);
+      const path = userPaths.get(user.user_id)?.positions.map(p => ({ lat: p.lat, lng: p.lng })) || [];
+      
+      if (!polyline && path.length > 1) {
+        polyline = new google.maps.Polyline({
+          path,
+          geodesic: true,
+          strokeColor: '#3b82f6',
+          strokeOpacity: 0.8,
+          strokeWeight: 3,
+          map: mapRef.current!,
+        });
+        polylinesRef.current.set(user.user_id, polyline);
+      } else if (polyline) {
+        polyline.setPath(path);
+      }
+    });
+
+    // توسيط الخريطة على المستخدمين
+    if (users.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      users.forEach(user => {
+        bounds.extend({ lat: Number(user.latitude), lng: Number(user.longitude) });
+      });
+      mapRef.current!.fitBounds(bounds);
+    }
+  };
 
   useEffect(() => {
     fetchTrackedUsers();
@@ -54,14 +175,8 @@ const LiveTracking = () => {
       )
       .subscribe();
 
-    // تحديث البيانات كل 10 ثواني
-    const interval = setInterval(() => {
-      fetchTrackedUsers();
-    }, 10000);
-
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(interval);
     };
   }, []);
 
@@ -93,6 +208,7 @@ const LiveTracking = () => {
       const users = Array.from(uniqueUsers.values());
       setTrackedUsers(users);
       setActiveCount(users.length);
+      updateMapMarkers(users);
 
     } catch (error) {
       console.error('Error fetching tracked users:', error);
@@ -105,25 +221,6 @@ const LiveTracking = () => {
       setLoading(false);
     }
   };
-
-  // تحويل البيانات لتنسيق MapboxComponent
-  const mapPatrols = trackedUsers.map((user, index) => ({
-    id: user.id,
-    name: user.profile?.full_name || `مستخدم ${index + 1}`,
-    area: user.profile?.badge_number || 'غير محدد',
-    location_lat: Number(user.latitude),
-    location_lng: Number(user.longitude),
-    location_address: `${Number(user.latitude).toFixed(6)}, ${Number(user.longitude).toFixed(6)}`,
-    status: 'active',
-    patrol_members: [
-      {
-        officer_name: user.profile?.full_name || 'غير متوفر',
-        officer_phone: user.profile?.phone || '',
-        role: user.profile?.badge_number || 'ضابط',
-        officer_id: user.user_id
-      }
-    ]
-  }));
 
   const getTimeDifference = (timestamp: string) => {
     const now = new Date();
@@ -182,8 +279,8 @@ const LiveTracking = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">التحديث التلقائي</p>
-                <p className="text-xl font-bold text-blue-700">كل 10 ثواني</p>
+                <p className="text-sm font-medium text-blue-600">التحديث المباشر</p>
+                <p className="text-xl font-bold text-blue-700">بث حي مباشر</p>
               </div>
               <Clock className="h-10 w-10 text-blue-600" />
             </div>
@@ -208,24 +305,17 @@ const LiveTracking = () => {
         <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            خريطة التتبع المباشر
+            خريطة التتبع المباشر - Google Maps
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {mapPatrols.length > 0 ? (
-            <div className="h-[600px]">
-              <MapboxComponent
-                patrols={mapPatrols}
-                center={[
-                  Number(trackedUsers[0]?.longitude) || 34.4668,
-                  Number(trackedUsers[0]?.latitude) || 31.5017
-                ]}
-                zoom={12}
-                height="600px"
-              />
-            </div>
-          ) : (
-            <div className="h-[600px] flex items-center justify-center bg-muted">
+          <div 
+            id="live-tracking-map" 
+            className="h-[600px] w-full"
+            style={{ minHeight: '600px' }}
+          />
+          {trackedUsers.length === 0 && (
+            <div className="absolute inset-0 h-[600px] flex items-center justify-center bg-muted/80">
               <div className="text-center">
                 <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-semibold text-muted-foreground">
