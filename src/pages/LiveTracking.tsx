@@ -7,12 +7,9 @@ import { ArrowLeft, Radio, Users, MapPin, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { BackButton } from '@/components/BackButton';
-
-declare global {
-  interface Window {
-    google: typeof google;
-  }
-}
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface TrackedUser {
   id: string;
@@ -34,8 +31,33 @@ interface TrackedUser {
 
 interface UserPath {
   user_id: string;
-  positions: Array<{ lat: number; lng: number; timestamp: string }>;
+  positions: Array<[number, number]>; // [lat, lng]
+  color: string;
 }
+
+// إصلاح أيقونات Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// مكون لتحديث حدود الخريطة
+const MapBounds: React.FC<{ users: TrackedUser[] }> = ({ users }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (users.length > 0) {
+      const bounds = L.latLngBounds(
+        users.map(user => [Number(user.latitude), Number(user.longitude)] as [number, number])
+      );
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    }
+  }, [users, map]);
+
+  return null;
+};
 
 const LiveTracking = () => {
   const navigate = useNavigate();
@@ -44,115 +66,44 @@ const LiveTracking = () => {
   const [loading, setLoading] = useState(true);
   const [activeCount, setActiveCount] = useState(0);
   const [userPaths, setUserPaths] = useState<Map<string, UserPath>>(new Map());
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
-  const polylinesRef = useRef<Map<string, google.maps.Polyline>>(new Map());
+  
+  // ألوان مختلفة للمسارات
+  const pathColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
-  // تهيئة الخريطة
-  useEffect(() => {
-    const initMap = () => {
-      const mapElement = document.getElementById('live-tracking-map');
-      if (!mapElement || !window.google) return;
-
-      const map = new google.maps.Map(mapElement, {
-        center: { lat: 31.5017, lng: 34.4668 },
-        zoom: 12,
-        mapTypeControl: true,
-        fullscreenControl: true,
-        streetViewControl: false,
-      });
-
-      mapRef.current = map;
-    };
-
-    if (window.google && window.google.maps) {
-      initMap();
-    } else {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDjpkLCYOR_TS6EveG28bEoNUIHED6VLfo&language=ar`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initMap;
-      document.head.appendChild(script);
-    }
-  }, []);
-
-  // تحديث المسارات والعلامات
-  const updateMapMarkers = (users: TrackedUser[]) => {
-    if (!mapRef.current) return;
-
-    users.forEach(user => {
-      const position = { lat: Number(user.latitude), lng: Number(user.longitude) };
-      let marker = markersRef.current.get(user.user_id);
-
-      // إنشاء أو تحديث العلامة
-      if (!marker) {
-        marker = new google.maps.Marker({
-          position,
-          map: mapRef.current!,
-          title: user.profile?.full_name || 'مستخدم',
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#22c55e',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
-        });
-        markersRef.current.set(user.user_id, marker);
-      } else {
-        marker.setPosition(position);
-      }
-
-      // تحديث المسار
-      setUserPaths(prev => {
-        const newPaths = new Map(prev);
-        const userPath = newPaths.get(user.user_id) || { user_id: user.user_id, positions: [] };
-        
-        // إضافة الموقع الجديد للمسار
-        userPath.positions.push({
-          lat: Number(user.latitude),
-          lng: Number(user.longitude),
-          timestamp: user.created_at
-        });
-
-        // الاحتفاظ بآخر 100 نقطة فقط
-        if (userPath.positions.length > 100) {
-          userPath.positions = userPath.positions.slice(-100);
-        }
-
-        newPaths.set(user.user_id, userPath);
-        return newPaths;
-      });
-
-      // رسم المسار
-      let polyline = polylinesRef.current.get(user.user_id);
-      const path = userPaths.get(user.user_id)?.positions.map(p => ({ lat: p.lat, lng: p.lng })) || [];
+  // تحديث المسارات عند تغيير المستخدمين
+  const updateUserPaths = (users: TrackedUser[]) => {
+    setUserPaths(prev => {
+      const newPaths = new Map(prev);
       
-      if (!polyline && path.length > 1) {
-        polyline = new google.maps.Polyline({
-          path,
-          geodesic: true,
-          strokeColor: '#3b82f6',
-          strokeOpacity: 0.8,
-          strokeWeight: 3,
-          map: mapRef.current!,
-        });
-        polylinesRef.current.set(user.user_id, polyline);
-      } else if (polyline) {
-        polyline.setPath(path);
-      }
-    });
-
-    // توسيط الخريطة على المستخدمين
-    if (users.length > 0) {
-      const bounds = new google.maps.LatLngBounds();
-      users.forEach(user => {
-        bounds.extend({ lat: Number(user.latitude), lng: Number(user.longitude) });
+      users.forEach((user, index) => {
+        const existingPath = newPaths.get(user.user_id);
+        const position: [number, number] = [Number(user.latitude), Number(user.longitude)];
+        
+        if (!existingPath) {
+          // مسار جديد
+          newPaths.set(user.user_id, {
+            user_id: user.user_id,
+            positions: [position],
+            color: pathColors[index % pathColors.length]
+          });
+        } else {
+          // تحديث المسار الموجود
+          const lastPosition = existingPath.positions[existingPath.positions.length - 1];
+          
+          // إضافة الموقع الجديد فقط إذا كان مختلفاً
+          if (!lastPosition || lastPosition[0] !== position[0] || lastPosition[1] !== position[1]) {
+            existingPath.positions.push(position);
+            
+            // الاحتفاظ بآخر 100 نقطة فقط
+            if (existingPath.positions.length > 100) {
+              existingPath.positions = existingPath.positions.slice(-100);
+            }
+          }
+        }
       });
-      mapRef.current!.fitBounds(bounds);
-    }
+      
+      return newPaths;
+    });
   };
 
   useEffect(() => {
@@ -208,7 +159,7 @@ const LiveTracking = () => {
       const users = Array.from(uniqueUsers.values());
       setTrackedUsers(users);
       setActiveCount(users.length);
-      updateMapMarkers(users);
+      updateUserPaths(users);
 
     } catch (error) {
       console.error('Error fetching tracked users:', error);
@@ -305,17 +256,73 @@ const LiveTracking = () => {
         <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            خريطة التتبع المباشر - Google Maps
+            خريطة التتبع المباشر - بث مباشر
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div 
-            id="live-tracking-map" 
-            className="h-[600px] w-full"
-            style={{ minHeight: '600px' }}
-          />
-          {trackedUsers.length === 0 && (
-            <div className="absolute inset-0 h-[600px] flex items-center justify-center bg-muted/80">
+          {trackedUsers.length > 0 ? (
+            <div className="h-[600px] w-full relative">
+              <MapContainer
+                center={[31.5017, 34.4668]}
+                zoom={12}
+                style={{ height: '100%', width: '100%' }}
+                className="z-0"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                
+                {/* عرض المستخدمين والعلامات */}
+                {trackedUsers.map((user) => {
+                  const userPath = userPaths.get(user.user_id);
+                  return (
+                    <React.Fragment key={user.user_id}>
+                      {/* المسار */}
+                      {userPath && userPath.positions.length > 1 && (
+                        <Polyline
+                          positions={userPath.positions}
+                          pathOptions={{
+                            color: userPath.color,
+                            weight: 4,
+                            opacity: 0.8,
+                          }}
+                        />
+                      )}
+                      
+                      {/* العلامة */}
+                      <Marker position={[Number(user.latitude), Number(user.longitude)]}>
+                        <Popup>
+                          <div className="text-sm">
+                            <p className="font-bold mb-1">{user.profile?.full_name || 'مستخدم'}</p>
+                            {user.profile?.badge_number && (
+                              <p className="text-xs text-muted-foreground">
+                                الشارة: {user.profile.badge_number}
+                              </p>
+                            )}
+                            <p className="text-xs mt-1">
+                              الدقة: {user.accuracy?.toFixed(0)}م
+                            </p>
+                            {user.speed && (
+                              <p className="text-xs">
+                                السرعة: {(Number(user.speed) * 3.6).toFixed(0)} كم/س
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {getTimeDifference(user.updated_at)}
+                            </p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    </React.Fragment>
+                  );
+                })}
+                
+                <MapBounds users={trackedUsers} />
+              </MapContainer>
+            </div>
+          ) : (
+            <div className="h-[600px] flex items-center justify-center bg-muted">
               <div className="text-center">
                 <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-semibold text-muted-foreground">
