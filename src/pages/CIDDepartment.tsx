@@ -60,6 +60,14 @@ const CIDDepartment = () => {
       color: 'from-teal-500 to-teal-600'
     },
     {
+      title: 'التواصل المشترك',
+      description: 'التواصل بين الأقسام',
+      icon: MessageCircle,
+      path: '/inter-department-communication',
+      color: 'from-pink-500 to-rose-600',
+      highlighted: true
+    },
+    {
       title: 'المحادثات',
       description: 'التواصل مع الفريق',
       icon: MessageCircle,

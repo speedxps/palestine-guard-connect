@@ -113,6 +113,14 @@ const AdminDepartment = () => {
       color: 'from-cyan-500 to-cyan-600'
     },
     {
+      title: 'التواصل المشترك',
+      description: 'التواصل بين الأقسام',
+      icon: MessageCircle,
+      path: '/inter-department-communication',
+      color: 'from-pink-500 to-rose-600',
+      highlighted: true
+    },
+    {
       title: 'المحادثات',
       description: 'التواصل مع الفريق',
       icon: MessageCircle,
