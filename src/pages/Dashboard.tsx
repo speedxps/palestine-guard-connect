@@ -271,7 +271,7 @@ const Dashboard = () => {
       {/* Tickets */}
       <div className="px-6 pb-3 w-full">
         <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
-        <div className="space-y-2 mb-5">
+        <div className="grid grid-cols-2 gap-2 mb-5">
           {tickets
             .filter(ticket => ticket.title !== "الأخبار")
             .map((ticket, index) => {
