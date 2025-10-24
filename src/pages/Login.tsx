@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Users, Eye, EyeOff } from "lucide-react";
+import { Users, Eye, EyeOff, Info } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import LoginBlocked from "./LoginBlocked";
@@ -235,7 +235,20 @@ const Login = () => {
   return (
     <div className="w-screen h-screen bg-white flex flex-col justify-start items-center overflow-hidden relative">
       {/* Blue Header */}
-      <div className="w-full flex justify-end">
+      <div className="w-full flex justify-between items-start px-4">
+        {/* About Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/about')}
+          className={`mt-4 text-[#2B9BF4] hover:bg-[#2B9BF4]/10 transition-all duration-500 ${
+            animateHeader ? "translate-x-0 opacity-100" : "-translate-x-20 opacity-0"
+          }`}
+        >
+          <Info className="h-4 w-4 ml-2" />
+          <span className="font-arabic">حول النظام</span>
+        </Button>
+
         <div
           className={`bg-[#2B9BF4] flex items-center gap-4 px-4 py-3 mt-4 shadow-sm transform transition-all duration-500 ease-in-out
             ${animateHeader ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"}`}
