@@ -326,7 +326,7 @@ const Dashboard = () => {
       <div className="fixed bottom-0 left-0 right-0 z-50">
         <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
           <DrawerTrigger asChild>
-            <button className="relative bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 w-full text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg">
+            <button className="relative bg-[#2B9BF4] text-white p-4 w-full text-center hover:bg-[#1e7cc7] transition-all shadow-lg">
               <h2 className="text-xl font-bold">الأخبار</h2>
               {unreadNewsCount > 0 && (
                 <Badge className="absolute top-3 right-4 h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs rounded-full">
