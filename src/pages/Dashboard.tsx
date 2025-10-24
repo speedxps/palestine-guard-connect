@@ -14,6 +14,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import LoginHistoryBell from "@/components/LoginHistoryBell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
@@ -324,7 +325,6 @@ const Dashboard = () => {
           <DrawerTrigger asChild>
             <button 
               className="relative bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors"
-              onClick={() => navigate('/news')}
             >
               <h2 className="text-2xl font-bold">الأخبار</h2>
               {unreadNewsCount > 0 && (
@@ -334,6 +334,34 @@ const Dashboard = () => {
               )}
             </button>
           </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle className="text-center text-2xl font-bold">الأخبار الداخلية</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-3">
+                {newsItems.map((item, index) => (
+                  <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardContent className="p-4">
+                      <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                      <p className="text-xs text-muted-foreground">{item.time}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Button 
+                className="w-full mt-4" 
+                size="lg"
+                onClick={() => {
+                  setNewsDrawerOpen(false);
+                  navigate('/news');
+                }}
+              >
+                عرض جميع الأخبار
+              </Button>
+            </div>
+          </DrawerContent>
         </Drawer>
       </div>
 

@@ -77,19 +77,22 @@ export const NotificationBell = () => {
         const title = notification.title?.toLowerCase() || '';
         const message = notification.message?.toLowerCase() || '';
         
-        // شروط إشعارات تسجيل الدخول العادية والمشبوهة
+        // شروط إشعارات تسجيل الدخول العادية والمشبوهة + التواصل المشترك
         return (
           title.includes('تسجيل دخول') ||
           title.includes('login') ||
           title.includes('محاولة دخول') ||
           title.includes('تنبيه عاجل') ||
           title.includes('مشبوه') ||
+          title.includes('رسالة') ||
+          title.includes('رد على') ||
           message.includes('تسجيل دخول') ||
           message.includes('login') ||
           message.includes('محاولة دخول') ||
           message.includes('suspicious') ||
           message.includes('blocked') ||
-          message.includes('محظور')
+          message.includes('محظور') ||
+          notification.action_url?.includes('/inter-department-communication')
         );
       });
 

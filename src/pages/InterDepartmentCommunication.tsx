@@ -37,16 +37,19 @@ interface Message {
   subject: string;
   message: string;
   sender_id: string;
-  agency_id: string;
+  sender_department: string;
+  target_department: string;
   priority: string;
   status: string;
   created_at: string;
   sender?: {
     full_name: string;
   };
+  reply_to?: string;
 }
 
 const DEPARTMENTS = [
+  { value: 'all', label: 'الجميع' },
   { value: 'admin', label: 'الإدارة العامة' },
   { value: 'operations', label: 'العمليات وإدارة الجهاز' },
   { value: 'traffic_police', label: 'شرطة المرور' },
@@ -56,6 +59,7 @@ const DEPARTMENTS = [
   { value: 'judicial_police', label: 'الشرطة القضائية' },
   { value: 'borders', label: 'المعابر والحدود' },
   { value: 'tourism_police', label: 'الشرطة السياحية' },
+  { value: 'joint_operations', label: 'العمليات المشتركة' },
 ];
 
 const InterDepartmentCommunication = () => {
@@ -71,6 +75,7 @@ const InterDepartmentCommunication = () => {
     targetDepartment: '',
     priority: 'normal',
   });
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
 
   useEffect(() => {
     fetchMessages();
@@ -139,19 +144,47 @@ const InterDepartmentCommunication = () => {
         throw new Error('Profile not found');
       }
 
-      const { error } = await supabase.from('agency_communications').insert([
-        {
-          sender_id: profile.id,
-          sender_department: profile.role,
-          target_department: formData.targetDepartment,
-          subject: formData.subject,
-          message: formData.message,
-          priority: formData.priority,
-          status: 'sent',
-        },
-      ]);
+      const messageData: any = {
+        sender_id: profile.id,
+        sender_department: profile.role,
+        target_department: formData.targetDepartment,
+        subject: formData.subject,
+        message: formData.message,
+        priority: formData.priority,
+        status: 'sent',
+      };
+
+      if (replyToMessage) {
+        messageData.reply_to = replyToMessage.id;
+      }
+
+      const { error } = await supabase.from('agency_communications').insert([messageData]);
 
       if (error) throw error;
+
+      // إرسال إشعار للمستخدمين المستهدفين
+      const targetDepartments = formData.targetDepartment === 'all' 
+        ? ['admin', 'operations', 'traffic_police', 'cid', 'special_police', 'cybercrime', 'judicial_police', 'borders', 'tourism_police', 'joint_operations']
+        : [formData.targetDepartment];
+
+      // Get current user's profile for sender_id
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (currentProfile) {
+        await supabase.from('notifications').insert([{
+          title: replyToMessage ? `رد على: ${replyToMessage.subject}` : 'رسالة جديدة',
+          message: `من ${profile.role}: ${formData.subject}`,
+          priority: formData.priority,
+          is_system_wide: formData.targetDepartment === 'all',
+          target_departments: targetDepartments,
+          action_url: '/inter-department-communication',
+          sender_id: currentProfile.id,
+        }]);
+      }
 
       toast({
         title: 'نجاح',
@@ -164,6 +197,7 @@ const InterDepartmentCommunication = () => {
         targetDepartment: '',
         priority: 'normal',
       });
+      setReplyToMessage(null);
       setIsDialogOpen(false);
       fetchMessages();
     } catch (error: any) {
@@ -264,7 +298,18 @@ const InterDepartmentCommunication = () => {
         </div>
 
         {/* New Message Button */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setReplyToMessage(null);
+            setFormData({
+              subject: '',
+              message: '',
+              targetDepartment: '',
+              priority: 'normal',
+            });
+          }
+        }}>
           <DialogTrigger asChild>
             <Button className="w-full" size="lg">
               <Send className="h-4 w-4 ml-2" />
@@ -273,7 +318,7 @@ const InterDepartmentCommunication = () => {
           </DialogTrigger>
           <DialogContent className="max-w-lg" dir="rtl">
             <DialogHeader>
-              <DialogTitle>إرسال رسالة جديدة</DialogTitle>
+              <DialogTitle>{replyToMessage ? `رد على: ${replyToMessage.subject}` : 'إرسال رسالة جديدة'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -367,7 +412,7 @@ const InterDepartmentCommunication = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
+                       <div className="flex items-center justify-between mb-1">
                         <h4 className="font-semibold text-sm truncate">
                           {message.sender?.full_name || 'مرسل غير معروف'}
                         </h4>
@@ -379,9 +424,28 @@ const InterDepartmentCommunication = () => {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                         {message.message}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {getTimeDiff(message.created_at)}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {getTimeDiff(message.created_at)}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReplyToMessage(message);
+                            setFormData({
+                              ...formData,
+                              targetDepartment: message.sender_department || '',
+                              subject: `رد: ${message.subject}`,
+                            });
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Send className="h-3 w-3 ml-1" />
+                          رد
+                        </Button>
                       </div>
                     </div>
                   </div>

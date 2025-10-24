@@ -313,6 +313,25 @@ export default function LoginHistory() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Map Dialog */}
+      <Dialog open={mapDialogOpen} onOpenChange={setMapDialogOpen}>
+        <DialogContent className="max-w-4xl h-[600px]">
+          <DialogHeader>
+            <DialogTitle>موقع تسجيل الدخول</DialogTitle>
+          </DialogHeader>
+          {selectedLocation && (
+            <iframe
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              style={{ border: 0 }}
+              src={`https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=15&output=embed`}
+              allowFullScreen
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
