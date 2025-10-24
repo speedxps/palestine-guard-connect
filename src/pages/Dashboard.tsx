@@ -271,29 +271,33 @@ const Dashboard = () => {
       {/* Tickets */}
       <div className="px-6 pb-3 w-full">
         <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
-        <div className="grid grid-cols-2 gap-4 md:gap-6 mb-5">
-          {tickets.map((ticket, index) => {
-            // ✅ السماح للإدمن برؤية جميع الأقسام
-            if (ticket.roles.length > 0 && user?.role !== "admin" && !hasAccess(ticket.roles as any[])) return null;
+        <div className="space-y-2 mb-5">
+          {tickets
+            .filter(ticket => ticket.title !== "الأخبار")
+            .map((ticket, index) => {
+              // ✅ السماح للإدمن برؤية جميع الأقسام
+              if (ticket.roles.length > 0 && user?.role !== "admin" && !hasAccess(ticket.roles as any[])) return null;
 
-            return (
-              <Card
-                key={index}
-                onClick={() => navigate(ticket.path)}
-                className="group cursor-pointer hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 overflow-hidden relative bg-gradient-to-br from-white to-gray-50/50"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <CardContent className="flex flex-col items-center justify-center p-4 md:p-6 min-h-[120px] relative">
-                  <div className={`${ticket.color} w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-500 relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-white/20 group-hover:bg-white/30 transition-colors duration-500" />
-                    <ticket.icon className="text-white w-6 h-6 md:w-7 md:h-7 relative z-10 group-hover:rotate-12 transition-transform duration-500" />
-                  </div>
-                  <h3 className="font-bold text-sm leading-tight text-center text-foreground group-hover:text-primary transition-colors duration-300">{ticket.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 group-hover:text-primary/70 transition-colors duration-300">{ticket.subtitle}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
+              return (
+                <Card
+                  key={index}
+                  onClick={() => navigate(ticket.path)}
+                  className="group cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden bg-white"
+                >
+                  <CardContent className="flex items-center justify-between p-3 h-16">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className={`${ticket.color} w-10 h-10 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300`}>
+                        <ticket.icon className="text-white w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{ticket.title}</h3>
+                        <p className="text-xs text-muted-foreground">{ticket.subtitle}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
         </div>
 
         {/* Toggle */}
@@ -317,18 +321,34 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* News Button - Full Width */}
+        <Card 
+          onClick={() => navigate('/news')}
+          className="group cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 mb-4 mx-0"
+        >
+          <CardContent className="flex items-center justify-between p-4 h-16 relative">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shadow-md">
+                <Newspaper className="text-white w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-base text-white">الأخبار</h3>
+                <p className="text-xs text-white/80">News</p>
+              </div>
+            </div>
+            {unreadNewsCount > 0 && (
+              <Badge className="h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs rounded-full">
+                {unreadNewsCount}
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+
         {/* News Drawer */}
         <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
           <DrawerTrigger asChild>
-            <button 
-              className="relative bg-[#7CB342] text-white rounded-t-2xl p-3 w-full text-center hover:bg-[#6aa23b] transition-colors"
-            >
+            <button className="hidden">
               <h2 className="text-2xl font-bold">الأخبار</h2>
-              {unreadNewsCount > 0 && (
-                <Badge className="absolute top-2 right-4 h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs rounded-full">
-                  {unreadNewsCount}
-                </Badge>
-              )}
             </button>
           </DrawerTrigger>
           <DrawerContent>
