@@ -242,7 +242,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center" style={{ direction: "ltr" }}>
+    <div className="min-h-screen bg-white flex flex-col items-center pb-20" style={{ direction: "ltr" }}>
       {/* Header */}
       <header className="bg-white w-full p-4 flex items-center justify-between border-b">
         <div className="flex items-center gap-5">
@@ -320,35 +320,19 @@ const Dashboard = () => {
             loading="lazy"
           />
         </div>
+      </div>
 
-        {/* News Button - Full Width */}
-        <Card 
-          onClick={() => navigate('/news')}
-          className="group cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 mb-4 mx-0"
-        >
-          <CardContent className="flex items-center justify-between p-4 h-16 relative">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shadow-md">
-                <Newspaper className="text-white w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-base text-white">الأخبار</h3>
-                <p className="text-xs text-white/80">News</p>
-              </div>
-            </div>
-            {unreadNewsCount > 0 && (
-              <Badge className="h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs rounded-full">
-                {unreadNewsCount}
-              </Badge>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* News Drawer */}
+      {/* News Drawer - Fixed at Bottom */}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
         <Drawer open={newsDrawerOpen} onOpenChange={setNewsDrawerOpen}>
           <DrawerTrigger asChild>
-            <button className="hidden">
-              <h2 className="text-2xl font-bold">الأخبار</h2>
+            <button className="relative bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 w-full text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg">
+              <h2 className="text-xl font-bold">الأخبار</h2>
+              {unreadNewsCount > 0 && (
+                <Badge className="absolute top-3 right-4 h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs rounded-full">
+                  {unreadNewsCount}
+                </Badge>
+              )}
             </button>
           </DrawerTrigger>
           <DrawerContent>
