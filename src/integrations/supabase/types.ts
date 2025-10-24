@@ -262,7 +262,7 @@ export type Database = {
           changed_fields: string[] | null
           citizen_id: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           performed_at: string
@@ -274,7 +274,7 @@ export type Database = {
           changed_fields?: string[] | null
           citizen_id?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           performed_at?: string
@@ -286,7 +286,7 @@ export type Database = {
           changed_fields?: string[] | null
           citizen_id?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           performed_at?: string
@@ -3061,22 +3061,13 @@ export type Database = {
         }
         Returns: undefined
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_profile: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
+      get_user_profile: { Args: { user_id: string }; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
-      has_cybercrime_access: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      has_cybercrime_access: { Args: { user_id: string }; Returns: boolean }
       has_page_permission: {
         Args: { _page_path: string; _user_id: string }
         Returns: boolean
@@ -3088,14 +3079,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_admin_role: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_admin_role: { Args: { _user_id: string }; Returns: boolean }
       log_activity_error: {
         Args: {
           p_error: string

@@ -291,6 +291,24 @@ const App = () => {
                   }
                 />
                 
+                <Route
+                  path="/user-location-map"
+                  element={
+                    <ProtectedRoute>
+                      <UserLocationMap />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/inter-department-communication"
+                  element={
+                    <ProtectedRoute>
+                      <InterDepartmentCommunication />
+                    </ProtectedRoute>
+                  }
+                />
+                
                 {/* Create User */}
                 <Route
                   path="/create-user"
