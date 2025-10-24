@@ -27,6 +27,7 @@ const Dashboard = () => {
   const [newsDrawerOpen, setNewsDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
 
   const handleTrackingToggle = (checked: boolean) => {
     if (checked) {
@@ -67,8 +68,10 @@ const Dashboard = () => {
       // Get all published news
       const { data: allNews } = await supabase
         .from('internal_news')
-        .select('id')
-        .eq('is_published', true);
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(5);
 
       if (!allNews) return;
 
@@ -82,9 +85,30 @@ const Dashboard = () => {
       const unreadCount = allNews.filter(n => !readNewsIds.includes(n.id)).length;
       
       setUnreadNewsCount(unreadCount);
+      setNewsItems(allNews.map(news => ({
+        id: news.id,
+        title: news.title,
+        description: news.content.substring(0, 100) + '...',
+        time: formatNewsTime(news.created_at),
+      })));
     } catch (error) {
       console.error('Error fetching unread news count:', error);
     }
+  };
+
+  const formatNewsTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'الآن';
+    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+    if (diffDays < 7) return `منذ ${diffDays} يوم`;
+    return date.toLocaleDateString('ar');
   };
 
   // الأقسام والخدمات - العداد يعرض tickets من آخر 24 ساعة
@@ -216,33 +240,6 @@ const Dashboard = () => {
     },
   ];
 
-  const newsItems = [
-    {
-      title: "إطلاق حملة مرورية جديدة في المدينة",
-      description: "تفاصيل وجدول الحملة المرورية الجديدة للحد من المخالفات...",
-      time: "منذ 10 دقائق",
-    },
-    {
-      title: "تحديث: نظام التعرف على الوجه",
-      description: "تم تحديث نظام التعرف على الوجه بأحدث تقنيات الذكاء الاصطناعي...",
-      time: "منذ ساعة",
-    },
-    {
-      title: "اجتماع تنسيقي بين الأقسام",
-      description: "اجتماع دوري لتنسيق العمل بين جميع أقسام الشرطة غداً الساعة 10 صباحاً...",
-      time: "منذ ساعتين",
-    },
-    {
-      title: "تدريب جديد على نظام PoliceOps",
-      description: "سيتم عقد دورة تدريبية شاملة على استخدام نظام PoliceOps الأسبوع القادم...",
-      time: "منذ 3 ساعات",
-    },
-    {
-      title: "إنجازات القسم لهذا الشهر",
-      description: "تقرير شامل بالإنجازات والإحصائيات الشهرية لجميع الأقسام...",
-      time: "منذ 5 ساعات",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center" style={{ direction: "ltr" }}>
