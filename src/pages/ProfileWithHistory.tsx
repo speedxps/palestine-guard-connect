@@ -16,7 +16,8 @@ import {
   ArrowLeft, 
   Shield, 
   LogOut,
-  History
+  History,
+  MapPin
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -154,6 +155,14 @@ const ProfileWithHistory = () => {
                 <div className="text-xs text-muted-foreground font-arabic mt-1">النقاط</div>
               </div>
             </div>
+
+            <Button 
+              onClick={() => navigate('/user-location-map')} 
+              variant="outline" 
+              className="w-full mt-4"
+            >
+              عرض الموقع على الخريطة
+            </Button>
           </CardContent>
         </Card>
 

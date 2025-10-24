@@ -36,6 +36,8 @@ export const NewsManagement: React.FC = () => {
     image_url: '',
     is_published: false
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchNews();
@@ -68,11 +70,33 @@ export const NewsManagement: React.FC = () => {
     if (!user) return;
 
     try {
+      setUploading(true);
+      let imageUrl = formData.image_url;
+
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `news/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('news_images')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('news_images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrl;
+      }
+
       if (editingNews) {
         const { error } = await supabase
           .from('internal_news')
           .update({
             ...formData,
+            image_url: imageUrl,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingNews.id);
@@ -88,6 +112,7 @@ export const NewsManagement: React.FC = () => {
           .from('internal_news')
           .insert({
             ...formData,
+            image_url: imageUrl,
             author_id: user.id,
             author_name: user.full_name || user.email || 'مجهول'
           });
@@ -101,6 +126,7 @@ export const NewsManagement: React.FC = () => {
       }
 
       setFormData({ title: '', content: '', image_url: '', is_published: false });
+      setImageFile(null);
       setEditingNews(null);
       setIsDialogOpen(false);
       fetchNews();
@@ -111,6 +137,8 @@ export const NewsManagement: React.FC = () => {
         description: "حدث خطأ أثناء حفظ الخبر.",
         variant: "destructive",
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -210,15 +238,18 @@ export const NewsManagement: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="image_url" className="font-arabic">رابط الصورة (اختياري)</Label>
+                <Label htmlFor="image" className="font-arabic">صورة الخبر (اختياري)</Label>
                 <Input
-                  id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                  placeholder="https://example.com/image.jpg"
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setImageFile(file);
+                  }}
                   className="font-arabic"
                 />
+                {imageFile && <p className="text-sm text-muted-foreground">تم اختيار: {imageFile.name}</p>}
               </div>
               
               <div className="flex items-center space-x-2 space-x-reverse">
@@ -231,8 +262,8 @@ export const NewsManagement: React.FC = () => {
               </div>
               
               <div className="flex gap-2">
-                <Button type="submit">
-                  {editingNews ? 'تحديث' : 'إضافة'}
+                <Button type="submit" disabled={uploading}>
+                  {uploading ? 'جاري الرفع...' : (editingNews ? 'تحديث' : 'إضافة')}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   إلغاء

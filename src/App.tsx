@@ -109,6 +109,8 @@ import BordersMonitoring from "@/pages/BordersMonitoring";
 import BordersDatabase from "@/pages/BordersDatabase";
 import BordersPermits from "@/pages/BordersPermits";
 import LiveTracking from "@/pages/LiveTracking";
+import UserLocationMap from "@/pages/UserLocationMap";
+import InterDepartmentCommunication from "@/pages/InterDepartmentCommunication";
 
 const queryClient = new QueryClient();
 
