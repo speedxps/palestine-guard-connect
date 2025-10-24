@@ -242,6 +242,16 @@ const About: React.FC = () => {
 
   const recentUpdates = [
     {
+      version: 'v2.5.0',
+      date: 'أكتوبر 2025',
+      items: [
+        'تحسينات شاملة في الأداء والاستقرار',
+        'إضافة المزيد من الميزات الأمنية',
+        'تحسين نظام التواصل المشترك',
+        'إصلاح الأخطاء وتحسين الواجهة',
+      ]
+    },
+    {
       version: 'v2.1.0',
       date: 'ديسمبر 2024',
       items: [
@@ -262,6 +272,16 @@ const About: React.FC = () => {
         'إضافة نظام المصادقة الثنائية',
         'نظام الجرائم الإلكترونية المتقدم',
         'تحسين الأمان والأداء',
+      ]
+    },
+    {
+      version: 'v1.0.0',
+      date: 'يناير 2024',
+      items: [
+        'إطلاق النسخة الأولى من النظام',
+        'نظام تسجيل الدخول الأساسي',
+        'إدارة البلاغات والحوادث',
+        'نظام الأقسام المتخصصة',
       ]
     }
   ];
@@ -329,9 +349,9 @@ const About: React.FC = () => {
             <div>
               <h2 className="font-bold font-arabic text-lg">نظام الشرطة الفلسطينية</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Badge variant="secondary">v2.1.0</Badge>
+                <Badge variant="secondary">v2.5.0</Badge>
                 <span>•</span>
-                <span>ديسمبر 2024</span>
+                <span>أكتوبر 2025</span>
               </div>
             </div>
           </div>
@@ -343,11 +363,11 @@ const About: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="font-arabic text-muted-foreground">{t('about.development_start')}:</span>
-              <span>نوفمبر 2024</span>
+              <span>يناير 2024</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="font-arabic text-muted-foreground">{t('about.last_update')}:</span>
-              <span>ديسمبر 2024</span>
+              <span>أكتوبر 2025</span>
             </div>
           </div>
         </Card>
@@ -536,7 +556,7 @@ const About: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <span>© 2024</span>
+            <span>© 2024-2025</span>
             <span>•</span>
             <span>جميع الحقوق محفوظة</span>
             <span>•</span>
