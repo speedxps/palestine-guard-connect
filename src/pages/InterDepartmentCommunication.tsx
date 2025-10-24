@@ -128,10 +128,10 @@ const InterDepartmentCommunication = () => {
     }
 
     try {
-      // Get sender profile ID
+      // Get sender profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, role')
         .eq('user_id', user?.id)
         .single();
 
@@ -139,13 +139,11 @@ const InterDepartmentCommunication = () => {
         throw new Error('Profile not found');
       }
 
-      // Create a placeholder agency if needed
-      let agencyId = formData.targetDepartment;
-
       const { error } = await supabase.from('agency_communications').insert([
         {
           sender_id: profile.id,
-          agency_id: agencyId,
+          sender_department: profile.role,
+          target_department: formData.targetDepartment,
           subject: formData.subject,
           message: formData.message,
           priority: formData.priority,

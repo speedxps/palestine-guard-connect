@@ -63,42 +63,48 @@ export type Database = {
       }
       agency_communications: {
         Row: {
-          agency_id: string
+          agency_id: string | null
           attachments: Json | null
           created_at: string
           id: string
           message: string
           priority: string
           reply_to: string | null
+          sender_department: string | null
           sender_id: string
           status: string
           subject: string
+          target_department: string
           updated_at: string
         }
         Insert: {
-          agency_id: string
+          agency_id?: string | null
           attachments?: Json | null
           created_at?: string
           id?: string
           message: string
           priority?: string
           reply_to?: string | null
+          sender_department?: string | null
           sender_id: string
           status?: string
           subject: string
+          target_department?: string
           updated_at?: string
         }
         Update: {
-          agency_id?: string
+          agency_id?: string | null
           attachments?: Json | null
           created_at?: string
           id?: string
           message?: string
           priority?: string
           reply_to?: string | null
+          sender_department?: string | null
           sender_id?: string
           status?: string
           subject?: string
+          target_department?: string
           updated_at?: string
         }
         Relationships: [
