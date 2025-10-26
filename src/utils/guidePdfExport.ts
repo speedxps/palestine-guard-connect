@@ -64,18 +64,3 @@ export const downloadGuidePDF = (sections: Section[], selectedSection?: string) 
   const { doc, filename } = createSimplePDF(sections, selectedSection);
   doc.save(filename);
 };
-
-export const printGuidePDF = (sections: Section[], selectedSection?: string) => {
-  const { doc } = createSimplePDF(sections, selectedSection);
-  
-  const pdfBlob = doc.output('blob');
-  const pdfUrl = URL.createObjectURL(pdfBlob);
-  
-  const printWindow = window.open(pdfUrl, '_blank');
-  if (printWindow) {
-    printWindow.onload = () => {
-      printWindow.print();
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
-    };
-  }
-};

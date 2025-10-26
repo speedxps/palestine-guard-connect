@@ -12,7 +12,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { downloadGuidePDF, printGuidePDF } from '@/utils/guidePdfExport';
+import { downloadGuidePDF } from '@/utils/guidePdfExport';
 
 interface GuidePrintButtonProps {
   sections: any[];
@@ -25,27 +25,29 @@ export const GuidePrintButton: React.FC<GuidePrintButtonProps> = ({ sections, cu
   const [isOpen, setIsOpen] = useState(false);
 
   const handleExport = () => {
-    const loadingMessage = actionType === 'print' ? 'جاري التحضير للطباعة...' : 'جاري إنشاء ملف PDF...';
-    toast.loading(loadingMessage, { id: 'pdf-export' });
-    
-    setTimeout(() => {
-      try {
-        const sectionToUse = (exportType === 'section' || exportType === 'current') ? currentSection : undefined;
-        
-        if (actionType === 'print') {
-          printGuidePDF(sections, sectionToUse);
-          toast.success('تم فتح نافذة الطباعة! 🖨️', { id: 'pdf-export' });
-        } else {
+    if (actionType === 'print') {
+      // Open print page in new window
+      const sectionParam = (exportType === 'section' || exportType === 'current') && currentSection 
+        ? `?section=${encodeURIComponent(currentSection)}`
+        : '';
+      window.open(`/print-guide${sectionParam}`, '_blank');
+      setIsOpen(false);
+    } else {
+      // For download, we'll still use the simple PDF
+      toast.loading('جاري إنشاء ملف PDF...', { id: 'pdf-export' });
+      
+      setTimeout(() => {
+        try {
+          const sectionToUse = (exportType === 'section' || exportType === 'current') ? currentSection : undefined;
           downloadGuidePDF(sections, sectionToUse);
           toast.success('تم تحميل الدليل بنجاح! 📄', { id: 'pdf-export' });
+          setIsOpen(false);
+        } catch (error) {
+          toast.error('حدث خطأ أثناء التحميل', { id: 'pdf-export' });
+          console.error('PDF error:', error);
         }
-        
-        setIsOpen(false);
-      } catch (error) {
-        toast.error('حدث خطأ أثناء المعالجة', { id: 'pdf-export' });
-        console.error('PDF error:', error);
-      }
-    }, 500);
+      }, 500);
+    }
   };
 
   return (

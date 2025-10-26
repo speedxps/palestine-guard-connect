@@ -112,6 +112,7 @@ import LiveTracking from "@/pages/LiveTracking";
 import UserLocationMap from "@/pages/UserLocationMap";
 import InterDepartmentCommunication from "@/pages/InterDepartmentCommunication";
 import UserGuide from "@/pages/UserGuide";
+import PrintGuidePage from "@/pages/PrintGuide";
 
 const queryClient = new QueryClient();
 
@@ -208,6 +209,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UserGuide />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/print-guide"
+                  element={
+                    <ProtectedRoute>
+                      <PrintGuidePage />
                     </ProtectedRoute>
                   }
                 />
