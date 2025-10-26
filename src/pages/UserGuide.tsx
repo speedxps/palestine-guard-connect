@@ -28,6 +28,7 @@ import {
 
 const UserGuide = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const sections = [
     {
@@ -856,6 +857,7 @@ const UserGuide = () => {
                           <div>
                             {item.content}
                           </div>
+                          <GuideRating topicId={`${section.id}-${index}`} topicTitle={item.title} />
                         </div>
                       );
                     })}
