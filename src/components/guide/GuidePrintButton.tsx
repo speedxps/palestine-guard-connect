@@ -12,7 +12,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { exportGuideToPDF } from '@/utils/guidePdfExport';
+import { downloadGuidePDF, printGuidePDF } from '@/utils/guidePdfExport';
 
 interface GuidePrintButtonProps {
   sections: any[];
@@ -21,26 +21,29 @@ interface GuidePrintButtonProps {
 
 export const GuidePrintButton: React.FC<GuidePrintButtonProps> = ({ sections, currentSection }) => {
   const [exportType, setExportType] = useState<'all' | 'section' | 'current'>('all');
+  const [actionType, setActionType] = useState<'download' | 'print'>('print');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleExport = () => {
-    toast.loading('جاري إنشاء ملف PDF...', { id: 'pdf-export' });
+    const loadingMessage = actionType === 'print' ? 'جاري التحضير للطباعة...' : 'جاري إنشاء ملف PDF...';
+    toast.loading(loadingMessage, { id: 'pdf-export' });
     
     setTimeout(() => {
       try {
-        if (exportType === 'all') {
-          exportGuideToPDF(sections);
-        } else if (exportType === 'section' && currentSection) {
-          exportGuideToPDF(sections, currentSection);
-        } else if (exportType === 'current' && currentSection) {
-          exportGuideToPDF(sections, currentSection);
+        const sectionToUse = (exportType === 'section' || exportType === 'current') ? currentSection : undefined;
+        
+        if (actionType === 'print') {
+          printGuidePDF(sections, sectionToUse);
+          toast.success('تم فتح نافذة الطباعة! 🖨️', { id: 'pdf-export' });
+        } else {
+          downloadGuidePDF(sections, sectionToUse);
+          toast.success('تم تحميل الدليل بنجاح! 📄', { id: 'pdf-export' });
         }
         
-        toast.success('تم تصدير الدليل بنجاح! 📄', { id: 'pdf-export' });
         setIsOpen(false);
       } catch (error) {
-        toast.error('حدث خطأ أثناء التصدير', { id: 'pdf-export' });
-        console.error('PDF export error:', error);
+        toast.error('حدث خطأ أثناء المعالجة', { id: 'pdf-export' });
+        console.error('PDF error:', error);
       }
     }, 500);
   };
@@ -65,41 +68,78 @@ export const GuidePrintButton: React.FC<GuidePrintButtonProps> = ({ sections, cu
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          <RadioGroup value={exportType} onValueChange={(value: any) => setExportType(value)}>
-            <div className="flex items-center space-x-2 space-x-reverse p-3 rounded-lg border-2 hover:bg-gray-50 transition-colors cursor-pointer">
-              <RadioGroupItem value="all" id="export-all" />
-              <Label htmlFor="export-all" className="flex-1 cursor-pointer">
-                <div>
-                  <p className="font-semibold">الدليل الكامل</p>
-                  <p className="text-sm text-gray-600">تصدير جميع الأقسام والمواضيع</p>
-                </div>
-              </Label>
-            </div>
-            
-            {currentSection && (
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">نوع الإجراء:</Label>
+            <RadioGroup value={actionType} onValueChange={(value: any) => setActionType(value)}>
               <div className="flex items-center space-x-2 space-x-reverse p-3 rounded-lg border-2 hover:bg-gray-50 transition-colors cursor-pointer">
-                <RadioGroupItem value="current" id="export-current" />
-                <Label htmlFor="export-current" className="flex-1 cursor-pointer">
-                  <div>
-                    <p className="font-semibold">القسم الحالي فقط</p>
-                    <p className="text-sm text-gray-600">تصدير {currentSection}</p>
+                <RadioGroupItem value="print" id="action-print" />
+                <Label htmlFor="action-print" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <Printer className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-semibold">طباعة مباشرة</p>
+                      <p className="text-sm text-gray-600">فتح نافذة الطباعة مباشرة</p>
+                    </div>
                   </div>
                 </Label>
               </div>
-            )}
-          </RadioGroup>
+              
+              <div className="flex items-center space-x-2 space-x-reverse p-3 rounded-lg border-2 hover:bg-gray-50 transition-colors cursor-pointer">
+                <RadioGroupItem value="download" id="action-download" />
+                <Label htmlFor="action-download" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <Download className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-semibold">تحميل PDF</p>
+                      <p className="text-sm text-gray-600">حفظ الملف على جهازك</p>
+                    </div>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
 
-          <div className="bg-blue-50 border-r-4 border-blue-400 p-3 rounded">
-            <p className="text-sm text-blue-800">
-              ℹ️ <strong>ملاحظة:</strong> سيتم حفظ الملف بصيغة PDF على جهازك.
-            </p>
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">المحتوى:</Label>
+            <RadioGroup value={exportType} onValueChange={(value: any) => setExportType(value)}>
+              <div className="flex items-center space-x-2 space-x-reverse p-3 rounded-lg border-2 hover:bg-gray-50 transition-colors cursor-pointer">
+                <RadioGroupItem value="all" id="export-all" />
+                <Label htmlFor="export-all" className="flex-1 cursor-pointer">
+                  <div>
+                    <p className="font-semibold">الدليل الكامل</p>
+                    <p className="text-sm text-gray-600">جميع الأقسام والمواضيع</p>
+                  </div>
+                </Label>
+              </div>
+              
+              {currentSection && (
+                <div className="flex items-center space-x-2 space-x-reverse p-3 rounded-lg border-2 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <RadioGroupItem value="current" id="export-current" />
+                  <Label htmlFor="export-current" className="flex-1 cursor-pointer">
+                    <div>
+                      <p className="font-semibold">القسم الحالي فقط</p>
+                      <p className="text-sm text-gray-600">{currentSection}</p>
+                    </div>
+                  </Label>
+                </div>
+              )}
+            </RadioGroup>
           </div>
         </div>
 
         <div className="flex gap-3">
           <Button onClick={handleExport} className="flex-1 gap-2">
-            <Printer className="h-4 w-4" />
-            تصدير PDF
+            {actionType === 'print' ? (
+              <>
+                <Printer className="h-4 w-4" />
+                طباعة الآن
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                تحميل PDF
+              </>
+            )}
           </Button>
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             إلغاء

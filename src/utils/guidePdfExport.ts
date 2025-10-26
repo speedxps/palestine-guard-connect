@@ -114,10 +114,33 @@ export const exportGuideToPDF = (sections: Section[], selectedSection?: string) 
     );
   }
 
-  // Save the PDF
   const filename = selectedSection
     ? `دليل_المستخدم_${selectedSection}.pdf`
     : 'دليل_المستخدم_كامل.pdf';
   
+  return { doc, filename };
+};
+
+export const downloadGuidePDF = (sections: Section[], selectedSection?: string) => {
+  const { doc, filename } = exportGuideToPDF(sections, selectedSection);
   doc.save(filename);
+};
+
+export const printGuidePDF = (sections: Section[], selectedSection?: string) => {
+  const { doc } = exportGuideToPDF(sections, selectedSection);
+  
+  // Open PDF in new window for printing
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  
+  const printWindow = window.open(pdfUrl, '_blank');
+  if (printWindow) {
+    printWindow.onload = () => {
+      printWindow.print();
+      // Clean up the URL after a delay
+      setTimeout(() => {
+        URL.revokeObjectURL(pdfUrl);
+      }, 1000);
+    };
+  }
 };
