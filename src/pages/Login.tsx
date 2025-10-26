@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Users, Eye, EyeOff, Info } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
+import policeLogoOptimized from "@/assets/police-logo-optimized.webp";
 import { supabase } from "@/integrations/supabase/client";
 import LoginBlocked from "./LoginBlocked";
 
@@ -274,15 +275,23 @@ const Login = () => {
 
       {/* الشعار الكبير */}
       <div className="absolute top-[100px] flex justify-center w-full">
-        <img 
-          src={policeLogo} 
-          alt="Police Logo Floating" 
-          className="w-52 h-52 object-contain" 
-          width="208" 
-          height="208"
-          loading="eager"
-          fetchPriority="high"
-        />
+        <picture>
+          <source 
+            srcSet={policeLogoOptimized} 
+            type="image/webp"
+            width="208"
+            height="208"
+          />
+          <img 
+            src={policeLogo} 
+            alt="Police Logo Floating" 
+            className="w-52 h-52 object-contain" 
+            width="208" 
+            height="208"
+            loading="eager"
+            fetchPriority="high"
+          />
+        </picture>
       </div>
 
       {/* المحتوى */}
