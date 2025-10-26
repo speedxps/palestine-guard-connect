@@ -721,13 +721,15 @@ const UserGuide = () => {
   ];
 
   // Filter sections based on search
-  const filteredSections = sections.map(section => ({
-    ...section,
-    items: section.items.filter(item => 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      section.title.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  })).filter(section => section.items.length > 0);
+  const filteredSections = searchQuery 
+    ? sections.map(section => ({
+        ...section,
+        items: section.items.filter(item => 
+          item.title.includes(searchQuery) ||
+          section.title.includes(searchQuery)
+        )
+      })).filter(section => section.items.length > 0)
+    : sections;
 
   return (
     <ProfessionalLayout
@@ -838,28 +840,26 @@ const UserGuide = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <Accordion type="single" collapsible className="w-full">
+                  <div className="space-y-6">
                     {section.items.map((item, index) => {
                       const ItemIcon = (item as any).icon;
                       return (
-                        <AccordionItem key={index} value={`item-${index}`} className="border-b last:border-0">
-                          <AccordionTrigger className="text-right hover:no-underline py-4">
-                            <div className="flex items-center gap-3 flex-1">
-                              {ItemIcon && (
-                                <div className="bg-gray-100 p-2 rounded-lg">
-                                  <ItemIcon className="h-5 w-5 text-gray-700" />
-                                </div>
-                              )}
-                              <span className="font-semibold text-gray-900">{item.title}</span>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-4 pb-6">
+                        <div key={index} className="border-b last:border-0 pb-6 last:pb-0">
+                          <div className="flex items-center gap-3 mb-4">
+                            {ItemIcon && (
+                              <div className="bg-gray-100 p-2 rounded-lg">
+                                <ItemIcon className="h-5 w-5 text-gray-700" />
+                              </div>
+                            )}
+                            <h3 className="font-bold text-gray-900 text-lg">{item.title}</h3>
+                          </div>
+                          <div>
                             {item.content}
-                          </AccordionContent>
-                        </AccordionItem>
+                          </div>
+                        </div>
                       );
                     })}
-                  </Accordion>
+                  </div>
                 </CardContent>
               </Card>
             );
