@@ -1,11 +1,8 @@
 import React from 'react';
 import { PrintableGuide } from '@/components/guide/PrintableGuide';
 import { BookOpen, Car, ShieldCheck, Computer, Bot } from 'lucide-react';
-import loginScreenshot from '@/assets/guide/login-screenshot.png';
-import dashboardScreenshot from '@/assets/guide/dashboard-screenshot.png';
-import trafficScreenshot from '@/assets/guide/traffic-screenshot.png';
-import cidScreenshot from '@/assets/guide/cid-screenshot.png';
-import cyberScreenshot from '@/assets/guide/cyber-screenshot.png';
+import loginReference from '@/assets/login-reference.jpeg';
+import dashboardReference from '@/assets/dashboard-reference.jpeg';
 
 const PrintGuidePage = () => {
   const sections = [
@@ -16,7 +13,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'تسجيل الدخول والخروج',
-          image: loginScreenshot,
+          image: loginReference,
           content: (
             <div>
               <h4>خطوات تسجيل الدخول:</h4>
@@ -34,7 +31,7 @@ const PrintGuidePage = () => {
         },
         {
           title: 'واجهة التطبيق الرئيسية',
-          image: dashboardScreenshot,
+          image: dashboardReference,
           content: (
             <div>
               <p>تتكون الواجهة الرئيسية من العناصر التالية:</p>
@@ -71,7 +68,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'البحث عن مركبة',
-          image: trafficScreenshot,
+          image: dashboardReference,
           content: (
             <div>
               <h4>خطوات البحث:</h4>
@@ -110,7 +107,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'البحث عن مشتبه به',
-          image: cidScreenshot,
+          image: dashboardReference,
           content: (
             <div>
               <h4>خطوات البحث:</h4>
@@ -148,7 +145,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'الإبلاغ عن جريمة إلكترونية',
-          image: cyberScreenshot,
+          image: dashboardReference,
           content: (
             <div>
               <h4>خطوات الإبلاغ:</h4>
