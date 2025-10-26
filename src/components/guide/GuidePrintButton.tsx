@@ -24,26 +24,28 @@ export const GuidePrintButton: React.FC<GuidePrintButtonProps> = ({ sections, cu
   const [actionType, setActionType] = useState<'download' | 'print'>('print');
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleExport = async () => {
+  const handleExport = () => {
     const loadingMessage = actionType === 'print' ? 'جاري التحضير للطباعة...' : 'جاري إنشاء ملف PDF...';
     toast.loading(loadingMessage, { id: 'pdf-export' });
     
-    try {
-      const sectionToUse = (exportType === 'section' || exportType === 'current') ? currentSection : undefined;
-      
-      if (actionType === 'print') {
-        await printGuidePDF(sections, sectionToUse);
-        toast.success('تم فتح نافذة الطباعة! 🖨️', { id: 'pdf-export' });
-      } else {
-        await downloadGuidePDF(sections, sectionToUse);
-        toast.success('تم تحميل الدليل بنجاح! 📄', { id: 'pdf-export' });
+    setTimeout(() => {
+      try {
+        const sectionToUse = (exportType === 'section' || exportType === 'current') ? currentSection : undefined;
+        
+        if (actionType === 'print') {
+          printGuidePDF(sections, sectionToUse);
+          toast.success('تم فتح نافذة الطباعة! 🖨️', { id: 'pdf-export' });
+        } else {
+          downloadGuidePDF(sections, sectionToUse);
+          toast.success('تم تحميل الدليل بنجاح! 📄', { id: 'pdf-export' });
+        }
+        
+        setIsOpen(false);
+      } catch (error) {
+        toast.error('حدث خطأ أثناء المعالجة', { id: 'pdf-export' });
+        console.error('PDF error:', error);
       }
-      
-      setIsOpen(false);
-    } catch (error) {
-      toast.error('حدث خطأ أثناء المعالجة', { id: 'pdf-export' });
-      console.error('PDF error:', error);
-    }
+    }, 500);
   };
 
   return (
