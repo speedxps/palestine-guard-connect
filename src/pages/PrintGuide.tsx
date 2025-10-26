@@ -1,8 +1,13 @@
 import React from 'react';
 import { PrintableGuide } from '@/components/guide/PrintableGuide';
 import { BookOpen, Car, ShieldCheck, Computer, Bot } from 'lucide-react';
-import loginReference from '@/assets/login-reference.jpeg';
-import dashboardReference from '@/assets/dashboard-reference.jpeg';
+import dashboardReal from '@/assets/guide/dashboard-real.jpg';
+import sidebarMenu from '@/assets/guide/sidebar-menu.jpg';
+import cidSuspect from '@/assets/guide/cid-suspect.jpg';
+import civilRegistry from '@/assets/guide/civil-registry.jpg';
+import aiAssistant from '@/assets/guide/ai-assistant.jpg';
+import notifications from '@/assets/guide/notifications.jpg';
+import loginLocation from '@/assets/guide/login-location.jpg';
 
 const PrintGuidePage = () => {
   const sections = [
@@ -13,7 +18,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'تسجيل الدخول والخروج',
-          image: loginReference,
+          image: loginLocation,
           content: (
             <div>
               <h4>خطوات تسجيل الدخول:</h4>
@@ -31,7 +36,7 @@ const PrintGuidePage = () => {
         },
         {
           title: 'واجهة التطبيق الرئيسية',
-          image: dashboardReference,
+          image: dashboardReal,
           content: (
             <div>
               <p>تتكون الواجهة الرئيسية من العناصر التالية:</p>
@@ -46,6 +51,7 @@ const PrintGuidePage = () => {
         },
         {
           title: 'تفعيل تتبع الموقع GPS',
+          image: sidebarMenu,
           content: (
             <div>
               <h4>خطوات التفعيل:</h4>
@@ -68,7 +74,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'البحث عن مركبة',
-          image: dashboardReference,
+          image: dashboardReal,
           content: (
             <div>
               <h4>خطوات البحث:</h4>
@@ -107,7 +113,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'البحث عن مشتبه به',
-          image: dashboardReference,
+          image: cidSuspect,
           content: (
             <div>
               <h4>خطوات البحث:</h4>
@@ -145,7 +151,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'الإبلاغ عن جريمة إلكترونية',
-          image: dashboardReference,
+          image: dashboardReal,
           content: (
             <div>
               <h4>خطوات الإبلاغ:</h4>
@@ -169,6 +175,7 @@ const PrintGuidePage = () => {
       items: [
         {
           title: 'المساعد الذكي',
+          image: aiAssistant,
           content: (
             <div>
               <h4>كيفية الاستخدام:</h4>
@@ -183,6 +190,7 @@ const PrintGuidePage = () => {
         },
         {
           title: 'إدارة الإشعارات',
+          image: notifications,
           content: (
             <div>
               <h4>التعامل مع الإشعارات:</h4>
@@ -197,6 +205,7 @@ const PrintGuidePage = () => {
         },
         {
           title: 'البحث في سجلات المواطنين',
+          image: civilRegistry,
           content: (
             <div>
               <h4>خطوات البحث:</h4>
