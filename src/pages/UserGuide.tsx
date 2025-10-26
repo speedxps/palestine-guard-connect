@@ -36,17 +36,17 @@ const UserGuide = () => {
         {
           title: 'تسجيل الدخول والخروج',
           content: (
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg border-r-4 border-blue-500">
-                <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
+            <div className="space-y-3 sm:space-y-4">
+              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border-r-4 border-blue-500">
+                <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                   تسجيل الدخول
                 </h4>
-                <ol className="space-y-2 text-gray-700">
-                  <li className="flex gap-2"><span className="font-bold text-blue-600">1.</span> افتح التطبيق</li>
-                  <li className="flex gap-2"><span className="font-bold text-blue-600">2.</span> أدخل البريد الإلكتروني وكلمة المرور</li>
-                  <li className="flex gap-2"><span className="font-bold text-blue-600">3.</span> اضغط على "تسجيل الدخول"</li>
-                  <li className="flex gap-2"><span className="font-bold text-blue-600">4.</span> إذا كان لديك مصادقة ثنائية، أدخل الرمز</li>
+                <ol className="space-y-1.5 sm:space-y-2 text-gray-700 text-sm sm:text-base">
+                  <li className="flex gap-2"><span className="font-bold text-blue-600 shrink-0">1.</span> <span>افتح التطبيق</span></li>
+                  <li className="flex gap-2"><span className="font-bold text-blue-600 shrink-0">2.</span> <span>أدخل البريد الإلكتروني وكلمة المرور</span></li>
+                  <li className="flex gap-2"><span className="font-bold text-blue-600 shrink-0">3.</span> <span>اضغط على "تسجيل الدخول"</span></li>
+                  <li className="flex gap-2"><span className="font-bold text-blue-600 shrink-0">4.</span> <span>إذا كان لديك مصادقة ثنائية، أدخل الرمز</span></li>
                 </ol>
               </div>
             </div>
@@ -55,16 +55,16 @@ const UserGuide = () => {
         {
           title: 'واجهة التطبيق الرئيسية',
           content: (
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">الواجهة الرئيسية تحتوي على:</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
-                  <h4 className="font-bold text-blue-900 mb-2">🏠 الصفحة الرئيسية</h4>
-                  <p className="text-sm text-gray-700">عرض الإحصائيات والأخبار والنشاطات الأخيرة</p>
+            <div className="space-y-3 sm:space-y-4">
+              <p className="text-gray-700 leading-relaxed text-sm sm:text-base">الواجهة الرئيسية تحتوي على:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 sm:p-4 rounded-lg">
+                  <h4 className="font-bold text-blue-900 mb-1.5 sm:mb-2 text-sm sm:text-base">🏠 الصفحة الرئيسية</h4>
+                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">عرض الإحصائيات والأخبار والنشاطات الأخيرة</p>
                 </div>
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
-                  <h4 className="font-bold text-green-900 mb-2">☰ القائمة الجانبية</h4>
-                  <p className="text-sm text-gray-700">الوصول السريع لجميع الأقسام والصفحات</p>
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 sm:p-4 rounded-lg">
+                  <h4 className="font-bold text-green-900 mb-1.5 sm:mb-2 text-sm sm:text-base">☰ القائمة الجانبية</h4>
+                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">الوصول السريع لجميع الأقسام والصفحات</p>
                 </div>
               </div>
             </div>
@@ -73,17 +73,17 @@ const UserGuide = () => {
         {
           title: 'تفعيل تتبع الموقع GPS',
           content: (
-            <div className="space-y-4">
-              <div className="bg-green-50 p-4 rounded-lg border-r-4 border-green-500">
-                <h4 className="font-bold text-green-900 mb-2 flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
+            <div className="space-y-3 sm:space-y-4">
+              <div className="bg-green-50 p-3 sm:p-4 rounded-lg border-r-4 border-green-500">
+                <h4 className="font-bold text-green-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                   خطوات التفعيل
                 </h4>
-                <ol className="space-y-2 text-gray-700">
-                  <li className="flex gap-2"><span className="font-bold text-green-600">1.</span> اذهب إلى "الملف الشخصي"</li>
-                  <li className="flex gap-2"><span className="font-bold text-green-600">2.</span> اضغط على "الإعدادات"</li>
-                  <li className="flex gap-2"><span className="font-bold text-green-600">3.</span> فعّل خيار "تتبع الموقع"</li>
-                  <li className="flex gap-2"><span className="font-bold text-green-600">4.</span> اسمح للمتصفح بالوصول للموقع</li>
+                <ol className="space-y-1.5 sm:space-y-2 text-gray-700 text-sm sm:text-base">
+                  <li className="flex gap-2"><span className="font-bold text-green-600 shrink-0">1.</span> <span>اذهب إلى "الملف الشخصي"</span></li>
+                  <li className="flex gap-2"><span className="font-bold text-green-600 shrink-0">2.</span> <span>اضغط على "الإعدادات"</span></li>
+                  <li className="flex gap-2"><span className="font-bold text-green-600 shrink-0">3.</span> <span>فعّل خيار "تتبع الموقع"</span></li>
+                  <li className="flex gap-2"><span className="font-bold text-green-600 shrink-0">4.</span> <span>اسمح للمتصفح بالوصول للموقع</span></li>
                 </ol>
               </div>
             </div>
@@ -100,9 +100,9 @@ const UserGuide = () => {
         {
           title: 'البحث عن مركبة',
           content: (
-            <div className="space-y-3 text-gray-700">
+            <div className="space-y-2 sm:space-y-3 text-gray-700 text-sm sm:text-base">
               <p className="font-semibold">الخطوات:</p>
-              <ol className="list-decimal list-inside space-y-2 pr-4">
+              <ol className="list-decimal list-inside space-y-1.5 sm:space-y-2 pr-3 sm:pr-4">
                 <li>انتقل إلى قسم "شرطة المرور"</li>
                 <li>اضغط على "الاستعلام عن مركبة"</li>
                 <li>أدخل رقم اللوحة</li>
@@ -114,9 +114,9 @@ const UserGuide = () => {
         {
           title: 'تسجيل مخالفة',
           content: (
-            <div className="space-y-3 text-gray-700">
+            <div className="space-y-2 sm:space-y-3 text-gray-700 text-sm sm:text-base">
               <p className="font-semibold">الخطوات:</p>
-              <ol className="list-decimal list-inside space-y-2 pr-4">
+              <ol className="list-decimal list-inside space-y-1.5 sm:space-y-2 pr-3 sm:pr-4">
                 <li>ابحث عن المركبة أولاً</li>
                 <li>اضغط "تسجيل مخالفة جديدة"</li>
                 <li>اختر نوع المخالفة</li>
@@ -265,51 +265,53 @@ const UserGuide = () => {
       headerActions={<GuidePrintButton sections={sections} />}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 mb-8">
-          <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
-          <TabsTrigger value="faq">أسئلة شائعة</TabsTrigger>
-          <TabsTrigger value="tips">نصائح</TabsTrigger>
-          <TabsTrigger value="shortcuts">اختصارات</TabsTrigger>
-          <TabsTrigger value="troubleshooting">حل المشاكل</TabsTrigger>
-          <TabsTrigger value="glossary">المصطلحات</TabsTrigger>
-          <TabsTrigger value="all">جميع المواضيع</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-2 mb-6">
+          <TabsList className="inline-flex w-auto min-w-full lg:grid lg:grid-cols-7 gap-2">
+            <TabsTrigger value="overview" className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4">نظرة عامة</TabsTrigger>
+            <TabsTrigger value="faq" className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4">أسئلة شائعة</TabsTrigger>
+            <TabsTrigger value="tips" className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4">نصائح</TabsTrigger>
+            <TabsTrigger value="shortcuts" className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4">اختصارات</TabsTrigger>
+            <TabsTrigger value="troubleshooting" className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4">حل المشاكل</TabsTrigger>
+            <TabsTrigger value="glossary" className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4">المصطلحات</TabsTrigger>
+            <TabsTrigger value="all" className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4">جميع المواضيع</TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="overview" className="space-y-8">
+        <TabsContent value="overview" className="space-y-6 sm:space-y-8">
           <Card className="border-2 bg-gradient-to-br from-primary/5 to-primary/10">
-            <CardContent className="p-8">
-              <h2 className="text-3xl font-bold mb-4">مرحباً بك في دليل المستخدم</h2>
-              <p className="text-lg text-gray-700 mb-6">
+            <CardContent className="p-4 sm:p-6 lg:p-8">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4">مرحباً بك في دليل المستخدم</h2>
+              <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-4 sm:mb-6 leading-relaxed">
                 هذا الدليل الشامل سيساعدك على فهم واستخدام جميع ميزات نظام PoliceOps بكفاءة عالية.
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <div className="text-center p-4 bg-white rounded-lg">
-                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <p className="font-bold text-2xl">{sections.length}</p>
-                  <p className="text-sm text-gray-600">أقسام</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg shadow-sm">
+                  <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-primary" />
+                  <p className="font-bold text-xl sm:text-2xl">{sections.length}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">أقسام</p>
                 </div>
-                <div className="text-center p-4 bg-white rounded-lg">
-                  <FileText className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <p className="font-bold text-2xl">{sections.reduce((acc, s) => acc + s.items.length, 0)}</p>
-                  <p className="text-sm text-gray-600">موضوع</p>
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg shadow-sm">
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-primary" />
+                  <p className="font-bold text-xl sm:text-2xl">{sections.reduce((acc, s) => acc + s.items.length, 0)}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">موضوع</p>
                 </div>
-                <div className="text-center p-4 bg-white rounded-lg">
-                  <HelpCircle className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <p className="font-bold text-2xl">10</p>
-                  <p className="text-sm text-gray-600">أسئلة شائعة</p>
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg shadow-sm">
+                  <HelpCircle className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-primary" />
+                  <p className="font-bold text-xl sm:text-2xl">10</p>
+                  <p className="text-xs sm:text-sm text-gray-600">أسئلة شائعة</p>
                 </div>
-                <div className="text-center p-4 bg-white rounded-lg">
-                  <Zap className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <p className="font-bold text-2xl">18</p>
-                  <p className="text-sm text-gray-600">اختصار</p>
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg shadow-sm">
+                  <Zap className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-primary" />
+                  <p className="font-bold text-xl sm:text-2xl">18</p>
+                  <p className="text-xs sm:text-sm text-gray-600">اختصار</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <div>
-            <h3 className="text-2xl font-bold mb-6">اختر قسماً للبدء</h3>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6">اختر قسماً للبدء</h3>
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {mainSections.map((section) => (
                 <GuideSectionCard
                   key={section.id}
@@ -325,14 +327,14 @@ const UserGuide = () => {
           </div>
 
           <Card className="border-2 bg-gradient-to-r from-green-50 to-blue-50">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-4">
-                  <Bot className="h-8 w-8 text-white" />
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-right">
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 sm:p-4 shrink-0">
+                  <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">هل تحتاج مساعدة سريعة؟</h3>
-                  <p className="text-gray-700">استخدم المساعد الذكي للحصول على إجابات فورية لأي سؤال!</p>
+                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-1 sm:mb-2">هل تحتاج مساعدة سريعة؟</h3>
+                  <p className="text-sm sm:text-base text-gray-700">استخدم المساعد الذكي للحصول على إجابات فورية لأي سؤال!</p>
                 </div>
               </div>
             </CardContent>
@@ -345,55 +347,55 @@ const UserGuide = () => {
         <TabsContent value="troubleshooting"><GuideTroubleshooting /></TabsContent>
         <TabsContent value="glossary"><GuideGlossary /></TabsContent>
 
-        <TabsContent value="all" className="space-y-8">
-          <div className="mb-6">
+        <TabsContent value="all" className="space-y-6 sm:space-y-8">
+          <div className="mb-4 sm:mb-6">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
               <Input
                 type="text"
                 placeholder="ابحث في الدليل..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 text-right"
+                className="pr-10 text-right text-sm sm:text-base"
               />
             </div>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {filteredSections.length === 0 ? (
               <Card>
-                <CardContent className="p-12 text-center">
-                  <Search className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">لم يتم العثور على نتائج</h3>
-                  <p className="text-gray-600">حاول البحث بكلمات مفتاحية أخرى</p>
+                <CardContent className="p-8 sm:p-12 text-center">
+                  <Search className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-gray-400" />
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">لم يتم العثور على نتائج</h3>
+                  <p className="text-sm sm:text-base text-gray-600">حاول البحث بكلمات مفتاحية أخرى</p>
                 </CardContent>
               </Card>
             ) : (
               filteredSections.map((section) => {
                 const SectionIcon = section.icon;
                 return (
-                  <Card key={section.id} className="border-2">
-                    <CardHeader className={`bg-gradient-to-r ${section.color} text-white`}>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <SectionIcon className="h-8 w-8" />
-                        {section.title}
+                  <Card key={section.id} className="border-2 overflow-hidden">
+                    <CardHeader className={`bg-gradient-to-r ${section.color} text-white p-4 sm:p-6`}>
+                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl lg:text-2xl">
+                        <SectionIcon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 shrink-0" />
+                        <span className="truncate">{section.title}</span>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-6">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="space-y-4 sm:space-y-6">
                         {section.items.map((item, index) => {
                           const ItemIcon = (item as any).icon;
                           return (
-                            <div key={index} className="border-b last:border-0 pb-6 last:pb-0">
-                              <div className="flex items-center gap-3 mb-4">
+                            <div key={index} className="border-b last:border-0 pb-4 sm:pb-6 last:pb-0">
+                              <div className="flex items-start gap-2 sm:gap-3 mb-3 sm:mb-4">
                                 {ItemIcon && (
-                                  <div className="bg-gray-100 p-2 rounded-lg">
-                                    <ItemIcon className="h-5 w-5 text-gray-700" />
+                                  <div className="bg-gray-100 p-1.5 sm:p-2 rounded-lg shrink-0">
+                                    <ItemIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
                                   </div>
                                 )}
-                                <h3 className="font-bold text-gray-900 text-lg">{item.title}</h3>
+                                <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-tight">{item.title}</h3>
                               </div>
-                              <div>
+                              <div className="text-sm sm:text-base">
                                 {item.content}
                               </div>
                               <GuideRating topicId={`${section.id}-${index}`} topicTitle={item.title} />
