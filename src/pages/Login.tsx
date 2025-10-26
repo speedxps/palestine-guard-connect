@@ -260,14 +260,28 @@ const Login = () => {
             boxShadow: "2px 2px 8px rgba(0,0,0,0.15)",
           }}
         >
-          <img src={policeLogo} alt="Police Logo" className="w-14 h-14 object-contain" />
+          <img 
+            src={policeLogo} 
+            alt="Police Logo" 
+            className="w-14 h-14 object-contain" 
+            width="56" 
+            height="56"
+            loading="eager"
+          />
           <p className="italic text-white text-lg font-light">Police Ops</p>
         </div>
       </div>
 
       {/* الشعار الكبير */}
       <div className="absolute top-[100px] flex justify-center w-full">
-        <img src={policeLogo} alt="Police Logo Floating" className="w-52 h-52 object-contain" />
+        <img 
+          src={policeLogo} 
+          alt="Police Logo Floating" 
+          className="w-52 h-52 object-contain" 
+          width="208" 
+          height="208"
+          loading="eager"
+        />
       </div>
 
       {/* المحتوى */}

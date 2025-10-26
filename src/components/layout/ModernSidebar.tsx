@@ -151,6 +151,9 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   src={policeLogo}
                   alt="Palestinian Police Logo" 
                   className="h-20 w-20 rounded-full object-cover"
+                  width="80"
+                  height="80"
+                  loading="eager"
                 />
               </div>
             </div>
