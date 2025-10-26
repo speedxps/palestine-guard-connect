@@ -185,6 +185,24 @@ export const PrintableGuide: React.FC<PrintableGuideProps> = ({ sections }) => {
           line-height: 1.8;
         }
 
+        .item-image {
+          width: 100%;
+          max-width: 100%;
+          height: auto;
+          margin: 20px 0;
+          border-radius: 8px;
+          border: 2px solid #e0e0e0;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-caption {
+          text-align: center;
+          font-size: 13px;
+          color: #7f8c8d;
+          margin-top: 8px;
+          font-style: italic;
+        }
+
         .guide-footer {
           margin-top: 50px;
           padding-top: 25px;
@@ -257,6 +275,12 @@ export const PrintableGuide: React.FC<PrintableGuideProps> = ({ sections }) => {
                   <span className="item-number">{itemIndex + 1}</span>
                   <h3 className="item-title">{item.title}</h3>
                 </div>
+                {item.image && (
+                  <div>
+                    <img src={item.image} alt={item.title} className="item-image" />
+                    <p className="image-caption">صورة توضيحية: {item.title}</p>
+                  </div>
+                )}
                 <div className="item-content">
                   {renderContent(item.content)}
                 </div>
