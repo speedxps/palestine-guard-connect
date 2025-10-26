@@ -22,7 +22,8 @@ import {
   UserCheck,
   Users,
   Scale,
-  Bell
+  Bell,
+  BookOpen
 } from 'lucide-react';
 import policeLogo from "@/assets/police-logo.png";
 
@@ -223,6 +224,20 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
               >
                 <Bot className="h-6 w-6 shrink-0" />
                 <span className="font-arabic text-lg">المساعد الذكي</span>
+              </Button>
+
+              {/* User Guide Link */}
+              <Button
+                variant="ghost"
+                className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                  location.pathname === '/user-guide' 
+                    ? 'bg-purple-500 text-white font-bold shadow-lg' 
+                    : 'text-gray-700 hover:bg-purple-50'
+                }`}
+                onClick={() => handleNavigation('/user-guide')}
+              >
+                <BookOpen className="h-6 w-6 shrink-0" />
+                <span className="font-arabic text-lg">دليل المستخدم</span>
               </Button>
 
               {/* News Link */}

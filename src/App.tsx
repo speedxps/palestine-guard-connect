@@ -111,6 +111,7 @@ import BordersPermits from "@/pages/BordersPermits";
 import LiveTracking from "@/pages/LiveTracking";
 import UserLocationMap from "@/pages/UserLocationMap";
 import InterDepartmentCommunication from "@/pages/InterDepartmentCommunication";
+import UserGuide from "@/pages/UserGuide";
 
 const queryClient = new QueryClient();
 
@@ -202,6 +203,14 @@ const App = () => {
                   }
                 />
                 <Route path="/about" element={<About />} />
+                <Route
+                  path="/user-guide"
+                  element={
+                    <ProtectedRoute>
+                      <UserGuide />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/news"
                   element={
