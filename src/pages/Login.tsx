@@ -281,6 +281,7 @@ const Login = () => {
           width="208" 
           height="208"
           loading="eager"
+          fetchPriority="high"
         />
       </div>
 
