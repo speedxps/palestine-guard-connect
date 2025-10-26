@@ -1,5 +1,5 @@
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { configureArabicPDF, addArabicText } from './arabicPdfConfig';
 
 interface Section {
   title: string;
@@ -9,127 +9,198 @@ interface Section {
   }[];
 }
 
-export const exportGuideToPDF = (sections: Section[], selectedSection?: string) => {
-  const doc = new jsPDF();
-  configureArabicPDF(doc);
-
-  let yPosition = 20;
-  const pageHeight = doc.internal.pageSize.height;
-  const margin = 20;
-  const maxWidth = doc.internal.pageSize.width - 2 * margin;
-
-  // Helper function to check if we need a new page
-  const checkNewPage = (requiredSpace: number) => {
-    if (yPosition + requiredSpace > pageHeight - margin) {
-      doc.addPage();
-      yPosition = 20;
-      return true;
-    }
-    return false;
-  };
-
-  // Title
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  addArabicText(doc, 'دليل مستخدم نظام PoliceOps', margin, yPosition, { align: 'right', maxWidth });
-  yPosition += 15;
-
-  // Date
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const currentDate = new Date().toLocaleDateString('ar-EG');
-  addArabicText(doc, `تاريخ الإنشاء: ${currentDate}`, margin, yPosition, { align: 'right', maxWidth });
-  yPosition += 20;
-
-  // Filter sections if specific section is selected
+// Helper function to create HTML content for PDF
+const createPrintableHTML = (sections: Section[], selectedSection?: string): string => {
   const sectionsToExport = selectedSection
     ? sections.filter(s => s.title === selectedSection)
     : sections;
 
-  // Iterate through sections
-  sectionsToExport.forEach((section, sectionIndex) => {
-    checkNewPage(30);
+  const currentDate = new Date().toLocaleDateString('ar-EG');
 
-    // Section title
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(41, 128, 185); // Blue color
-    addArabicText(doc, section.title, margin, yPosition, { align: 'right', maxWidth });
-    yPosition += 12;
-
-    // Section items
-    section.items.forEach((item, itemIndex) => {
-      checkNewPage(25);
-
-      // Item title
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      addArabicText(doc, `${itemIndex + 1}. ${item.title}`, margin + 5, yPosition, { align: 'right', maxWidth: maxWidth - 5 });
-      yPosition += 10;
-
-      // Note: Content rendering is simplified
-      // In a real implementation, you would parse the React content and convert to text
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(60, 60, 60);
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap');
+        
+        body {
+          font-family: 'Noto Sans Arabic', Arial, sans-serif;
+          direction: rtl;
+          padding: 40px;
+          background: white;
+          color: #000;
+          line-height: 1.8;
+        }
+        
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+          border-bottom: 3px solid #2980b9;
+          padding-bottom: 20px;
+        }
+        
+        .header h1 {
+          color: #2980b9;
+          font-size: 32px;
+          font-weight: 700;
+          margin: 0 0 10px 0;
+        }
+        
+        .header .date {
+          color: #666;
+          font-size: 14px;
+        }
+        
+        .section {
+          margin: 30px 0;
+          page-break-inside: avoid;
+        }
+        
+        .section-title {
+          color: #2980b9;
+          font-size: 24px;
+          font-weight: 700;
+          margin: 20px 0 15px 0;
+          border-right: 5px solid #2980b9;
+          padding-right: 15px;
+        }
+        
+        .item {
+          margin: 20px 0;
+          padding: 15px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          page-break-inside: avoid;
+        }
+        
+        .item-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #000;
+          margin-bottom: 10px;
+        }
+        
+        .item-content {
+          font-size: 14px;
+          color: #333;
+          line-height: 1.8;
+        }
+        
+        .footer {
+          text-align: center;
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 2px solid #ddd;
+          color: #666;
+          font-size: 12px;
+        }
+        
+        ol, ul {
+          margin: 10px 0;
+          padding-right: 25px;
+        }
+        
+        li {
+          margin: 8px 0;
+        }
+        
+        @media print {
+          body {
+            padding: 20px;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>دليل مستخدم نظام PoliceOps</h1>
+        <div class="date">تاريخ الإنشاء: ${currentDate}</div>
+      </div>
       
-      // Add placeholder for content (you would need to extract actual text from React components)
-      const contentText = `محتوى موضوع: ${item.title}`;
-      const lines = doc.splitTextToSize(contentText, maxWidth - 10);
+      ${sectionsToExport.map(section => `
+        <div class="section">
+          <h2 class="section-title">${section.title}</h2>
+          ${section.items.map((item, index) => `
+            <div class="item">
+              <h3 class="item-title">${index + 1}. ${item.title}</h3>
+              <div class="item-content">
+                <p>موضوع: ${item.title}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
       
-      lines.forEach((line: string) => {
-        checkNewPage(7);
-        addArabicText(doc, line, margin + 10, yPosition, { align: 'right', maxWidth: maxWidth - 10 });
-        yPosition += 7;
-      });
+      <div class="footer">
+        <p>نظام PoliceOps - الشرطة الفلسطينية</p>
+        <p>${currentDate}</p>
+      </div>
+    </body>
+    </html>
+  `;
+};
 
-      yPosition += 8;
-    });
+export const exportGuideToPDF = async (sections: Section[], selectedSection?: string) => {
+  // Create temporary container
+  const container = document.createElement('div');
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
+  container.style.width = '210mm'; // A4 width
+  container.innerHTML = createPrintableHTML(sections, selectedSection);
+  document.body.appendChild(container);
 
-    yPosition += 10;
+  // Wait for fonts to load
+  await document.fonts.ready;
 
-    // Add separator line between sections
-    if (sectionIndex < sectionsToExport.length - 1) {
-      checkNewPage(5);
-      doc.setDrawColor(200, 200, 200);
-      doc.line(margin, yPosition, doc.internal.pageSize.width - margin, yPosition);
-      yPosition += 15;
-    }
+  // Generate PDF
+  const canvas = await html2canvas(container, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff'
   });
 
-  // Footer on each page
-  const totalPages = doc.internal.pages.length - 1; // -1 because first element is null
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(128, 128, 128);
-    doc.setFont('helvetica', 'normal');
-    addArabicText(
-      doc,
-      `صفحة ${i} من ${totalPages}`,
-      doc.internal.pageSize.width / 2,
-      pageHeight - 10,
-      { align: 'center' }
-    );
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = pdf.internal.pageSize.getHeight();
+  const imgWidth = pdfWidth;
+  const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+  
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pdfHeight;
+
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
   }
+
+  // Clean up
+  document.body.removeChild(container);
 
   const filename = selectedSection
     ? `دليل_المستخدم_${selectedSection}.pdf`
     : 'دليل_المستخدم_كامل.pdf';
-  
-  return { doc, filename };
+
+  return { doc: pdf, filename };
 };
 
-export const downloadGuidePDF = (sections: Section[], selectedSection?: string) => {
-  const { doc, filename } = exportGuideToPDF(sections, selectedSection);
+export const downloadGuidePDF = async (sections: Section[], selectedSection?: string) => {
+  const { doc, filename } = await exportGuideToPDF(sections, selectedSection);
   doc.save(filename);
 };
 
-export const printGuidePDF = (sections: Section[], selectedSection?: string) => {
-  const { doc } = exportGuideToPDF(sections, selectedSection);
+export const printGuidePDF = async (sections: Section[], selectedSection?: string) => {
+  const { doc } = await exportGuideToPDF(sections, selectedSection);
   
-  // Open PDF in new window for printing
   const pdfBlob = doc.output('blob');
   const pdfUrl = URL.createObjectURL(pdfBlob);
   
@@ -137,7 +208,6 @@ export const printGuidePDF = (sections: Section[], selectedSection?: string) => 
   if (printWindow) {
     printWindow.onload = () => {
       printWindow.print();
-      // Clean up the URL after a delay
       setTimeout(() => {
         URL.revokeObjectURL(pdfUrl);
       }, 1000);
