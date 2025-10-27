@@ -23,7 +23,8 @@ import {
   Users,
   Scale,
   Bell,
-  BookOpen
+  BookOpen,
+  ScanFace
 } from 'lucide-react';
 import policeLogo from "@/assets/police-logo.png";
 
@@ -340,6 +341,22 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                 </>
               )}
 
+              {/* Face Recognition Link - Available for Admin, CID, Cybercrime */}
+              {(userRole === 'admin' || userRole === 'cid' || userRole === 'cybercrime') && (
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                    location.pathname === '/real-time-face-recognition' 
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg' 
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50'
+                  }`}
+                  onClick={() => handleNavigation('/real-time-face-recognition')}
+                >
+                  <ScanFace className="h-6 w-6 shrink-0" />
+                  <span className="font-arabic text-lg">البحث عن الوجوه</span>
+                </Button>
+              )}
+
               {/* Departments */}
               {departments.length > 0 && (
                 <div className="pt-4">
@@ -384,7 +401,8 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                               ...basePages,
                               { path: '/forensic-labs', label: 'المختبرات الجنائية' },
                               { path: '/wanted-persons-tree', label: 'المطلوبين' },
-                              { path: '/incidents-management', label: 'إدارة الحوادث' }
+                              { path: '/incidents-management', label: 'إدارة الحوادث' },
+                              { path: '/real-time-face-recognition', label: 'البحث عن الوجوه' }
                             ];
                           case 'special_police':
                             return [
@@ -400,7 +418,8 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                               { path: '/cybercrime-reports', label: 'التقارير' },
                               { path: '/cybercrime-advanced', label: 'النظام المتقدم' },
                               { path: '/cybercrime-advanced-dashboard', label: 'لوحة التحكم المتقدمة' },
-                              { path: '/wanted-persons-tree', label: 'المطلوبين' }
+                              { path: '/wanted-persons-tree', label: 'المطلوبين' },
+                              { path: '/real-time-face-recognition', label: 'البحث عن الوجوه' }
                             ];
                           case 'judicial_police':
                             return [
