@@ -2,19 +2,18 @@ import * as faceapi from 'face-api.js';
 
 let modelsLoaded = false;
 
-export const loadFaceApiModels = async (): Promise<boolean> => {
+// استخدام CDN للنماذج (بديل للتحميل المحلي)
+const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master/models';
+
+export const loadFaceApiModelsFromCDN = async (): Promise<boolean> => {
   if (modelsLoaded) {
     console.log('✅ النماذج محملة مسبقاً');
     return true;
   }
 
   try {
-    console.log('🔄 بدء تحميل نماذج face-api.js...');
-    
-    // محاولة التحميل من المجلد المحلي أولاً
-    const MODEL_URL = '/models';
-    
-    console.log('📁 محاولة التحميل من:', MODEL_URL);
+    console.log('🔄 بدء تحميل نماذج face-api.js من CDN...');
+    console.log('📡 CDN URL:', MODEL_URL);
     
     // تحميل النماذج الثلاثة المطلوبة
     await Promise.all([
@@ -24,43 +23,21 @@ export const loadFaceApiModels = async (): Promise<boolean> => {
     ]);
 
     modelsLoaded = true;
-    console.log('✅ تم تحميل جميع النماذج بنجاح من المجلد المحلي');
-    console.log('💡 النماذج جاهزة للاستخدام');
+    console.log('✅ تم تحميل جميع النماذج بنجاح من CDN');
     return true;
-  } catch (localError) {
-    console.warn('⚠️ فشل التحميل من المجلد المحلي، محاولة التحميل من CDN...');
-    
-    try {
-      // محاولة التحميل من CDN كبديل
-      const CDN_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master/models';
-      console.log('📡 محاولة التحميل من CDN:', CDN_URL);
-      
-      await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(CDN_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(CDN_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(CDN_URL),
-      ]);
-
-      modelsLoaded = true;
-      console.log('✅ تم تحميل جميع النماذج بنجاح من CDN');
-      console.log('💡 ملاحظة: يُفضل تحميل النماذج محلياً للحصول على أداء أفضل');
-      return true;
-    } catch (cdnError) {
-      console.error('❌ خطأ في تحميل النماذج:', cdnError);
-      console.error('💡 تلميح: تأكد من وجود ملفات النماذج في public/models/');
-      console.error('💡 أو تحقق من اتصال الإنترنت للتحميل من CDN');
-      console.error('📖 راجع ملف SETUP_FACE_RECOGNITION_MODELS.md للتعليمات');
-      modelsLoaded = false;
-      return false;
-    }
+  } catch (error) {
+    console.error('❌ خطأ في تحميل النماذج من CDN:', error);
+    console.log('💡 تلميح: تحقق من اتصال الإنترنت أو استخدم النماذج المحلية');
+    modelsLoaded = false;
+    return false;
   }
 };
 
-export const isModelsLoaded = (): boolean => {
+export const isModelsLoadedFromCDN = (): boolean => {
   return modelsLoaded;
 };
 
-export const extractFaceDescriptor = async (
+export const extractFaceDescriptorFromCDN = async (
   imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement
 ): Promise<Float32Array | null> => {
   try {
@@ -88,7 +65,7 @@ export const extractFaceDescriptor = async (
   }
 };
 
-export const extractAllFaceDescriptors = async (
+export const extractAllFaceDescriptorsFromCDN = async (
   imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement
 ): Promise<Array<{ descriptor: Float32Array; detection: faceapi.FaceDetection; landmarks: faceapi.FaceLandmarks68 }>> => {
   try {

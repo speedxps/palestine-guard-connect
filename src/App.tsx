@@ -39,6 +39,7 @@ import CivilRegistry from "@/pages/CivilRegistry";
 import SmartCivilRegistry from "@/pages/SmartCivilRegistry";
 import AdvancedFaceRecognition from "@/pages/AdvancedFaceRecognition";
 import FaceRecognition from "@/pages/FaceRecognition";
+import RealTimeFaceRecognition from "@/pages/RealTimeFaceRecognition";
 import Tasks from "@/pages/Tasks";
 import DepartmentTasks from "@/pages/DepartmentTasks";
 import Patrol from "@/pages/Patrol";
@@ -451,6 +452,16 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
                         <FaceRecognition />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/real-time-face-recognition"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
+                        <RealTimeFaceRecognition />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }
