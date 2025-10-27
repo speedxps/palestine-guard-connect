@@ -2,10 +2,17 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Camera, StopCircle, Loader2, AlertCircle } from 'lucide-react';
-import { useFaceApi, FaceMatch } from '@/hooks/useFaceApi';
-import * as faceapi from 'face-api.js';
+import { Camera, StopCircle } from 'lucide-react';
+import { useFaceRecognition } from '@/hooks/useFaceRecognition';
 import { toast } from 'sonner';
+
+interface Match {
+  id: string;
+  national_id: string;
+  name: string;
+  photo_url: string;
+  similarity: number;
+}
 
 export const RealTimeFaceRecognition: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -15,20 +22,11 @@ export const RealTimeFaceRecognition: React.FC = () => {
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentMatches, setCurrentMatches] = useState<FaceMatch[]>([]);
+  const [currentMatches, setCurrentMatches] = useState<Match[]>([]);
   const [fps, setFps] = useState(0);
   const [lastFrameTime, setLastFrameTime] = useState(Date.now());
 
-  const { isModelLoaded, isLoading, error, searchFaces, extractAllFaceDescriptors } = useFaceApi();
-
-  // إظهار رسالة عند فشل التحميل
-  useEffect(() => {
-    if (!isLoading && !isModelLoaded && error) {
-      toast.error('فشل تحميل نماذج التعرف على الوجوه', {
-        description: 'الرجاء التحقق من اتصال الإنترنت وإعادة تحميل الصفحة'
-      });
-    }
-  }, [isLoading, isModelLoaded, error]);
+  const { searchFaces } = useFaceRecognition();
 
   // تشغيل الكاميرا
   const startCamera = useCallback(async () => {
@@ -92,49 +90,20 @@ export const RealTimeFaceRecognition: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // كشف جميع الوجوه في الإطار
-      const detections = await faceapi
-        .detectAllFaces(video)
-        .withFaceLandmarks()
-        .withFaceDescriptors();
-
-      // مسح Canvas
+      // التقاط إطار الفيديو
       const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+      if (!ctx) return;
 
-      if (detections.length > 0) {
-        // رسم مربعات حول الوجوه
-        faceapi.draw.drawDetections(canvas, detections);
-        faceapi.draw.drawFaceLandmarks(canvas, detections);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // تحويل Canvas إلى base64
+      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
 
-        // البحث عن تطابق لأول وجه فقط (لتحسين الأداء)
-        const firstDescriptor = detections[0].descriptor;
-        const result = await searchFaces(firstDescriptor, 0.6, 3);
+      // البحث عن الوجوه باستخدام OpenAI
+      const result = await searchFaces(imageBase64);
 
-        if (result.success && result.matches && result.matches.length > 0) {
-          setCurrentMatches(result.matches);
-
-          // رسم معلومات الشخص المطابق
-          if (ctx) {
-            const box = detections[0].detection.box;
-            const match = result.matches[0];
-            
-            ctx.font = '16px Arial';
-            ctx.fillStyle = match.similarity > 0.8 ? '#22c55e' : '#eab308';
-            ctx.fillRect(box.x, box.y - 30, box.width, 30);
-            
-            ctx.fillStyle = '#000';
-            ctx.fillText(
-              `${match.full_name} (${(match.similarity * 100).toFixed(0)}%)`,
-              box.x + 5,
-              box.y - 10
-            );
-          }
-        } else {
-          setCurrentMatches([]);
-        }
+      if (result.success && result.matches && result.matches.length > 0) {
+        setCurrentMatches(result.matches);
       } else {
         setCurrentMatches([]);
       }
@@ -156,8 +125,8 @@ export const RealTimeFaceRecognition: React.FC = () => {
 
   // بدء المعالجة المستمرة
   useEffect(() => {
-    if (isCameraActive && isModelLoaded) {
-      intervalRef.current = window.setInterval(processFrame, 200); // معالجة كل 200ms (5 FPS)
+    if (isCameraActive) {
+      intervalRef.current = window.setInterval(processFrame, 3000); // معالجة كل 3 ثوانٍ
       
       return () => {
         if (intervalRef.current) {
@@ -166,7 +135,7 @@ export const RealTimeFaceRecognition: React.FC = () => {
         }
       };
     }
-  }, [isCameraActive, isModelLoaded, processFrame]);
+  }, [isCameraActive, processFrame]);
 
   // تنظيف عند الخروج
   useEffect(() => {
@@ -175,57 +144,6 @@ export const RealTimeFaceRecognition: React.FC = () => {
     };
   }, [stopCamera]);
 
-  if (isLoading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="flex items-center justify-center p-12">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">جاري تحميل نماذج التعرف على الوجوه...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full border-destructive">
-        <CardContent className="p-8">
-          <div className="text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="bg-destructive/10 p-4 rounded-full">
-                <AlertCircle className="w-16 h-16 text-destructive" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-destructive">فشل تحميل نماذج التعرف على الوجوه</h3>
-              <p className="text-muted-foreground">{error}</p>
-            </div>
-
-            <div className="bg-muted p-4 rounded-lg text-right space-y-3">
-              <p className="font-semibold text-sm">🔧 الحلول المقترحة:</p>
-              <ul className="text-sm space-y-2 text-muted-foreground">
-                <li>✓ تأكد من اتصالك بالإنترنت</li>
-                <li>✓ حاول إعادة تحميل الصفحة (F5)</li>
-                <li>✓ امسح ذاكرة التخزين المؤقت للمتصفح</li>
-                <li>✓ حاول استخدام متصفح آخر (Chrome، Firefox)</li>
-              </ul>
-            </div>
-
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="w-full"
-              variant="default"
-            >
-              إعادة تحميل الصفحة
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -272,7 +190,6 @@ export const RealTimeFaceRecognition: React.FC = () => {
             {!isCameraActive ? (
               <Button
                 onClick={startCamera}
-                disabled={!isModelLoaded}
                 className="flex-1"
               >
                 <Camera className="w-4 h-4 mr-2" />
@@ -303,18 +220,18 @@ export const RealTimeFaceRecognition: React.FC = () => {
                     {match.photo_url && (
                       <img
                         src={match.photo_url}
-                        alt={match.full_name}
+                        alt={match.name}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     )}
                     <div className="flex-1">
-                      <p className="font-semibold">{match.full_name}</p>
+                      <p className="font-semibold">{match.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {match.national_id}
                       </p>
                     </div>
                     <Badge
-                      variant={match.similarity > 0.8 ? 'default' : 'secondary'}
+                      variant={match.similarity > 0.5 ? 'default' : 'secondary'}
                     >
                       {(match.similarity * 100).toFixed(1)}%
                     </Badge>

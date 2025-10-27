@@ -3,27 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Search, Loader2, AlertCircle, X } from 'lucide-react';
-import { useFaceApi, FaceMatch } from '@/hooks/useFaceApi';
+import { useFaceRecognition } from '@/hooks/useFaceRecognition';
 import { toast } from 'sonner';
 
+interface Match {
+  id: string;
+  national_id: string;
+  name: string;
+  photo_url: string;
+  similarity: number;
+}
+
 export const FaceRecognitionUpload: React.FC = () => {
-  const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [matches, setMatches] = useState<FaceMatch[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
 
-  const { isModelLoaded, isLoading, error, processAndSearchImage } = useFaceApi();
-
-  // إظهار رسالة عند فشل التحميل
-  React.useEffect(() => {
-    if (!isLoading && !isModelLoaded && error) {
-      toast.error('فشل تحميل نماذج التعرف على الوجوه', {
-        description: 'الرجاء التحقق من اتصال الإنترنت وإعادة تحميل الصفحة'
-      });
-    }
-  }, [isLoading, isModelLoaded, error]);
+  const { searchFaces } = useFaceRecognition();
 
   // معالجة رفع الصورة
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,7 +45,7 @@ export const FaceRecognitionUpload: React.FC = () => {
 
   // البحث عن الوجه
   const handleSearch = async () => {
-    if (!imageRef.current || !imagePreview) {
+    if (!imagePreview) {
       toast.error('يرجى رفع صورة أولاً');
       return;
     }
@@ -56,7 +54,7 @@ export const FaceRecognitionUpload: React.FC = () => {
     setMatches([]);
 
     try {
-      const result = await processAndSearchImage(imageRef.current, 0.6, 5);
+      const result = await searchFaces(imagePreview);
 
       if (result.success && result.matches) {
         if (result.matches.length > 0) {
@@ -85,57 +83,6 @@ export const FaceRecognitionUpload: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="flex items-center justify-center p-12">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">جاري تحميل نماذج التعرف على الوجوه...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full border-destructive">
-        <CardContent className="p-8">
-          <div className="text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="bg-destructive/10 p-4 rounded-full">
-                <AlertCircle className="w-16 h-16 text-destructive" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-destructive">فشل تحميل نماذج التعرف على الوجوه</h3>
-              <p className="text-muted-foreground">{error}</p>
-            </div>
-
-            <div className="bg-muted p-4 rounded-lg text-right space-y-3">
-              <p className="font-semibold text-sm">🔧 الحلول المقترحة:</p>
-              <ul className="text-sm space-y-2 text-muted-foreground">
-                <li>✓ تأكد من اتصالك بالإنترنت</li>
-                <li>✓ حاول إعادة تحميل الصفحة (F5)</li>
-                <li>✓ امسح ذاكرة التخزين المؤقت للمتصفح</li>
-                <li>✓ حاول استخدام متصفح آخر (Chrome، Firefox)</li>
-              </ul>
-            </div>
-
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="w-full"
-              variant="default"
-            >
-              إعادة تحميل الصفحة
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -171,11 +118,9 @@ export const FaceRecognitionUpload: React.FC = () => {
             ) : (
               <div className="relative">
                 <img
-                  ref={imageRef}
                   src={imagePreview}
                   alt="صورة للبحث"
                   className="w-full rounded-lg"
-                  crossOrigin="anonymous"
                 />
                 <Button
                   onClick={handleClear}
@@ -193,7 +138,7 @@ export const FaceRecognitionUpload: React.FC = () => {
           <div className="flex gap-2">
             <Button
               onClick={handleSearch}
-              disabled={!imagePreview || isSearching || !isModelLoaded}
+              disabled={!imagePreview || isSearching}
               className="flex-1"
             >
               {isSearching ? (
@@ -223,18 +168,18 @@ export const FaceRecognitionUpload: React.FC = () => {
                     {match.photo_url && (
                       <img
                         src={match.photo_url}
-                        alt={match.full_name}
+                        alt={match.name}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     )}
                     <div className="flex-1">
-                      <p className="font-semibold">{match.full_name}</p>
+                      <p className="font-semibold">{match.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {match.national_id}
                       </p>
                     </div>
                     <Badge
-                      variant={match.similarity > 0.8 ? 'default' : 'secondary'}
+                      variant={match.similarity > 0.5 ? 'default' : 'secondary'}
                     >
                       {(match.similarity * 100).toFixed(1)}%
                     </Badge>

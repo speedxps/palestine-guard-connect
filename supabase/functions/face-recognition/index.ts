@@ -188,8 +188,13 @@ serve(async (req) => {
       )
     }
 
-    let bestMatch = null
-    let highestSimilarity = 0
+    const matches: Array<{
+      id: string;
+      national_id: string;
+      name: string;
+      photo_url: string;
+      similarity: number;
+    }> = []
 
     for (const citizen of citizens) {
       if (citizen.face_embedding) {
@@ -197,24 +202,29 @@ serve(async (req) => {
         
         console.log(`Comparing with ${citizen.full_name}: ${similarity.toFixed(3)} similarity`)
         
-        if (similarity > highestSimilarity && similarity > 0.15) {
-          highestSimilarity = similarity
-          bestMatch = {
+        if (similarity > 0.30) {
+          matches.push({
             id: citizen.id,
             national_id: citizen.national_id,
             name: citizen.full_name,
             photo_url: citizen.photo_url,
             similarity: similarity
-          }
+          })
         }
       }
     }
 
-    if (bestMatch) {
+    // ترتيب النتائج حسب التطابق
+    matches.sort((a, b) => b.similarity - a.similarity)
+    
+    // أخذ أفضل 3 نتائج
+    const topMatches = matches.slice(0, 3)
+
+    if (topMatches.length > 0) {
       return new Response(
         JSON.stringify({
           success: true,
-          matches: [bestMatch]
+          matches: topMatches
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -225,7 +235,7 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           matches: [],
-          error: 'لم يتم العثور على تطابق كافٍ'
+          error: 'لم يتم العثور على تطابق كافٍ (الحد الأدنى 30%)'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
