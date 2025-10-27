@@ -277,6 +277,19 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   <Button
                     variant="ghost"
                     className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/batch-face-processing' 
+                        ? 'bg-emerald-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-emerald-50'
+                    }`}
+                    onClick={() => handleNavigation('/batch-face-processing')}
+                  >
+                    <ScanFace className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">معالجة الصور الدفعية</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
                       location.pathname === '/user-dashboard' 
                         ? 'bg-indigo-500 text-white font-bold shadow-lg' 
                         : 'text-gray-700 hover:bg-indigo-50'

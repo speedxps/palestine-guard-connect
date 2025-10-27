@@ -114,6 +114,7 @@ import UserLocationMap from "@/pages/UserLocationMap";
 import InterDepartmentCommunication from "@/pages/InterDepartmentCommunication";
 import UserGuide from "@/pages/UserGuide";
 import PrintGuidePage from "@/pages/PrintGuide";
+import BatchFaceProcessing from "@/pages/BatchFaceProcessing";
 
 const queryClient = new QueryClient();
 
@@ -432,6 +433,16 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin"]}>
                         <SmartCivilRegistry />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/batch-face-processing"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <BatchFaceProcessing />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }
