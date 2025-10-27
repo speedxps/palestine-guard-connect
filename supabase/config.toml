@@ -2,3 +2,12 @@ project_id = "ldhgwqeuvbvlmvyywmaf"
 
 [functions.log-login-event]
 verify_jwt = false
+
+[functions.generate-face-vector]
+verify_jwt = true
+
+[functions.search-face-vector]
+verify_jwt = true
+
+[functions.batch-generate-face-vectors]
+verify_jwt = true

@@ -416,6 +416,7 @@ export type Database = {
           created_by: string | null
           date_of_birth: string | null
           face_embedding: string | null
+          face_vector: string | null
           family_name: string | null
           father_name: string | null
           first_name: string | null
@@ -440,6 +441,7 @@ export type Database = {
           created_by?: string | null
           date_of_birth?: string | null
           face_embedding?: string | null
+          face_vector?: string | null
           family_name?: string | null
           father_name?: string | null
           first_name?: string | null
@@ -464,6 +466,7 @@ export type Database = {
           created_by?: string | null
           date_of_birth?: string | null
           face_embedding?: string | null
+          face_vector?: string | null
           family_name?: string | null
           father_name?: string | null
           first_name?: string | null
@@ -1016,6 +1019,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "face_embeddings_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      face_processing_log: {
+        Row: {
+          citizen_id: string | null
+          confidence_score: number | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          processed_at: string | null
+          processing_status: string
+        }
+        Insert: {
+          citizen_id?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          processed_at?: string | null
+          processing_status?: string
+        }
+        Update: {
+          citizen_id?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          processed_at?: string | null
+          processing_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "face_processing_log_citizen_id_fkey"
             columns: ["citizen_id"]
             isOneToOne: false
             referencedRelation: "citizens"
@@ -3095,6 +3136,20 @@ export type Database = {
           p_source: string
         }
         Returns: undefined
+      }
+      search_faces_by_vector: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_vector: string
+        }
+        Returns: {
+          full_name: string
+          id: string
+          national_id: string
+          photo_url: string
+          similarity: number
+        }[]
       }
     }
     Enums: {
