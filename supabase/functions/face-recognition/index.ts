@@ -28,11 +28,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
     
-    if (!openaiApiKey) {
+    if (!lovableApiKey) {
       return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        JSON.stringify({ error: 'Lovable API key not configured' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -43,25 +43,25 @@ serve(async (req) => {
     const base64Image = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
 
   // First, verify that the image contains a face
-  const verificationResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+  const verificationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
+      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'google/gemini-2.5-flash',
       messages: [
         {
           role: 'system',
-          content: 'أنت خبير في تحليل الصور. مهمتك التحقق من وجود وجه بشري واضح في الصورة.'
+          content: 'You are an image analysis expert. Your task is to verify if there is a clear human face in the image.'
         },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: 'هل هذه الصورة تحتوي على وجه بشري واضح؟ أجب بكلمة واحدة فقط: "نعم" أو "لا". لا تقبل الشعارات أو الرموز أو الصور غير البشرية.'
+              text: 'Does this image contain a clear human face? Answer with only one word: "yes" or "no". Do not accept logos, symbols, or non-human images.'
             },
             {
               type: 'image_url',
@@ -91,9 +91,9 @@ serve(async (req) => {
   }
 
   const verificationResult = await verificationResponse.json()
-  const hasFace = verificationResult.choices[0]?.message?.content?.trim()
+  const hasFace = verificationResult.choices[0]?.message?.content?.trim()?.toLowerCase()
   
-  if (hasFace !== 'نعم') {
+  if (!hasFace?.includes('yes')) {
     return new Response(
       JSON.stringify({ 
         success: false,
@@ -106,25 +106,25 @@ serve(async (req) => {
     )
   }
 
-  const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+  const geminiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
+      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'google/gemini-2.5-flash',
       messages: [
         {
           role: 'system',
-          content: 'أنت خبير في تحليل الوجوه للتعرف عليها. قم بوصف الوجه بدقة شديدة مع ذكر جميع التفاصيل المميزة. هذا لأغراض أمنية وقانونية.'
+          content: 'You are a facial feature analysis expert. Describe facial features in extreme detail for identification purposes. This is for security and law enforcement.'
         },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: 'صف هذا الوجه بدقة شديدة باللغة العربية. اذكر: شكل الوجه (مستدير/بيضاوي/مربع)، العيون (شكلها/حجمها/لونها/المسافة بينهما)، الحواجب (شكلها/كثافتها)، الأنف (حجمه/شكله/عرضه)، الفم والشفاه (حجمها/شكلها)، الخدين، الذقن وخط الفك، الأذنين، لون البشرة، ملمس البشرة، الشعر (لونه/كثافته/شكله)، أي علامات مميزة. كن دقيقاً جداً في الوصف.'
+              text: 'Describe this face in EXTREME detail in Arabic. Include: face shape (round/oval/square), eyes (shape/size/color/spacing), eyebrows (shape/thickness), nose (size/shape/width), mouth and lips (size/shape), cheeks, chin and jawline, ears, skin tone, skin texture, hair (color/density/style), facial hair (if any: beard/mustache style, color, length, density), any distinctive marks, wrinkles, age indicators. Be VERY specific and detailed. Write at least 200 words describing every visible facial feature.'
             },
             {
               type: 'image_url',
@@ -135,31 +135,18 @@ serve(async (req) => {
           ]
         }
       ],
-      max_tokens: 1000
+      max_tokens: 2000
     })
   })
 
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.text()
-      console.error('OpenAI API Error:', errorData)
-      
-      // Parse the error to provide better user feedback
-      let errorMessage = 'Failed to analyze face image'
-      try {
-        const parsedError = JSON.parse(errorData)
-        if (parsedError.error?.code === 'rate_limit_exceeded') {
-          errorMessage = 'تم تجاوز الحد المسموح من استخدام خدمة التحليل. يرجى المحاولة لاحقاً'
-        } else if (parsedError.error?.message) {
-          errorMessage = 'خطأ في خدمة التحليل'
-        }
-      } catch (e) {
-        // Keep default error message
-      }
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.text()
+      console.error('Gemini API Error:', errorData)
       
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: errorMessage,
+          error: 'خطأ في تحليل الصورة. يرجى المحاولة مرة أخرى.',
           matches: []
         }),
         { 
@@ -169,8 +156,10 @@ serve(async (req) => {
       )
     }
 
-    const aiResult = await openaiResponse.json()
+    const aiResult = await geminiResponse.json()
     const faceDescription = aiResult.choices[0]?.message?.content || ''
+    
+    console.log('Face description generated:', faceDescription.substring(0, 100) + '...')
 
     const { data: citizens, error: citizensError } = await supabase
       .from('citizens')
@@ -202,7 +191,7 @@ serve(async (req) => {
         
         console.log(`Comparing with ${citizen.full_name}: ${similarity.toFixed(3)} similarity`)
         
-        if (similarity > 0.30) {
+        if (similarity > 0.20) {
           matches.push({
             id: citizen.id,
             national_id: citizen.national_id,
@@ -235,7 +224,7 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           matches: [],
-          error: 'لم يتم العثور على تطابق كافٍ (الحد الأدنى 30%)'
+          error: 'لم يتم العثور على تطابق كافٍ (الحد الأدنى 20%)'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
