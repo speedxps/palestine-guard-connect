@@ -11,45 +11,51 @@ export const loadFaceApiModels = async (): Promise<boolean> => {
   try {
     console.log('🔄 بدء تحميل نماذج face-api.js...');
     
-    // محاولة التحميل من المجلد المحلي أولاً
-    const MODEL_URL = '/models';
+    // محاولة التحميل من CDN مباشرة (أكثر موثوقية)
+    const CDN_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
     
-    console.log('📁 محاولة التحميل من:', MODEL_URL);
+    console.log('📡 تحميل النماذج من CDN:', CDN_URL);
+    console.log('⏳ قد يستغرق التحميل بضع ثوانٍ، الرجاء الانتظار...');
     
     // تحميل النماذج الثلاثة المطلوبة
     await Promise.all([
-      faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+      faceapi.nets.ssdMobilenetv1.loadFromUri(CDN_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(CDN_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(CDN_URL),
     ]);
 
     modelsLoaded = true;
-    console.log('✅ تم تحميل جميع النماذج بنجاح من المجلد المحلي');
+    console.log('✅ تم تحميل جميع النماذج بنجاح!');
+    console.log('✅ النماذج المحملة: SSD MobileNet V1, Face Landmarks 68, Face Recognition');
     console.log('💡 النماذج جاهزة للاستخدام');
     return true;
-  } catch (localError) {
-    console.warn('⚠️ فشل التحميل من المجلد المحلي، محاولة التحميل من CDN...');
+  } catch (error) {
+    console.error('❌ فشل تحميل النماذج من CDN الأول، محاولة CDN بديل...');
     
     try {
-      // محاولة التحميل من CDN كبديل
-      const CDN_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master/models';
-      console.log('📡 محاولة التحميل من CDN:', CDN_URL);
+      // محاولة من CDN بديل
+      const BACKUP_CDN = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+      console.log('📡 تحميل من CDN البديل:', BACKUP_CDN);
       
       await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(CDN_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(CDN_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(CDN_URL),
+        faceapi.nets.ssdMobilenetv1.loadFromUri(BACKUP_CDN),
+        faceapi.nets.faceLandmark68Net.loadFromUri(BACKUP_CDN),
+        faceapi.nets.faceRecognitionNet.loadFromUri(BACKUP_CDN),
       ]);
 
       modelsLoaded = true;
-      console.log('✅ تم تحميل جميع النماذج بنجاح من CDN');
-      console.log('💡 ملاحظة: يُفضل تحميل النماذج محلياً للحصول على أداء أفضل');
+      console.log('✅ تم تحميل النماذج من CDN البديل بنجاح');
       return true;
-    } catch (cdnError) {
-      console.error('❌ خطأ في تحميل النماذج:', cdnError);
-      console.error('💡 تلميح: تأكد من وجود ملفات النماذج في public/models/');
-      console.error('💡 أو تحقق من اتصال الإنترنت للتحميل من CDN');
-      console.error('📖 راجع ملف SETUP_FACE_RECOGNITION_MODELS.md للتعليمات');
+    } catch (backupError) {
+      console.error('❌ فشل التحميل من جميع المصادر');
+      console.error('📋 تفاصيل الخطأ:', backupError);
+      console.error('');
+      console.error('🔧 حلول مقترحة:');
+      console.error('   1. تأكد من اتصالك بالإنترنت');
+      console.error('   2. حاول تحديث الصفحة (F5)');
+      console.error('   3. امسح الذاكرة المؤقتة للمتصفح');
+      console.error('   4. حاول استخدام متصفح مختلف');
+      console.error('');
       modelsLoaded = false;
       return false;
     }

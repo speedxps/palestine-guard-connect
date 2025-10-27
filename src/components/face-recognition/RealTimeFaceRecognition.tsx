@@ -21,6 +21,15 @@ export const RealTimeFaceRecognition: React.FC = () => {
 
   const { isModelLoaded, isLoading, error, searchFaces, extractAllFaceDescriptors } = useFaceApi();
 
+  // إظهار رسالة عند فشل التحميل
+  useEffect(() => {
+    if (!isLoading && !isModelLoaded && error) {
+      toast.error('فشل تحميل نماذج التعرف على الوجوه', {
+        description: 'الرجاء التحقق من اتصال الإنترنت وإعادة تحميل الصفحة'
+      });
+    }
+  }, [isLoading, isModelLoaded, error]);
+
   // تشغيل الكاميرا
   const startCamera = useCallback(async () => {
     try {
@@ -182,10 +191,36 @@ export const RealTimeFaceRecognition: React.FC = () => {
   if (error) {
     return (
       <Card className="w-full border-destructive">
-        <CardContent className="flex items-center justify-center p-12">
-          <div className="text-center space-y-4">
-            <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
-            <p className="text-destructive">{error}</p>
+        <CardContent className="p-8">
+          <div className="text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="bg-destructive/10 p-4 rounded-full">
+                <AlertCircle className="w-16 h-16 text-destructive" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-destructive">فشل تحميل نماذج التعرف على الوجوه</h3>
+              <p className="text-muted-foreground">{error}</p>
+            </div>
+
+            <div className="bg-muted p-4 rounded-lg text-right space-y-3">
+              <p className="font-semibold text-sm">🔧 الحلول المقترحة:</p>
+              <ul className="text-sm space-y-2 text-muted-foreground">
+                <li>✓ تأكد من اتصالك بالإنترنت</li>
+                <li>✓ حاول إعادة تحميل الصفحة (F5)</li>
+                <li>✓ امسح ذاكرة التخزين المؤقت للمتصفح</li>
+                <li>✓ حاول استخدام متصفح آخر (Chrome، Firefox)</li>
+              </ul>
+            </div>
+
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="w-full"
+              variant="default"
+            >
+              إعادة تحميل الصفحة
+            </Button>
           </div>
         </CardContent>
       </Card>
