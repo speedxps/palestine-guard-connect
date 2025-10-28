@@ -159,7 +159,7 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
     }
   };
 
-  // Face detection loop
+  // Enhanced face detection loop with better accuracy
   const startFaceDetection = () => {
     if (detectionIntervalRef.current) {
       clearInterval(detectionIntervalRef.current);
@@ -168,14 +168,28 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
     detectionIntervalRef.current = setInterval(async () => {
       if (videoRef.current && modelsLoaded && videoRef.current.readyState === 4) {
         try {
+          // Use better detection options for improved accuracy
           const detection = await faceapi.detectSingleFace(
             videoRef.current,
-            new faceapi.TinyFaceDetectorOptions()
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 320,  // Higher resolution for better detection
+              scoreThreshold: 0.4  // Lower threshold for easier detection
+            })
           ).withFaceLandmarks();
 
-          setFaceDetected(!!detection);
+          const wasPreviouslyDetected = faceDetected;
+          const isNowDetected = !!detection;
+          
+          setFaceDetected(isNowDetected);
 
-          // Draw detection on canvas
+          // Provide feedback when face detection state changes
+          if (!wasPreviouslyDetected && isNowDetected) {
+            toast.success('✓ تم اكتشاف الوجه!', { duration: 1500 });
+          } else if (wasPreviouslyDetected && !isNowDetected) {
+            toast.error('⚠ لم يعد الوجه مرئياً', { duration: 1500 });
+          }
+
+          // Draw detection on canvas with enhanced visualization
           if (canvasRef.current && detection) {
             const canvas = canvasRef.current;
             const displaySize = { 
@@ -188,7 +202,30 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
             const ctx = canvas.getContext('2d');
             if (ctx) {
               ctx.clearRect(0, 0, canvas.width, canvas.height);
-              faceapi.draw.drawFaceLandmarks(canvas, resizedDetection);
+              
+              // Draw landmarks with custom styling
+              const landmarks = resizedDetection.landmarks.positions;
+              ctx.fillStyle = '#22c55e';
+              ctx.strokeStyle = '#22c55e';
+              ctx.lineWidth = 2;
+              
+              landmarks.forEach((point) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+                ctx.fill();
+              });
+              
+              // Draw face box
+              const box = resizedDetection.detection.box;
+              ctx.strokeStyle = '#22c55e';
+              ctx.lineWidth = 3;
+              ctx.strokeRect(box.x, box.y, box.width, box.height);
+            }
+          } else if (canvasRef.current) {
+            // Clear canvas when no face detected
+            const ctx = canvasRef.current.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
             }
           }
         } catch (error) {
@@ -210,10 +247,46 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
     setIsCameraActive(false);
   };
 
-  // Capture photo
+  // Play capture sound
+  const playCaptureSound = () => {
+    try {
+      // Create a pleasant camera shutter sound
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+      
+      // Add a second tone for richness
+      const oscillator2 = audioContext.createOscillator();
+      const gainNode2 = audioContext.createGain();
+      oscillator2.connect(gainNode2);
+      gainNode2.connect(audioContext.destination);
+      oscillator2.frequency.value = 1200;
+      oscillator2.type = 'sine';
+      gainNode2.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+      oscillator2.start(audioContext.currentTime);
+      oscillator2.stop(audioContext.currentTime + 0.08);
+    } catch (error) {
+      console.log('Could not play capture sound:', error);
+    }
+  };
+
+  // Capture photo with enhanced feedback
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current || !faceDetected) {
-      toast.error('لم يتم اكتشاف وجه. تأكد من وضوح وجهك في الإطار');
+      toast.error('⚠️ لم يتم اكتشاف وجه. تأكد من وضوح وجهك في الإطار');
       return;
     }
 
@@ -226,11 +299,35 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+    // Draw with mirror effect
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.restore();
+    
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
     
     const newImages = [...capturedImages, imageBase64];
     setCapturedImages(newImages);
+
+    // Play capture sound
+    playCaptureSound();
+
+    // Visual feedback with flash effect
+    if (videoRef.current) {
+      const flashOverlay = document.createElement('div');
+      flashOverlay.style.position = 'absolute';
+      flashOverlay.style.top = '0';
+      flashOverlay.style.left = '0';
+      flashOverlay.style.width = '100%';
+      flashOverlay.style.height = '100%';
+      flashOverlay.style.backgroundColor = 'white';
+      flashOverlay.style.opacity = '0.8';
+      flashOverlay.style.pointerEvents = 'none';
+      flashOverlay.style.zIndex = '50';
+      videoRef.current.parentElement?.appendChild(flashOverlay);
+      setTimeout(() => flashOverlay.remove(), 150);
+    }
 
     // Update checkpoint dots
     const currentStepIndex = getCurrentStepIndex();
@@ -239,6 +336,9 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
         idx === currentStepIndex ? { ...dot, completed: true } : dot
       )
     );
+
+    // Success toast
+    toast.success(`✓ تم التقاط الصورة ${newImages.length} من 5`);
 
     // Move to next step
     moveToNextStep(newImages.length);
@@ -265,14 +365,16 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
       setInstruction(STEPS_CONFIG[nextStep].instruction);
       setProgress(20 + (imagesCount * 15));
       
-      // Play success sound (optional)
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
-      audio.volume = 0.3;
-      audio.play().catch(() => {});
+      // Enhanced instruction toast
+      toast.info(`📸 ${STEPS_CONFIG[nextStep].title}`, {
+        description: STEPS_CONFIG[nextStep].instruction,
+        duration: 3000,
+      });
       
     } else {
       // All images captured
       setProgress(95);
+      toast.success('✅ تم التقاط جميع الصور! جاري المعالجة...');
       processFaceData(capturedImages);
     }
   };
@@ -327,36 +429,42 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl">
-            {step === 'success' ? '✅ تم التسجيل بنجاح' : '🎭 تسجيل الوجه'}
+          <DialogTitle className="text-center text-2xl font-arabic">
+            {step === 'success' ? '✅ تم التسجيل بنجاح' : '📸 تسجيل الوجه للدخول السريع'}
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className="text-center text-lg font-arabic">
             {instruction}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Progress Bar */}
-          <Progress value={progress} className="w-full" />
+          {/* Progress Bar with Percentage */}
+          <div className="space-y-2">
+            <Progress value={progress} className="w-full h-3" />
+            <p className="text-center text-sm text-muted-foreground font-arabic">
+              {Math.round(progress)}% مكتمل - {capturedImages.length} من 5 صور
+            </p>
+          </div>
 
-          {/* Camera View with Checkpoint Dots */}
+          {/* Camera View with Checkpoint Dots - LARGER SIZE */}
           {(step.startsWith('capture-') || step === 'processing') && (
-            <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-                style={{ transform: 'scaleX(-1)' }}
-              />
-              <canvas
-                ref={canvasRef}
-                className="absolute top-0 left-0 w-full h-full"
-                style={{ transform: 'scaleX(-1)' }}
-              />
+            <div className="relative w-full bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30">
+              <div className="relative aspect-[4/3]">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+                <canvas
+                  ref={canvasRef}
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  style={{ transform: 'scaleX(-1)' }}
+                />
               
               {/* Animated Circle Frame */}
               <motion.div
@@ -402,8 +510,8 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
                 </svg>
               </motion.div>
 
-              {/* Face Detection Indicator */}
-              <div className="absolute top-4 right-4">
+              {/* Face Detection Indicator - Enhanced */}
+              <div className="absolute top-6 right-6 z-10">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0.5 }}
                   animate={{ 
@@ -411,12 +519,71 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
                     opacity: faceDetected ? 1 : 0.5
                   }}
                   transition={{ duration: 0.3 }}
-                  className={`p-2 rounded-full ${faceDetected ? 'bg-green-500' : 'bg-yellow-500'}`}
+                  className={`p-3 rounded-full shadow-lg backdrop-blur-sm ${
+                    faceDetected 
+                      ? 'bg-green-500/90 ring-4 ring-green-300/50' 
+                      : 'bg-yellow-500/90 ring-4 ring-yellow-300/50'
+                  }`}
                 >
-                  {faceDetected ? <CheckCircle className="w-6 h-6 text-white" /> : <AlertCircle className="w-6 h-6 text-white" />}
+                  {faceDetected ? (
+                    <CheckCircle className="w-7 h-7 text-white" />
+                  ) : (
+                    <AlertCircle className="w-7 h-7 text-white animate-pulse" />
+                  )}
                 </motion.div>
               </div>
+
+              {/* Step Instruction Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center"
+                >
+                  <p className="text-white text-xl font-bold font-arabic mb-2">
+                    {step.startsWith('capture-') && STEPS_CONFIG[step as keyof typeof STEPS_CONFIG]?.title}
+                  </p>
+                  <p className="text-white/80 text-sm font-arabic">
+                    {faceDetected ? '✓ تم اكتشاف الوجه - جاهز للالتقاط' : '⚠ ضع وجهك في الإطار'}
+                  </p>
+                </motion.div>
+              </div>
+              </div>
             </div>
+          )}
+
+          {/* Captured Images Preview */}
+          {capturedImages.length > 0 && step.startsWith('capture-') && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="space-y-2"
+            >
+              <p className="text-sm font-semibold text-center font-arabic">
+                الصور الملتقطة ({capturedImages.length}/5)
+              </p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                {capturedImages.map((img, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-green-500 shadow-lg"
+                  >
+                    <img 
+                      src={`data:image/jpeg;base64,${img}`} 
+                      alt={`صورة ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      style={{ transform: 'scaleX(-1)' }}
+                    />
+                    <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-white drop-shadow-lg" />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           )}
 
           {/* Loading Models Step */}
@@ -474,27 +641,48 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
+          {/* Enhanced Action Buttons */}
+          <div className="flex gap-3 pt-2">
             {step.startsWith('capture-') && (
               <>
                 <Button 
                   onClick={capturePhoto} 
-                  className="flex-1"
+                  className="flex-1 text-lg py-6 font-arabic shadow-lg"
                   disabled={!faceDetected}
+                  size="lg"
                 >
-                  <Camera className="w-4 h-4 mr-2" />
-                  التقاط الصورة
+                  <Camera className="w-6 h-6 ml-2" />
+                  {faceDetected ? '📸 التقاط الآن' : '⏳ في انتظار الوجه...'}
                 </Button>
-                <Button onClick={handleClose} variant="outline">
+                <Button 
+                  onClick={handleClose} 
+                  variant="outline"
+                  className="py-6 font-arabic"
+                  size="lg"
+                >
                   إلغاء
                 </Button>
               </>
             )}
 
             {(step === 'error' || step === 'success') && (
-              <Button onClick={handleClose} className="w-full">
+              <Button 
+                onClick={handleClose} 
+                className="w-full py-6 font-arabic"
+                size="lg"
+              >
                 إغلاق
+              </Button>
+            )}
+
+            {step === 'loading-models' && (
+              <Button
+                onClick={handleClose}
+                variant="outline"
+                className="w-full py-6 font-arabic"
+                size="lg"
+              >
+                إلغاء
               </Button>
             )}
           </div>
