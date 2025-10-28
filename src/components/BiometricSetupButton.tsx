@@ -78,8 +78,9 @@ export const BiometricSetupButton = ({ isEnabled, onToggle }: BiometricSetupButt
 
         if (error) throw error;
 
-        // Save user ID for biometric login
+        // Save user ID and enabled status for biometric login
         localStorage.setItem('biometricUserId', user.id);
+        localStorage.setItem('biometricEnabled', 'true');
 
         toast.success('تم تفعيل تسجيل الدخول بالبصمة');
         onToggle(true);

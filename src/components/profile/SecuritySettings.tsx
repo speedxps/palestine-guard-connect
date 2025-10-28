@@ -62,6 +62,16 @@ export const SecuritySettings = () => {
   const handleFaceLoginSuccess = async () => {
     setFaceLoginEnabled(true);
     localStorage.setItem('faceLoginEnabled', 'true');
+    
+    // Also update database
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ face_login_enabled: true })
+        .eq('user_id', user.id);
+    }
+    
     setShowFaceSetup(false);
     toast({
       title: "✅ تم تفعيل تسجيل الدخول بالوجه",
@@ -291,7 +301,10 @@ export const SecuritySettings = () => {
             {/* المصادقة البيومترية */}
             <BiometricSetupButton 
               isEnabled={biometricEnabled}
-              onToggle={setBiometricEnabled}
+              onToggle={(enabled) => {
+                setBiometricEnabled(enabled);
+                localStorage.setItem('biometricEnabled', enabled ? 'true' : 'false');
+              }}
             />
 
             {/* تسجيل الدخول بالوجه */}

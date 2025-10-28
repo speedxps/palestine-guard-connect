@@ -7,6 +7,7 @@ import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useFaceLogin } from '@/hooks/useFaceLogin';
 import { supabase } from '@/integrations/supabase/client';
 import { AdvancedFaceLoginSetup } from './AdvancedFaceLoginSetup';
+import { AdvancedFaceLoginVerify } from './AdvancedFaceLoginVerify';
 
 interface IntegratedLoginButtonProps {
   onSuccess: () => void;
@@ -18,97 +19,50 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
   const [hasBiometric, setHasBiometric] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showFaceSetup, setShowFaceSetup] = useState(false);
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [showFaceVerify, setShowFaceVerify] = useState(false);
 
   const { isSupported: biometricSupported, isRegistered: biometricRegistered, authenticate: authenticateBiometric } = useBiometricAuth();
   const { verifyFaceAndLogin, isVerifying } = useFaceLogin();
 
   useEffect(() => {
     checkAvailableMethods();
-    
-    return () => {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-      }
-    };
   }, []);
 
   const checkAvailableMethods = async () => {
     try {
-      // Check if face login is enabled (check localStorage for quick access)
-      const faceEnabled = localStorage.getItem('faceLoginEnabled') === 'true';
-      setHasFaceLogin(faceEnabled);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Check database for enabled features
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('face_login_enabled, biometric_enabled')
+          .eq('user_id', user.id)
+          .single();
 
-      // Check if biometric is available and registered
-      const biometricAvailable = biometricSupported && biometricRegistered;
-      setHasBiometric(biometricAvailable);
+        if (profile) {
+          setHasFaceLogin(profile.face_login_enabled || false);
+          setHasBiometric(profile.biometric_enabled || false);
+          
+          // Also sync with localStorage for faster access
+          localStorage.setItem('faceLoginEnabled', profile.face_login_enabled ? 'true' : 'false');
+          localStorage.setItem('biometricEnabled', profile.biometric_enabled ? 'true' : 'false');
+        }
+      } else {
+        // If no user, check localStorage as fallback
+        const faceEnabled = localStorage.getItem('faceLoginEnabled') === 'true';
+        const bioEnabled = localStorage.getItem('biometricEnabled') === 'true';
+        setHasFaceLogin(faceEnabled);
+        setHasBiometric(bioEnabled && biometricSupported && biometricRegistered);
+      }
     } catch (error) {
       console.error('Error checking biometric methods:', error);
     }
   };
 
-  const handleFaceLogin = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Start camera
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
-      });
-      setCameraStream(stream);
-
-      // Create video element to capture frame
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-
-      // Wait for video to be ready
-      await new Promise(resolve => {
-        video.onloadedmetadata = resolve;
-      });
-
-      // Small delay to ensure camera is fully initialized
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Capture frame
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) throw new Error('Failed to get canvas context');
-      
-      ctx.drawImage(video, 0, 0);
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
-
-      // Stop camera
-      stream.getTracks().forEach(track => track.stop());
-      setCameraStream(null);
-
-      // Verify face
-      toast.info('جاري التحقق من الوجه...');
-      const result = await verifyFaceAndLogin(imageBase64);
-
-      if (result.success) {
-        toast.success('تم تسجيل الدخول بنجاح!');
-        setTimeout(() => {
-          onSuccess();
-        }, 500);
-      } else {
-        toast.error(result.error || 'فشل التحقق من الوجه');
-      }
-    } catch (error: any) {
-      console.error('Face login error:', error);
-      toast.error('فشل في تسجيل الدخول بالوجه');
-      
-      // Clean up camera stream on error
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        setCameraStream(null);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+  const handleFaceLogin = () => {
+    setShowFaceVerify(true);
   };
 
   const handleBiometricLogin = async () => {
@@ -241,6 +195,13 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
           setHasFaceLogin(true);
           localStorage.setItem('faceLoginEnabled', 'true');
         }}
+      />
+
+      {/* Face Login Verify Modal */}
+      <AdvancedFaceLoginVerify
+        isOpen={showFaceVerify}
+        onClose={() => setShowFaceVerify(false)}
+        onSuccess={onSuccess}
       />
     </>
   );
