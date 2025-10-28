@@ -133,8 +133,8 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
 
       // Set session
       const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.session.accessToken,
-        refresh_token: data.session.refreshToken
+        access_token: data.accessToken,
+        refresh_token: data.refreshToken
       });
 
       if (sessionError) throw sessionError;
