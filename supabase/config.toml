@@ -14,3 +14,9 @@ verify_jwt = true
 
 [functions.verify-face-login]
 verify_jwt = false
+
+[functions.save-face-data]
+verify_jwt = false
+
+[functions.verify-biometric-login]
+verify_jwt = false

@@ -47,10 +47,28 @@ export const SecuritySettings = () => {
   const handleToggleBiometric = async (enabled: boolean) => {
     if (enabled && biometricSupported) {
       if (!biometricRegistered) {
-        // First register biometric data
         try {
           const result = await biometricRegister();
           if (result.success) {
+            // حفظ في قاعدة البيانات
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { error } = await supabase
+                .from('profiles')
+                .update({
+                  biometric_enabled: true,
+                  biometric_registered_at: new Date().toISOString()
+                })
+                .eq('user_id', user.id);
+
+              if (error) {
+                console.error('Error updating profile:', error);
+              }
+
+              // حفظ userId في localStorage للربط
+              localStorage.setItem('biometric_user_id', user.id);
+            }
+
             setBiometricEnabled(true);
             localStorage.setItem('biometricEnabled', 'true');
             toast({
@@ -73,7 +91,6 @@ export const SecuritySettings = () => {
           });
         }
       } else {
-        // Already registered, just enable
         setBiometricEnabled(true);
         localStorage.setItem('biometricEnabled', 'true');
         toast({
@@ -82,6 +99,15 @@ export const SecuritySettings = () => {
         });
       }
     } else {
+      // تعطيل البصمة
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ biometric_enabled: false })
+          .eq('user_id', user.id);
+      }
+
       setBiometricEnabled(false);
       localStorage.setItem('biometricEnabled', 'false');
       toast({

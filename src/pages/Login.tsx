@@ -10,8 +10,7 @@ import { Users, Eye, EyeOff, Info } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import LoginBlocked from "./LoginBlocked";
-import FaceLoginButton from "@/components/FaceLoginButton";
-import BiometricLoginButton from "@/components/BiometricLoginButton";
+import UnifiedBiometricLogin from "@/components/UnifiedBiometricLogin";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -377,19 +376,18 @@ const Login = () => {
             {isLoading ? "Loading..." : "Login"}
           </Button>
 
-          {/* أزرار تسجيل الدخول البديلة */}
-          <div className="space-y-2 mt-4">
+          {/* تسجيل الدخول البيومتري الموحد */}
+          <div className="space-y-3 mt-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-gray-500">OR</span>
+                <span className="bg-white px-2 text-gray-500 font-arabic">أو</span>
               </div>
             </div>
             
-            <FaceLoginButton onSuccess={() => navigate('/dashboard')} />
-            <BiometricLoginButton onSuccess={() => navigate('/dashboard')} />
+            <UnifiedBiometricLogin onSuccess={() => navigate('/dashboard')} />
           </div>
         </form>
       </div>

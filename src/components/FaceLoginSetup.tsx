@@ -6,7 +6,7 @@ import { Camera, Check, X, RefreshCw, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useFaceRecognition } from '@/hooks/useFaceRecognition';
+
 
 interface FaceLoginSetupProps {
   isOpen: boolean;
@@ -17,7 +17,6 @@ interface FaceLoginSetupProps {
 export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose, onSuccess }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { generateFaceEmbedding, saveFaceData, isLoading: faceRecognitionLoading } = useFaceRecognition();
   const [step, setStep] = useState<'capture' | 'confirm' | 'processing'>('capture');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -100,21 +99,20 @@ export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose,
     setStep('processing');
 
     try {
-      // Generate face embedding using AI
-      const embeddingResult = await generateFaceEmbedding(capturedImage);
+      const imageBase64 = capturedImage.split(',')[1];
+
+      console.log('🔐 Saving face data via Edge Function...');
       
-      if (!embeddingResult.success || !embeddingResult.embedding) {
-        throw new Error(embeddingResult.error || 'فشل في معالجة الصورة');
+      const { data, error } = await supabase.functions.invoke('save-face-data', {
+        body: { userId: user.id, imageBase64 }
+      });
+
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || 'فشل في حفظ بيانات الوجه');
       }
 
-      // Save face data with encryption
-      const saveResult = await saveFaceData(user.id, capturedImage, embeddingResult.embedding);
-      
-      if (!saveResult.success) {
-        throw new Error(saveResult.error || 'فشل في حفظ البيانات');
-      }
+      console.log('✅ Face data saved successfully');
 
-      // Save preference in localStorage
       localStorage.setItem('faceLoginEnabled', 'true');
 
       toast({
@@ -249,11 +247,11 @@ export const FaceLoginSetup: React.FC<FaceLoginSetupProps> = ({ isOpen, onClose,
                 </Button>
                 <Button
                   onClick={processFaceData}
-                  disabled={loading || faceRecognitionLoading}
+                  disabled={loading}
                   className="flex-1"
                 >
                   <Check className="h-4 w-4 mr-2" />
-                  {loading || faceRecognitionLoading ? 'معالجة...' : 'تأكيد وحفظ'}
+                  {loading ? 'معالجة...' : 'تأكيد وحفظ'}
                 </Button>
               </div>
             </>
