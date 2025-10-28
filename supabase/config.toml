@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.batch-generate-face-vectors]
 verify_jwt = true
+
+[functions.verify-face-login]
+verify_jwt = false

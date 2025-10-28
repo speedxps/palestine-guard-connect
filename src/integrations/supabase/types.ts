@@ -2350,8 +2350,12 @@ export type Database = {
         Row: {
           avatar_url: string | null
           badge_number: string | null
+          biometric_enabled: boolean | null
+          biometric_registered_at: string | null
           created_at: string
           email: string | null
+          face_login_enabled: boolean | null
+          face_registered_at: string | null
           full_name: string
           id: string
           is_active: boolean
@@ -2364,8 +2368,12 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           badge_number?: string | null
+          biometric_enabled?: boolean | null
+          biometric_registered_at?: string | null
           created_at?: string
           email?: string | null
+          face_login_enabled?: boolean | null
+          face_registered_at?: string | null
           full_name: string
           id?: string
           is_active?: boolean
@@ -2378,8 +2386,12 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           badge_number?: string | null
+          biometric_enabled?: boolean | null
+          biometric_registered_at?: string | null
           created_at?: string
           email?: string | null
+          face_login_enabled?: boolean | null
+          face_registered_at?: string | null
           full_name?: string
           id?: string
           is_active?: boolean

@@ -105,9 +105,79 @@ export const SecuritySettings = () => {
     }
   };
 
+  const handleFaceLoginSuccess = async () => {
+    // تحديث حالة تسجيل الدخول بالوجه في قاعدة البيانات
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          face_login_enabled: true,
+          face_registered_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        console.error('خطأ في تحديث قاعدة البيانات:', updateError);
+      }
+    }
+
+    setFaceLoginEnabled(true);
+    setShowFaceSetup(false);
+    toast({
+      title: "✅ تم تفعيل تسجيل الدخول بالوجه",
+      description: "يمكنك الآن استخدام وجهك لتسجيل الدخول",
+    });
+  };
+
+  const handleDisableFaceLogin = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // تعطيل في قاعدة البيانات
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          face_login_enabled: false,
+          face_registered_at: null
+        })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        console.error('خطأ في تحديث قاعدة البيانات:', updateError);
+        toast({
+          title: "❌ خطأ",
+          description: "فشل تعطيل تسجيل الدخول بالوجه",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // تعطيل face_data
+      const { error: faceDataError } = await supabase
+        .from('face_data')
+        .update({ is_active: false })
+        .eq('user_id', user.id);
+
+      if (faceDataError) {
+        console.error('خطأ في تحديث face_data:', faceDataError);
+      }
+    }
+
+    setFaceLoginEnabled(false);
+    localStorage.setItem('faceLoginEnabled', 'false');
+    toast({
+      title: "ℹ️ تم تعطيل تسجيل الدخول بالوجه",
+      description: "لن تتمكن من استخدام الوجه لتسجيل الدخول",
+    });
+  };
+
   const handleTwoFactorSuccess = () => {
-    // Refresh component to show updated status
     loadSecuritySettings();
+    setShowTwoFactorSetup(false);
+    toast({
+      title: "✅ تم تفعيل المصادقة الثنائية",
+      description: "يمكنك الآن استخدام رموز TOTP لتسجيل الدخول",
+    });
   };
 
   const handleChangePassword = async () => {
@@ -317,7 +387,27 @@ export const SecuritySettings = () => {
                   <Label className="font-arabic text-sm">تسجيل الدخول بالوجه</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  {!faceLoginEnabled ? (
+                  {faceLoginEnabled && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowFaceSetup(true)}
+                        className="text-xs"
+                      >
+                        إعادة التسجيل
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleDisableFaceLogin}
+                        className="text-xs"
+                      >
+                        تعطيل
+                      </Button>
+                    </>
+                  )}
+                  {!faceLoginEnabled && (
                     <Button
                       size="sm"
                       onClick={() => setShowFaceSetup(true)}
@@ -325,18 +415,6 @@ export const SecuritySettings = () => {
                     >
                       إعداد
                     </Button>
-                  ) : (
-                    <Switch
-                      checked={faceLoginEnabled}
-                      onCheckedChange={(enabled) => {
-                        localStorage.setItem('faceLoginEnabled', enabled.toString());
-                        setFaceLoginEnabled(enabled);
-                        toast({
-                          title: enabled ? "تم تفعيل تسجيل الدخول بالوجه" : "تم إلغاء تسجيل الدخول بالوجه",
-                          description: enabled ? "يمكنك الآن استخدام وجهك للدخول" : "تم إلغاء تفعيل تسجيل الدخول بالوجه",
-                        });
-                      }}
-                    />
                   )}
                 </div>
               </div>
@@ -434,10 +512,7 @@ export const SecuritySettings = () => {
         <FaceLoginSetup
           isOpen={showFaceSetup}
           onClose={() => setShowFaceSetup(false)}
-          onSuccess={() => {
-            setFaceLoginEnabled(true);
-            loadSecuritySettings();
-          }}
+          onSuccess={handleFaceLoginSuccess}
         />
     </Dialog>
   );
