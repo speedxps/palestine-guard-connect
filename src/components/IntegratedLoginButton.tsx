@@ -30,34 +30,50 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
 
   const checkAvailableMethods = async () => {
     try {
-      // Get current user
+      console.log('🔍 Checking available biometric methods...');
+      
+      // Priority 1: Check localStorage first (fast, works without user)
+      const faceEnabledLocal = localStorage.getItem('faceLoginEnabled') === 'true';
+      const bioEnabledLocal = localStorage.getItem('biometricEnabled') === 'true';
+      
+      console.log('📦 localStorage status:', { faceEnabledLocal, bioEnabledLocal });
+      
+      // Set immediately from localStorage
+      setHasFaceLogin(faceEnabledLocal);
+      setHasBiometric(bioEnabledLocal && biometricSupported && biometricRegistered);
+      
+      // Priority 2: Then verify with database if user exists (optional sync)
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Check database for enabled features
-        const { data: profile } = await supabase
+        console.log('👤 User found, syncing with database...');
+        
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('face_login_enabled, biometric_enabled')
           .eq('user_id', user.id)
           .single();
 
-        if (profile) {
+        if (!error && profile) {
+          console.log('✅ Database sync:', profile);
+          
+          // Update states and localStorage
           setHasFaceLogin(profile.face_login_enabled || false);
           setHasBiometric(profile.biometric_enabled || false);
           
-          // Also sync with localStorage for faster access
           localStorage.setItem('faceLoginEnabled', profile.face_login_enabled ? 'true' : 'false');
           localStorage.setItem('biometricEnabled', profile.biometric_enabled ? 'true' : 'false');
         }
       } else {
-        // If no user, check localStorage as fallback
-        const faceEnabled = localStorage.getItem('faceLoginEnabled') === 'true';
-        const bioEnabled = localStorage.getItem('biometricEnabled') === 'true';
-        setHasFaceLogin(faceEnabled);
-        setHasBiometric(bioEnabled && biometricSupported && biometricRegistered);
+        console.log('ℹ️ No user logged in, using localStorage only');
       }
     } catch (error) {
-      console.error('Error checking biometric methods:', error);
+      console.error('❌ Error checking biometric methods:', error);
+      // In case of error, still rely on localStorage
+      const faceEnabledLocal = localStorage.getItem('faceLoginEnabled') === 'true';
+      const bioEnabledLocal = localStorage.getItem('biometricEnabled') === 'true';
+      setHasFaceLogin(faceEnabledLocal);
+      setHasBiometric(bioEnabledLocal && biometricSupported && biometricRegistered);
     }
   };
 
@@ -74,14 +90,16 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
       const authResult = await authenticateBiometric();
 
       if (!authResult.success) {
-        toast.error(authResult.error || 'فشل في التحقق من البصمة');
+        // Show more specific error message
+        const errorMessage = authResult.error || 'فشل في التحقق من البصمة';
+        toast.error(errorMessage);
         return;
       }
 
       // Get stored user ID
       const storedUserId = localStorage.getItem('biometricUserId');
       if (!storedUserId) {
-        toast.error('لم يتم العثور على معلومات المستخدم. يرجى إعادة تسجيل البصمة');
+        toast.error('⚠️ لم يتم العثور على معلومات المستخدم. يرجى إعادة تسجيل البصمة من إعدادات الحساب');
         return;
       }
 
@@ -105,13 +123,13 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
 
       if (sessionError) throw sessionError;
 
-      toast.success('تم تسجيل الدخول بنجاح!');
+      toast.success('✅ تم تسجيل الدخول بنجاح!');
       setTimeout(() => {
         onSuccess();
       }, 500);
     } catch (error: any) {
-      console.error('Biometric login error:', error);
-      toast.error('فشل في تسجيل الدخول بالبصمة');
+      console.error('❌ Biometric login error:', error);
+      toast.error('فشل في تسجيل الدخول بالبصمة. يرجى المحاولة مرة أخرى.');
     } finally {
       setIsLoading(false);
     }

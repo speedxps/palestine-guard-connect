@@ -80,6 +80,8 @@ export const AdvancedFaceLoginVerify = ({ isOpen, onClose, onSuccess }: Advanced
 
   const startCamera = async () => {
     try {
+      console.log('🎥 بدء تشغيل الكاميرا...');
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: 'user',
@@ -88,27 +90,37 @@ export const AdvancedFaceLoginVerify = ({ isOpen, onClose, onSuccess }: Advanced
         }
       });
       
+      console.log('✅ تم الحصول على stream:', stream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        console.log('✅ تم ربط الفيديو بالـ stream');
+        
         streamRef.current = stream;
         
         await new Promise<void>((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
+              console.log('✅ تم تحميل metadata للفيديو');
+              console.log('📐 أبعاد الفيديو:', {
+                width: videoRef.current?.videoWidth,
+                height: videoRef.current?.videoHeight
+              });
               resolve();
             };
           }
         });
         
+        console.log('✅ الكاميرا جاهزة للعرض');
         setIsCameraActive(true);
         setStep('ready');
         setInstruction('ضع وجهك في الإطار');
-        toast.success('انظر للكاميرا مباشرة 📸');
+        toast.success('📸 انظر للكاميرا مباشرة');
         
         startFaceDetection();
       }
     } catch (error: any) {
-      console.error('Camera error:', error);
+      console.error('❌ خطأ في الكاميرا:', error);
       
       if (error.name === 'NotAllowedError') {
         toast.error('تم رفض إذن الكاميرا');
@@ -131,11 +143,23 @@ export const AdvancedFaceLoginVerify = ({ isOpen, onClose, onSuccess }: Advanced
       if (!videoRef.current || !canvasRef.current || !modelsLoaded) return;
 
       try {
+        // Update canvas dimensions to match video
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+        
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          console.log('📐 تم تحديث أبعاد Canvas:', {
+            width: canvas.width,
+            height: canvas.height
+          });
+        }
+
         const detection = await faceapi
           .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks();
 
-        const canvas = canvasRef.current;
         const displaySize = {
           width: videoRef.current.videoWidth,
           height: videoRef.current.videoHeight
@@ -281,40 +305,45 @@ export const AdvancedFaceLoginVerify = ({ isOpen, onClose, onSuccess }: Advanced
 
           {/* Camera View */}
           <div className="relative aspect-video bg-black">
+            {/* Video and Canvas - Always in background */}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+
+            {/* Overlays for different states */}
             {step === 'loading-models' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 >
                   <Camera className="w-16 h-16 text-primary mb-4" />
                 </motion.div>
-                <p className="text-white text-lg">جاري التحضير...</p>
+                <p className="text-white text-lg">جاري تحميل النماذج...</p>
+                <p className="text-white/70 text-sm mt-2">سيتم فتح الكاميرا تلقائياً</p>
               </div>
             )}
 
             {step === 'camera-opening' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
                 <Loader2 className="w-16 h-16 text-primary animate-spin mb-4" />
                 <p className="text-white text-lg">جاري فتح الكاميرا...</p>
               </div>
             )}
 
+            {/* Animated Circle Frame - Only when ready */}
             {(step === 'ready' || step === 'countdown') && (
               <>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 w-full h-full"
-                />
-
-                {/* Animated Circle Frame */}
                 <motion.div
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   initial={{ scale: 0.8, opacity: 0 }}

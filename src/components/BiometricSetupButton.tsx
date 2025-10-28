@@ -49,17 +49,21 @@ export const BiometricSetupButton = ({ isEnabled, onToggle }: BiometricSetupButt
     } else {
       // Enable biometric
       if (!isSupported) {
-        toast.error('المصادقة البيومترية غير مدعومة على هذا الجهاز');
+        toast.error('⚠️ المصادقة البيومترية غير مدعومة على هذا الجهاز');
         return;
       }
 
       try {
         setIsLoading(true);
         
+        // Show a helpful message before registration
+        toast.info('📱 تأكد من تسجيل بصمتك على الهاتف أولاً في إعدادات الجهاز');
+        
         // Call register from useBiometricAuth - this will trigger the real biometric prompt
         const result = await register();
 
         if (!result.success) {
+          // Show specific error message
           toast.error(result.error || 'فشل في تسجيل البصمة');
           return;
         }

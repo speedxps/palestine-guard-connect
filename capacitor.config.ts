@@ -12,11 +12,9 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true,
     },
-    FingerprintAIO: {
-      requestCode: 'BIOMETRIC_REQUEST_CODE',
-      disableBackup: false,
-      cancelled: 'Authentication was cancelled',
-    },
+    NativeBiometric: {
+      // Native biometric authentication from @aparajita/capacitor-biometric-auth
+    }
   },
 };
 
