@@ -5,9 +5,10 @@ import { useRoleBasedAccess } from "@/hooks/useRoleBasedAccess";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useTicketsCount } from "@/hooks/useTicketsCount";
 import { useGPSTracking } from "@/hooks/useGPSTracking";
+import { useUserRoles, UserRole } from "@/hooks/useUserRoles";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Bot, Newspaper, Lock, Users, AlertCircle, Radio, MapPin, Palmtree, GitBranch } from "lucide-react";
+import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Bot, Newspaper, Lock, Users, AlertCircle, Radio, MapPin, Palmtree, GitBranch, FileText, UserSearch, ClipboardList, Eye, Siren, MessageSquare, Target, Globe, FileCheck, Camera } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import ModernSidebar from "@/components/layout/ModernSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -17,9 +18,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
+// Quick Access Button Type
+interface QuickAccessButton {
+  title: string;
+  icon: any;
+  path: string;
+  gradient: string;
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { hasAccess } = useRoleBasedAccess();
+  const { roles, hasRole, hasAnyRole, isAdmin } = useUserRoles();
   const navigate = useNavigate();
   const stats = useDashboardStats();
   const { ticketsCounts } = useTicketsCount();
@@ -28,6 +38,109 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadNewsCount, setUnreadNewsCount] = useState(0);
   const [newsItems, setNewsItems] = useState<any[]>([]);
+
+  // Get quick access buttons based on user roles
+  const getQuickAccessButtons = (): QuickAccessButton[] => {
+    // Admin - Operations System
+    if (isAdmin || hasRole('operations_system')) {
+      return [
+        { title: "إدارة البلاغات", icon: AlertCircle, path: "/incidents-management", gradient: "from-blue-500 to-blue-600" },
+        { title: "إدارة المستخدمين", icon: Users, path: "/admin-panel", gradient: "from-indigo-500 to-indigo-600" },
+        { title: "التقارير", icon: FileText, path: "/reports", gradient: "from-purple-500 to-purple-600" },
+        { title: "المهام العاجلة", icon: Target, path: "/urgent-tasks", gradient: "from-red-500 to-red-600" },
+      ];
+    }
+
+    // Traffic Police
+    if (hasRole('traffic_police')) {
+      return [
+        { title: "المخالفات", icon: Car, path: "/violations", gradient: "from-orange-500 to-orange-600" },
+        { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-amber-500 to-amber-600" },
+        { title: "الاستعلام عن مركبة", icon: Search, path: "/vehicle-inquiry", gradient: "from-yellow-500 to-yellow-600" },
+        { title: "الدوريات", icon: Radio, path: "/patrol", gradient: "from-lime-500 to-lime-600" },
+      ];
+    }
+
+    // CID
+    if (hasRole('cid')) {
+      return [
+        { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-blue-500 to-blue-600" },
+        { title: "التعرف على الوجوه", icon: Camera, path: "/face-recognition", gradient: "from-cyan-500 to-cyan-600" },
+        { title: "المطلوبون", icon: UserSearch, path: "/wanted-persons-tree", gradient: "from-sky-500 to-sky-600" },
+        { title: "سجل المشتبهين", icon: FileCheck, path: "/cid-suspect-search", gradient: "from-indigo-500 to-indigo-600" },
+      ];
+    }
+
+    // Cybercrime
+    if (hasRole('cybercrime')) {
+      return [
+        { title: "الجرائم الإلكترونية", icon: Shield, path: "/cybercrime", gradient: "from-purple-500 to-purple-600" },
+        { title: "لوحة التحكم المتقدمة", icon: Wifi, path: "/cybercrime-advanced-dashboard", gradient: "from-violet-500 to-violet-600" },
+        { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-fuchsia-500 to-fuchsia-600" },
+        { title: "تقارير الجرائم", icon: FileText, path: "/cybercrime-reports", gradient: "from-pink-500 to-pink-600" },
+      ];
+    }
+
+    // Special Police
+    if (hasRole('special_police')) {
+      return [
+        { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-green-500 to-green-600" },
+        { title: "الدوريات", icon: Radio, path: "/patrol", gradient: "from-emerald-500 to-emerald-600" },
+        { title: "بلاغ جديد", icon: AlertCircle, path: "/new-incident", gradient: "from-teal-500 to-teal-600" },
+        { title: "التواصل المشترك", icon: MessageSquare, path: "/inter-department-communication", gradient: "from-cyan-500 to-cyan-600" },
+      ];
+    }
+
+    // Judicial Police
+    if (hasRole('judicial_police')) {
+      return [
+        { title: "البحث عن القضايا", icon: Search, path: "/judicial-case-search", gradient: "from-slate-500 to-slate-600" },
+        { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-gray-500 to-gray-600" },
+        { title: "التواصل الرسمي", icon: MessageSquare, path: "/judicial-communications", gradient: "from-zinc-500 to-zinc-600" },
+        { title: "تتبع القضايا", icon: Eye, path: "/judicial-tracking", gradient: "from-stone-500 to-stone-600" },
+      ];
+    }
+
+    // Borders
+    if (hasRole('borders')) {
+      return [
+        { title: "مراقبة المعابر", icon: Eye, path: "/borders-monitoring", gradient: "from-teal-500 to-teal-600" },
+        { title: "قاعدة البيانات", icon: FileCheck, path: "/borders-database", gradient: "from-cyan-500 to-cyan-600" },
+        { title: "البحث والاستعلام", icon: Search, path: "/borders-database", gradient: "from-sky-500 to-sky-600" },
+        { title: "إدارة التصاريح", icon: FileText, path: "/borders-permits", gradient: "from-blue-500 to-blue-600" },
+      ];
+    }
+
+    // Tourism Police
+    if (hasRole('tourism_police')) {
+      return [
+        { title: "المواقع السياحية", icon: Globe, path: "/tourism-sites", gradient: "from-emerald-500 to-emerald-600" },
+        { title: "مساعدة الزوار", icon: Users, path: "/tourism-assistance", gradient: "from-green-500 to-green-600" },
+        { title: "البلاغات السياحية", icon: AlertCircle, path: "/incidents", gradient: "from-lime-500 to-lime-600" },
+        { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-teal-500 to-teal-600" },
+      ];
+    }
+
+    // Joint Operations
+    if (hasRole('joint_operations')) {
+      return [
+        { title: "التنسيق مع الأجهزة", icon: MessageSquare, path: "/joint-ops-coordination", gradient: "from-purple-500 to-purple-600" },
+        { title: "العمليات المشتركة", icon: Target, path: "/joint-ops-operations", gradient: "from-pink-500 to-pink-600" },
+        { title: "غرفة العمليات", icon: Radio, path: "/joint-ops-command-center", gradient: "from-fuchsia-500 to-fuchsia-600" },
+        { title: "الملفات المشتركة", icon: FileCheck, path: "/joint-ops-shared-files", gradient: "from-violet-500 to-violet-600" },
+      ];
+    }
+
+    // Default for regular users
+    return [
+      { title: "المهام", icon: ClipboardList, path: "/tasks", gradient: "from-blue-500 to-blue-600" },
+      { title: "البلاغات", icon: AlertCircle, path: "/incidents", gradient: "from-red-500 to-red-600" },
+      { title: "التقارير", icon: FileText, path: "/reports", gradient: "from-purple-500 to-purple-600" },
+      { title: "الدوريات", icon: Radio, path: "/patrol", gradient: "from-green-500 to-green-600" },
+    ];
+  };
+
+  const quickAccessButtons = getQuickAccessButtons();
 
   const handleTrackingToggle = (checked: boolean) => {
     if (checked) {
@@ -319,6 +432,35 @@ const Dashboard = () => {
             allowFullScreen
             loading="lazy"
           />
+        </div>
+
+        {/* Quick Access Section - 4 Dynamic Buttons */}
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-[#7CB342] mb-3 flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            الوصول السريع
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {quickAccessButtons.map((button, index) => {
+              const IconComponent = button.icon;
+              return (
+                <Card
+                  key={index}
+                  onClick={() => navigate(button.path)}
+                  className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-0 overflow-hidden"
+                >
+                  <CardContent className="p-0 h-24">
+                    <div className={`h-full w-full bg-gradient-to-br ${button.gradient} flex flex-col items-center justify-center gap-2 group-hover:scale-105 transition-transform duration-300`}>
+                      <IconComponent className="text-white w-8 h-8 drop-shadow-lg" />
+                      <h3 className="font-bold text-sm text-white text-center px-2 drop-shadow-md">
+                        {button.title}
+                      </h3>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </div>
 
