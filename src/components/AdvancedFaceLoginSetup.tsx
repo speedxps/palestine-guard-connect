@@ -14,7 +14,7 @@ interface AdvancedFaceLoginSetupProps {
   onSuccess: () => void;
 }
 
-type SetupStep = 'loading-models' | 'permission' | 'capture-front' | 'capture-left' | 'capture-right' | 'capture-up' | 'capture-down' | 'processing' | 'success' | 'error';
+type SetupStep = 'loading-models' | 'capture-front' | 'capture-left' | 'capture-right' | 'capture-up' | 'capture-down' | 'processing' | 'success' | 'error';
 
 interface CheckpointDot {
   id: number;
@@ -52,7 +52,7 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
   const streamRef = useRef<MediaStream | null>(null);
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load face-api models
+  // Load face-api models and start camera automatically
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -65,9 +65,11 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
         ]);
         
         setModelsLoaded(true);
-        setStep('permission');
-        setInstruction('انقر على "بدء التسجيل" للمتابعة');
         setProgress(10);
+        
+        // Start camera immediately after models load
+        setInstruction('📸 جاري فتح الكاميرا...');
+        await startCamera();
       } catch (error) {
         console.error('Error loading face-api models:', error);
         toast.error('فشل تحميل نماذج التعرف على الوجه');
@@ -83,6 +85,7 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current);
       }
+      stopCamera();
     };
   }, [isOpen]);
 
@@ -373,12 +376,17 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
             </div>
           )}
 
-          {/* Permission Step */}
-          {step === 'permission' && (
+          {/* Loading Models Step */}
+          {step === 'loading-models' && (
             <div className="flex flex-col items-center gap-4 py-8">
-              <Camera className="w-20 h-20 text-primary" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                <Camera className="w-20 h-20 text-primary" />
+              </motion.div>
               <p className="text-center text-muted-foreground">
-                سنحتاج للوصول إلى الكاميرا لتسجيل وجهك من 5 زوايا مختلفة
+                جاري التحضير... سيتم فتح الكاميرا تلقائياً
               </p>
             </div>
           )}
@@ -425,18 +433,6 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            {step === 'permission' && (
-              <>
-                <Button onClick={startCamera} className="flex-1">
-                  <Camera className="w-4 h-4 mr-2" />
-                  بدء التسجيل
-                </Button>
-                <Button onClick={handleClose} variant="outline">
-                  إلغاء
-                </Button>
-              </>
-            )}
-
             {step.startsWith('capture-') && (
               <>
                 <Button 

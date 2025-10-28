@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 
+// Dynamic import for Capacitor BiometricAuth (only available on native)
+let BiometricAuth: any = null;
+if (Capacitor.isNativePlatform()) {
+  try {
+    BiometricAuth = require('@capacitor/biometric-auth').BiometricAuth;
+  } catch (e) {
+    console.log('BiometricAuth plugin not available, will use WebAuthn fallback');
+  }
+}
+
 interface BiometricAuthResult {
   isSupported: boolean;
   isAvailable: boolean;
@@ -60,63 +70,34 @@ export const useBiometricAuth = (): BiometricAuthResult => {
 
       console.log('Starting biometric registration...');
 
-      // For native platforms (mobile apps)
-      if (Capacitor.isNativePlatform()) {
-        console.log('Registering biometrics on native platform');
+      // For native platforms (mobile apps) - use Capacitor BiometricAuth
+      if (Capacitor.isNativePlatform() && BiometricAuth) {
+        console.log('Registering biometrics on native platform using Capacitor');
         
         try {
-          // Try to use WebAuthn even on mobile
-          const challenge = new Uint8Array(32);
-          crypto.getRandomValues(challenge);
-          
-          const userId = new Uint8Array(32);
-          crypto.getRandomValues(userId);
-
-          const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
-            challenge: challenge,
-            rp: {
-              name: "Palestinian Police System",
-              id: window.location.hostname || 'police.ps',
-            },
-            user: {
-              id: userId,
-              name: "user@police.ps",
-              displayName: "Police User",
-            },
-            pubKeyCredParams: [
-              { alg: -7, type: "public-key" }, // ES256
-              { alg: -257, type: "public-key" } // RS256
-            ],
-            authenticatorSelection: {
-              authenticatorAttachment: "platform",
-              userVerification: "required",
-              requireResidentKey: false,
-            },
-            timeout: 60000,
-            attestation: "direct"
-          };
-
-          const credential = await navigator.credentials.create({
-            publicKey: publicKeyCredentialCreationOptions,
+          // Use native biometric authentication
+          const result = await BiometricAuth.authenticate({
+            reason: 'تسجيل بصمتك للدخول السريع والآمن',
+            title: 'تسجيل البصمة',
+            subtitle: 'استخدم بصمتك أو Face ID',
+            description: 'ضع إصبعك على المستشعر أو انظر للكاميرا'
           });
 
-          if (credential) {
-            const credentialId = Array.from(new Uint8Array((credential as PublicKeyCredential).rawId));
-            localStorage.setItem('biometricCredentialId', JSON.stringify(credentialId));
+          if (result) {
             localStorage.setItem('biometricRegistered', 'true');
-            localStorage.removeItem('biometricSimulated'); // Remove simulation flag
+            localStorage.removeItem('biometricSimulated');
             setIsRegistered(true);
             
-            console.log('Biometric registration successful');
+            console.log('Native biometric registration successful');
             return { success: true };
           } else {
-            throw new Error('No credential returned');
+            throw new Error('Biometric authentication failed');
           }
         } catch (nativeError: any) {
           console.error('Native biometric registration failed:', nativeError);
           return { 
             success: false, 
-            error: 'فشل في تسجيل البيانات البيومترية. تأكد من أن جهازك يدعم البصمة وأنها مُفعلة.' 
+            error: 'فشل في تسجيل البصمة. تأكد من تفعيل البصمة على جهازك.' 
           };
         }
       }
@@ -234,47 +215,29 @@ export const useBiometricAuth = (): BiometricAuthResult => {
         }
       }
 
-      // For native platforms (mobile apps) - try real WebAuthn
-      if (Capacitor.isNativePlatform()) {
-        console.log('Authenticating on native platform');
+      // For native platforms (mobile apps) - use Capacitor BiometricAuth
+      if (Capacitor.isNativePlatform() && BiometricAuth) {
+        console.log('Authenticating on native platform using Capacitor');
         
         try {
-          const challenge = new Uint8Array(32);
-          crypto.getRandomValues(challenge);
-          
-          const savedCredentialId = localStorage.getItem('biometricCredentialId');
-          const allowCredentials = [];
-          
-          if (savedCredentialId) {
-            const credentialId = new Uint8Array(JSON.parse(savedCredentialId));
-            allowCredentials.push({
-              id: credentialId,
-              type: "public-key" as const,
-            });
-          }
-          
-          const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
-            challenge: challenge,
-            allowCredentials: allowCredentials,
-            userVerification: 'required',
-            timeout: 60000,
-          };
-
-          const credential = await navigator.credentials.get({
-            publicKey: publicKeyCredentialRequestOptions,
+          const result = await BiometricAuth.authenticate({
+            reason: 'تسجيل الدخول بالبصمة',
+            title: 'مصادقة بيومترية',
+            subtitle: 'استخدم بصمتك أو Face ID للدخول',
+            description: 'ضع إصبعك على المستشعر أو انظر للكاميرا'
           });
 
-          if (credential) {
+          if (result) {
             console.log('Native biometric authentication successful');
             return { success: true };
           } else {
-            return { success: false, error: 'فشل في المصادقة البيومترية' };
+            return { success: false, error: 'فشل في التحقق من البصمة' };
           }
         } catch (nativeError: any) {
           console.error('Native biometric authentication failed:', nativeError);
           return { 
             success: false, 
-            error: 'فشل في المصادقة البيومترية. تأكد من أن بصمتك مسجلة على الجهاز.' 
+            error: 'فشل في التحقق من البصمة. تأكد من تسجيل بصمتك على الجهاز.' 
           };
         }
       }
