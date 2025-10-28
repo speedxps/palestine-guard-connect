@@ -39,32 +39,49 @@ const FaceLoginButton: React.FC<FaceLoginButtonProps> = ({ onSuccess }) => {
   const captureAndVerify = async () => {
     if (!videoRef.current || !canvasRef.current) return;
 
-    try {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context) return;
+
+    // ضبط حجم الكانفاس
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // رسم الصورة من الفيديو
+    context.drawImage(video, 0, 0);
+
+    // تحويل الصورة إلى base64
+    const imageBase64 = canvas.toDataURL('image/jpeg').split(',')[1];
+
+    console.log('📸 تم التقاط الصورة، جاري التحقق...');
+    toast.info('جاري التحقق من الوجه... 🔍');
+
+    // استدعاء التحقق
+    const result = await verifyFaceAndLogin(imageBase64);
+
+    if (result.success) {
+      setSimilarity(result.similarity || 0);
+      toast.success(`تم تسجيل الدخول بنجاح! 🎉`, {
+        description: `نسبة التطابق: ${result.similarity?.toFixed(1)}%`
+      });
       
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
+      // إيقاف الكاميرا
+      stopCamera();
       
-      context?.drawImage(videoRef.current, 0, 0);
+      // إغلاق النافذة
+      setIsOpen(false);
       
-      const imageBase64 = canvas.toDataURL('image/jpeg');
-      
-      console.log('📸 تم التقاط الصورة، جاري التحقق...');
-      const result = await verifyFaceAndLogin(imageBase64);
-      
-      if (result.success) {
-        setSimilarity(result.similarity);
-        toast.success(`${result.message} 🎉`);
-        stopCamera();
-        setIsOpen(false);
+      // استدعاء callback النجاح بعد تأخير قصير للسماح بإنشاء الجلسة
+      setTimeout(() => {
         onSuccess();
-      } else {
-        toast.error(result.error || 'فشل في التحقق من الوجه');
-      }
-    } catch (error) {
-      console.error('❌ خطأ في التحقق:', error);
-      toast.error('حدث خطأ أثناء التحقق');
+      }, 500);
+    } else {
+      toast.error('فشل التحقق من الوجه', {
+        description: result.error || 'يرجى التأكد من وضوح الصورة والإضاءة الجيدة'
+      });
+      setSimilarity(0);
     }
   };
 

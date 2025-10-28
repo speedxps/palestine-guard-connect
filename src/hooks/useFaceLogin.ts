@@ -31,10 +31,26 @@ export const useFaceLogin = () => {
 
       console.log('✅ تم التحقق بنجاح! المستخدم:', data.email, 'التشابه:', data.similarity);
 
-      // حفظ بيانات المستخدم للتحديث التلقائي للجلسة
-      // سيتم تحديث الجلسة تلقائياً من خلال onAuthStateChange في AuthContext
-      localStorage.setItem('face_login_verified', 'true');
-      localStorage.setItem('verified_user_email', data.email);
+      // إنشاء جلسة Supabase باستخدام الـ tokens المُرجعة
+      if (data.accessToken && data.refreshToken) {
+        console.log('🔑 إنشاء جلسة Supabase...');
+        
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.accessToken,
+          refresh_token: data.refreshToken
+        });
+
+        if (sessionError) {
+          console.error('❌ خطأ في إنشاء الجلسة:', sessionError);
+          return {
+            success: false,
+            error: 'فشل في إنشاء الجلسة'
+          };
+        }
+
+        console.log('✅ تم إنشاء الجلسة بنجاح!');
+        toast.success('تم تسجيل الدخول بنجاح! 🎉');
+      }
 
       return {
         success: true,

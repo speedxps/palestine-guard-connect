@@ -206,15 +206,66 @@ serve(async (req) => {
 
     console.log(`✅ تم العثور على تطابق! المستخدم: ${profile.email}, التشابه: ${bestMatch.similarity}%`);
 
+    // إنشاء session token للمستخدم
+    console.log('🔑 إنشاء session token للمستخدم...');
+    
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: profile.email,
+      options: {
+        redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/dashboard`
+      }
+    });
+
+    if (sessionError) {
+      console.error('❌ خطأ في إنشاء session:', sessionError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'فشل في إنشاء الجلسة'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      );
+    }
+
+    // استخراج الـ tokens من الرابط
+    const url = new URL(sessionData.properties.action_link);
+    const accessToken = url.searchParams.get('access_token');
+    const refreshToken = url.searchParams.get('refresh_token');
+
+    if (!accessToken || !refreshToken) {
+      console.error('❌ لم يتم الحصول على tokens');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'فشل في الحصول على بيانات الجلسة'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      );
+    }
+
+    console.log('✅ تم إنشاء session بنجاح!');
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        userId: bestMatch.userId,
-        email: profile.email,
+      JSON.stringify({
+        success: true,
+        message: 'تم التحقق من الوجه بنجاح',
         similarity: bestMatch.similarity,
-        message: `تم التحقق بنجاح! نسبة التطابق: ${bestMatch.similarity}%`
-      }), 
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        email: profile.email,
+        userId: bestMatch.userId,
+        accessToken,
+        refreshToken
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
     );
 
   } catch (error) {
