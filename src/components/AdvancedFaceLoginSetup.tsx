@@ -73,15 +73,15 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
         
         console.log('✅ Face-api models loaded successfully');
         setModelsLoaded(true);
-        setProgress(15);
-        
-        // Step 2: Start camera immediately
-        console.log('📸 Requesting camera access...');
-        setInstruction('📸 جاري فتح الكاميرا الأمامية...');
         setProgress(20);
         
-        // Add small delay to show the message
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Step 2: Start camera immediately after a short delay
+        console.log('📸 Requesting camera access...');
+        setInstruction('📸 جاري فتح الكاميرا...');
+        setProgress(30);
+        
+        // Short delay to ensure UI updates
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         await startCamera();
         
@@ -89,13 +89,16 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
       } catch (error) {
         console.error('❌ Error in setup:', error);
         if (error instanceof Error && error.name === 'NotAllowedError') {
-          toast.error('⛔ تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا.');
-          setInstruction('⛔ تم رفض إذن الكاميرا');
+          toast.error('⛔ يرجى السماح بالوصول للكاميرا من إعدادات المتصفح');
+          setInstruction('⛔ تم رفض إذن الكاميرا - اضغط على أيقونة القفل في شريط العنوان');
         } else if (error instanceof Error && error.name === 'NotFoundError') {
-          toast.error('⚠️ لم يتم العثور على كاميرا');
+          toast.error('⚠️ لم يتم العثور على كاميرا أمامية');
           setInstruction('⚠️ لم يتم العثور على كاميرا');
+        } else if (error instanceof Error && error.name === 'NotReadableError') {
+          toast.error('⚠️ الكاميرا قيد الاستخدام من تطبيق آخر');
+          setInstruction('⚠️ الكاميرا قيد الاستخدام - أغلق التطبيقات الأخرى');
         } else {
-          toast.error('❌ فشل في فتح الكاميرا');
+          toast.error('❌ فشل في فتح الكاميرا: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'));
           setInstruction('❌ فشل في الوصول للكاميرا');
         }
         setStep('error');
@@ -118,82 +121,135 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
     try {
       console.log('📹 Requesting camera access with facingMode: user...');
       
-      // Request front-facing camera (selfie camera)
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // Check if camera is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('المتصفح لا يدعم الوصول للكاميرا');
+      }
+      
+      // Request front-facing camera (selfie camera) with explicit constraints
+      const constraints = {
         video: { 
           facingMode: 'user',  // Front camera for selfie
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
         audio: false
+      };
+      
+      console.log('Requesting camera with constraints:', constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      console.log('✅ Camera stream obtained');
+      const videoTrack = stream.getVideoTracks()[0];
+      console.log('Video track settings:', videoTrack.getSettings());
+      console.log('Video track label:', videoTrack.label);
+      
+      if (!videoRef.current) {
+        throw new Error('Video element not found');
+      }
+      
+      // Set stream to video element
+      videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+      
+      // Wait for video to be ready with better error handling
+      await new Promise<void>((resolve, reject) => {
+        if (!videoRef.current) {
+          reject(new Error('Video element lost'));
+          return;
+        }
+
+        let resolved = false;
+        
+        const onLoadedMetadata = () => {
+          if (resolved) return;
+          resolved = true;
+          console.log('✅ Video metadata loaded');
+          console.log('Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+          
+          if (videoRef.current && (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0)) {
+            reject(new Error('Video has invalid dimensions'));
+          } else {
+            resolve();
+          }
+        };
+        
+        const onError = (e: any) => {
+          if (resolved) return;
+          resolved = true;
+          console.error('❌ Video element error:', e);
+          reject(new Error('Video element error'));
+        };
+        
+        videoRef.current.onloadedmetadata = onLoadedMetadata;
+        videoRef.current.onerror = onError;
+        
+        // Timeout after 8 seconds
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            reject(new Error('Video loading timeout'));
+          }
+        }, 8000);
+        
+        // If metadata is already loaded
+        if (videoRef.current.readyState >= 2) {
+          onLoadedMetadata();
+        }
       });
       
-      console.log('✅ Camera stream obtained:', stream.getVideoTracks()[0].getSettings());
-      
+      // Ensure video is playing
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        
-        // Wait for video metadata to load
-        await new Promise<void>((resolve, reject) => {
-          if (videoRef.current) {
-            videoRef.current.onloadedmetadata = () => {
-              console.log('✅ Video metadata loaded');
-              console.log('Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
-              resolve();
-            };
-            
-            videoRef.current.onerror = (e) => {
-              console.error('❌ Video element error:', e);
-              reject(new Error('Video playback failed'));
-            };
-            
-            // Timeout after 10 seconds
-            setTimeout(() => reject(new Error('Video loading timeout')), 10000);
-          }
-        });
-        
-        // Ensure video is playing
         try {
           await videoRef.current.play();
-          console.log('✅ Video playing');
+          console.log('✅ Video is now playing');
         } catch (playError) {
           console.error('❌ Video play error:', playError);
+          // Continue anyway as some browsers auto-play
         }
-        
-        setIsCameraActive(true);
-        setStep('capture-front');
-        setProgress(30);
-        setInstruction(STEPS_CONFIG['capture-front'].instruction);
-        toast.success('✅ تم فتح الكاميرا! ضع وجهك في الإطار', { duration: 3000 });
-        
-        // Start face detection after camera is ready
-        await new Promise(resolve => setTimeout(resolve, 500));
-        startFaceDetection();
       }
+      
+      // Update UI state
+      setIsCameraActive(true);
+      setStep('capture-front');
+      setProgress(50);
+      setInstruction(STEPS_CONFIG['capture-front'].instruction);
+      toast.success('✅ الكاميرا تعمل! ضع وجهك في الإطار الدائري', { duration: 3000 });
+      
+      // Start face detection after a short delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      startFaceDetection();
+      
     } catch (error: any) {
       console.error('❌ Camera error:', error);
       
       let errorMessage = '❌ فشل في الوصول للكاميرا';
+      let errorDescription = '';
       
       if (error.name === 'NotAllowedError') {
-        errorMessage = '⛔ تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا من إعدادات المتصفح.';
-        toast.error(errorMessage, { duration: 5000 });
+        errorMessage = '⛔ تم رفض إذن الكاميرا';
+        errorDescription = 'يرجى السماح بالوصول للكاميرا من إعدادات المتصفح أو النقر على أيقونة القفل في شريط العنوان';
       } else if (error.name === 'NotFoundError') {
-        errorMessage = '⚠️ لم يتم العثور على كاميرا متصلة بالجهاز';
-        toast.error(errorMessage, { duration: 5000 });
+        errorMessage = '⚠️ لم يتم العثور على كاميرا';
+        errorDescription = 'تأكد من توصيل كاميرا بالجهاز';
       } else if (error.name === 'NotReadableError') {
-        errorMessage = '⚠️ الكاميرا قيد الاستخدام من تطبيق آخر';
-        toast.error(errorMessage, { duration: 5000 });
+        errorMessage = '⚠️ الكاميرا قيد الاستخدام';
+        errorDescription = 'أغلق التطبيقات الأخرى التي تستخدم الكاميرا وحاول مرة أخرى';
       } else if (error.message?.includes('timeout')) {
-        errorMessage = '⏱️ انتهت مهلة تحميل الكاميرا. حاول مرة أخرى';
-        toast.error(errorMessage, { duration: 5000 });
+        errorMessage = '⏱️ انتهت مهلة تحميل الكاميرا';
+        errorDescription = 'حاول إعادة تحميل الصفحة';
       } else {
-        toast.error(errorMessage + ': ' + error.message, { duration: 5000 });
+        errorMessage = '❌ خطأ في الكاميرا';
+        errorDescription = error.message || 'خطأ غير معروف';
       }
       
+      toast.error(errorMessage, { 
+        description: errorDescription,
+        duration: 7000 
+      });
+      
       setStep('error');
-      setInstruction(errorMessage);
+      setInstruction(errorMessage + (errorDescription ? '\n' + errorDescription : ''));
       throw error;
     }
   };
@@ -487,21 +543,27 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
             </p>
           </div>
 
-          {/* Camera View with Checkpoint Dots - LARGER SIZE */}
-          {(step.startsWith('capture-') || step === 'processing') && (
-            <div className="relative w-full bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl overflow-hidden shadow-2xl border-2 border-primary/30">
-              <div className="relative aspect-[4/3]">
+          {/* Camera View with Checkpoint Dots - FULL SCREEN LIKE LOGIN */}
+          {step.startsWith('capture-') && isCameraActive && (
+            <div className="relative w-full bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-primary">
+              <div className="relative aspect-[3/4] sm:aspect-[4/3]">
+                {/* Video Element - Mirror Mode */}
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   style={{ transform: 'scaleX(-1)' }}
+                  onCanPlay={() => {
+                    console.log('✅ Video can play - displaying camera');
+                  }}
                 />
+                
+                {/* Canvas for Face Detection Overlay */}
                 <canvas
                   ref={canvasRef}
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  className="absolute inset-0 w-full h-full pointer-events-none"
                   style={{ transform: 'scaleX(-1)' }}
                 />
               
