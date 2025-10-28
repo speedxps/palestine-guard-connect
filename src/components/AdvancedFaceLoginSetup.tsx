@@ -350,10 +350,12 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
                 playsInline
                 muted
                 className="w-full h-full object-cover"
+                style={{ transform: 'scaleX(-1)' }}
               />
               <canvas
                 ref={canvasRef}
                 className="absolute top-0 left-0 w-full h-full"
+                style={{ transform: 'scaleX(-1)' }}
               />
               
               {/* Animated Circle Frame */}
