@@ -54,9 +54,15 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
 
   // Load face-api models and start camera automatically
   useEffect(() => {
-    const loadModels = async () => {
+    if (!isOpen) return;
+
+    const loadAndStartCamera = async () => {
       try {
+        // Step 1: Load models
+        setStep('loading-models');
         setInstruction('جاري تحميل نماذج التعرف على الوجه...');
+        setProgress(5);
+        
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
         
         await Promise.all([
@@ -65,23 +71,33 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
         ]);
         
         setModelsLoaded(true);
-        setProgress(10);
+        setProgress(15);
         
-        // Start camera immediately after models load
+        // Step 2: Request camera permission and start camera
+        console.log('Models loaded, starting camera...');
         setInstruction('📸 جاري فتح الكاميرا...');
+        setProgress(20);
+        
+        // Start camera directly
         await startCamera();
+        
+        console.log('Camera started successfully');
       } catch (error) {
-        console.error('Error loading face-api models:', error);
-        toast.error('فشل تحميل نماذج التعرف على الوجه');
+        console.error('Error in setup:', error);
+        if (error instanceof Error && error.name === 'NotAllowedError') {
+          toast.error('تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا.');
+        } else {
+          toast.error('فشل في فتح الكاميرا');
+        }
         setStep('error');
+        setInstruction('فشل في الوصول للكاميرا');
       }
     };
 
-    if (isOpen) {
-      loadModels();
-    }
+    loadAndStartCamera();
 
     return () => {
+      console.log('Cleaning up camera and detection...');
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current);
       }
@@ -92,6 +108,7 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
   // Start camera
   const startCamera = async () => {
     try {
+      console.log('Requesting camera access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: 'user',
@@ -100,21 +117,45 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
         }
       });
       
+      console.log('Camera stream obtained:', stream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        
+        // Wait for video to be ready
+        await new Promise<void>((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = () => {
+              console.log('Video metadata loaded');
+              resolve();
+            };
+          }
+        });
+        
         setIsCameraActive(true);
         setStep('capture-front');
-        setProgress(20);
+        setProgress(30);
         setInstruction(STEPS_CONFIG['capture-front'].instruction);
+        toast.success('تم فتح الكاميرا! ضع وجهك في الإطار');
         
         // Start face detection
         startFaceDetection();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Camera error:', error);
-      toast.error('فشل في الوصول للكاميرا');
+      
+      if (error.name === 'NotAllowedError') {
+        toast.error('تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا من إعدادات المتصفح.');
+      } else if (error.name === 'NotFoundError') {
+        toast.error('لم يتم العثور على كاميرا متصلة بالجهاز');
+      } else {
+        toast.error('فشل في الوصول للكاميرا');
+      }
+      
       setStep('error');
+      setInstruction('فشل في فتح الكاميرا');
+      throw error; // Re-throw to be caught by parent
     }
   };
 
