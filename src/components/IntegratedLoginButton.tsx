@@ -32,17 +32,24 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
     try {
       console.log('🔍 Checking available biometric methods...');
       
-      // Priority 1: Check localStorage first (fast, works without user)
+      // Priority 1: Show buttons based on device capabilities first
+      // This ensures buttons appear on login page even before setup
+      const hasFaceCapability = true; // Face login available via camera
+      const hasBioCapability = biometricSupported && biometricRegistered;
+      
+      console.log('📱 Device capabilities:', { hasFaceCapability, hasBioCapability });
+      
+      // Priority 2: Check localStorage for setup status
       const faceEnabledLocal = localStorage.getItem('faceLoginEnabled') === 'true';
       const bioEnabledLocal = localStorage.getItem('biometricEnabled') === 'true';
       
       console.log('📦 localStorage status:', { faceEnabledLocal, bioEnabledLocal });
       
-      // Set immediately from localStorage
-      setHasFaceLogin(faceEnabledLocal);
-      setHasBiometric(bioEnabledLocal && biometricSupported && biometricRegistered);
+      // Show buttons if either capability exists OR already enabled in localStorage
+      setHasFaceLogin(hasFaceCapability || faceEnabledLocal);
+      setHasBiometric(hasBioCapability || bioEnabledLocal);
       
-      // Priority 2: Then verify with database if user exists (optional sync)
+      // Priority 3: Sync with database if user exists (background sync)
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
@@ -57,23 +64,21 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
         if (!error && profile) {
           console.log('✅ Database sync:', profile);
           
-          // Update states and localStorage
-          setHasFaceLogin(profile.face_login_enabled || false);
-          setHasBiometric(profile.biometric_enabled || false);
+          // Update states based on database
+          setHasFaceLogin(profile.face_login_enabled || hasFaceCapability);
+          setHasBiometric(profile.biometric_enabled || hasBioCapability);
           
           localStorage.setItem('faceLoginEnabled', profile.face_login_enabled ? 'true' : 'false');
           localStorage.setItem('biometricEnabled', profile.biometric_enabled ? 'true' : 'false');
         }
       } else {
-        console.log('ℹ️ No user logged in, using localStorage only');
+        console.log('ℹ️ No user logged in, showing available capabilities');
       }
     } catch (error) {
       console.error('❌ Error checking biometric methods:', error);
-      // In case of error, still rely on localStorage
-      const faceEnabledLocal = localStorage.getItem('faceLoginEnabled') === 'true';
-      const bioEnabledLocal = localStorage.getItem('biometricEnabled') === 'true';
-      setHasFaceLogin(faceEnabledLocal);
-      setHasBiometric(bioEnabledLocal && biometricSupported && biometricRegistered);
+      // In case of error, show based on device capabilities
+      setHasFaceLogin(true); // Face login via camera always available
+      setHasBiometric(biometricSupported && biometricRegistered);
     }
   };
 
