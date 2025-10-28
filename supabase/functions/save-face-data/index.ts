@@ -22,55 +22,76 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { userId, imageBase64 } = await req.json();
+    const { userId, images } = await req.json();
 
-    if (!userId || !imageBase64) {
+    if (!userId || !images || !Array.isArray(images) || images.length === 0) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing userId or imageBase64' }),
+        JSON.stringify({ success: false, error: 'Missing userId or images array' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('🔐 Saving face data for user:', userId);
+    console.log('🔐 Saving face data for user:', userId, '- Images count:', images.length);
 
-    // توليد وصف AI للوجه باستخدام Gemini
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${lovableApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                text: 'Describe this face in extreme detail for facial recognition. Include: face shape, eye characteristics (color, shape, distance), nose structure, mouth features, skin tone, any distinctive marks, facial proportions, and unique identifiers. Be very specific and technical.'
-              },
-              {
-                inline_data: {
-                  mime_type: 'image/jpeg',
-                  data: imageBase64
+    // توليد وصف AI شامل من جميع الصور
+    const faceDescriptions = [];
+    
+    for (let i = 0; i < images.length; i++) {
+      const imageBase64 = images[i];
+      
+      console.log(`📸 Processing image ${i + 1}/${images.length}`);
+      
+      const geminiResponse = await fetch(
+        `https://ai.gateway.lovable.dev/v1/chat/completions`,
+        {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [{
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Describe this face in extreme detail for facial recognition. Include: face shape, eye characteristics (color, shape, distance), nose structure, mouth features, skin tone, any distinctive marks, facial proportions, jaw line, cheekbones, forehead, and unique identifiers. Be very specific and technical. Focus on permanent features, not temporary ones like expressions.'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/jpeg;base64,${imageBase64}`
+                  }
                 }
-              }
-            ]
-          }]
-        })
+              ]
+            }]
+          })
+        }
+      );
+
+      if (!geminiResponse.ok) {
+        const errorText = await geminiResponse.text();
+        console.error('Gemini API error:', errorText);
+        throw new Error('Failed to generate face description');
       }
-    );
 
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error('Gemini API error:', errorText);
-      throw new Error('Failed to generate face description');
+      const geminiData = await geminiResponse.json();
+      const faceDescription = geminiData?.choices?.[0]?.message?.content;
+
+      if (!faceDescription) {
+        throw new Error('No face description generated');
+      }
+
+      faceDescriptions.push(faceDescription);
+      console.log(`✅ Description ${i + 1} generated`);
     }
 
-    const geminiData = await geminiResponse.json();
-    const faceDescription = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    // دمج جميع الأوصاف في وصف واحد شامل
+    const combinedDescription = `MULTI-ANGLE FACE PROFILE (${images.length} angles):\n\n` + 
+      faceDescriptions.map((desc, idx) => `Angle ${idx + 1}:\n${desc}`).join('\n\n---\n\n');
 
-    if (!faceDescription) {
-      throw new Error('No face description generated');
-    }
-
-    console.log('✅ Face description generated');
+    console.log('✅ All face descriptions combined');
 
     // حفظ بيانات الوجه في face_data
     const { error: faceDataError } = await supabaseAdmin

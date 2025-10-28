@@ -10,7 +10,7 @@ import { Users, Eye, EyeOff, Info } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import LoginBlocked from "./LoginBlocked";
-import UnifiedBiometricLogin from "@/components/UnifiedBiometricLogin";
+import { IntegratedLoginButton } from "@/components/IntegratedLoginButton";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -367,28 +367,11 @@ const Login = () => {
             </label>
           </div>
 
-          {/* زر تسجيل الدخول */}
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 bg-[#2B9BF4] text-white italic text-lg rounded-none mt-3 transition-all duration-150 active:scale-[0.98]"
-          >
-            {isLoading ? "Loading..." : "Login"}
-          </Button>
-
-          {/* تسجيل الدخول البيومتري الموحد */}
-          <div className="space-y-3 mt-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-gray-500 font-arabic">أو</span>
-              </div>
-            </div>
-            
-            <UnifiedBiometricLogin onSuccess={() => navigate('/dashboard')} />
-          </div>
+          {/* Integrated Login Button with Biometric Options */}
+          <IntegratedLoginButton 
+            onSuccess={() => navigate('/dashboard')}
+            isSubmitting={isLoading}
+          />
         </form>
       </div>
     </div>

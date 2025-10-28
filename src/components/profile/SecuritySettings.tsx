@@ -9,7 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
 import { TwoFactorSetupModal } from '@/components/TwoFactorSetupModal';
-import { FaceLoginSetup } from '@/components/FaceLoginSetup';
+import { AdvancedFaceLoginSetup } from '@/components/AdvancedFaceLoginSetup';
+import { BiometricSetupButton } from '@/components/BiometricSetupButton';
 import { supabase } from '@/integrations/supabase/client';
 import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode, Camera } from 'lucide-react';
 
@@ -19,7 +20,6 @@ export const SecuritySettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
   const [showFaceSetup, setShowFaceSetup] = useState(false);
-  const { isSupported: biometricSupported, isRegistered: biometricRegistered, authenticate: biometricAuth, register: biometricRegister } = useBiometricAuth();
   const { isEnabled: twoFactorEnabled, disable: disableTwoFactor } = useTwoFactorAuth();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [faceLoginEnabled, setFaceLoginEnabled] = useState(false);
@@ -44,78 +44,6 @@ export const SecuritySettings = () => {
     }
   };
 
-  const handleToggleBiometric = async (enabled: boolean) => {
-    if (enabled && biometricSupported) {
-      if (!biometricRegistered) {
-        try {
-          const result = await biometricRegister();
-          if (result.success) {
-            // حفظ في قاعدة البيانات
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const { error } = await supabase
-                .from('profiles')
-                .update({
-                  biometric_enabled: true,
-                  biometric_registered_at: new Date().toISOString()
-                })
-                .eq('user_id', user.id);
-
-              if (error) {
-                console.error('Error updating profile:', error);
-              }
-
-              // حفظ userId في localStorage للربط
-              localStorage.setItem('biometric_user_id', user.id);
-            }
-
-            setBiometricEnabled(true);
-            localStorage.setItem('biometricEnabled', 'true');
-            toast({
-              title: "✅ تم تسجيل البصمة بنجاح",
-              description: "يمكنك الآن استخدام البصمة لتسجيل الدخول",
-            });
-          } else {
-            toast({
-              title: "❌ فشل التسجيل",
-              description: result.error || "فشل في تسجيل البيانات البيومترية",
-              variant: "destructive",
-            });
-          }
-        } catch (error) {
-          console.error('Biometric registration error:', error);
-          toast({
-            title: "❌ خطأ",
-            description: "حدث خطأ في تسجيل البيانات البيومترية",
-            variant: "destructive",
-          });
-        }
-      } else {
-        setBiometricEnabled(true);
-        localStorage.setItem('biometricEnabled', 'true');
-        toast({
-          title: "✅ تم تفعيل المصادقة البيومترية",
-          description: "يمكنك الآن استخدام البصمة لتسجيل الدخول",
-        });
-      }
-    } else {
-      // تعطيل البصمة
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('profiles')
-          .update({ biometric_enabled: false })
-          .eq('user_id', user.id);
-      }
-
-      setBiometricEnabled(false);
-      localStorage.setItem('biometricEnabled', 'false');
-      toast({
-        title: "ℹ️ تم إلغاء المصادقة البيومترية",
-        description: "لن تتمكن من استخدام البصمة لتسجيل الدخول",
-      });
-    }
-  };
 
   const handleTwoFactorToggle = (enabled: boolean) => {
     if (enabled && !twoFactorEnabled) {
@@ -132,23 +60,8 @@ export const SecuritySettings = () => {
   };
 
   const handleFaceLoginSuccess = async () => {
-    // تحديث حالة تسجيل الدخول بالوجه في قاعدة البيانات
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          face_login_enabled: true,
-          face_registered_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) {
-        console.error('خطأ في تحديث قاعدة البيانات:', updateError);
-      }
-    }
-
     setFaceLoginEnabled(true);
+    localStorage.setItem('faceLoginEnabled', 'true');
     setShowFaceSetup(false);
     toast({
       title: "✅ تم تفعيل تسجيل الدخول بالوجه",
@@ -376,34 +289,10 @@ export const SecuritySettings = () => {
             </div>
 
             {/* المصادقة البيومترية */}
-            {biometricSupported && (
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Fingerprint className="h-4 w-4 text-blue-400" />
-                    <Label className="font-arabic text-sm">المصادقة البيومترية</Label>
-                  </div>
-                  <Switch
-                    checked={biometricEnabled}
-                    onCheckedChange={handleToggleBiometric}
-                  />
-                </div>
-                <p className="text-xs text-blue-400/80 font-arabic mb-2">
-                  استخدام البصمة أو الوجه لتسجيل الدخول
-                </p>
-                {biometricRegistered ? (
-                  <div className="flex items-center gap-1 text-xs text-green-400">
-                    <span>✓</span>
-                    <span className="font-arabic">مسجل - جاهز للاستخدام</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-xs text-orange-400">
-                    <span>⚠️</span>
-                    <span className="font-arabic">غير مسجل - سيطلب التسجيل عند التفعيل</span>
-                  </div>
-                )}
-              </div>
-            )}
+            <BiometricSetupButton 
+              isEnabled={biometricEnabled}
+              onToggle={setBiometricEnabled}
+            />
 
             {/* تسجيل الدخول بالوجه */}
             <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
@@ -535,7 +424,7 @@ export const SecuritySettings = () => {
           onSuccess={handleTwoFactorSuccess}
         />
         
-        <FaceLoginSetup
+        <AdvancedFaceLoginSetup
           isOpen={showFaceSetup}
           onClose={() => setShowFaceSetup(false)}
           onSuccess={handleFaceLoginSuccess}
