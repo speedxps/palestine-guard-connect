@@ -185,20 +185,32 @@ serve(async (req) => {
       similarity: number;
     }> = []
 
+    console.log(`Starting AI comparison for ${citizens.length} citizens...`)
+
+    // استخدام AI للمقارنة الذكية لكل مواطن
     for (const citizen of citizens) {
       if (citizen.face_embedding) {
-        const similarity = calculateEnhancedSimilarity(faceDescription, citizen.face_embedding)
-        
-        console.log(`Comparing with ${citizen.full_name}: ${similarity.toFixed(3)} similarity`)
-        
-        if (similarity > 0.20) {
-          matches.push({
-            id: citizen.id,
-            national_id: citizen.national_id,
-            name: citizen.full_name,
-            photo_url: citizen.photo_url,
-            similarity: similarity
-          })
+        try {
+          const similarity = await compareWithAI(
+            faceDescription, 
+            citizen.face_embedding,
+            lovableApiKey
+          )
+          
+          console.log(`AI Comparison with ${citizen.full_name}: ${similarity.toFixed(1)}% similarity`)
+          
+          // رفع الحد الأدنى إلى 70%
+          if (similarity >= 70) {
+            matches.push({
+              id: citizen.id,
+              national_id: citizen.national_id,
+              name: citizen.full_name,
+              photo_url: citizen.photo_url,
+              similarity: similarity / 100 // تحويل إلى نسبة من 0 إلى 1
+            })
+          }
+        } catch (error) {
+          console.error(`Error comparing with ${citizen.full_name}:`, error)
         }
       }
     }
@@ -224,7 +236,7 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           matches: [],
-          error: 'لم يتم العثور على تطابق كافٍ (الحد الأدنى 20%)'
+          error: 'لم يتم العثور على تطابق كافٍ (الحد الأدنى 70%)'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -244,89 +256,72 @@ serve(async (req) => {
   }
 })
 
-function calculateEnhancedSimilarity(text1: string, text2: string): number {
-  // تنظيف النصوص وإزالة الرموز الزائدة
-  const cleanText = (text: string) => text
-    .toLowerCase()
-    .replace(/[^\u0600-\u06FF\u0750-\u077F\s]/g, ' ') // إبقاء الأحرف العربية فقط
-    .replace(/\s+/g, ' ')
-    .trim()
+/**
+ * استخدام AI للمقارنة الذكية بين وصفي الوجه
+ * يعيد نسبة التشابه من 0 إلى 100
+ */
+async function compareWithAI(
+  description1: string, 
+  description2: string,
+  apiKey: string
+): Promise<number> {
   
-  const cleanText1 = cleanText(text1)
-  const cleanText2 = cleanText(text2)
-  
-  // تحليل الكلمات المفردة
-  const words1 = cleanText1.split(/\s+/).filter(w => w.length > 1)
-  const words2 = cleanText2.split(/\s+/).filter(w => w.length > 1)
-  
-  const set1 = new Set(words1)
-  const set2 = new Set(words2)
-  
-  const intersection = new Set([...set1].filter(x => set2.has(x)))
-  const union = new Set([...set1, ...set2])
-  
-  const wordSimilarity = union.size > 0 ? intersection.size / union.size : 0
+  const comparisonPrompt = `أنت خبير في التعرف على الوجوه ومقارنتها. لديك وصفان تفصيليان لوجهين. مهمتك:
 
-  // تحليل العبارات (كلمتين متتاليتين)
-  const phrases1 = []
-  const phrases2 = []
-  
-  for (let i = 0; i < words1.length - 1; i++) {
-    phrases1.push(`${words1[i]} ${words1[i + 1]}`)
-  }
-  for (let i = 0; i < words2.length - 1; i++) {
-    phrases2.push(`${words2[i]} ${words2[i + 1]}`)
-  }
-  
-  const phraseSet1 = new Set(phrases1)
-  const phraseSet2 = new Set(phrases2)
-  const phraseIntersection = new Set([...phraseSet1].filter(x => phraseSet2.has(x)))
-  const phraseUnion = new Set([...phraseSet1, ...phraseSet2])
-  
-  const phraseSimilarity = phraseUnion.size > 0 ? phraseIntersection.size / phraseUnion.size : 0
+1. قارن الوصفين بعناية فائقة
+2. ركز على: شكل الوجه، العيون، الأنف، الفم، الشعر، البشرة، العلامات المميزة
+3. أعط نسبة تشابه من 0 إلى 100
+4. كن دقيقاً جداً: إذا كانت هناك اختلافات واضحة، أعط نسبة منخفضة
+5. أجب برقم فقط (مثال: 85)
 
-  // تحليل الأحرف المتتالية (تسلسل 4 أحرف)
-  const ngrams1 = generateNgrams(cleanText1, 4)
-  const ngrams2 = generateNgrams(cleanText2, 4)
-  
-  const ngramSet1 = new Set(ngrams1)
-  const ngramSet2 = new Set(ngrams2)
-  const ngramIntersection = new Set([...ngramSet1].filter(x => ngramSet2.has(x)))
-  const ngramUnion = new Set([...ngramSet1, ...ngramSet2])
-  
-  const ngramSimilarity = ngramUnion.size > 0 ? ngramIntersection.size / ngramUnion.size : 0
+الوصف الأول:
+${description1}
 
-  // تحليل الكلمات المفتاحية المهمة
-  const keyFeatures = [
-    'عيون', 'عين', 'أنف', 'فم', 'شفاه', 'وجه', 'حاجب', 'خد', 'فك', 'بشرة', 'شعر',
-    'دائري', 'بيضاوي', 'مربع', 'طويل', 'قصير', 'عريض', 'ضيق', 'كبير', 'صغير',
-    'أسود', 'بني', 'أزرق', 'أخضر', 'رمادي', 'أبيض', 'أحمر', 'أشقر', 'داكن', 'فاتح'
-  ]
-  
-  let keywordMatches = 0
-  let totalKeywords = 0
-  
-  for (const keyword of keyFeatures) {
-    if (cleanText1.includes(keyword) || cleanText2.includes(keyword)) {
-      totalKeywords++
-      if (cleanText1.includes(keyword) && cleanText2.includes(keyword)) {
-        keywordMatches++
-      }
+الوصف الثاني:
+${description2}
+
+النسبة المئوية للتشابه (0-100):`;
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert in facial recognition. You compare detailed facial descriptions and return a similarity percentage from 0 to 100. Only return a number.'
+          },
+          {
+            role: 'user',
+            content: comparisonPrompt
+          }
+        ],
+        max_tokens: 10
+      })
+    })
+
+    if (!response.ok) {
+      console.error('AI comparison failed:', await response.text())
+      return 0
     }
-  }
-  
-  const keywordSimilarity = totalKeywords > 0 ? keywordMatches / totalKeywords : 0
 
-  // حساب النتيجة النهائية مع أوزان محسنة
-  const finalSimilarity = (wordSimilarity * 0.4) + (phraseSimilarity * 0.3) + (ngramSimilarity * 0.15) + (keywordSimilarity * 0.15)
-  
-  return Math.min(finalSimilarity, 1.0)
-}
-
-function generateNgrams(text: string, n: number): string[] {
-  const ngrams = []
-  for (let i = 0; i <= text.length - n; i++) {
-    ngrams.push(text.substring(i, i + n))
+    const result = await response.json()
+    const similarityText = result.choices[0]?.message?.content?.trim() || '0'
+    
+    // استخراج الرقم من الرد
+    const similarityMatch = similarityText.match(/\d+/)
+    const similarity = similarityMatch ? parseInt(similarityMatch[0], 10) : 0
+    
+    // التأكد من أن النسبة بين 0 و 100
+    return Math.max(0, Math.min(100, similarity))
+    
+  } catch (error) {
+    console.error('Error in AI comparison:', error)
+    return 0
   }
-  return ngrams
 }
