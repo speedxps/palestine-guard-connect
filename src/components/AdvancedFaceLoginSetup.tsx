@@ -58,11 +58,12 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
 
     const loadAndStartCamera = async () => {
       try {
-        // Step 1: Load models
+        // Step 1: Load models from CDN
         setStep('loading-models');
-        setInstruction('جاري تحميل نماذج التعرف على الوجه...');
+        setInstruction('📦 جاري تحميل نماذج التعرف على الوجه...');
         setProgress(5);
         
+        console.log('🔄 Starting to load face-api models...');
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
         
         await Promise.all([
@@ -70,34 +71,41 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
           faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
         ]);
         
+        console.log('✅ Face-api models loaded successfully');
         setModelsLoaded(true);
         setProgress(15);
         
-        // Step 2: Request camera permission and start camera
-        console.log('Models loaded, starting camera...');
-        setInstruction('📸 جاري فتح الكاميرا...');
+        // Step 2: Start camera immediately
+        console.log('📸 Requesting camera access...');
+        setInstruction('📸 جاري فتح الكاميرا الأمامية...');
         setProgress(20);
         
-        // Start camera directly
+        // Add small delay to show the message
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         await startCamera();
         
-        console.log('Camera started successfully');
+        console.log('✅ Camera started successfully');
       } catch (error) {
-        console.error('Error in setup:', error);
+        console.error('❌ Error in setup:', error);
         if (error instanceof Error && error.name === 'NotAllowedError') {
-          toast.error('تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا.');
+          toast.error('⛔ تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا.');
+          setInstruction('⛔ تم رفض إذن الكاميرا');
+        } else if (error instanceof Error && error.name === 'NotFoundError') {
+          toast.error('⚠️ لم يتم العثور على كاميرا');
+          setInstruction('⚠️ لم يتم العثور على كاميرا');
         } else {
-          toast.error('فشل في فتح الكاميرا');
+          toast.error('❌ فشل في فتح الكاميرا');
+          setInstruction('❌ فشل في الوصول للكاميرا');
         }
         setStep('error');
-        setInstruction('فشل في الوصول للكاميرا');
       }
     };
 
     loadAndStartCamera();
 
     return () => {
-      console.log('Cleaning up camera and detection...');
+      console.log('🧹 Cleaning up camera and detection...');
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current);
       }
@@ -108,54 +116,85 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
   // Start camera
   const startCamera = async () => {
     try {
-      console.log('Requesting camera access...');
+      console.log('📹 Requesting camera access with facingMode: user...');
+      
+      // Request front-facing camera (selfie camera)
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        }
+          facingMode: 'user',  // Front camera for selfie
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 }
+        },
+        audio: false
       });
       
-      console.log('Camera stream obtained:', stream);
+      console.log('✅ Camera stream obtained:', stream.getVideoTracks()[0].getSettings());
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
         
-        // Wait for video to be ready
-        await new Promise<void>((resolve) => {
+        // Wait for video metadata to load
+        await new Promise<void>((resolve, reject) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
-              console.log('Video metadata loaded');
+              console.log('✅ Video metadata loaded');
+              console.log('Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
               resolve();
             };
+            
+            videoRef.current.onerror = (e) => {
+              console.error('❌ Video element error:', e);
+              reject(new Error('Video playback failed'));
+            };
+            
+            // Timeout after 10 seconds
+            setTimeout(() => reject(new Error('Video loading timeout')), 10000);
           }
         });
+        
+        // Ensure video is playing
+        try {
+          await videoRef.current.play();
+          console.log('✅ Video playing');
+        } catch (playError) {
+          console.error('❌ Video play error:', playError);
+        }
         
         setIsCameraActive(true);
         setStep('capture-front');
         setProgress(30);
         setInstruction(STEPS_CONFIG['capture-front'].instruction);
-        toast.success('تم فتح الكاميرا! ضع وجهك في الإطار');
+        toast.success('✅ تم فتح الكاميرا! ضع وجهك في الإطار', { duration: 3000 });
         
-        // Start face detection
+        // Start face detection after camera is ready
+        await new Promise(resolve => setTimeout(resolve, 500));
         startFaceDetection();
       }
     } catch (error: any) {
-      console.error('Camera error:', error);
+      console.error('❌ Camera error:', error);
+      
+      let errorMessage = '❌ فشل في الوصول للكاميرا';
       
       if (error.name === 'NotAllowedError') {
-        toast.error('تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا من إعدادات المتصفح.');
+        errorMessage = '⛔ تم رفض إذن الكاميرا. يرجى السماح بالوصول للكاميرا من إعدادات المتصفح.';
+        toast.error(errorMessage, { duration: 5000 });
       } else if (error.name === 'NotFoundError') {
-        toast.error('لم يتم العثور على كاميرا متصلة بالجهاز');
+        errorMessage = '⚠️ لم يتم العثور على كاميرا متصلة بالجهاز';
+        toast.error(errorMessage, { duration: 5000 });
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = '⚠️ الكاميرا قيد الاستخدام من تطبيق آخر';
+        toast.error(errorMessage, { duration: 5000 });
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = '⏱️ انتهت مهلة تحميل الكاميرا. حاول مرة أخرى';
+        toast.error(errorMessage, { duration: 5000 });
       } else {
-        toast.error('فشل في الوصول للكاميرا');
+        toast.error(errorMessage + ': ' + error.message, { duration: 5000 });
       }
       
       setStep('error');
-      setInstruction('فشل في فتح الكاميرا');
-      throw error; // Re-throw to be caught by parent
+      setInstruction(errorMessage);
+      throw error;
     }
   };
 
@@ -586,18 +625,34 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
             </motion.div>
           )}
 
-          {/* Loading Models Step */}
+          {/* Loading Models Step - Enhanced */}
           {step === 'loading-models' && (
-            <div className="flex flex-col items-center gap-4 py-8">
+            <div className="flex flex-col items-center gap-6 py-12">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="relative"
               >
-                <Camera className="w-20 h-20 text-primary" />
+                <Camera className="w-24 h-24 text-primary" />
+                <motion.div
+                  className="absolute inset-0 rounded-full border-4 border-primary/30 border-t-primary"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
               </motion.div>
-              <p className="text-center text-muted-foreground">
-                جاري التحضير... سيتم فتح الكاميرا تلقائياً
-              </p>
+              <div className="text-center space-y-2">
+                <p className="text-lg font-semibold font-arabic">
+                  جاري التحضير...
+                </p>
+                <p className="text-muted-foreground font-arabic">
+                  سيتم فتح الكاميرا الأمامية تلقائياً
+                </p>
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                </div>
+              </div>
             </div>
           )}
 
@@ -631,13 +686,34 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
             </motion.div>
           )}
 
-          {/* Error Step */}
+          {/* Error Step - Enhanced */}
           {step === 'error' && (
-            <div className="flex flex-col items-center gap-4 py-8">
-              <XCircle className="w-20 h-20 text-destructive" />
-              <p className="text-center text-muted-foreground">
-                حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى
-              </p>
+            <div className="flex flex-col items-center gap-6 py-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", duration: 0.5 }}
+              >
+                <XCircle className="w-24 h-24 text-destructive" />
+              </motion.div>
+              <div className="text-center space-y-3">
+                <p className="text-lg font-semibold text-destructive font-arabic">
+                  حدث خطأ أثناء التسجيل
+                </p>
+                <p className="text-muted-foreground font-arabic">
+                  {instruction}
+                </p>
+                <div className="bg-muted/50 rounded-lg p-4 mt-4">
+                  <p className="text-sm font-arabic text-muted-foreground">
+                    💡 تأكد من:
+                  </p>
+                  <ul className="text-sm text-muted-foreground mt-2 space-y-1 text-right">
+                    <li className="font-arabic">• السماح بإذن الكاميرا من المتصفح</li>
+                    <li className="font-arabic">• عدم استخدام الكاميرا من تطبيق آخر</li>
+                    <li className="font-arabic">• الاتصال بالإنترنت</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
 
@@ -671,7 +747,7 @@ export const AdvancedFaceLoginSetup = ({ isOpen, onClose, onSuccess }: AdvancedF
                 className="w-full py-6 font-arabic"
                 size="lg"
               >
-                إغلاق
+                {step === 'error' ? 'إغلاق وإعادة المحاولة' : 'إغلاق'}
               </Button>
             )}
 
