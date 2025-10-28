@@ -3,16 +3,20 @@ import { Capacitor } from '@capacitor/core';
 
 // Dynamic import for Capacitor BiometricAuth (only available on native)
 let BiometricAuth: any = null;
+let biometricLoadPromise: Promise<void> | null = null;
+
 if (Capacitor.isNativePlatform()) {
   console.log('🔐 Running on native platform, loading BiometricAuth...');
-  try {
-    // Use require for synchronous loading on native platform
-    BiometricAuth = require('@aparajita/capacitor-biometric-auth').NativeBiometric;
-    console.log('✅ BiometricAuth loaded successfully');
-  } catch (e) {
-    console.log('⚠️ BiometricAuth plugin not available, will use WebAuthn fallback');
-    console.log('Make sure @aparajita/capacitor-biometric-auth is installed');
-  }
+  biometricLoadPromise = (async () => {
+    try {
+      const module = await import('@aparajita/capacitor-biometric-auth');
+      BiometricAuth = module.BiometricAuth;
+      console.log('✅ BiometricAuth loaded successfully');
+    } catch (e) {
+      console.error('❌ BiometricAuth plugin not available:', e);
+      console.log('Make sure @aparajita/capacitor-biometric-auth is installed and synced');
+    }
+  })();
 } else {
   console.log('🌐 Running on web platform, BiometricAuth not needed');
 }
@@ -47,9 +51,45 @@ export const useBiometricAuth = (): BiometricAuthResult => {
     try {
       // Check if we're on a mobile device with Capacitor
       if (Capacitor.isNativePlatform()) {
-        console.log('Running on native platform, checking biometric support');
-        // On native platforms, assume biometrics are available if device has them
-        return true;
+        console.log('🔍 Checking biometric support on native platform...');
+        
+        // Wait for BiometricAuth to load
+        if (biometricLoadPromise) {
+          await biometricLoadPromise;
+        }
+        
+        if (!BiometricAuth) {
+          console.log('❌ BiometricAuth plugin not loaded');
+          return false;
+        }
+        
+        try {
+          // Use BiometricAuth.checkBiometry() for actual device verification
+          const result = await BiometricAuth.checkBiometry();
+          
+          console.log('📱 Biometry check result:', result);
+          
+          // result.isAvailable = true if device supports biometrics
+          // result.biometryType = FaceID, TouchID, Fingerprint, etc.
+          if (result.isAvailable) {
+            console.log('✅ Biometrics available:', result.biometryType);
+            return true;
+          } else {
+            console.log('❌ Biometrics not available on this device');
+            return false;
+          }
+        } catch (nativeError: any) {
+          console.error('❌ Native biometric check failed:', nativeError);
+          
+          // Check for specific error codes
+          if (nativeError.code === 'biometryNotAvailable') {
+            console.log('⚠️ Device does not support biometrics');
+          } else if (nativeError.code === 'biometryNotEnrolled') {
+            console.log('⚠️ No biometrics enrolled on device');
+          }
+          
+          return false;
+        }
       }
       
       // Check if Web Authentication API is available (web/browser)
@@ -77,18 +117,32 @@ export const useBiometricAuth = (): BiometricAuthResult => {
       console.log('Starting biometric registration...');
 
       // For native platforms (mobile apps) - use Capacitor BiometricAuth
-      if (Capacitor.isNativePlatform() && BiometricAuth) {
-        console.log('🔐 Registering biometrics on native platform using Capacitor');
+      if (Capacitor.isNativePlatform()) {
+        // Wait for BiometricAuth to load
+        if (biometricLoadPromise) {
+          await biometricLoadPromise;
+        }
+        
+        if (!BiometricAuth) {
+          return { 
+            success: false, 
+            error: '❌ المصادقة البيومترية غير متوفرة. تأكد من تثبيت الإضافة.' 
+          };
+        }
+        
+        console.log('🔐 Registering biometrics on native platform using BiometricAuth');
         
         try {
-          // Use native biometric authentication
+          // Use BiometricAuth.authenticate() with proper API
           const result = await BiometricAuth.authenticate({
             reason: 'تسجيل بصمتك للدخول السريع والآمن',
-            title: 'تسجيل البصمة',
-            subtitle: 'استخدم بصمتك أو Face ID',
+            androidTitle: 'تسجيل البصمة',
+            androidSubtitle: 'استخدم بصمتك',
+            androidConfirmationRequired: false,
+            iosLocalizedFallbackTitle: 'استخدم رمز المرور',
           });
 
-          if (result.verified) {
+          if (result && result.verified) {
             localStorage.setItem('biometricRegistered', 'true');
             localStorage.removeItem('biometricSimulated');
             setIsRegistered(true);
@@ -96,16 +150,29 @@ export const useBiometricAuth = (): BiometricAuthResult => {
             console.log('✅ Native biometric registration successful');
             return { success: true };
           } else {
-            throw new Error('Biometric authentication failed');
+            return { 
+              success: false, 
+              error: 'فشل في التحقق من البصمة' 
+            };
           }
         } catch (nativeError: any) {
           console.error('❌ Native biometric registration failed:', nativeError);
           
-          // Check for specific error codes
-          if (nativeError.code === 10 || nativeError.message?.includes('not enrolled')) {
+          // Check for specific error codes from @aparajita/capacitor-biometric-auth
+          if (nativeError.code === 'biometryNotEnrolled') {
             return { 
               success: false, 
-              error: '⚠️ لم يتم العثور على بصمة مسجلة على الهاتف. يرجى تسجيل بصمتك في إعدادات الجهاز أولاً.' 
+              error: '⚠️ لم يتم تسجيل بصمة على الهاتف. يرجى تسجيل بصمتك في إعدادات الجهاز أولاً.' 
+            };
+          } else if (nativeError.code === 'biometryNotAvailable') {
+            return { 
+              success: false, 
+              error: '❌ المصادقة البيومترية غير مدعومة على هذا الجهاز.' 
+            };
+          } else if (nativeError.code === 'userCancel') {
+            return { 
+              success: false, 
+              error: 'تم إلغاء العملية من قبل المستخدم' 
             };
           }
           
@@ -230,17 +297,31 @@ export const useBiometricAuth = (): BiometricAuthResult => {
       }
 
       // For native platforms (mobile apps) - use Capacitor BiometricAuth
-      if (Capacitor.isNativePlatform() && BiometricAuth) {
-        console.log('🔐 Authenticating on native platform using Capacitor');
+      if (Capacitor.isNativePlatform()) {
+        // Wait for BiometricAuth to load
+        if (biometricLoadPromise) {
+          await biometricLoadPromise;
+        }
+        
+        if (!BiometricAuth) {
+          return { 
+            success: false, 
+            error: '❌ المصادقة البيومترية غير متوفرة. تأكد من تثبيت الإضافة.' 
+          };
+        }
+        
+        console.log('🔐 Authenticating on native platform using BiometricAuth');
         
         try {
           const result = await BiometricAuth.authenticate({
             reason: 'تسجيل الدخول بالبصمة',
-            title: 'مصادقة بيومترية',
-            subtitle: 'استخدم بصمتك أو Face ID للدخول',
+            androidTitle: 'مصادقة بيومترية',
+            androidSubtitle: 'استخدم بصمتك للدخول',
+            androidConfirmationRequired: false,
+            iosLocalizedFallbackTitle: 'استخدم رمز المرور',
           });
 
-          if (result.verified) {
+          if (result && result.verified) {
             console.log('✅ Native biometric authentication successful');
             return { success: true };
           } else {
@@ -249,16 +330,26 @@ export const useBiometricAuth = (): BiometricAuthResult => {
         } catch (nativeError: any) {
           console.error('❌ Native biometric authentication failed:', nativeError);
           
-          // Check for specific error codes
-          if (nativeError.code === 10 || nativeError.message?.includes('not enrolled')) {
+          // Check for specific error codes from @aparajita/capacitor-biometric-auth
+          if (nativeError.code === 'biometryNotEnrolled') {
             return { 
               success: false, 
               error: '⚠️ لم يتم العثور على بصمة مسجلة على الهاتف. يرجى تسجيل بصمتك في إعدادات الجهاز.' 
             };
-          } else if (nativeError.code === 13 || nativeError.message?.includes('cancelled')) {
+          } else if (nativeError.code === 'biometryNotAvailable') {
+            return { 
+              success: false, 
+              error: '❌ المصادقة البيومترية غير مدعومة على هذا الجهاز.' 
+            };
+          } else if (nativeError.code === 'userCancel') {
             return { 
               success: false, 
               error: 'تم إلغاء المصادقة من قبل المستخدم' 
+            };
+          } else if (nativeError.code === 'biometryLockout') {
+            return { 
+              success: false, 
+              error: '⚠️ تم قفل البصمة مؤقتاً. استخدم رمز المرور أو حاول لاحقاً.' 
             };
           }
           

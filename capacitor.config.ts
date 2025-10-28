@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true,
     },
-    NativeBiometric: {
+    BiometricAuth: {
       // Native biometric authentication from @aparajita/capacitor-biometric-auth
     }
   },

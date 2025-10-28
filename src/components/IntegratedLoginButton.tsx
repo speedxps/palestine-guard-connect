@@ -89,15 +89,26 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
   const handleBiometricLogin = async () => {
     try {
       setIsLoading(true);
-      toast.info('جاري التحقق من البصمة...');
+      
+      // التحقق من الدعم أولاً
+      if (!biometricSupported) {
+        toast.error('❌ المصادقة البيومترية غير مدعومة على هذا الجهاز');
+        return;
+      }
+      
+      if (!biometricRegistered) {
+        toast.error('⚠️ يرجى تفعيل البصمة من إعدادات الحساب أولاً');
+        return;
+      }
+      
+      toast.info('🔐 جاري التحقق من البصمة...');
 
       // Authenticate using biometric
       const authResult = await authenticateBiometric();
 
       if (!authResult.success) {
-        // Show more specific error message
-        const errorMessage = authResult.error || 'فشل في التحقق من البصمة';
-        toast.error(errorMessage);
+        // عرض رسالة الخطأ المحددة من useBiometricAuth
+        toast.error(authResult.error || 'فشل في التحقق من البصمة');
         return;
       }
 
