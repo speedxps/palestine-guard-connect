@@ -388,10 +388,10 @@ const DeviceManagement = () => {
       {selectedDevice && (
         <DeviceDetailsModal
           device={selectedDevice}
-          isOpen={showDetailsModal}
-          onClose={() => {
-            setShowDetailsModal(false);
-            setSelectedDevice(null);
+          open={showDetailsModal}
+          onOpenChange={(open) => {
+            setShowDetailsModal(open);
+            if (!open) setSelectedDevice(null);
           }}
         />
       )}
