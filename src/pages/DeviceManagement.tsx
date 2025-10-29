@@ -168,6 +168,22 @@ const DeviceManagement = () => {
     }
   };
 
+  const handleMaxDevicesUpdate = (newMax: number) => {
+    if (selectedUser) {
+      // Update the local state immediately
+      const updatedUser = { ...selectedUser, max_devices_allowed: newMax };
+      setSelectedUser(updatedUser);
+      
+      // Update in the users array
+      setUsers(users.map(u => 
+        u.id === selectedUser.id ? updatedUser : u
+      ));
+      
+      // Reload to ensure sync with server
+      loadUsersAndDevices();
+    }
+  };
+
   const filteredUsers = users.filter(user => 
     user.email?.toLowerCase().includes(search.toLowerCase()) ||
     user.full_name?.toLowerCase().includes(search.toLowerCase())
@@ -295,7 +311,7 @@ const DeviceManagement = () => {
               <MaxDevicesSelector
                 userId={selectedUser.id}
                 currentMax={selectedUser.max_devices_allowed}
-                onUpdate={loadUsersAndDevices}
+                onUpdate={handleMaxDevicesUpdate}
               />
             </div>
 

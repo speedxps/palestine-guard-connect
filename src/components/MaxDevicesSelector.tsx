@@ -7,15 +7,17 @@ import { Loader2 } from 'lucide-react';
 interface MaxDevicesSelectorProps {
   userId: string;
   currentMax: number;
-  onUpdate: () => void;
+  onUpdate: (newMax: number) => void;
 }
 
 export const MaxDevicesSelector = ({ userId, currentMax, onUpdate }: MaxDevicesSelectorProps) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [localValue, setLocalValue] = useState(currentMax.toString());
 
   const handleMaxDevicesChange = async (value: string) => {
     const maxDevices = parseInt(value);
     
+    setLocalValue(value);
     setIsUpdating(true);
     try {
       const { data, error } = await supabase.functions.invoke('update-max-devices', {
@@ -26,13 +28,14 @@ export const MaxDevicesSelector = ({ userId, currentMax, onUpdate }: MaxDevicesS
 
       if (data?.success) {
         toast.success('تم تحديث عدد الأجهزة المسموح بها بنجاح');
-        onUpdate();
+        onUpdate(maxDevices);
       } else {
         throw new Error(data?.error || 'فشل في التحديث');
       }
     } catch (error: any) {
       console.error('Error updating max devices:', error);
       toast.error(error.message || 'فشل في تحديث عدد الأجهزة');
+      setLocalValue(currentMax.toString());
     } finally {
       setIsUpdating(false);
     }
@@ -41,7 +44,7 @@ export const MaxDevicesSelector = ({ userId, currentMax, onUpdate }: MaxDevicesS
   return (
     <div className="flex items-center gap-2">
       <Select
-        value={currentMax.toString()}
+        value={localValue}
         onValueChange={handleMaxDevicesChange}
         disabled={isUpdating}
       >
