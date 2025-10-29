@@ -173,11 +173,19 @@ const DeviceManagement = () => {
   };
 
   const handleApproveSuccess = () => {
+    // Remove the attempt from the list immediately
+    setBlockedAttempts(prev => prev.filter(a => a.id !== selectedAttempt?.id));
+    setShowApproveDialog(false);
+    setSelectedAttempt(null);
     loadBlockedAttempts();
     loadUsersAndDevices();
   };
 
   const handleBlacklistSuccess = () => {
+    // Remove the attempt from the list immediately
+    setBlockedAttempts(prev => prev.filter(a => a.id !== selectedAttempt?.id));
+    setShowBlacklistDialog(false);
+    setSelectedAttempt(null);
     loadBlockedAttempts();
   };
 

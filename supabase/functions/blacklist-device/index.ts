@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { userId, deviceFingerprint, deviceInfo, reason, notes } = await req.json();
+    const { attemptId, userId, deviceFingerprint, deviceInfo, reason, notes } = await req.json();
 
     if (!deviceFingerprint) {
       return new Response(JSON.stringify({ error: 'معلومات غير مكتملة' }), {
@@ -104,6 +104,14 @@ Deno.serve(async (req) => {
         .update({ is_active: false })
         .eq('user_id', userId)
         .eq('device_fingerprint', deviceFingerprint);
+    }
+
+    // Delete the blocked attempt from device_access_log
+    if (attemptId) {
+      await supabaseAdmin
+        .from('device_access_log')
+        .delete()
+        .eq('id', attemptId);
     }
 
     // Log the blacklisting

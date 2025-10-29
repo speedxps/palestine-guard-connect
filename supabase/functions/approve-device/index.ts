@@ -124,6 +124,12 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Delete the blocked attempt from device_access_log
+    await supabaseAdmin
+      .from('device_access_log')
+      .delete()
+      .eq('id', attemptId);
+
     // Log the approval
     await supabaseAdmin
       .from('device_access_log')

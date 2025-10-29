@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Trash2, Smartphone, Clock, Hash } from 'lucide-react';
+import { Eye, Trash2, Smartphone, Clock, Hash, MapPin, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { DeviceToggleButton } from './DeviceToggleButton';
@@ -34,6 +34,10 @@ export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, 
                    device.device_info?.platform?.toLowerCase().includes('android') ||
                    device.device_info?.platform?.toLowerCase().includes('ios');
 
+  // Check if device is online (last seen within 5 minutes)
+  const isOnline = device.is_active && 
+    new Date().getTime() - new Date(device.last_seen_at).getTime() < 5 * 60 * 1000;
+
   const getDeviceName = () => {
     if (device.device_name) return device.device_name;
     const info = device.device_info;
@@ -48,15 +52,30 @@ export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, 
     return 'جهاز غير معروف';
   };
 
+  const hasGPS = device.device_info?.geolocation?.latitude && device.device_info?.geolocation?.longitude;
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4 space-y-4">
         {/* Device Name & Status */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Smartphone className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <div className="relative flex-shrink-0">
+              <Smartphone className="h-5 w-5 text-muted-foreground" />
+              {isOnline && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-sm sm:text-base truncate">{getDeviceName()}</h4>
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-sm sm:text-base truncate">{getDeviceName()}</h4>
+                {isOnline && (
+                  <Badge variant="default" className="text-xs bg-green-500">Online</Badge>
+                )}
+              </div>
               {device.is_primary && (
                 <Badge variant="secondary" className="text-xs mt-1">أساسي</Badge>
               )}
@@ -113,6 +132,23 @@ export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, 
             isActive={device.is_active}
             onToggle={onToggle}
           />
+
+          {hasGPS && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const lat = device.device_info.geolocation.latitude;
+                const lng = device.device_info.geolocation.longitude;
+                window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+              }}
+              className="w-full"
+            >
+              <MapPin className="h-4 w-4 ml-2" />
+              عرض الموقع على الخريطة
+              <ExternalLink className="h-3 w-3 mr-2" />
+            </Button>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Button

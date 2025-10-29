@@ -48,6 +48,7 @@ export const BlacklistDeviceDialog = ({
     try {
       const { data, error } = await supabase.functions.invoke('blacklist-device', {
         body: {
+          attemptId: attempt.id,
           userId: attempt.user_id,
           deviceFingerprint: attempt.device_fingerprint,
           deviceInfo: attempt.device_info,
