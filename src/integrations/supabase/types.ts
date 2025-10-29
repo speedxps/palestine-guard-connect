@@ -827,6 +827,56 @@ export type Database = {
           },
         ]
       }
+      device_access_log: {
+        Row: {
+          access_type: string
+          created_at: string
+          device_fingerprint: string
+          device_id: string | null
+          geolocation: Json | null
+          id: string
+          ip_address: string | null
+          reason: string | null
+          user_agent: string | null
+          user_id: string
+          was_allowed: boolean
+        }
+        Insert: {
+          access_type: string
+          created_at?: string
+          device_fingerprint: string
+          device_id?: string | null
+          geolocation?: Json | null
+          id?: string
+          ip_address?: string | null
+          reason?: string | null
+          user_agent?: string | null
+          user_id: string
+          was_allowed: boolean
+        }
+        Update: {
+          access_type?: string
+          created_at?: string
+          device_fingerprint?: string
+          device_id?: string | null
+          geolocation?: Json | null
+          id?: string
+          ip_address?: string | null
+          reason?: string | null
+          user_agent?: string | null
+          user_id?: string
+          was_allowed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_access_log_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "user_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duty_chat_messages: {
         Row: {
           attachment_type: string | null
@@ -2833,6 +2883,57 @@ export type Database = {
           record_date?: string
           record_type?: Database["public"]["Enums"]["traffic_record_type"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_devices: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          device_fingerprint: string
+          device_info: Json
+          device_name: string | null
+          first_seen_at: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          last_seen_at: string
+          login_count: number
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          device_fingerprint: string
+          device_info?: Json
+          device_name?: string | null
+          first_seen_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          last_seen_at?: string
+          login_count?: number
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          device_fingerprint?: string
+          device_info?: Json
+          device_name?: string | null
+          first_seen_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          last_seen_at?: string
+          login_count?: number
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

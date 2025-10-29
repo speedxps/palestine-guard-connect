@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.verify-biometric-login]
 verify_jwt = false
+
+[functions.check-device-access]
+verify_jwt = false
+
+[functions.manage-user-device]
+verify_jwt = true

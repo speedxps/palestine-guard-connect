@@ -79,6 +79,13 @@ const AdminPanel = () => {
       description: 'إعدادات متقدمة وصيانة',
       icon: Settings,
       color: 'from-gray-500 to-gray-600'
+    },
+    {
+      id: 'device-management',
+      title: 'إدارة أمان الأجهزة',
+      description: 'التحكم في الأجهزة المصرح بها',
+      icon: Shield,
+      color: 'from-indigo-500 to-indigo-600'
     }
   ];
 
@@ -221,6 +228,20 @@ const AdminPanel = () => {
             {isCreatingTestUsers ? "جاري الإنشاء..." : "إنشاء المستخدمين التجريبيين"}
           </Button>
         </div>
+        <div className="p-4 border rounded-lg bg-indigo-50/50">
+          <h4 className="font-semibold font-arabic">إدارة أمان الأجهزة</h4>
+          <p className="text-sm text-muted-foreground font-arabic mb-3">
+            التحكم في الأجهزة المسموح بها لكل مستخدم ومراقبة محاولات الدخول
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/device-management')}
+          >
+            <Shield className="h-4 w-4 mr-2" />
+            إدارة الأجهزة
+          </Button>
+        </div>
         <div className="p-4 border rounded-lg">
           <h4 className="font-semibold font-arabic">النسخ الاحتياطي</h4>
           <p className="text-sm text-muted-foreground font-arabic mb-3">إنشاء نسخة احتياطية من البيانات</p>
@@ -311,7 +332,7 @@ const AdminPanel = () => {
       {/* Content */}
       <div className="px-6 py-8 pb-32">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 h-auto p-1 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 h-auto p-1 bg-muted/50">
             {adminSections.map((section) => {
               const Icon = section.icon;
               return (

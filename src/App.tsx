@@ -98,6 +98,7 @@ import NotFound from "@/pages/NotFound";
 import AccessDenied from "@/pages/AccessDenied";
 import SetupTestUsers from "@/pages/SetupTestUsers";
 import CreateUser from "@/pages/CreateUser";
+import DeviceManagement from "@/pages/DeviceManagement";
 import Tickets from "@/pages/Tickets";
 import InternalNews from "@/pages/InternalNews";
 import InvestigationClosureManagement from "@/pages/InvestigationClosureManagement";

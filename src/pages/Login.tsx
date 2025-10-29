@@ -11,6 +11,7 @@ import policeLogo from "@/assets/police-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import LoginBlocked from "./LoginBlocked";
 import { IntegratedLoginButton } from "@/components/IntegratedLoginButton";
+import { generateDeviceFingerprint } from "@/utils/deviceFingerprint";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -184,6 +185,48 @@ const Login = () => {
         toast({
           title: "فشل تسجيل الدخول",
           description: "تحقق من اسم المستخدم وكلمة المرور",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // التحقق من الجهاز بعد نجاح تسجيل الدخول
+      console.log('🔍 Checking device fingerprint...');
+      try {
+        const deviceData = await generateDeviceFingerprint();
+        const { data: deviceCheck, error: deviceError } = await supabase.functions.invoke('check-device-access', {
+          body: {
+            userId: data.user.id,
+            deviceFingerprint: deviceData.fingerprint,
+            deviceInfo: deviceData.deviceInfo,
+          },
+        });
+
+        console.log('📱 Device check result:', deviceCheck);
+
+        if (deviceError || !deviceCheck?.allowed) {
+          // تسجيل خروج المستخدم
+          await supabase.auth.signOut();
+          
+          toast({
+            title: "⛔ جهاز غير مصرح به",
+            description: deviceCheck?.reason || "لا يمكنك تسجيل الدخول من هذا الجهاز. يرجى التواصل مع الإدارة.",
+            variant: "destructive",
+            duration: 8000,
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('✅ Device verified successfully');
+      } catch (deviceCheckError) {
+        console.error('❌ Device check error:', deviceCheckError);
+        // في حالة فشل التحقق من الجهاز، نسجل خروج المستخدم
+        await supabase.auth.signOut();
+        toast({
+          title: "خطأ في التحقق من الجهاز",
+          description: "حدث خطأ أثناء التحقق من جهازك. يرجى المحاولة مرة أخرى.",
           variant: "destructive",
         });
         setIsLoading(false);

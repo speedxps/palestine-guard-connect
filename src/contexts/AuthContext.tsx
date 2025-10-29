@@ -2,6 +2,7 @@ import * as React from 'react';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { generateDeviceFingerprint } from '@/utils/deviceFingerprint';
 
 export type UserRole = 'admin' | 'traffic_police' | 'cid' | 'special_police' | 'cybercrime' | 'judicial_police' | 'officer' | 'user' | 'traffic_manager' | 'cid_manager' | 'special_manager' | 'cybercrime_manager' | 'operations_system' | 'borders' | 'tourism_police' | 'joint_operations';
 
@@ -116,6 +117,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data.user) {
         console.log('AuthContext: Login successful');
+        
+        // Check device fingerprint
+        console.log('AuthContext: Checking device fingerprint...');
+        try {
+          const deviceData = await generateDeviceFingerprint();
+          const { data: deviceCheck, error: deviceError } = await supabase.functions.invoke('check-device-access', {
+            body: {
+              userId: data.user.id,
+              deviceFingerprint: deviceData.fingerprint,
+              deviceInfo: deviceData.deviceInfo,
+            },
+          });
+
+          if (deviceError || !deviceCheck?.allowed) {
+            console.error('Device not authorized:', deviceCheck);
+            await supabase.auth.signOut();
+            return false;
+          }
+
+          console.log('AuthContext: Device verified successfully');
+        } catch (deviceCheckError) {
+          console.error('Device check failed:', deviceCheckError);
+          await supabase.auth.signOut();
+          return false;
+        }
         
         // Log the login event to track security
         try {
