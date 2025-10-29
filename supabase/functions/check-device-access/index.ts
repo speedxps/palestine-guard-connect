@@ -23,18 +23,25 @@ serve(async (req) => {
       }
     );
 
-    const { userId, deviceFingerprint, deviceInfo, geolocation, ipAddress, userAgent } = await req.json();
+    // Get IP address from request headers
+    const ipAddress = req.headers.get('x-forwarded-for') || 
+                      req.headers.get('x-real-ip') || 
+                      req.headers.get('cf-connecting-ip') ||
+                      'unknown';
+
+    const { userId, deviceFingerprint, deviceInfo, geolocation, userAgent } = await req.json();
 
     console.log('Checking device access for user:', userId);
     console.log('Device fingerprint:', deviceFingerprint);
     console.log('Geolocation:', geolocation);
     console.log('IP Address:', ipAddress);
+    console.log('User Agent:', userAgent);
 
     // Get user's max allowed devices from profiles
     const { data: userProfile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('max_devices_allowed')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
     if (profileError) {
@@ -60,12 +67,19 @@ serve(async (req) => {
     // If device exists and is active, allow access
     if (existingDevice) {
       if (existingDevice.is_active) {
+        // Update device info with latest geolocation
+        const updatedDeviceInfo = {
+          ...existingDevice.device_info,
+          geolocation: geolocation,
+        };
+        
         // Update last seen and login count
         await supabaseClient
           .from('user_devices')
           .update({
             last_seen_at: new Date().toISOString(),
             login_count: existingDevice.login_count + 1,
+            device_info: updatedDeviceInfo,
           })
           .eq('id', existingDevice.id);
 
@@ -144,12 +158,17 @@ serve(async (req) => {
 
     // If user has no devices, register this one as primary
     if (activeDeviceCount === 0) {
+      const deviceInfoWithGeo = {
+        ...deviceInfo,
+        geolocation: geolocation,
+      };
+      
       const { data: newDevice, error: insertError } = await supabaseClient
         .from('user_devices')
         .insert({
           user_id: userId,
           device_fingerprint: deviceFingerprint,
-          device_info: deviceInfo,
+          device_info: deviceInfoWithGeo,
           is_active: true,
           is_primary: true,
           login_count: 1,

@@ -122,11 +122,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('AuthContext: Checking device fingerprint...');
         try {
           const deviceData = await generateDeviceFingerprint();
+          
+          // Get geolocation
+          const geolocation = await new Promise<{ latitude: number; longitude: number } | null>((resolve) => {
+            if (!navigator.geolocation) {
+              resolve(null);
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              (position) => resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              }),
+              () => resolve(null),
+              { timeout: 3000 }
+            );
+          });
+          
           const { data: deviceCheck, error: deviceError } = await supabase.functions.invoke('check-device-access', {
             body: {
               userId: data.user.id,
               deviceFingerprint: deviceData.fingerprint,
               deviceInfo: deviceData.deviceInfo,
+              geolocation,
+              userAgent: navigator.userAgent,
             },
           });
 

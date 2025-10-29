@@ -208,6 +208,32 @@ function parseUserAgent(): { name: string; version: string; os: string; osVersio
   return { name: browserName, version: browserVersion, os: osName, osVersion };
 }
 
+// Get user's geolocation
+async function getGeolocation(): Promise<{ latitude: number; longitude: number } | null> {
+  if (!navigator.geolocation) {
+    return null;
+  }
+
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.warn('Geolocation error:', error);
+        resolve(null);
+      },
+      {
+        timeout: 5000,
+        maximumAge: 60000,
+      }
+    );
+  });
+}
+
 // Main function to generate device fingerprint
 export async function generateDeviceFingerprint(): Promise<DeviceFingerprint> {
   const { name: browserName, version: browserVersion, os: osName, osVersion } = parseUserAgent();
