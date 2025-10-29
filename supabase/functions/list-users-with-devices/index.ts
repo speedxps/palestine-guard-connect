@@ -81,6 +81,17 @@ serve(async (req) => {
     const authUsers = authData.users;
     console.log(`Found ${authUsers.length} users`);
 
+    // Fetch profiles with max_devices_allowed
+    const { data: profiles, error: profilesError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, full_name, max_devices_allowed');
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    }
+
+    const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
     // Fetch all devices
     const { data: devices, error: devicesError } = await supabaseAdmin
       .from('user_devices')
@@ -110,13 +121,19 @@ serve(async (req) => {
 
     console.log(`Found ${blockedCount || 0} blocked attempts today`);
 
-    // Combine users with their devices
-    const usersWithDevices = authUsers.map(user => ({
-      id: user.id,
-      email: user.email || '',
-      raw_user_meta_data: user.user_metadata || {},
-      devices: devices?.filter(d => d.user_id === user.id) || [],
-    }));
+    // Combine users with their devices and profiles
+    const usersWithDevices = authUsers.map(user => {
+      const userDevices = devices?.filter(d => d.user_id === user.id) || [];
+      const profile = profilesMap.get(user.id);
+      return {
+        id: user.id,
+        email: user.email || '',
+        full_name: profile?.full_name || user.email?.split('@')[0] || 'مستخدم',
+        raw_user_meta_data: user.user_metadata || {},
+        max_devices_allowed: profile?.max_devices_allowed || 1,
+        devices: userDevices,
+      };
+    });
 
     const stats = {
       totalUsers: usersWithDevices.length,

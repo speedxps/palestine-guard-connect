@@ -1,119 +1,145 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Monitor, Smartphone, Trash2, Eye, Clock, LogIn } from "lucide-react";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Eye, Trash2, Smartphone, Clock, Hash } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { DeviceToggleButton } from './DeviceToggleButton';
+
+interface Device {
+  id: string;
+  device_fingerprint: string;
+  device_info: any;
+  device_name?: string;
+  is_active: boolean;
+  is_primary: boolean;
+  first_seen_at: string;
+  last_seen_at: string;
+  login_count: number;
+  notes?: string;
+  user_id: string;
+}
 
 interface DeviceCardProps {
-  device: {
-    id: string;
-    device_name?: string;
-    device_info: any;
-    is_active: boolean;
-    is_primary: boolean;
-    last_seen_at: string;
-    login_count: number;
-    first_seen_at: string;
-    notes?: string;
-  };
-  onViewDetails: () => void;
-  onDelete: () => void;
+  device: Device;
+  userId: string;
+  onViewDetails: (device: Device) => void;
+  onDelete: (device: Device) => void;
+  onToggle: () => void;
   isDeleting?: boolean;
 }
 
-export const DeviceCard = ({ device, onViewDetails, onDelete, isDeleting }: DeviceCardProps) => {
-  const deviceInfo = device.device_info;
-  const isMobile = deviceInfo?.hardware?.touchSupport || deviceInfo?.hardware?.maxTouchPoints > 0;
+export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, isDeleting }: DeviceCardProps) => {
+  const isMobile = device.device_info?.platform?.toLowerCase().includes('mobile') || 
+                   device.device_info?.platform?.toLowerCase().includes('android') ||
+                   device.device_info?.platform?.toLowerCase().includes('ios');
 
-  const getDeviceDisplayName = () => {
+  const getDeviceName = () => {
     if (device.device_name) return device.device_name;
-    
-    const browser = deviceInfo?.browser?.name || 'Unknown';
-    const browserVersion = deviceInfo?.browser?.version || '';
-    const os = deviceInfo?.os?.name || 'Unknown';
-    const osVersion = deviceInfo?.os?.version || '';
-    
-    return `${browser} ${browserVersion} على ${os} ${osVersion}`;
+    const info = device.device_info;
+    if (info?.userAgent) {
+      if (info.userAgent.includes('iPhone')) return 'iPhone';
+      if (info.userAgent.includes('iPad')) return 'iPad';
+      if (info.userAgent.includes('Android')) return 'Android';
+      if (info.userAgent.includes('Windows')) return 'Windows PC';
+      if (info.userAgent.includes('Macintosh')) return 'Mac';
+      if (info.userAgent.includes('Linux')) return 'Linux';
+    }
+    return 'جهاز غير معروف';
   };
 
   return (
-    <Card className={`${!device.is_active ? 'opacity-60' : ''} hover:shadow-lg transition-shadow`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            {isMobile ? (
-              <Smartphone className="h-8 w-8 text-primary" />
-            ) : (
-              <Monitor className="h-8 w-8 text-primary" />
-            )}
-            <div>
-              <CardTitle className="text-lg">{getDeviceDisplayName()}</CardTitle>
-              <div className="flex gap-2 mt-1">
-                {device.is_primary && (
-                  <Badge variant="default" className="text-xs">جهاز رئيسي</Badge>
-                )}
-                {device.is_active ? (
-                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-300">
-                    نشط
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-300">
-                    معطل
-                  </Badge>
-                )}
-              </div>
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4 space-y-4">
+        {/* Device Name & Status */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Smartphone className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-sm sm:text-base truncate">{getDeviceName()}</h4>
+              {device.is_primary && (
+                <Badge variant="secondary" className="text-xs mt-1">أساسي</Badge>
+              )}
             </div>
           </div>
+          <Badge variant={device.is_active ? 'default' : 'secondary'} className="flex-shrink-0">
+            {device.is_active ? 'نشط' : 'معطل'}
+          </Badge>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <div>
-              <div className="font-medium text-foreground">آخر استخدام</div>
-              <div className="text-xs">
-                {format(new Date(device.last_seen_at), 'PPp', { locale: ar })}
-              </div>
+        <div className="h-px bg-border" />
+
+        {/* Device Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">آخر استخدام</p>
+              <p className="font-medium truncate">
+                {formatDistanceToNow(new Date(device.last_seen_at), {
+                  addSuffix: true,
+                  locale: ar,
+                })}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <LogIn className="h-4 w-4" />
-            <div>
-              <div className="font-medium text-foreground">مرات الدخول</div>
-              <div className="text-xs">{device.login_count} مرة</div>
+          <div className="flex items-center gap-2">
+            <Hash className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">مرات الدخول</p>
+              <p className="font-medium">{device.login_count}</p>
             </div>
           </div>
         </div>
 
         {device.notes && (
-          <div className="text-sm p-2 bg-muted rounded-md">
-            <div className="font-medium mb-1">ملاحظات:</div>
-            <div className="text-muted-foreground">{device.notes}</div>
-          </div>
+          <>
+            <div className="h-px bg-border" />
+            <div className="text-sm">
+              <p className="text-xs text-muted-foreground mb-1">ملاحظات:</p>
+              <p className="text-muted-foreground">{device.notes}</p>
+            </div>
+          </>
         )}
 
-        <div className="flex gap-2 pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onViewDetails}
-            className="flex-1"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            عرض التفاصيل
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={onDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+        <div className="h-px bg-border" />
+
+        {/* Toggle & Actions */}
+        <div className="space-y-3">
+          <DeviceToggleButton
+            deviceId={device.id}
+            userId={userId}
+            isActive={device.is_active}
+            onToggle={onToggle}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewDetails(device)}
+              className="w-full"
+            >
+              <Eye className="h-4 w-4 ml-2" />
+              عرض التفاصيل
+            </Button>
+
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(device)}
+              disabled={isDeleting}
+              className="w-full"
+            >
+              {isDeleting ? (
+                <span className="animate-spin ml-2">⏳</span>
+              ) : (
+                <Trash2 className="h-4 w-4 ml-2" />
+              )}
+              حذف الجهاز
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

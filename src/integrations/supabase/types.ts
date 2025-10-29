@@ -2409,6 +2409,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          max_devices_allowed: number
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
@@ -2427,6 +2428,7 @@ export type Database = {
           full_name: string
           id?: string
           is_active?: boolean
+          max_devices_allowed?: number
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
@@ -2445,6 +2447,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          max_devices_allowed?: number
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string

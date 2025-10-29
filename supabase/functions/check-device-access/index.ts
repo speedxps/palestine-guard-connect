@@ -28,6 +28,20 @@ serve(async (req) => {
     console.log('Checking device access for user:', userId);
     console.log('Device fingerprint:', deviceFingerprint);
 
+    // Get user's max allowed devices from profiles
+    const { data: userProfile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('max_devices_allowed')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+    }
+
+    const maxDevicesAllowed = userProfile?.max_devices_allowed || 1;
+    console.log(`User max devices allowed: ${maxDevicesAllowed}`);
+
     // Check if the device exists for this user
     const { data: existingDevice, error: deviceError } = await supabaseClient
       .from('user_devices')
@@ -109,15 +123,19 @@ serve(async (req) => {
     const { data: userDevices, error: userDevicesError } = await supabaseClient
       .from('user_devices')
       .select('id')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('is_active', true);
 
     if (userDevicesError) {
       console.error('Error checking user devices:', userDevicesError);
       throw userDevicesError;
     }
 
+    const activeDeviceCount = userDevices?.length || 0;
+    console.log(`User has ${activeDeviceCount} active devices`);
+
     // If user has no devices, register this one as primary
-    if (!userDevices || userDevices.length === 0) {
+    if (activeDeviceCount === 0) {
       const { data: newDevice, error: insertError } = await supabaseClient
         .from('user_devices')
         .insert({
@@ -162,7 +180,36 @@ serve(async (req) => {
       );
     }
 
-    // User already has devices - deny access from new device
+    // Check if user has reached max devices limit
+    if (activeDeviceCount >= maxDevicesAllowed) {
+      console.log(`User has reached max devices limit (${activeDeviceCount}/${maxDevicesAllowed})`);
+      
+      // Log blocked access attempt
+      await supabaseClient
+        .from('device_access_log')
+        .insert({
+          user_id: userId,
+          device_id: null,
+          device_fingerprint: deviceFingerprint,
+          access_type: 'login_blocked',
+          was_allowed: false,
+          reason: `Max devices reached (${maxDevicesAllowed})`,
+        });
+
+      return new Response(
+        JSON.stringify({
+          allowed: false,
+          device: null,
+          reason: `وصلت للحد الأقصى من الأجهزة المسموح بها (${maxDevicesAllowed}). يرجى حذف جهاز قديم أو الاتصال بالإدارة`,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // User has devices but hasn't reached limit - still deny for security
     await supabaseClient
       .from('device_access_log')
       .insert({
