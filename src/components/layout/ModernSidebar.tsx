@@ -290,6 +290,19 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   <Button
                     variant="ghost"
                     className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/device-management' 
+                        ? 'bg-emerald-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-emerald-50'
+                    }`}
+                    onClick={() => handleNavigation('/device-management')}
+                  >
+                    <Shield className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">أمان الأجهزة</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
                       location.pathname === '/user-dashboard' 
                         ? 'bg-indigo-500 text-white font-bold shadow-lg' 
                         : 'text-gray-700 hover:bg-indigo-50'
@@ -410,6 +423,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                             return [
                               ...basePages,
                               { path: '/admin-panel', label: 'إدارة المستخدمين' },
+                              { path: '/device-management', label: 'أمان الأجهزة' },
                               { path: '/user-dashboard', label: 'الأجهزة' },
                               { path: '/notification-management', label: 'إدارة الإشعارات' },
                               { path: '/news-management', label: 'إدارة الأخبار' },

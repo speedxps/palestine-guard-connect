@@ -46,8 +46,8 @@ const Dashboard = () => {
       return [
         { title: "إدارة البلاغات", icon: AlertCircle, path: "/incidents-management", gradient: "from-blue-500 to-blue-600" },
         { title: "إدارة المستخدمين", icon: Users, path: "/admin-panel", gradient: "from-indigo-500 to-indigo-600" },
+        { title: "أمان الأجهزة", icon: Shield, path: "/device-management", gradient: "from-green-500 to-green-600" },
         { title: "التقارير", icon: FileText, path: "/reports", gradient: "from-purple-500 to-purple-600" },
-        { title: "المهام العاجلة", icon: Target, path: "/urgent-tasks", gradient: "from-red-500 to-red-600" },
       ];
     }
 

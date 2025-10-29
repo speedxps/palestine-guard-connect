@@ -46,46 +46,28 @@ export default function DeviceManagement() {
     try {
       setLoading(true);
 
-      // Fetch all users
-      const { data: authUsers, error: usersError } = await supabase.auth.admin.listUsers();
-      if (usersError) throw usersError;
+      // Call edge function to get users with devices
+      const { data, error } = await supabase.functions.invoke('list-users-with-devices');
 
-      // Fetch all devices
-      const { data: devices, error: devicesError } = await supabase
-        .from('user_devices')
-        .select('*')
-        .order('last_seen_at', { ascending: false });
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'فشل في تحميل البيانات');
+      }
 
-      if (devicesError) throw devicesError;
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'فشل في تحميل البيانات');
+      }
 
-      // Fetch blocked attempts count (today)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count: blockedCount } = await supabase
-        .from('device_access_log')
-        .select('*', { count: 'exact', head: true })
-        .eq('was_allowed', false)
-        .gte('created_at', today.toISOString());
+      console.log('Data loaded successfully:', data);
 
-      // Combine users with their devices
-      const usersWithDevices = authUsers.users.map(user => ({
-        id: user.id,
-        email: user.email || '',
-        raw_user_meta_data: user.user_metadata,
-        devices: devices?.filter(d => d.user_id === user.id) || [],
-      }));
+      setUsers(data.users || []);
+      setStats(data.stats || { totalUsers: 0, totalDevices: 0, blockedAttempts: 0 });
 
-      setUsers(usersWithDevices);
-      setStats({
-        totalUsers: usersWithDevices.length,
-        totalDevices: devices?.length || 0,
-        blockedAttempts: blockedCount || 0,
-      });
     } catch (error: any) {
       console.error('Error loading users and devices:', error);
       toast({
-        title: "خطأ",
-        description: "فشل في تحميل بيانات المستخدمين والأجهزة",
+        title: "خطأ في التحميل",
+        description: error.message || "فشل في تحميل بيانات المستخدمين والأجهزة. تأكد من أنك مسجل دخول كمسؤول.",
         variant: "destructive",
       });
     } finally {
@@ -176,6 +158,9 @@ export default function DeviceManagement() {
             <p className="text-muted-foreground">التحكم في الأجهزة المصرح بها للمستخدمين</p>
           </div>
         </div>
+        <Button onClick={loadUsersAndDevices} variant="outline" size="icon">
+          <RefreshCcw className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Statistics Cards */}
