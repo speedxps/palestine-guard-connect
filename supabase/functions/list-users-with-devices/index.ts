@@ -27,28 +27,16 @@ serve(async (req) => {
       }
     );
 
-    // Initialize regular client for RLS-protected queries
+    // Get and verify JWT token
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('لا يوجد تصريح دخول');
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    // Verify user is admin
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify user with admin client
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     
     if (userError || !user) {
       console.error('Error getting user:', userError);
@@ -58,7 +46,7 @@ serve(async (req) => {
     console.log('User verified:', user.id);
 
     // Check if user is admin
-    const { data: userRoles, error: rolesError } = await supabase
+    const { data: userRoles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id);
@@ -94,7 +82,7 @@ serve(async (req) => {
     console.log(`Found ${authUsers.length} users`);
 
     // Fetch all devices
-    const { data: devices, error: devicesError } = await supabase
+    const { data: devices, error: devicesError } = await supabaseAdmin
       .from('user_devices')
       .select('*')
       .order('last_seen_at', { ascending: false });
@@ -110,7 +98,7 @@ serve(async (req) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const { count: blockedCount, error: blockedError } = await supabase
+    const { count: blockedCount, error: blockedError } = await supabaseAdmin
       .from('device_access_log')
       .select('*', { count: 'exact', head: true })
       .eq('was_allowed', false)
