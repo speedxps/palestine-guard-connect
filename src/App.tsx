@@ -294,6 +294,18 @@ const App = () => {
                   }
                 />
                 
+                {/* Device Management */}
+                <Route
+                  path="/device-management"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <DeviceManagement />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                
                 <Route
                   path="/admin/live-tracking"
                   element={
