@@ -97,7 +97,7 @@ export const BlockedAttemptCard = ({ attempt, onApprove, onBlacklist }: BlockedA
           )}
 
           {/* Location */}
-          {attempt.geolocation && (
+          {attempt.geolocation ? (
             <Button
               variant="outline"
               size="sm"
@@ -107,6 +107,13 @@ export const BlockedAttemptCard = ({ attempt, onApprove, onBlacklist }: BlockedA
               <MapPin className="h-4 w-4 ml-2" />
               عرض الموقع على الخريطة
             </Button>
+          ) : (
+            <div className="p-3 bg-muted rounded-md text-center">
+              <p className="text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 inline ml-1" />
+                لا يوجد موقع GPS لهذه المحاولة
+              </p>
+            </div>
           )}
 
           {/* Actions */}

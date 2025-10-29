@@ -133,7 +133,7 @@ export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, 
             onToggle={onToggle}
           />
 
-          {hasGPS && (
+          {hasGPS ? (
             <Button
               variant="outline"
               size="sm"
@@ -148,6 +148,13 @@ export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, 
               عرض الموقع على الخريطة
               <ExternalLink className="h-3 w-3 mr-2" />
             </Button>
+          ) : (
+            <div className="p-2 bg-muted rounded-md text-center">
+              <p className="text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 inline ml-1" />
+                لا يوجد موقع GPS لهذا الجهاز
+              </p>
+            </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
