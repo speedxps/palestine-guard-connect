@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Update max devices request received');
+    console.log('Get blocked attempts request received');
 
     // Initialize Supabase Admin Client
     const supabaseAdmin = createClient(
@@ -68,44 +68,50 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Parse request body
-    const { userId, maxDevices } = await req.json();
+    // Get blocked login attempts (where was_allowed = false and access_type = 'login_blocked')
+    const { data: blockedAttempts, error: attemptsError } = await supabaseAdmin
+      .from('device_access_log')
+      .select('*')
+      .eq('was_allowed', false)
+      .eq('access_type', 'login_blocked')
+      .order('created_at', { ascending: false })
+      .limit(100);
 
-    if (!userId || maxDevices === undefined || maxDevices === null) {
-      return new Response(JSON.stringify({ error: 'معلومات غير مكتملة' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (attemptsError) {
+      console.error('Error fetching blocked attempts:', attemptsError);
+      throw new Error('فشل في جلب محاولات الدخول المحظورة');
+    }
+
+    // Get user details for each attempt
+    const userIds = [...new Set(blockedAttempts?.map(a => a.user_id).filter(Boolean) || [])];
+    
+    const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authUsersError) {
+      console.error('Error fetching auth users:', authUsersError);
+    }
+
+    const usersMap = new Map();
+    authUsers?.users.forEach(u => {
+      usersMap.set(u.id, {
+        email: u.email,
+        full_name: u.user_metadata?.full_name || u.email,
       });
-    }
+    });
 
-    // Validate maxDevices
-    if (maxDevices < 1 || maxDevices > 999) {
-      return new Response(JSON.stringify({ error: 'عدد غير صالح للأجهزة' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Combine attempts with user data
+    const attemptsWithUserData = blockedAttempts?.map(attempt => ({
+      ...attempt,
+      user_email: usersMap.get(attempt.user_id)?.email || 'غير معروف',
+      user_name: usersMap.get(attempt.user_id)?.full_name || 'غير معروف',
+    })) || [];
 
-    console.log(`Updating max devices for user ${userId} to ${maxDevices}`);
-
-    // Update max_devices_allowed in profiles table
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({ max_devices_allowed: maxDevices })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      console.error('Error updating max devices:', updateError);
-      throw new Error('فشل في تحديث عدد الأجهزة');
-    }
-
-    console.log('Max devices updated successfully');
+    console.log(`Found ${attemptsWithUserData.length} blocked attempts`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'تم تحديث عدد الأجهزة المسموح بها بنجاح',
-        maxDevices 
+        attempts: attemptsWithUserData,
       }),
       {
         status: 200,
@@ -114,7 +120,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in update-max-devices:', error);
+    console.error('Error in get-blocked-attempts:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'حدث خطأ غير متوقع' }),
       {

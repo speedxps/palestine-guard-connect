@@ -877,6 +877,42 @@ export type Database = {
           },
         ]
       }
+      device_blacklist: {
+        Row: {
+          blocked_at: string | null
+          blocked_by: string | null
+          created_at: string | null
+          device_fingerprint: string
+          device_info: Json | null
+          id: string
+          notes: string | null
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          created_at?: string | null
+          device_fingerprint: string
+          device_info?: Json | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          created_at?: string | null
+          device_fingerprint?: string
+          device_info?: Json | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       duty_chat_messages: {
         Row: {
           attachment_type: string | null

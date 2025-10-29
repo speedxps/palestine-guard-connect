@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -23,12 +25,16 @@ import {
   RefreshCw,
   Loader2,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  ArrowLeft
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaxDevicesSelector } from '@/components/MaxDevicesSelector';
 import { DeviceCard } from '@/components/DeviceCard';
 import { DeviceDetailsModal } from '@/components/DeviceDetailsModal';
+import { BlockedAttemptCard } from '@/components/BlockedAttemptCard';
+import { ApproveDeviceDialog } from '@/components/ApproveDeviceDialog';
+import { BlacklistDeviceDialog } from '@/components/BlacklistDeviceDialog';
 
 interface Device {
   id: string;
@@ -52,7 +58,25 @@ interface UserWithDevices {
   devices: Device[];
 }
 
+interface BlockedAttempt {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  device_fingerprint: string;
+  device_info: any;
+  geolocation: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  reason: string;
+  created_at: string;
+}
+
 const DeviceManagement = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<UserWithDevices[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserWithDevices | null>(null);
@@ -69,6 +93,13 @@ const DeviceManagement = () => {
     totalDevices: 0,
     blockedAttempts: 0,
   });
+
+  // Blocked attempts state
+  const [blockedAttempts, setBlockedAttempts] = useState<BlockedAttempt[]>([]);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
+  const [selectedAttempt, setSelectedAttempt] = useState<BlockedAttempt | null>(null);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showBlacklistDialog, setShowBlacklistDialog] = useState(false);
 
   const loadUsersAndDevices = async () => {
     try {
@@ -96,13 +127,58 @@ const DeviceManagement = () => {
     }
   };
 
+  const loadBlockedAttempts = async () => {
+    try {
+      setLoadingAttempts(true);
+      
+      const { data, error } = await supabase.functions.invoke('get-blocked-attempts');
+
+      if (error) {
+        console.error('Error loading blocked attempts:', error);
+        throw error;
+      }
+
+      if (data?.success) {
+        setBlockedAttempts(data.attempts || []);
+      } else {
+        throw new Error(data?.error || 'فشل في تحميل محاولات الدخول المحظورة');
+      }
+    } catch (error: any) {
+      console.error('Error in loadBlockedAttempts:', error);
+      toast.error(error.message || 'فشل في تحميل محاولات الدخول المحظورة');
+    } finally {
+      setLoadingAttempts(false);
+    }
+  };
+
   useEffect(() => {
     loadUsersAndDevices();
+    loadBlockedAttempts();
   }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
     loadUsersAndDevices();
+    loadBlockedAttempts();
+  };
+
+  const handleApproveAttempt = (attempt: BlockedAttempt) => {
+    setSelectedAttempt(attempt);
+    setShowApproveDialog(true);
+  };
+
+  const handleBlacklistAttempt = (attempt: BlockedAttempt) => {
+    setSelectedAttempt(attempt);
+    setShowBlacklistDialog(true);
+  };
+
+  const handleApproveSuccess = () => {
+    loadBlockedAttempts();
+    loadUsersAndDevices();
+  };
+
+  const handleBlacklistSuccess = () => {
+    loadBlockedAttempts();
   };
 
   const handleDeleteDevice = async (deviceId: string) => {
@@ -193,11 +269,21 @@ const DeviceManagement = () => {
     <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 max-w-7xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-bold">إدارة الأجهزة</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            تحكم في أجهزة المستخدمين وعدد الأجهزة المسموح بها
-          </p>
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => navigate(-1)} 
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-bold">إدارة الأجهزة</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              تحكم في أجهزة المستخدمين وعدد الأجهزة المسموح بها
+            </p>
+          </div>
         </div>
         <Button 
           onClick={handleRefresh} 
@@ -273,14 +359,33 @@ const DeviceManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Users List or Device Details */}
-      {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-        </div>
-      ) : selectedUser ? (
+      {/* Tabs for Registered Devices and Blocked Attempts */}
+      <Tabs defaultValue="devices" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="devices">
+            <Smartphone className="h-4 w-4 ml-2" />
+            الأجهزة المسجلة
+          </TabsTrigger>
+          <TabsTrigger value="blocked">
+            <ShieldAlert className="h-4 w-4 ml-2" />
+            محاولات الدخول المحظورة
+            {blockedAttempts.length > 0 && (
+              <Badge variant="destructive" className="mr-2">
+                {blockedAttempts.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab 1: Registered Devices */}
+        <TabsContent value="devices" className="space-y-4">
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
+            </div>
+          ) : selectedUser ? (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -399,6 +504,40 @@ const DeviceManagement = () => {
           )}
         </div>
       )}
+        </TabsContent>
+
+        {/* Tab 2: Blocked Login Attempts */}
+        <TabsContent value="blocked" className="space-y-4">
+          {loadingAttempts ? (
+            <div className="space-y-3">
+              <Skeleton className="h-40" />
+              <Skeleton className="h-40" />
+              <Skeleton className="h-40" />
+            </div>
+          ) : blockedAttempts.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <ShieldAlert className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium mb-2">لا توجد محاولات دخول محظورة</p>
+                <p className="text-sm text-muted-foreground">
+                  جميع محاولات تسجيل الدخول تمت بنجاح
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {blockedAttempts.map(attempt => (
+                <BlockedAttemptCard
+                  key={attempt.id}
+                  attempt={attempt}
+                  onApprove={handleApproveAttempt}
+                  onBlacklist={handleBlacklistAttempt}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Device Details Modal */}
       {selectedDevice && (
@@ -455,6 +594,22 @@ const DeviceManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Approve Device Dialog */}
+      <ApproveDeviceDialog
+        open={showApproveDialog}
+        onOpenChange={setShowApproveDialog}
+        attempt={selectedAttempt}
+        onSuccess={handleApproveSuccess}
+      />
+
+      {/* Blacklist Device Dialog */}
+      <BlacklistDeviceDialog
+        open={showBlacklistDialog}
+        onOpenChange={setShowBlacklistDialog}
+        attempt={selectedAttempt}
+        onSuccess={handleBlacklistSuccess}
+      />
     </div>
   );
 };

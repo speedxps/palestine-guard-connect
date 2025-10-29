@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Update max devices request received');
+    console.log('Blacklist device request received');
 
     // Initialize Supabase Admin Client
     const supabaseAdmin = createClient(
@@ -69,43 +69,60 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { userId, maxDevices } = await req.json();
+    const { userId, deviceFingerprint, deviceInfo, reason, notes } = await req.json();
 
-    if (!userId || maxDevices === undefined || maxDevices === null) {
+    if (!deviceFingerprint) {
       return new Response(JSON.stringify({ error: 'معلومات غير مكتملة' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Validate maxDevices
-    if (maxDevices < 1 || maxDevices > 999) {
-      return new Response(JSON.stringify({ error: 'عدد غير صالح للأجهزة' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    console.log(`Blacklisting device: ${deviceFingerprint}`);
+
+    // Add to blacklist
+    const { error: blacklistError } = await supabaseAdmin
+      .from('device_blacklist')
+      .insert({
+        device_fingerprint: deviceFingerprint,
+        user_id: userId,
+        device_info: deviceInfo,
+        reason: reason || 'تم حظره من قبل الإدارة',
+        notes: notes,
+        blocked_by: user.id,
       });
+
+    if (blacklistError) {
+      console.error('Error adding to blacklist:', blacklistError);
+      throw new Error('فشل في إضافة الجهاز للقائمة السوداء');
     }
 
-    console.log(`Updating max devices for user ${userId} to ${maxDevices}`);
-
-    // Update max_devices_allowed in profiles table
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({ max_devices_allowed: maxDevices })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      console.error('Error updating max devices:', updateError);
-      throw new Error('فشل في تحديث عدد الأجهزة');
+    // Deactivate device if it exists
+    if (userId) {
+      await supabaseAdmin
+        .from('user_devices')
+        .update({ is_active: false })
+        .eq('user_id', userId)
+        .eq('device_fingerprint', deviceFingerprint);
     }
 
-    console.log('Max devices updated successfully');
+    // Log the blacklisting
+    await supabaseAdmin
+      .from('device_access_log')
+      .insert({
+        user_id: userId,
+        device_fingerprint: deviceFingerprint,
+        access_type: 'admin_blacklist',
+        was_allowed: false,
+        reason: reason || 'تم حظره من قبل الإدارة',
+      });
+
+    console.log('Device blacklisted successfully');
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'تم تحديث عدد الأجهزة المسموح بها بنجاح',
-        maxDevices 
+        message: 'تم حظر الجهاز بنجاح',
       }),
       {
         status: 200,
@@ -114,7 +131,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in update-max-devices:', error);
+    console.error('Error in blacklist-device:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'حدث خطأ غير متوقع' }),
       {

@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Update max devices request received');
+    console.log('Approve device request received');
 
     // Initialize Supabase Admin Client
     const supabaseAdmin = createClient(
@@ -69,43 +69,78 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { userId, maxDevices } = await req.json();
+    const { attemptId, userId, deviceFingerprint, deviceInfo } = await req.json();
 
-    if (!userId || maxDevices === undefined || maxDevices === null) {
+    if (!attemptId || !userId || !deviceFingerprint) {
       return new Response(JSON.stringify({ error: 'معلومات غير مكتملة' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Validate maxDevices
-    if (maxDevices < 1 || maxDevices > 999) {
-      return new Response(JSON.stringify({ error: 'عدد غير صالح للأجهزة' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    console.log(`Approving device for user ${userId}`);
+
+    // Check if device already exists
+    const { data: existingDevice, error: checkError } = await supabaseAdmin
+      .from('user_devices')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('device_fingerprint', deviceFingerprint)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error checking existing device:', checkError);
+      throw new Error('فشل في التحقق من الجهاز');
+    }
+
+    if (existingDevice) {
+      // Device exists, just activate it
+      const { error: updateError } = await supabaseAdmin
+        .from('user_devices')
+        .update({ is_active: true })
+        .eq('id', existingDevice.id);
+
+      if (updateError) {
+        console.error('Error activating device:', updateError);
+        throw new Error('فشل في تفعيل الجهاز');
+      }
+    } else {
+      // Create new device
+      const { error: insertError } = await supabaseAdmin
+        .from('user_devices')
+        .insert({
+          user_id: userId,
+          device_fingerprint: deviceFingerprint,
+          device_info: deviceInfo,
+          is_active: true,
+          is_primary: false,
+          login_count: 0,
+          notes: 'تم الموافقة من قبل الإدارة',
+        });
+
+      if (insertError) {
+        console.error('Error creating device:', insertError);
+        throw new Error('فشل في إنشاء الجهاز');
+      }
+    }
+
+    // Log the approval
+    await supabaseAdmin
+      .from('device_access_log')
+      .insert({
+        user_id: userId,
+        device_fingerprint: deviceFingerprint,
+        access_type: 'admin_approval',
+        was_allowed: true,
+        reason: 'تمت الموافقة من قبل الإدارة',
       });
-    }
 
-    console.log(`Updating max devices for user ${userId} to ${maxDevices}`);
-
-    // Update max_devices_allowed in profiles table
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({ max_devices_allowed: maxDevices })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      console.error('Error updating max devices:', updateError);
-      throw new Error('فشل في تحديث عدد الأجهزة');
-    }
-
-    console.log('Max devices updated successfully');
+    console.log('Device approved successfully');
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'تم تحديث عدد الأجهزة المسموح بها بنجاح',
-        maxDevices 
+        message: 'تم الموافقة على الجهاز بنجاح',
       }),
       {
         status: 200,
@@ -114,7 +149,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in update-max-devices:', error);
+    console.error('Error in approve-device:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'حدث خطأ غير متوقع' }),
       {

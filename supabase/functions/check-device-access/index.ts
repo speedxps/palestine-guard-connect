@@ -23,10 +23,12 @@ serve(async (req) => {
       }
     );
 
-    const { userId, deviceFingerprint, deviceInfo } = await req.json();
+    const { userId, deviceFingerprint, deviceInfo, geolocation, ipAddress, userAgent } = await req.json();
 
     console.log('Checking device access for user:', userId);
     console.log('Device fingerprint:', deviceFingerprint);
+    console.log('Geolocation:', geolocation);
+    console.log('IP Address:', ipAddress);
 
     // Get user's max allowed devices from profiles
     const { data: userProfile, error: profileError } = await supabaseClient
@@ -76,6 +78,9 @@ serve(async (req) => {
             device_fingerprint: deviceFingerprint,
             access_type: 'login_success',
             was_allowed: true,
+            geolocation: geolocation,
+            ip_address: ipAddress,
+            user_agent: userAgent,
           });
 
         console.log('Device access granted - existing active device');
@@ -101,6 +106,9 @@ serve(async (req) => {
             access_type: 'login_blocked',
             was_allowed: false,
             reason: 'Device is inactive',
+            geolocation: geolocation,
+            ip_address: ipAddress,
+            user_agent: userAgent,
           });
 
         console.log('Device access denied - device is inactive');
@@ -164,6 +172,9 @@ serve(async (req) => {
           access_type: 'login_success',
           was_allowed: true,
           reason: 'First device registered',
+          geolocation: geolocation,
+          ip_address: ipAddress,
+          user_agent: userAgent,
         });
 
       console.log('New device registered and access granted');
@@ -194,6 +205,9 @@ serve(async (req) => {
           access_type: 'login_blocked',
           was_allowed: false,
           reason: `Max devices reached (${maxDevicesAllowed})`,
+          geolocation: geolocation,
+          ip_address: ipAddress,
+          user_agent: userAgent,
         });
 
       return new Response(
@@ -219,6 +233,9 @@ serve(async (req) => {
         access_type: 'login_blocked',
         was_allowed: false,
         reason: 'Unauthorized device',
+        geolocation: geolocation,
+        ip_address: ipAddress,
+        user_agent: userAgent,
       });
 
     console.log('Device access denied - unauthorized device');
