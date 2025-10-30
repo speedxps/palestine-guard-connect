@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Users, Eye, EyeOff, Info } from "lucide-react";
+import { Users, Eye, EyeOff, Info, Camera } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import LoginBlocked from "./LoginBlocked";
@@ -434,6 +434,17 @@ const Login = () => {
             onSuccess={() => navigate('/dashboard')}
             isSubmitting={isLoading}
           />
+          
+          {/* Face Login Button */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-12 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:bg-primary/20 transition-all"
+            onClick={() => navigate('/face-login')}
+          >
+            <Camera className="mr-2 h-5 w-5 text-primary" />
+            <span className="font-semibold">تسجيل الدخول عبر الوجه</span>
+          </Button>
         </form>
       </div>
     </div>

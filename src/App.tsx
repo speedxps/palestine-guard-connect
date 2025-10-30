@@ -117,6 +117,7 @@ import UserGuide from "@/pages/UserGuide";
 import PrintGuidePage from "@/pages/PrintGuide";
 import BatchFaceProcessing from "@/pages/BatchFaceProcessing";
 import FaceLoginSetup from "@/pages/FaceLoginSetup";
+import FaceLogin from "@/pages/FaceLogin";
 
 const queryClient = new QueryClient();
 
@@ -137,6 +138,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/face-login" element={<FaceLogin />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/setup-test-users" element={<SetupTestUsers />} />
                 <Route path="/access-denied" element={
