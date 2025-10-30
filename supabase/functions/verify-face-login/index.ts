@@ -326,42 +326,7 @@ serve(async (req) => {
 
     console.log(`✅ تم العثور على تطابق! المستخدم: ${userEmail}, التشابه: ${bestMatch.similarity}%`);
 
-    // إنشاء session باستخدام admin API مباشرة
-    console.log('🔑 إنشاء session للمستخدم...');
-    
-    // Get user details
-    const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
-    
-    if (usersError) {
-      console.error('❌ خطأ في جلب بيانات المستخدم:', usersError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'فشل في التحقق من المستخدم'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      );
-    }
-
-    const user = users?.find(u => u.email === userEmail);
-    if (!user) {
-      console.error('❌ المستخدم غير موجود');
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'المستخدم غير موجود'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404
-        }
-      );
-    }
-
-    // Create session using service role
+    // Create admin client for session creation
     const adminAuthClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -373,14 +338,15 @@ serve(async (req) => {
       }
     );
 
-    // Generate link to get access tokens directly
-    const { data: linkData, error: linkError } = await adminAuthClient.auth.admin.generateLink({
-      type: 'magiclink',
-      email: userEmail
+    // Create session directly using admin API
+    console.log('🔑 Creating session using admin.createSession...');
+    
+    const { data: sessionData, error: sessionError } = await adminAuthClient.auth.admin.createSession({
+      user_id: bestMatch.userId
     });
 
-    if (linkError || !linkData) {
-      console.error('❌ خطأ في إنشاء magic link:', linkError);
+    if (sessionError || !sessionData?.session) {
+      console.error('❌ خطأ في إنشاء session:', sessionError);
       return new Response(
         JSON.stringify({
           success: false,
@@ -393,16 +359,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Magic link created');
-    console.log('Properties keys:', Object.keys(linkData.properties || {}));
-
-    // Access tokens directly from properties
-    const accessToken = linkData.properties.access_token;
-    const refreshToken = linkData.properties.refresh_token;
+    const accessToken = sessionData.session.access_token;
+    const refreshToken = sessionData.session.refresh_token;
 
     if (!accessToken || !refreshToken) {
-      console.error('❌ فشل في الحصول على tokens من properties');
-      console.error('Available properties:', linkData.properties);
+      console.error('❌ Missing tokens in session');
       return new Response(
         JSON.stringify({
           success: false,
