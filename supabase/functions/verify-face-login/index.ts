@@ -221,15 +221,11 @@ serve(async (req) => {
       );
     }
 
-    // المرحلة 6: جلب بيانات المستخدم للتحقق من التفعيل
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('user_id, email, face_login_enabled')
-      .eq('user_id', bestMatch.userId)
-      .single();
+    // المرحلة 6: جلب بيانات المستخدم من auth.users
+    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(bestMatch.userId);
 
-    if (profileError || !profile) {
-      console.error("❌ خطأ في جلب بيانات المستخدم:", profileError);
+    if (authError || !authUser || !authUser.user) {
+      console.error("❌ خطأ في جلب بيانات المستخدم من auth:", authError);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -239,10 +235,30 @@ serve(async (req) => {
       );
     }
 
-    console.log(`📋 حالة face_login_enabled للمستخدم ${profile.email}: ${profile.face_login_enabled}`);
+    const userEmail = authUser.user.email;
+    
+    if (!userEmail) {
+      console.error("❌ البريد الإلكتروني غير موجود للمستخدم");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'البريد الإلكتروني غير موجود للمستخدم' 
+        }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // جلب بيانات face_login_enabled من profiles
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('face_login_enabled')
+      .eq('user_id', bestMatch.userId)
+      .single();
+
+    console.log(`📋 حالة face_login_enabled للمستخدم ${userEmail}: ${profile?.face_login_enabled}`);
 
     // تفعيل face_login تلقائياً إذا لم يكن مفعلاً ولكن لديه بيانات وجه
-    if (!profile.face_login_enabled) {
+    if (profile && !profile.face_login_enabled) {
       console.log('⚙️ تفعيل face_login تلقائياً للمستخدم...');
       const { error: updateError } = await supabase
         .from('profiles')
@@ -256,14 +272,14 @@ serve(async (req) => {
       }
     }
 
-    console.log(`✅ تم العثور على تطابق! المستخدم: ${profile.email}, التشابه: ${bestMatch.similarity}%`);
+    console.log(`✅ تم العثور على تطابق! المستخدم: ${userEmail}, التشابه: ${bestMatch.similarity}%`);
 
     // إنشاء session token للمستخدم
     console.log('🔑 إنشاء session token للمستخدم...');
     
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
-      email: profile.email,
+      email: userEmail,
       options: {
         redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/dashboard`
       }
@@ -309,7 +325,7 @@ serve(async (req) => {
         success: true,
         message: 'تم التحقق من الوجه بنجاح',
         similarity: bestMatch.similarity,
-        email: profile.email,
+        email: userEmail,
         userId: bestMatch.userId,
         accessToken,
         refreshToken
