@@ -9,31 +9,28 @@ export const useFaceLogin = () => {
     setIsVerifying(true);
     
     try {
-      console.log('🔐 بدء عملية التحقق من الوجه...');
+      console.log('🔐 Starting face verification...');
 
-      // استدعاء edge function للتحقق من الوجه
       const { data, error } = await supabase.functions.invoke('verify-face-login', {
         body: { imageBase64 }
       });
 
       if (error) {
-        console.error('❌ خطأ في استدعاء edge function:', error);
-        throw new Error('فشل الاتصال بخدمة التحقق');
+        console.error('❌ Edge function error:', error);
+        toast.error('فشل الاتصال بخدمة التحقق');
+        return { success: false, error: 'فشل الاتصال بخدمة التحقق' };
       }
 
       if (!data.success) {
-        console.log('❌ فشل التحقق:', data.error);
-        return { 
-          success: false, 
-          error: data.error || 'فشل التحقق من الوجه' 
-        };
+        console.log('❌ Verification failed:', data.error);
+        toast.error(data.error || 'فشل التحقق من الوجه');
+        return { success: false, error: data.error || 'فشل التحقق من الوجه' };
       }
 
-      console.log('✅ تم التحقق بنجاح! المستخدم:', data.email, 'التشابه:', data.similarity);
+      console.log('✅ Face verified! User:', data.email, 'Similarity:', data.similarity);
 
-      // إنشاء جلسة Supabase باستخدام الـ tokens المُرجعة
       if (data.accessToken && data.refreshToken) {
-        console.log('🔑 إنشاء جلسة Supabase...');
+        console.log('🔑 Creating session...');
         
         const { error: sessionError } = await supabase.auth.setSession({
           access_token: data.accessToken,
@@ -41,15 +38,13 @@ export const useFaceLogin = () => {
         });
 
         if (sessionError) {
-          console.error('❌ خطأ في إنشاء الجلسة:', sessionError);
-          return {
-            success: false,
-            error: 'فشل في إنشاء الجلسة'
-          };
+          console.error('❌ Session error:', sessionError);
+          toast.error('فشل في إنشاء الجلسة');
+          return { success: false, error: 'فشل في إنشاء الجلسة' };
         }
 
-        console.log('✅ تم إنشاء الجلسة بنجاح!');
-        toast.success('تم تسجيل الدخول بنجاح! 🎉');
+        console.log('✅ Session created successfully!');
+        toast.success(`مرحباً ${data.email}! 🎉`);
       }
 
       return {
@@ -61,11 +56,10 @@ export const useFaceLogin = () => {
       };
 
     } catch (error) {
-      console.error('❌ خطأ في عملية تسجيل الدخول بالوجه:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'حدث خطأ غير متوقع'
-      };
+      console.error('❌ Face login error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'حدث خطأ غير متوقع';
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
     } finally {
       setIsVerifying(false);
     }

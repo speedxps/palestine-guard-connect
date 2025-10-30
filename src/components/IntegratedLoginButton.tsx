@@ -6,8 +6,7 @@ import { motion } from 'framer-motion';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useFaceLogin } from '@/hooks/useFaceLogin';
 import { supabase } from '@/integrations/supabase/client';
-import { AdvancedFaceLoginSetup } from './AdvancedFaceLoginSetup';
-import { AdvancedFaceLoginVerify } from './AdvancedFaceLoginVerify';
+import { SimpleFaceLoginVerify } from './SimpleFaceLoginVerify';
 
 interface IntegratedLoginButtonProps {
   onSuccess: () => void;
@@ -18,11 +17,10 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
   const [hasFaceLogin, setHasFaceLogin] = useState(false);
   const [hasBiometric, setHasBiometric] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showFaceSetup, setShowFaceSetup] = useState(false);
   const [showFaceVerify, setShowFaceVerify] = useState(false);
 
   const { isSupported: biometricSupported, isRegistered: biometricRegistered, authenticate: authenticateBiometric } = useBiometricAuth();
-  const { verifyFaceAndLogin, isVerifying } = useFaceLogin();
+  const { isVerifying } = useFaceLogin();
 
   useEffect(() => {
     checkAvailableMethods();
@@ -221,22 +219,20 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
         )}
       </div>
 
-      {/* Advanced Face Setup Modal */}
-      <AdvancedFaceLoginSetup
-        isOpen={showFaceSetup}
-        onClose={() => setShowFaceSetup(false)}
-        onSuccess={() => {
-          setHasFaceLogin(true);
-          localStorage.setItem('faceLoginEnabled', 'true');
-        }}
-      />
-
-      {/* Face Login Verify Modal */}
-      <AdvancedFaceLoginVerify
-        isOpen={showFaceVerify}
-        onClose={() => setShowFaceVerify(false)}
-        onSuccess={onSuccess}
-      />
+      {/* Face Login Verify Dialog */}
+      {showFaceVerify && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg p-6 max-w-2xl w-full">
+            <SimpleFaceLoginVerify
+              onSuccess={() => {
+                setShowFaceVerify(false);
+                onSuccess();
+              }}
+              onCancel={() => setShowFaceVerify(false)}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

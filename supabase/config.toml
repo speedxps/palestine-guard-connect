@@ -33,6 +33,9 @@ verify_jwt = true
 [functions.verify-face-login]
 verify_jwt = false
 
+[functions.process-face-registration]
+verify_jwt = true
+
 [functions.save-face-data]
 verify_jwt = false
 

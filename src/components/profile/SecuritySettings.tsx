@@ -9,10 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
 import { TwoFactorSetupModal } from '@/components/TwoFactorSetupModal';
-import { AdvancedFaceLoginSetup } from '@/components/AdvancedFaceLoginSetup';
+import { SimpleFaceLoginSetup } from '@/components/SimpleFaceLoginSetup';
 import { BiometricSetupButton } from '@/components/BiometricSetupButton';
 import { supabase } from '@/integrations/supabase/client';
-import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode, Camera } from 'lucide-react';
+import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode, Camera, Trash2 } from 'lucide-react';
 
 export const SecuritySettings = () => {
   const { toast } = useToast();
@@ -437,11 +437,20 @@ export const SecuritySettings = () => {
           onSuccess={handleTwoFactorSuccess}
         />
         
-        <AdvancedFaceLoginSetup
-          isOpen={showFaceSetup}
-          onClose={() => setShowFaceSetup(false)}
-          onSuccess={handleFaceLoginSuccess}
-        />
+        {/* Face Login Setup Dialog */}
+        {showFaceSetup && (
+          <Dialog open={showFaceSetup} onOpenChange={setShowFaceSetup}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="font-arabic">إعداد تسجيل الدخول بالوجه</DialogTitle>
+              </DialogHeader>
+              <SimpleFaceLoginSetup
+                onSuccess={handleFaceLoginSuccess}
+                onCancel={() => setShowFaceSetup(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
     </Dialog>
   );
 };
