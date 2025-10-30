@@ -382,9 +382,9 @@ const Dashboard = () => {
       </div>
 
       {/* Tickets */}
-      <div className="px-6 pb-3 w-full">
-        <h2 className="text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
-        <div className="grid grid-cols-2 gap-2 mb-5">
+      <div className="px-4 sm:px-6 pb-3 w-full">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-5">
           {tickets
             .filter(ticket => ticket.title !== "الأخبار")
             .map((ticket, index) => {
@@ -397,14 +397,14 @@ const Dashboard = () => {
                   onClick={() => navigate(ticket.path)}
                   className="group cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden bg-white"
                 >
-                  <CardContent className="flex items-center justify-between p-3 h-16">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className={`${ticket.color} w-10 h-10 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300`}>
-                        <ticket.icon className="text-white w-5 h-5" />
+                  <CardContent className="flex items-center justify-between p-3 sm:p-4 min-h-[64px] sm:h-16">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className={`${ticket.color} w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 flex-shrink-0`}>
+                        <ticket.icon className="text-white w-5 h-5 sm:w-6 sm:w-6" />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{ticket.title}</h3>
-                        <p className="text-xs text-muted-foreground">{ticket.subtitle}</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors truncate">{ticket.title}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{ticket.subtitle}</p>
                       </div>
                     </div>
                   </CardContent>

@@ -288,30 +288,31 @@ const AdminPanel = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-xl bg-card/30 border-b border-border/20">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <BackButton to="/dashboard" />
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-md"></div>
                 <img 
                   src="/lovable-uploads/5d8c7245-166d-4337-afbb-639857489274.png" 
                   alt="Palestinian Police Department Logo" 
-                  className="relative w-12 h-12 rounded-full shadow-lg"
+                  className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg"
                 />
               </div>
-              <div>
-                <h1 className="text-xl font-bold font-arabic bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-xl font-bold font-arabic bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent truncate">
                   لوحة تحكم الإدارة
                 </h1>
-                <p className="text-sm text-muted-foreground font-arabic">مرحباً، {user?.name}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground font-arabic truncate">مرحباً، {user?.name}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
+                className="hidden sm:flex h-9"
               >
                 <Home className="h-4 w-4 mr-2" />
                 الرئيسية
@@ -320,9 +321,9 @@ const AdminPanel = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate('/profile')}
-                className="relative h-10 w-10 rounded-full bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border border-primary/20"
+                className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border border-primary/20"
               >
-                <User className="h-5 w-5 text-primary" />
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </Button>
             </div>
           </div>
@@ -330,19 +331,19 @@ const AdminPanel = () => {
       </div>
 
       {/* Content */}
-      <div className="px-6 py-8 pb-32">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 h-auto p-1 bg-muted/50">
+      <div className="px-3 sm:px-6 py-4 sm:py-8 pb-24 sm:pb-32">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-1 sm:gap-2 h-auto p-1 bg-muted/50 overflow-x-auto">
             {adminSections.map((section) => {
               const Icon = section.icon;
               return (
                 <TabsTrigger
                   key={section.id}
                   value={section.id}
-                  className="flex flex-col items-center gap-1 p-3 h-auto font-arabic"
+                  className="flex flex-col items-center gap-1 p-2 sm:p-3 h-auto font-arabic min-h-[60px]"
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="text-xs">{section.title}</span>
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-[10px] sm:text-xs text-center leading-tight">{section.title}</span>
                 </TabsTrigger>
               );
             })}

@@ -158,54 +158,54 @@ const JudicialCaseSearch = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
       <div className="bg-card border-b shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <BackButton to="/department/judicial-police" />
             
-            <div className="flex items-center gap-3">
-              <img src={policeLogo} alt="شعار الشرطة" className="h-12 w-12 object-contain" />
-              <Scale className="h-8 w-8 text-primary" />
-              <h1 className="text-xl md:text-2xl font-bold">البحث عن القضايا القضائية</h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img src={policeLogo} alt="شعار الشرطة" className="h-8 w-8 sm:h-12 sm:w-12 object-contain flex-shrink-0" />
+              <Scale className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+              <h1 className="text-base sm:text-xl md:text-2xl font-bold truncate">البحث عن القضايا القضائية</h1>
             </div>
 
-            <div className="w-20" />
+            <div className="hidden sm:block w-20" />
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Search Card */}
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-6 w-6" />
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+              <Search className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
               بحث عن قضية
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col gap-4">
               <div className="flex-1">
-                <Label htmlFor="search">رقم القضية أو رقم الهوية الوطنية</Label>
+                <Label htmlFor="search" className="text-sm sm:text-base">رقم القضية أو رقم الهوية الوطنية</Label>
                 <Input
                   id="search"
                   placeholder="ابحث برقم القضية أو رقم الهوية..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="text-lg"
+                  className="text-sm sm:text-base h-10 sm:h-11 mt-2"
                 />
               </div>
-              <div className="flex items-end gap-2">
-                <Button onClick={handleSearch} disabled={loading} size="lg">
-                  <Search className="h-5 w-5 ml-2" />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+                <Button onClick={handleSearch} disabled={loading} className="h-10 sm:h-11 text-sm sm:text-base">
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 ml-2 flex-shrink-0" />
                   بحث
                 </Button>
                 
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="lg">
-                      <Plus className="h-5 w-5 ml-2" />
+                    <Button variant="outline" className="h-10 sm:h-11 text-sm sm:text-base">
+                      <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-2 flex-shrink-0" />
                       قضية جديدة
                     </Button>
                   </DialogTrigger>
