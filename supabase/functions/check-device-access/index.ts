@@ -67,14 +67,18 @@ serve(async (req) => {
     // If device exists and is active, allow access
     if (existingDevice) {
       if (existingDevice.is_active) {
-        // Update device info with latest geolocation
+        // Merge existing device_info with new geolocation
+        const currentDeviceInfo = existingDevice.device_info || {};
         const updatedDeviceInfo = {
-          ...existingDevice.device_info,
+          ...currentDeviceInfo,
+          ...(deviceInfo || {}),
           geolocation: geolocation,
         };
         
+        console.log('Updating device with geolocation:', geolocation);
+        
         // Update last seen and login count
-        await supabaseClient
+        const { error: updateError } = await supabaseClient
           .from('user_devices')
           .update({
             last_seen_at: new Date().toISOString(),
@@ -82,6 +86,12 @@ serve(async (req) => {
             device_info: updatedDeviceInfo,
           })
           .eq('id', existingDevice.id);
+        
+        if (updateError) {
+          console.error('Error updating device:', updateError);
+        } else {
+          console.log('Device updated successfully with GPS');
+        }
 
         // Log successful access
         await supabaseClient
@@ -159,9 +169,11 @@ serve(async (req) => {
     // If user has no devices, register this one as primary
     if (activeDeviceCount === 0) {
       const deviceInfoWithGeo = {
-        ...deviceInfo,
+        ...(deviceInfo || {}),
         geolocation: geolocation,
       };
+      
+      console.log('Creating new device with geolocation:', geolocation);
       
       const { data: newDevice, error: insertError } = await supabaseClient
         .from('user_devices')
@@ -175,6 +187,12 @@ serve(async (req) => {
         })
         .select()
         .single();
+      
+      if (insertError) {
+        console.error('Error creating device:', insertError);
+      } else {
+        console.log('Device created successfully with GPS');
+      }
 
       if (insertError) {
         console.error('Error creating new device:', insertError);
