@@ -97,20 +97,20 @@ const AdminPanel = () => {
   ];
 
   const renderOverview = () => (
-    <div className="space-y-6">
+      <div className="space-y-6">
       {/* System Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         {systemStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="p-4">
-              <div className="flex items-center gap-3">
+            <Card key={index} className="p-3 sm:p-4">
+              <div className="flex flex-col items-center gap-2">
                 <div className={`p-2 rounded-lg bg-muted`}>
-                  <Icon className={`h-5 w-5 ${stat.color}`} />
+                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <div className="text-center">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{stat.value}</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               </div>
             </Card>
@@ -121,18 +121,18 @@ const AdminPanel = () => {
       {/* Quick Actions */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 font-arabic">الإجراءات السريعة</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
           <Button
             variant="default"
-            className="h-auto p-4 flex flex-col items-center gap-2"
+            className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
             onClick={() => navigate('/create-user')}
           >
-            <div className="p-3 rounded-lg bg-gradient-to-r from-primary to-primary/80">
-              <User className="h-6 w-6 text-white" />
+            <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-r from-primary to-primary/80">
+              <User className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div className="text-center">
-              <p className="font-semibold font-arabic">إنشاء مستخدم جديد</p>
-              <p className="text-xs opacity-90 font-arabic">إضافة مستخدم للنظام</p>
+              <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">إنشاء مستخدم جديد</p>
+              <p className="text-[9px] sm:text-xs opacity-90 font-arabic">إضافة مستخدم للنظام</p>
             </div>
           </Button>
           {adminSections.slice(1, 4).map((section) => {
@@ -141,15 +141,15 @@ const AdminPanel = () => {
               <Button
                 key={section.id}
                 variant="outline"
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:bg-muted"
+                className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2 hover:bg-muted"
                 onClick={() => setActiveTab(section.id)}
               >
-                <div className={`p-3 rounded-lg bg-gradient-to-r ${section.color}`}>
-                  <Icon className="h-6 w-6 text-white" />
+                <div className={`p-2 sm:p-3 rounded-lg bg-gradient-to-r ${section.color}`}>
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="font-semibold font-arabic">{section.title}</p>
-                  <p className="text-xs text-muted-foreground font-arabic">{section.description}</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">{section.title}</p>
+                  <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">{section.description}</p>
                 </div>
               </Button>
             );
@@ -265,19 +265,19 @@ const AdminPanel = () => {
   const renderReports = () => (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4 font-arabic">التقارير والإحصائيات</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-        <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2">
-          <BarChart3 className="h-8 w-8 text-blue-500" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+        <Button variant="outline" className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2">
+          <BarChart3 className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-blue-500" />
           <div className="text-center">
-            <p className="font-semibold font-arabic">تقرير المستخدمين</p>
-            <p className="text-xs text-muted-foreground font-arabic">إحصائيات المستخدمين النشطين</p>
+            <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">تقرير المستخدمين</p>
+            <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">إحصائيات المستخدمين النشطين</p>
           </div>
         </Button>
-        <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2">
-          <FileText className="h-8 w-8 text-green-500" />
+        <Button variant="outline" className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2">
+          <FileText className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-green-500" />
           <div className="text-center">
-            <p className="font-semibold font-arabic">تقرير البلاغات</p>
-            <p className="text-xs text-muted-foreground font-arabic">تحليل أنواع وحالات البلاغات</p>
+            <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">تقرير البلاغات</p>
+            <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">تحليل أنواع وحالات البلاغات</p>
           </div>
         </Button>
       </div>
@@ -362,27 +362,27 @@ const AdminPanel = () => {
       <TabsContent value="traffic-management" className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة شرطة المرور</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
               onClick={() => navigate('/violations-admin')}
             >
-              <FileText className="h-8 w-8 text-yellow-500" />
+              <FileText className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-yellow-500" />
               <div className="text-center">
-                <p className="font-semibold font-arabic">إدارة المخالفات</p>
-                <p className="text-xs text-muted-foreground font-arabic">تحرير ومراجعة المخالفات</p>
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">إدارة المخالفات</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">تحرير ومراجعة المخالفات</p>
               </div>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
               onClick={() => navigate('/vehicle-lookup')}
             >
-              <Car className="h-8 w-8 text-blue-500" />
+              <Car className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-blue-500" />
               <div className="text-center">
-                <p className="font-semibold font-arabic">البحث عن المركبات</p>
-                <p className="text-xs text-muted-foreground font-arabic">استعلام وإدارة بيانات المركبات</p>
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">البحث عن المركبات</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">استعلام وإدارة بيانات المركبات</p>
               </div>
             </Button>
           </div>
@@ -392,27 +392,27 @@ const AdminPanel = () => {
       <TabsContent value="cid-management" className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة المباحث الجنائية</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
               onClick={() => navigate('/incidents-management')}
             >
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+              <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-red-500" />
               <div className="text-center">
-                <p className="font-semibold font-arabic">إدارة البلاغات</p>
-                <p className="text-xs text-muted-foreground font-arabic">مراجعة وتتبع البلاغات</p>
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">إدارة البلاغات</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">مراجعة وتتبع البلاغات</p>
               </div>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
               onClick={() => navigate('/wanted-persons-tree')}
             >
-              <Users className="h-8 w-8 text-orange-500" />
+              <Users className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-orange-500" />
               <div className="text-center">
-                <p className="font-semibold font-arabic">المطلوبون</p>
-                <p className="text-xs text-muted-foreground font-arabic">إدارة قائمة المطلوبين</p>
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">المطلوبون</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">إدارة قائمة المطلوبين</p>
               </div>
             </Button>
           </div>
@@ -422,27 +422,27 @@ const AdminPanel = () => {
       <TabsContent value="special-management" className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة الشرطة الخاصة</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
               onClick={() => navigate('/tasks')}
             >
-              <CheckSquare className="h-8 w-8 text-green-500" />
+              <CheckSquare className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-green-500" />
               <div className="text-center">
-                <p className="font-semibold font-arabic">إدارة المهام</p>
-                <p className="text-xs text-muted-foreground font-arabic">تكليف ومتابعة المهام</p>
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">إدارة المهام</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">تكليف ومتابعة المهام</p>
               </div>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
+              className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
               onClick={() => navigate('/patrol')}
             >
-              <Shield className="h-8 w-8 text-blue-500" />
+              <Shield className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-blue-500" />
               <div className="text-center">
-                <p className="font-semibold font-arabic">إدارة الدوريات</p>
-                <p className="text-xs text-muted-foreground font-arabic">تنسيق وتتبع الدوريات</p>
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic">إدارة الدوريات</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground font-arabic">تنسيق وتتبع الدوريات</p>
               </div>
             </Button>
           </div>

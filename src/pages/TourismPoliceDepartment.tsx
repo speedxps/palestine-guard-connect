@@ -96,16 +96,16 @@ export default function TourismPoliceDepartment() {
         </div>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
           {tourismTools.map((tool, index) => (
             <Card
               key={index}
               className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <div className="p-4 flex flex-col items-center text-center min-h-[100px]">
-                <tool.icon className="h-8 w-8 text-primary mb-2 flex-shrink-0" />
-                <h3 className="text-xs sm:text-sm font-bold line-clamp-2">
+              <div className="p-2 sm:p-3 md:p-4 flex flex-col items-center text-center min-h-[80px] sm:min-h-[90px] md:min-h-[100px]">
+                <tool.icon className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary mb-2 flex-shrink-0" />
+                <h3 className="text-[10px] sm:text-xs md:text-sm font-bold line-clamp-2">
                   {tool.title}
                 </h3>
               </div>

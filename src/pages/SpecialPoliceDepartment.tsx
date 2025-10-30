@@ -101,7 +101,7 @@ const SpecialPoliceDepartment = () => {
       </div>
 
       {/* Tools Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         {specialPoliceTools.map((tool, index) => {
           const Icon = tool.icon;
           return (
@@ -110,9 +110,9 @@ const SpecialPoliceDepartment = () => {
               className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-4 min-h-[100px]">
-                <Icon className="h-8 w-8 mb-2 text-primary flex-shrink-0" />
-                <p className="text-xs sm:text-sm font-semibold text-center line-clamp-2">{tool.title}</p>
+              <CardContent className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-h-[80px] sm:min-h-[90px] md:min-h-[100px]">
+                <Icon className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 mb-2 text-primary flex-shrink-0" />
+                <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-center line-clamp-2">{tool.title}</p>
               </CardContent>
             </Card>
           );
