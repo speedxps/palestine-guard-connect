@@ -384,7 +384,7 @@ const Dashboard = () => {
       {/* Tickets */}
       <div className="px-4 sm:px-6 pb-3 w-full">
         <h2 className="text-xl sm:text-2xl font-bold text-[#7CB342] mb-2">Tickets</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-5">
           {tickets
             .filter(ticket => ticket.title !== "الأخبار")
             .map((ticket, index) => {
@@ -397,16 +397,11 @@ const Dashboard = () => {
                   onClick={() => navigate(ticket.path)}
                   className="group cursor-pointer hover:shadow-lg transition-all duration-300 border overflow-hidden bg-white"
                 >
-                  <CardContent className="flex items-center justify-between p-3 sm:p-4 min-h-[64px] sm:h-16">
-                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                      <div className={`${ticket.color} w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 flex-shrink-0`}>
-                        <ticket.icon className="text-white w-5 h-5 sm:w-6 sm:w-6" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors truncate">{ticket.title}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{ticket.subtitle}</p>
-                      </div>
+                  <CardContent className="p-4 flex flex-col items-center text-center min-h-[100px]">
+                    <div className={`${ticket.color} w-12 h-12 rounded-lg flex items-center justify-center shadow-md mb-2 flex-shrink-0`}>
+                      <ticket.icon className="text-white w-6 h-6" />
                     </div>
+                    <h3 className="text-xs sm:text-sm font-bold line-clamp-2">{ticket.title}</h3>
                   </CardContent>
                 </Card>
               );
@@ -440,7 +435,7 @@ const Dashboard = () => {
             <Target className="w-5 h-5" />
             الوصول السريع
           </h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {quickAccessButtons.map((button, index) => {
               const IconComponent = button.icon;
               return (
@@ -449,10 +444,10 @@ const Dashboard = () => {
                   onClick={() => navigate(button.path)}
                   className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-0 overflow-hidden"
                 >
-                  <CardContent className="p-0 h-24">
-                    <div className={`h-full w-full bg-gradient-to-br ${button.gradient} flex flex-col items-center justify-center gap-2 group-hover:scale-105 transition-transform duration-300`}>
-                      <IconComponent className="text-white w-8 h-8 drop-shadow-lg" />
-                      <h3 className="font-bold text-sm text-white text-center px-2 drop-shadow-md">
+                  <CardContent className="p-0 h-20">
+                    <div className={`h-full w-full bg-gradient-to-br ${button.gradient} flex flex-col items-center justify-center gap-1 group-hover:scale-105 transition-transform duration-300`}>
+                      <IconComponent className="text-white w-6 h-6 drop-shadow-lg" />
+                      <h3 className="font-bold text-xs text-white text-center px-2 drop-shadow-md line-clamp-2">
                         {button.title}
                       </h3>
                     </div>

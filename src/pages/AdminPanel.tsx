@@ -99,7 +99,7 @@ const AdminPanel = () => {
   const renderOverview = () => (
     <div className="space-y-6">
       {/* System Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {systemStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -121,7 +121,7 @@ const AdminPanel = () => {
       {/* Quick Actions */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 font-arabic">الإجراءات السريعة</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <Button
             variant="default"
             className="h-auto p-4 flex flex-col items-center gap-2"
@@ -265,7 +265,7 @@ const AdminPanel = () => {
   const renderReports = () => (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4 font-arabic">التقارير والإحصائيات</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2">
           <BarChart3 className="h-8 w-8 text-blue-500" />
           <div className="text-center">
@@ -362,7 +362,7 @@ const AdminPanel = () => {
       <TabsContent value="traffic-management" className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة شرطة المرور</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             <Button 
               variant="outline" 
               className="h-auto p-4 flex flex-col items-center gap-2"
@@ -392,7 +392,7 @@ const AdminPanel = () => {
       <TabsContent value="cid-management" className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة المباحث الجنائية</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             <Button 
               variant="outline" 
               className="h-auto p-4 flex flex-col items-center gap-2"
@@ -422,7 +422,7 @@ const AdminPanel = () => {
       <TabsContent value="special-management" className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة الشرطة الخاصة</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             <Button 
               variant="outline" 
               className="h-auto p-4 flex flex-col items-center gap-2"
@@ -459,7 +459,7 @@ const AdminPanel = () => {
           <TabsContent value="traffic-management" className="space-y-6">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة شرطة المرور</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 <Button 
                   variant="outline" 
                   className="h-auto p-4 flex flex-col items-center gap-2"
@@ -489,7 +489,7 @@ const AdminPanel = () => {
           <TabsContent value="cid-management" className="space-y-6">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة المباحث الجنائية</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 <Button 
                   variant="outline" 
                   className="h-auto p-4 flex flex-col items-center gap-2"
@@ -519,7 +519,7 @@ const AdminPanel = () => {
           <TabsContent value="special-management" className="space-y-6">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 font-arabic">إدارة الشرطة الخاصة</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 <Button 
                   variant="outline" 
                   className="h-auto p-4 flex flex-col items-center gap-2"
