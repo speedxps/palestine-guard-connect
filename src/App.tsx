@@ -94,6 +94,7 @@ import CIDSuspectSearch from "@/pages/CIDSuspectSearch";
 import JudicialCaseRecord from "@/pages/JudicialCaseRecord";
 import NotificationManagement from "@/pages/NotificationManagement";
 import UserPermissions from "@/pages/UserPermissions";
+import UniversalSearch from "@/pages/UniversalSearch";
 import NotFound from "@/pages/NotFound";
 import AccessDenied from "@/pages/AccessDenied";
 import SetupTestUsers from "@/pages/SetupTestUsers";
@@ -300,6 +301,18 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin"]}>
                         <AdminPanel />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Universal Search */}
+                <Route
+                  path="/universal-search"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <UniversalSearch />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

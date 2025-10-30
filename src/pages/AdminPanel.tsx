@@ -26,7 +26,8 @@ import {
   Car,
   Eye,
   MessageCircle,
-  CheckSquare
+  CheckSquare,
+  Search
 } from 'lucide-react';
 
 const AdminPanel = () => {
@@ -121,7 +122,7 @@ const AdminPanel = () => {
       {/* Quick Actions */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 font-arabic">الإجراءات السريعة</h3>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           <Button
             variant="default"
             className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2"
@@ -135,6 +136,21 @@ const AdminPanel = () => {
               <p className="text-[9px] sm:text-xs opacity-90 font-arabic">إضافة مستخدم للنظام</p>
             </div>
           </Button>
+          
+          <Button
+            variant="default"
+            className="h-auto p-3 sm:p-4 flex flex-col items-center gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700"
+            onClick={() => navigate('/universal-search')}
+          >
+            <div className="p-2 sm:p-3 rounded-lg bg-white/20">
+              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] sm:text-xs md:text-sm font-semibold font-arabic text-white">البحث الشامل</p>
+              <p className="text-[9px] sm:text-xs text-white/90 font-arabic">ابحث في كل النظام</p>
+            </div>
+          </Button>
+          
           {adminSections.slice(1, 4).map((section) => {
             const Icon = section.icon;
             return (
