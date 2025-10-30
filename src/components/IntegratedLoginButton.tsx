@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useFaceLogin } from '@/hooks/useFaceLogin';
 import { supabase } from '@/integrations/supabase/client';
-import { SimpleFaceLoginVerify } from './SimpleFaceLoginVerify';
+import { AdvancedFaceLoginVerify } from './AdvancedFaceLoginVerify';
 
 interface IntegratedLoginButtonProps {
   onSuccess: () => void;
@@ -223,7 +223,7 @@ export const IntegratedLoginButton = ({ onSuccess, isSubmitting }: IntegratedLog
       {showFaceVerify && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-background rounded-lg p-6 max-w-2xl w-full">
-            <SimpleFaceLoginVerify
+            <AdvancedFaceLoginVerify
               onSuccess={() => {
                 setShowFaceVerify(false);
                 onSuccess();
