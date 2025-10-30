@@ -274,20 +274,16 @@ serve(async (req) => {
 
     console.log(`✅ تم العثور على تطابق! المستخدم: ${userEmail}, التشابه: ${bestMatch.similarity}%`);
 
-    // إنشاء session token للمستخدم
-    console.log('🔑 إنشاء session token للمستخدم...');
+    // إنشاء session token للمستخدم باستخدام magiclink
+    console.log('🔑 إنشاء magic link للمستخدم...');
     
-    // استخدام recovery link للحصول على tokens
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'recovery',
-      email: userEmail,
-      options: {
-        redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/dashboard`
-      }
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: userEmail
     });
 
-    if (sessionError || !sessionData) {
-      console.error('❌ خطأ في إنشاء session:', sessionError);
+    if (linkError || !linkData) {
+      console.error('❌ خطأ في إنشاء magic link:', linkError);
       return new Response(
         JSON.stringify({
           success: false,
@@ -300,27 +296,21 @@ serve(async (req) => {
       );
     }
 
-    console.log('🔗 Action link created:', sessionData.properties.action_link.substring(0, 100) + '...');
+    console.log('✅ Magic link created, hashed_token available');
 
-    // استخراج الـ tokens من الرابط
-    const url = new URL(sessionData.properties.action_link);
-    const accessToken = url.searchParams.get('access_token');
-    const refreshToken = url.searchParams.get('refresh_token');
-
-    console.log('🔍 Tokens extracted:', { 
-      hasAccessToken: !!accessToken, 
-      hasRefreshToken: !!refreshToken,
-      accessTokenLength: accessToken?.length,
-      refreshTokenLength: refreshToken?.length
+    // استخدام hashed_token مع verifyOtp لإنشاء session
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+      email: userEmail,
+      token: linkData.properties.hashed_token,
+      type: 'magiclink'
     });
 
-    if (!accessToken || !refreshToken) {
-      console.error('❌ لم يتم الحصول على tokens من الرابط');
-      console.error('📋 URL params:', Array.from(url.searchParams.entries()));
+    if (verifyError || !verifyData.session) {
+      console.error('❌ خطأ في التحقق من OTP:', verifyError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'فشل في الحصول على بيانات الجلسة'
+          error: 'فشل في التحقق من الجلسة'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -328,6 +318,14 @@ serve(async (req) => {
         }
       );
     }
+
+    const accessToken = verifyData.session.access_token;
+    const refreshToken = verifyData.session.refresh_token;
+
+    console.log('✅ Session tokens created successfully:', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken
+    });
 
     console.log('✅ تم إنشاء session بنجاح!');
 
