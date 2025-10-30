@@ -92,21 +92,23 @@ const CIDDepartment = () => {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
         <BackButton />
-        <div className="p-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600">
-          <ShieldCheck className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 font-arabic">المباحث الجنائية</h1>
-          <p className="text-gray-600 font-arabic">التحقيق في الجرائم ومعالجة البلاغات</p>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600 flex-shrink-0">
+            <ShieldCheck className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">المباحث الجنائية</h1>
+            <p className="text-sm sm:text-base text-muted-foreground truncate">التحقيق في الجرائم ومعالجة البلاغات</p>
+          </div>
         </div>
       </div>
 
       {/* Tools Grid */}
-      <div className="grid grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {cidTools.map((tool, index) => {
           const Icon = tool.icon;
           return (
@@ -115,9 +117,9 @@ const CIDDepartment = () => {
               className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
-                <Icon className="h-12 w-12 mb-4 text-primary" />
-                <p className="text-sm md:text-base font-semibold text-center">{tool.title}</p>
+              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px]">
+                <Icon className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 text-primary flex-shrink-0" />
+                <p className="text-sm sm:text-base font-semibold text-center line-clamp-2">{tool.title}</p>
               </CardContent>
             </Card>
           );
@@ -125,29 +127,29 @@ const CIDDepartment = () => {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-red-600">87</CardTitle>
-            <CardDescription className="font-arabic">البلاغات الجديدة</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-red-600">87</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">البلاغات الجديدة</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-blue-600">156</CardTitle>
-            <CardDescription className="font-arabic">البلاغات قيد التحقيق</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600">156</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">البلاغات قيد التحقيق</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-green-600">432</CardTitle>
-            <CardDescription className="font-arabic">البلاغات المحلولة</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">432</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">البلاغات المحلولة</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-orange-600">23</CardTitle>
-            <CardDescription className="font-arabic">الأشخاص المطلوبون</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-orange-600">23</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">الأشخاص المطلوبون</CardDescription>
           </CardHeader>
         </Card>
       </div>

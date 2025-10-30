@@ -75,28 +75,28 @@ export default function BordersDepartment() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
           <BackButton />
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg">
-                <MapPin className="h-8 w-8 text-white" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="p-2 sm:p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg flex-shrink-0">
+                <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                 قسم المعابر والحدود
               </h1>
             </div>
-            <p className="text-muted-foreground text-lg mr-14">
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground sm:mr-14">
               مراقبة وإدارة حركة الدخول والخروج من المعابر والتنسيق الأمني
             </p>
           </div>
         </div>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {bordersTools.map((tool, index) => (
             <Card
               key={index}
@@ -105,16 +105,16 @@ export default function BordersDepartment() {
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
               
-              <div className="p-6 space-y-4">
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
-                  <tool.icon className="h-8 w-8 text-white" />
+              <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0`}>
+                  <tool.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">
                     {tool.title}
                   </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed line-clamp-2">
                     {tool.description}
                   </p>
                 </div>
@@ -124,44 +124,44 @@ export default function BordersDepartment() {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-          <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">عمليات عبور اليوم</p>
-                <p className="text-3xl font-bold text-green-600">1,247</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-4 sm:mt-6">
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">عمليات عبور اليوم</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-600">1,247</p>
               </div>
-              <Users className="h-10 w-10 text-green-500 opacity-70" />
+              <Users className="h-8 w-8 sm:h-10 sm:w-10 text-green-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">المعابر النشطة</p>
-                <p className="text-3xl font-bold text-blue-600">8</p>
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">المعابر النشطة</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">8</p>
               </div>
-              <MapPin className="h-10 w-10 text-blue-500 opacity-70" />
+              <MapPin className="h-8 w-8 sm:h-10 sm:w-10 text-blue-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-red-500/10 to-orange-500/10 border-red-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">حالات موقوفة</p>
-                <p className="text-3xl font-bold text-red-600">5</p>
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-red-500/10 to-orange-500/10 border-red-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">حالات موقوفة</p>
+                <p className="text-2xl sm:text-3xl font-bold text-red-600">5</p>
               </div>
-              <AlertTriangle className="h-10 w-10 text-red-500 opacity-70" />
+              <AlertTriangle className="h-8 w-8 sm:h-10 sm:w-10 text-red-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">تصاريح جديدة</p>
-                <p className="text-3xl font-bold text-purple-600">32</p>
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">تصاريح جديدة</p>
+                <p className="text-2xl sm:text-3xl font-bold text-purple-600">32</p>
               </div>
-              <FileText className="h-10 w-10 text-purple-500 opacity-70" />
+              <FileText className="h-8 w-8 sm:h-10 sm:w-10 text-purple-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
         </div>

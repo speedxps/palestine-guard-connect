@@ -78,25 +78,25 @@ const JudicialPoliceDepartment = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-3 sm:p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <BackButton />
-          <div className="flex items-center gap-3 bg-card px-6 py-3 rounded-full shadow-lg border">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">الشرطة القضائية</h1>
+          <div className="flex items-center gap-2 sm:gap-3 bg-card px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg border">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">الشرطة القضائية</h1>
           </div>
-          <div />
+          <div className="hidden sm:block" />
         </div>
 
         {/* Info Card */}
         <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <Scale className="h-12 w-12 text-primary flex-shrink-0" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+              <Scale className="h-10 w-10 sm:h-12 sm:w-12 text-primary flex-shrink-0" />
               <div>
-                <h2 className="text-xl font-bold mb-2">منصة الشرطة القضائية الإلكترونية</h2>
-                <p className="text-muted-foreground">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">منصة الشرطة القضائية الإلكترونية</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   نظام متكامل للتواصل الرقمي بين الشرطة والمحاكم والنيابة العامة. جميع المعاملات موقعة رقمياً ومشفرة لضمان الأمان والموثوقية.
                 </p>
               </div>
@@ -105,16 +105,16 @@ const JudicialPoliceDepartment = () => {
         </Card>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {tools.map((tool) => (
             <Card
               key={tool.path}
               className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
-                <tool.icon className="h-12 w-12 mb-4 text-primary" />
-                <p className="text-sm md:text-base font-semibold text-center">{tool.title}</p>
+              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px]">
+                <tool.icon className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 text-primary flex-shrink-0" />
+                <p className="text-sm sm:text-base font-semibold text-center line-clamp-2">{tool.title}</p>
                 {tool.stats && <p className="text-xs text-muted-foreground mt-1">{tool.stats}</p>}
               </CardContent>
             </Card>
@@ -122,26 +122,26 @@ const JudicialPoliceDepartment = () => {
         </div>
 
         {/* Security Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-2">🔒</div>
-              <h3 className="font-semibold mb-1">تشفير متقدم</h3>
-              <p className="text-sm text-muted-foreground">جميع الملفات والبيانات مشفرة</p>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl mb-1 sm:mb-2">🔒</div>
+              <h3 className="text-sm sm:text-base font-semibold mb-1">تشفير متقدم</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">جميع الملفات والبيانات مشفرة</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-2">✍️</div>
-              <h3 className="font-semibold mb-1">توقيع رقمي</h3>
-              <p className="text-sm text-muted-foreground">كل عملية نقل موقعة رقمياً</p>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl mb-1 sm:mb-2">✍️</div>
+              <h3 className="text-sm sm:text-base font-semibold mb-1">توقيع رقمي</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">كل عملية نقل موقعة رقمياً</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-2">📋</div>
-              <h3 className="font-semibold mb-1">سجل كامل</h3>
-              <p className="text-sm text-muted-foreground">تتبع جميع الأنشطة والعمليات</p>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl mb-1 sm:mb-2">📋</div>
+              <h3 className="text-sm sm:text-base font-semibold mb-1">سجل كامل</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">تتبع جميع الأنشطة والعمليات</p>
             </CardContent>
           </Card>
         </div>

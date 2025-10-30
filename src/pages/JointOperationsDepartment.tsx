@@ -92,33 +92,33 @@ export default function JointOperationsDepartment() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Cover Image */}
-        <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden rounded-b-3xl shadow-2xl">
+        <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] overflow-hidden rounded-b-2xl sm:rounded-b-3xl shadow-2xl">
           <img 
             src={jointOpsCover} 
             alt="غلاف قسم العمليات المشتركة" 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          <div className="absolute bottom-8 right-8">
-            <h1 className="text-3xl md:text-5xl font-bold text-white drop-shadow-2xl">
+          <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 right-4 sm:right-6 md:right-8 left-4 sm:left-6">
+            <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl">
               قسم العمليات المشتركة
             </h1>
-            <p className="text-white/90 text-lg md:text-xl mt-2 drop-shadow-lg">
+            <p className="text-white/90 text-sm sm:text-base md:text-lg lg:text-xl mt-1 sm:mt-2 drop-shadow-lg">
               التنسيق والتواصل مع جميع الأجهزة الأمنية والعسكرية الفلسطينية
             </p>
           </div>
         </div>
 
         {/* Header with Back Button */}
-        <div className="px-4 md:px-8 pt-4">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-3 sm:pt-4">
           <BackButton />
         </div>
 
         {/* Tools Grid */}
-        <div className="px-4 md:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {jointOpsTools.map((tool, index) => (
             <Card
               key={index}
@@ -127,16 +127,16 @@ export default function JointOperationsDepartment() {
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
               
-              <div className="p-6 space-y-4">
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
-                  <tool.icon className="h-8 w-8 text-white" />
+              <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0`}>
+                  <tool.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">
                     {tool.title}
                   </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed line-clamp-2">
                     {tool.description}
                   </p>
                 </div>
@@ -147,21 +147,21 @@ export default function JointOperationsDepartment() {
         </div>
 
         {/* Security Agencies Section */}
-        <div className="px-4 md:px-8">
-          <Card className="p-6 mt-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8">
+          <Card className="p-4 sm:p-6 mt-4 sm:mt-6">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
             الأجهزة الأمنية المنسقة
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {securityAgencies.map((agency, index) => (
               <div
                 key={index}
                 onClick={() => navigate(`/security-agency/${agency.id}`)}
-                className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
               >
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span className="text-sm font-medium">{agency.name}</span>
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium line-clamp-1">{agency.name}</span>
               </div>
             ))}
           </div>
@@ -169,45 +169,45 @@ export default function JointOperationsDepartment() {
         </div>
 
         {/* Stats Section */}
-        <div className="px-4 md:px-8 pb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">عمليات نشطة</p>
-                <p className="text-3xl font-bold text-blue-600">12</p>
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">عمليات نشطة</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">12</p>
               </div>
-              <Activity className="h-10 w-10 text-blue-500 opacity-70" />
+              <Activity className="h-8 w-8 sm:h-10 sm:w-10 text-blue-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">أجهزة منسقة</p>
-                <p className="text-3xl font-bold text-green-600">18</p>
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">أجهزة منسقة</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-600">18</p>
               </div>
-              <Users className="h-10 w-10 text-green-500 opacity-70" />
+              <Users className="h-8 w-8 sm:h-10 sm:w-10 text-green-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">ملفات مشتركة</p>
-                <p className="text-3xl font-bold text-purple-600">45</p>
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">ملفات مشتركة</p>
+                <p className="text-2xl sm:text-3xl font-bold text-purple-600">45</p>
               </div>
-              <Database className="h-10 w-10 text-purple-500 opacity-70" />
+              <Database className="h-8 w-8 sm:h-10 sm:w-10 text-purple-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-red-500/10 to-orange-500/10 border-red-200/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">اتصالات طارئة</p>
-                <p className="text-3xl font-bold text-red-600">8</p>
+          <Card className="p-3 sm:p-4 md:p-6 bg-gradient-to-br from-red-500/10 to-orange-500/10 border-red-200/50">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">اتصالات طارئة</p>
+                <p className="text-2xl sm:text-3xl font-bold text-red-600">8</p>
               </div>
-              <Phone className="h-10 w-10 text-red-500 opacity-70" />
+              <Phone className="h-8 w-8 sm:h-10 sm:w-10 text-red-500 opacity-70 flex-shrink-0" />
             </div>
           </Card>
           </div>

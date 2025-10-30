@@ -113,21 +113,23 @@ const TrafficDepartment = () => {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
         <BackButton />
-        <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
-          <Car className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 font-arabic">شرطة المرور</h1>
-          <p className="text-gray-600 font-arabic">إدارة حركة المرور والمخالفات</p>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 flex-shrink-0">
+            <Car className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">شرطة المرور</h1>
+            <p className="text-sm sm:text-base text-muted-foreground truncate">إدارة حركة المرور والمخالفات</p>
+          </div>
         </div>
       </div>
 
       {/* Tools Grid */}
-      <div className="grid grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {trafficTools.map((tool, index) => {
           const Icon = tool.icon;
           return (
@@ -136,9 +138,9 @@ const TrafficDepartment = () => {
               className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
-                <Icon className="h-12 w-12 mb-4 text-primary" />
-                <p className="text-sm md:text-base font-semibold text-center">{tool.title}</p>
+              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px]">
+                <Icon className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 text-primary flex-shrink-0" />
+                <p className="text-sm sm:text-base font-semibold text-center line-clamp-2">{tool.title}</p>
               </CardContent>
             </Card>
           );
@@ -146,29 +148,29 @@ const TrafficDepartment = () => {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-red-600">1,245</CardTitle>
-            <CardDescription className="font-arabic">المخالفات هذا الشهر</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-red-600">1,245</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">المخالفات هذا الشهر</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-blue-600">856</CardTitle>
-            <CardDescription className="font-arabic">المخالفات المسددة</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600">856</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">المخالفات المسددة</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-green-600">12</CardTitle>
-            <CardDescription className="font-arabic">الدوريات النشطة</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">12</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">الدوريات النشطة</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-purple-600">45,832</CardTitle>
-            <CardDescription className="font-arabic">إجمالي المركبات</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-purple-600">45,832</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">إجمالي المركبات</CardDescription>
           </CardHeader>
         </Card>
       </div>

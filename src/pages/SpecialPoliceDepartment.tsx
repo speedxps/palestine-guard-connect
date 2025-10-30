@@ -85,21 +85,23 @@ const SpecialPoliceDepartment = () => {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
         <BackButton />
-        <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
-          <Shield className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 font-arabic">الشرطة الخاصة</h1>
-          <p className="text-gray-600 font-arabic">العمليات الخاصة والمهام الأمنية</p>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex-shrink-0">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">الشرطة الخاصة</h1>
+            <p className="text-sm sm:text-base text-muted-foreground truncate">العمليات الخاصة والمهام الأمنية</p>
+          </div>
         </div>
       </div>
 
       {/* Tools Grid */}
-      <div className="grid grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {specialPoliceTools.map((tool, index) => {
           const Icon = tool.icon;
           return (
@@ -108,9 +110,9 @@ const SpecialPoliceDepartment = () => {
               className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
-                <Icon className="h-12 w-12 mb-4 text-primary" />
-                <p className="text-sm md:text-base font-semibold text-center">{tool.title}</p>
+              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px]">
+                <Icon className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 text-primary flex-shrink-0" />
+                <p className="text-sm sm:text-base font-semibold text-center line-clamp-2">{tool.title}</p>
               </CardContent>
             </Card>
           );
@@ -118,29 +120,29 @@ const SpecialPoliceDepartment = () => {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-blue-600">45</CardTitle>
-            <CardDescription className="font-arabic">المهام النشطة</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600">45</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">المهام النشطة</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-green-600">8</CardTitle>
-            <CardDescription className="font-arabic">الدوريات الميدانية</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">8</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">الدوريات الميدانية</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-purple-600">156</CardTitle>
-            <CardDescription className="font-arabic">المهام المكتملة</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-purple-600">156</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">المهام المكتملة</CardDescription>
           </CardHeader>
         </Card>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-orange-600">24/7</CardTitle>
-            <CardDescription className="font-arabic">التغطية الأمنية</CardDescription>
+          <CardHeader className="text-center p-3 sm:p-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-orange-600">24/7</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">التغطية الأمنية</CardDescription>
           </CardHeader>
         </Card>
       </div>
