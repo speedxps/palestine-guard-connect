@@ -69,13 +69,35 @@ export const SimpleFaceLoginSetup = ({ onSuccess, onCancel }: SimpleFaceLoginSet
     if (!videoRef.current) return;
 
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    
+    // Reduce image size for faster processing
+    const maxWidth = 800;
+    const maxHeight = 600;
+    const videoWidth = videoRef.current.videoWidth;
+    const videoHeight = videoRef.current.videoHeight;
+    
+    let width = videoWidth;
+    let height = videoHeight;
+    
+    // Scale down if needed
+    if (width > maxWidth) {
+      height = (height * maxWidth) / width;
+      width = maxWidth;
+    }
+    if (height > maxHeight) {
+      width = (width * maxHeight) / height;
+      height = maxHeight;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0);
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+      ctx.drawImage(videoRef.current, 0, 0, width, height);
+      // Compress image to 0.7 quality
+      const imageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      console.log('📸 Captured image size:', imageBase64.length, 'chars');
       setCapturedImage(imageBase64);
       stopCamera();
     }

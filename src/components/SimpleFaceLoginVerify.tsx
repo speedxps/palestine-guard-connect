@@ -17,17 +17,35 @@ export const SimpleFaceLoginVerify = ({ onSuccess, onCancel }: SimpleFaceLoginVe
 
   const startCamera = async () => {
     try {
+      console.log('🎥 محاولة فتح الكاميرا للتحقق...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
           facingMode: 'user'
         } 
       });
       
+      console.log('✅ تم الحصول على stream من الكاميرا');
       streamRef.current = stream;
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        console.log('✅ تم تعيين stream للفيديو');
+        
+        // Try to play immediately
+        try {
+          await videoRef.current.play();
+          console.log('✅ الفيديو يعمل الآن');
+        } catch (playError) {
+          console.log('⚠️ محاولة ثانية للتشغيل...');
+          setTimeout(async () => {
+            try {
+              await videoRef.current?.play();
+              console.log('✅ الفيديو يعمل بعد المحاولة الثانية');
+            } catch (e) {
+              console.error('❌ فشل تشغيل الفيديو:', e);
+            }
+          }, 100);
+        }
       }
       setIsCapturing(true);
     } catch (error) {
@@ -47,13 +65,35 @@ export const SimpleFaceLoginVerify = ({ onSuccess, onCancel }: SimpleFaceLoginVe
     if (!videoRef.current) return;
 
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    
+    // Reduce image size for faster processing
+    const maxWidth = 800;
+    const maxHeight = 600;
+    const videoWidth = videoRef.current.videoWidth;
+    const videoHeight = videoRef.current.videoHeight;
+    
+    let width = videoWidth;
+    let height = videoHeight;
+    
+    // Scale down if needed
+    if (width > maxWidth) {
+      height = (height * maxWidth) / width;
+      width = maxWidth;
+    }
+    if (height > maxHeight) {
+      width = (width * maxHeight) / height;
+      height = maxHeight;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0);
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+      ctx.drawImage(videoRef.current, 0, 0, width, height);
+      // Compress image to 0.7 quality
+      const imageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      console.log('📸 Captured image size:', imageBase64.length, 'chars');
       setCapturedImage(imageBase64);
       stopCamera();
 

@@ -38,15 +38,21 @@ serve(async (req) => {
     console.log("🔍 بدء التحقق من الوجه للدخول...");
 
     // Ensure image has proper data URL prefix
-    const imageDataUrl = imageBase64.startsWith('data:') 
-      ? imageBase64 
-      : `data:image/jpeg;base64,${imageBase64}`;
+    let imageDataUrl = imageBase64;
+    if (!imageDataUrl.startsWith('data:image/')) {
+      imageDataUrl = `data:image/jpeg;base64,${imageDataUrl}`;
+    }
+
+    console.log('🖼️ Image data URL prefix:', imageDataUrl.substring(0, 50));
+    console.log('📏 Image data URL length:', imageDataUrl.length);
 
     // المرحلة 1: التحقق من وجود وجه في الصورة
     const verificationPrompt = `هل يوجد وجه واضح لإنسان في هذه الصورة؟
 أجب بـ "نعم" أو "لا" فقط.
 إذا كان الوجه غير واضح، أو الصورة مظلمة جداً، أو يوجد أكثر من وجه، أجب بـ "لا".`;
 
+    console.log('🚀 Sending request to Lovable AI for face verification...');
+    
     const verificationResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -67,8 +73,12 @@ serve(async (req) => {
       }),
     });
 
+    console.log('📡 AI Response status:', verificationResponse.status);
+
     if (!verificationResponse.ok) {
-      throw new Error(`AI verification failed: ${verificationResponse.status}`);
+      const errorText = await verificationResponse.text();
+      console.error('❌ AI Error response:', errorText);
+      throw new Error(`AI verification failed: ${verificationResponse.status} - ${errorText}`);
     }
 
     const verificationData = await verificationResponse.json();
@@ -98,6 +108,8 @@ serve(async (req) => {
 
 أعطني وصف دقيق ومفصل في فقرة واحدة.`;
 
+    console.log('🚀 Sending request to Lovable AI for face description...');
+    
     const descriptionResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -118,8 +130,12 @@ serve(async (req) => {
       }),
     });
 
+    console.log('📡 AI Description Response status:', descriptionResponse.status);
+
     if (!descriptionResponse.ok) {
-      throw new Error(`AI description failed: ${descriptionResponse.status}`);
+      const errorText = await descriptionResponse.text();
+      console.error('❌ AI Description Error:', errorText);
+      throw new Error(`AI description failed: ${descriptionResponse.status} - ${errorText}`);
     }
 
     const descriptionData = await descriptionResponse.json();

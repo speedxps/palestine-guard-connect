@@ -10,10 +10,14 @@ export const useFaceLogin = () => {
     
     try {
       console.log('🔐 Starting face verification...');
+      console.log('📏 Image base64 length:', imageBase64.length);
+      console.log('🖼️ Image base64 prefix:', imageBase64.substring(0, 50));
 
       const { data, error } = await supabase.functions.invoke('verify-face-login', {
         body: { imageBase64 }
       });
+
+      console.log('📡 Edge function response:', { data, error });
 
       if (error) {
         console.error('❌ Edge function error:', error);
