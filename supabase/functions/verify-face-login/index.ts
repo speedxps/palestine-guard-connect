@@ -373,13 +373,10 @@ serve(async (req) => {
       }
     );
 
-    // Generate access token
+    // Generate recovery link (contains tokens in URL)
     const { data: sessionData, error: sessionError } = await adminAuthClient.auth.admin.generateLink({
-      type: 'magiclink',
-      email: userEmail,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/verify`
-      }
+      type: 'recovery',
+      email: userEmail
     });
 
     if (sessionError || !sessionData) {
