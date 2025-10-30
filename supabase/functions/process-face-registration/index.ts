@@ -32,6 +32,11 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Ensure image has proper data URL format
+    const imageDataUrl = imageBase64.startsWith('data:') 
+      ? imageBase64 
+      : `data:image/jpeg;base64,${imageBase64}`;
+
     console.log('🤖 Generating detailed face description using Lovable AI...');
 
     // Generate detailed face description using Lovable AI
@@ -57,7 +62,7 @@ serve(async (req) => {
               },
               {
                 type: 'image_url',
-                image_url: { url: imageBase64 }
+                image_url: { url: imageDataUrl }
               }
             ]
           }
