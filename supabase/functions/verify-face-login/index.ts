@@ -373,7 +373,7 @@ serve(async (req) => {
       }
     );
 
-    // Generate magic link to get hashed token
+    // Generate link to get access tokens directly
     const { data: linkData, error: linkError } = await adminAuthClient.auth.admin.generateLink({
       type: 'magiclink',
       email: userEmail
@@ -393,21 +393,20 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Magic link created, verifying OTP...');
+    console.log('✅ Magic link created');
+    console.log('Properties keys:', Object.keys(linkData.properties || {}));
 
-    // Use the hashed_token to verify and create session
-    const { data: verifyData, error: verifyError } = await adminAuthClient.auth.verifyOtp({
-      email: userEmail,
-      token: linkData.properties.hashed_token,
-      type: 'magiclink'
-    });
+    // Access tokens directly from properties
+    const accessToken = linkData.properties.access_token;
+    const refreshToken = linkData.properties.refresh_token;
 
-    if (verifyError || !verifyData.session) {
-      console.error('❌ خطأ في التحقق من OTP:', verifyError);
+    if (!accessToken || !refreshToken) {
+      console.error('❌ فشل في الحصول على tokens من properties');
+      console.error('Available properties:', linkData.properties);
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'فشل في التحقق من الجلسة'
+          error: 'فشل في إنشاء الجلسة'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -415,9 +414,6 @@ serve(async (req) => {
         }
       );
     }
-
-    const accessToken = verifyData.session.access_token;
-    const refreshToken = verifyData.session.refresh_token;
 
     console.log('✅ Session tokens created successfully:', {
       hasAccessToken: !!accessToken,
