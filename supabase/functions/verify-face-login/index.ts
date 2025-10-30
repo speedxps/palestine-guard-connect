@@ -37,8 +37,28 @@ serve(async (req) => {
 
     console.log("🔍 بدء التحقق من الوجه للدخول...");
 
+    // التحقق من صحة بيانات الصورة
+    if (!imageBase64 || imageBase64.length < 100) {
+      console.error('❌ Invalid image data received. Length:', imageBase64?.length);
+      return new Response(
+        JSON.stringify({ success: false, error: 'بيانات الصورة غير صالحة' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Ensure image has proper data URL prefix
     let imageDataUrl = imageBase64;
+    
+    // Check if it starts with just 'data:' without proper format
+    if (imageDataUrl.startsWith('data:,') || (imageDataUrl.startsWith('data:') && !imageDataUrl.includes('base64'))) {
+      console.error('❌ Invalid data URL format:', imageDataUrl.substring(0, 50));
+      return new Response(
+        JSON.stringify({ success: false, error: 'تنسيق الصورة غير صحيح' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Add prefix if needed
     if (!imageDataUrl.startsWith('data:image/')) {
       imageDataUrl = `data:image/jpeg;base64,${imageDataUrl}`;
     }

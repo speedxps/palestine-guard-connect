@@ -9,6 +9,13 @@ export const useFaceLogin = () => {
     setIsVerifying(true);
     
     try {
+      // التحقق من صحة الصورة قبل الإرسال
+      if (!imageBase64 || imageBase64.length < 100) {
+        console.error('❌ Invalid image data');
+        toast.error('بيانات الصورة غير صالحة');
+        return { success: false, error: 'بيانات الصورة غير صالحة' };
+      }
+
       console.log('🔐 Starting face verification...');
       console.log('📏 Image base64 length:', imageBase64.length);
       console.log('🖼️ Image base64 prefix:', imageBase64.substring(0, 50));

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, Loader2, X } from 'lucide-react';
 import { useFaceLogin } from '@/hooks/useFaceLogin';
+import { toast } from 'sonner';
 
 interface SimpleFaceLoginVerifyProps {
   onSuccess?: () => void;
@@ -68,7 +69,16 @@ export const SimpleFaceLoginVerify = ({ onSuccess, onCancel }: SimpleFaceLoginVe
   };
 
   const captureImage = async () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      toast.error('الكاميرا غير جاهزة');
+      return;
+    }
+
+    // التحقق من أن الفيديو يعمل
+    if (videoRef.current.readyState !== videoRef.current.HAVE_ENOUGH_DATA) {
+      toast.error('الفيديو غير جاهز. يرجى الانتظار قليلاً');
+      return;
+    }
 
     const canvas = document.createElement('canvas');
     
@@ -77,6 +87,11 @@ export const SimpleFaceLoginVerify = ({ onSuccess, onCancel }: SimpleFaceLoginVe
     const maxHeight = 600;
     const videoWidth = videoRef.current.videoWidth;
     const videoHeight = videoRef.current.videoHeight;
+    
+    if (videoWidth === 0 || videoHeight === 0) {
+      toast.error('لم يتم تحميل الفيديو بشكل صحيح');
+      return;
+    }
     
     let width = videoWidth;
     let height = videoHeight;
@@ -97,9 +112,19 @@ export const SimpleFaceLoginVerify = ({ onSuccess, onCancel }: SimpleFaceLoginVe
     
     if (ctx) {
       ctx.drawImage(videoRef.current, 0, 0, width, height);
+      
       // Compress image to 0.7 quality
       const imageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      
+      // التحقق من أن الصورة صالحة
+      if (!imageBase64 || imageBase64 === 'data:,' || imageBase64.length < 100) {
+        console.error('❌ Failed to capture image. Length:', imageBase64?.length);
+        toast.error('فشل في التقاط الصورة. حاول مرة أخرى');
+        return;
+      }
+      
       console.log('📸 Captured image size:', imageBase64.length, 'chars');
+      console.log('📸 Image prefix:', imageBase64.substring(0, 50));
       setCapturedImage(imageBase64);
       stopCamera();
 
@@ -108,6 +133,8 @@ export const SimpleFaceLoginVerify = ({ onSuccess, onCancel }: SimpleFaceLoginVe
       if (result.success) {
         onSuccess?.();
       }
+    } else {
+      toast.error('فشل في إنشاء سياق الرسم');
     }
   };
 
