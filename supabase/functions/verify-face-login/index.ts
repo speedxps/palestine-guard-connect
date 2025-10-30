@@ -13,6 +13,47 @@ serve(async (req) => {
   }
 
   try {
+    // Extract IP address for rate limiting
+    const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+
+    console.log('🔒 Checking rate limit for IP:', ipAddress);
+
+    // Initialize Supabase client early for rate limit check
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check rate limit using database function
+    const { data: rateLimitCheck, error: rateLimitError } = await supabase
+      .rpc('check_face_login_rate_limit', {
+        _ip_address: ipAddress,
+        _window_minutes: 60,
+        _max_attempts: 5
+      });
+
+    if (rateLimitError) {
+      console.error('❌ Rate limit check error:', rateLimitError);
+    } else if (!rateLimitCheck) {
+      // Log failed attempt
+      await supabase.from('face_login_attempts').insert({
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        was_successful: false
+      });
+
+      console.log('🚫 Rate limit exceeded for IP:', ipAddress);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'تم تجاوز الحد الأقصى للمحاولات. يرجى المحاولة لاحقاً.' 
+        }), 
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await req.json();
     console.log('📦 Request body received:', { hasImageBase64: !!body.imageBase64, bodyKeys: Object.keys(body) });
     
@@ -30,10 +71,6 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log("🔍 بدء التحقق من الوجه للدخول...");
 
@@ -212,6 +249,13 @@ serve(async (req) => {
 
     // المرحلة 5: التحقق من النتيجة
     if (!bestMatch) {
+      // Log failed attempt
+      await supabase.from('face_login_attempts').insert({
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        was_successful: false
+      });
+
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -220,6 +264,14 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Log successful attempt
+    await supabase.from('face_login_attempts').insert({
+      ip_address: ipAddress,
+      user_agent: userAgent,
+      was_successful: true,
+      matched_user_id: bestMatch.userId
+    });
 
     // المرحلة 6: جلب بيانات المستخدم من auth.users
     const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(bestMatch.userId);

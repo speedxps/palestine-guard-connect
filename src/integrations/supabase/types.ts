@@ -1112,6 +1112,36 @@ export type Database = {
           },
         ]
       }
+      face_login_attempts: {
+        Row: {
+          attempt_time: string
+          created_at: string
+          id: string
+          ip_address: string
+          matched_user_id: string | null
+          user_agent: string | null
+          was_successful: boolean
+        }
+        Insert: {
+          attempt_time?: string
+          created_at?: string
+          id?: string
+          ip_address: string
+          matched_user_id?: string | null
+          user_agent?: string | null
+          was_successful?: boolean
+        }
+        Update: {
+          attempt_time?: string
+          created_at?: string
+          id?: string
+          ip_address?: string
+          matched_user_id?: string | null
+          user_agent?: string | null
+          was_successful?: boolean
+        }
+        Relationships: []
+      }
       face_processing_log: {
         Row: {
           citizen_id: string | null
@@ -3259,6 +3289,14 @@ export type Database = {
           user_role: Database["public"]["Enums"]["app_role"]
         }
         Returns: undefined
+      }
+      check_face_login_rate_limit: {
+        Args: {
+          _ip_address: string
+          _max_attempts?: number
+          _window_minutes?: number
+        }
+        Returns: boolean
       }
       get_current_user_role: { Args: never; Returns: string }
       get_user_profile: { Args: { user_id: string }; Returns: string }
