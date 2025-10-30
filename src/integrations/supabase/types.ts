@@ -1044,28 +1044,37 @@ export type Database = {
       face_data: {
         Row: {
           created_at: string
+          encryption_version: string | null
           face_encoding: string
+          face_encoding_hash: string | null
           id: string
           image_url: string | null
           is_active: boolean
+          is_encrypted: boolean | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          encryption_version?: string | null
           face_encoding: string
+          face_encoding_hash?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_encrypted?: boolean | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          encryption_version?: string | null
           face_encoding?: string
+          face_encoding_hash?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_encrypted?: boolean | null
           updated_at?: string
           user_id?: string
         }
@@ -1116,27 +1125,33 @@ export type Database = {
         Row: {
           attempt_time: string
           created_at: string
+          email_provided: string | null
           id: string
           ip_address: string
           matched_user_id: string | null
+          preliminary_auth_passed: boolean | null
           user_agent: string | null
           was_successful: boolean
         }
         Insert: {
           attempt_time?: string
           created_at?: string
+          email_provided?: string | null
           id?: string
           ip_address: string
           matched_user_id?: string | null
+          preliminary_auth_passed?: boolean | null
           user_agent?: string | null
           was_successful?: boolean
         }
         Update: {
           attempt_time?: string
           created_at?: string
+          email_provided?: string | null
           id?: string
           ip_address?: string
           matched_user_id?: string | null
+          preliminary_auth_passed?: boolean | null
           user_agent?: string | null
           was_successful?: boolean
         }
@@ -2478,6 +2493,10 @@ export type Database = {
           max_devices_allowed: number
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          two_factor_backup_codes: Json | null
+          two_factor_enabled: boolean | null
+          two_factor_secret: string | null
+          two_factor_setup_at: string | null
           updated_at: string
           user_id: string
           username: string
@@ -2497,6 +2516,10 @@ export type Database = {
           max_devices_allowed?: number
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          two_factor_backup_codes?: Json | null
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
+          two_factor_setup_at?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -2516,6 +2539,10 @@ export type Database = {
           max_devices_allowed?: number
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          two_factor_backup_codes?: Json | null
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
+          two_factor_setup_at?: string | null
           updated_at?: string
           user_id?: string
           username?: string

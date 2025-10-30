@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
 import { Shield, RotateCcw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TwoFactorVerificationModalProps {
   isOpen: boolean;
@@ -42,28 +43,26 @@ export const TwoFactorVerificationModal: React.FC<TwoFactorVerificationModalProp
     try {
       let isValid = false;
       
-      if (showBackupCode && backupCode) {
-        // Verify backup code
-        const savedBackupCodes = localStorage.getItem('twoFactorBackupCodes');
-        if (savedBackupCodes) {
-          const codes = JSON.parse(savedBackupCodes);
-          const codeIndex = codes.indexOf(backupCode);
-          
-          if (codeIndex !== -1) {
-            // Remove used backup code
-            codes.splice(codeIndex, 1);
-            localStorage.setItem('twoFactorBackupCodes', JSON.stringify(codes));
-            isValid = true;
-            
-            toast({
-              title: "⚠️ تم استخدام رمز النسخ الاحتياطي",
-              description: `متبقي ${codes.length} من رموز النسخ الاحتياطي`,
-            });
-          }
+      // Server-side verification via edge function
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-2fa-code', {
+        body: {
+          email: userEmail,
+          code: showBackupCode ? backupCode : verificationCode,
+          isBackupCode: showBackupCode
         }
-      } else if (verificationCode) {
-        // Verify TOTP code
-        isValid = verify(verificationCode);
+      });
+
+      if (verifyError || !verifyData?.success) {
+        isValid = false;
+      } else {
+        isValid = true;
+        
+        if (showBackupCode && verifyData.remainingBackupCodes !== undefined) {
+          toast({
+            title: "⚠️ تم استخدام رمز النسخ الاحتياطي",
+            description: `متبقي ${verifyData.remainingBackupCodes} من رموز النسخ الاحتياطي`,
+          });
+        }
       }
 
       if (isValid) {

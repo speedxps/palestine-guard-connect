@@ -77,15 +77,25 @@ export const TwoFactorSetupModal: React.FC<TwoFactorSetupModalProps> = ({
     const isValid = verify(verificationCode);
     
     if (isValid) {
-      // Generate backup codes
-      const codes = generateBackupCodes();
-      setBackupCodes(codes);
-      setStep('backup');
-      
-      toast({
-        title: "✅ تم التحقق بنجاح",
-        description: "احفظ رموز النسخ الاحتياطي",
-      });
+      // Generate backup codes (async)
+      generateBackupCodes()
+        .then((codes) => {
+          setBackupCodes(codes);
+          setStep('backup');
+          
+          toast({
+            title: "✅ تم التحقق بنجاح",
+            description: "احفظ رموز النسخ الاحتياطي",
+          });
+        })
+        .catch((error) => {
+          console.error('Error generating backup codes:', error);
+          toast({
+            title: "❌ خطأ",
+            description: "فشل في إنشاء رموز النسخ الاحتياطي",
+            variant: "destructive",
+          });
+        });
     } else {
       toast({
         title: "❌ رمز خاطئ",

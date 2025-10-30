@@ -3,14 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Camera, Upload, ArrowLeft, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SimpleFaceLoginVerify } from '@/components/SimpleFaceLoginVerify';
 import { useNavigate } from 'react-router-dom';
 import { useFaceLogin } from '@/hooks/useFaceLogin';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function FaceLogin() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { verifyFaceAndLogin, isVerifying } = useFaceLogin();
@@ -32,9 +36,43 @@ export default function FaceLogin() {
     reader.readAsDataURL(file);
   };
 
+  const handleEmailVerification = async () => {
+    if (!email || !email.includes('@')) {
+      toast.error('الرجاء إدخال بريد إلكتروني صحيح');
+      return;
+    }
+
+    // Check if user exists
+    setIsProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-email-exists', {
+        body: { email }
+      });
+
+      if (error || !data?.exists) {
+        toast.error('البريد الإلكتروني غير مسجل في النظام');
+        setIsProcessing(false);
+        return;
+      }
+
+      setEmailVerified(true);
+      toast.success('تم التحقق من البريد، الآن يمكنك المتابعة للتحقق من الوجه');
+    } catch (error) {
+      console.error('Error verifying email:', error);
+      toast.error('حدث خطأ أثناء التحقق من البريد');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleVerifyUploadedImage = async () => {
     if (!selectedImage) {
       toast.error('الرجاء اختيار صورة أولاً');
+      return;
+    }
+
+    if (!emailVerified) {
+      toast.error('يجب التحقق من البريد الإلكتروني أولاً');
       return;
     }
 
@@ -42,11 +80,14 @@ export default function FaceLogin() {
     try {
       const result = await verifyFaceAndLogin(selectedImage);
       
-      if (result.success) {
+      if (result.success && result.email === email) {
         toast.success('تم تسجيل الدخول بنجاح! 🎉');
         setTimeout(() => {
           navigate('/dashboard');
         }, 1000);
+      } else if (result.email !== email) {
+        toast.error('الوجه لا يتطابق مع البريد الإلكتروني المدخل');
+        setSelectedImage(null);
       } else {
         toast.error(result.error || 'فشل التحقق من الوجه');
         setSelectedImage(null);
@@ -91,21 +132,57 @@ export default function FaceLogin() {
           <Info className="h-4 w-4" />
           <AlertDescription>
             <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>أدخل بريدك الإلكتروني أولاً للتحقق</li>
               <li>تأكد من أن الإضاءة جيدة وأن وجهك واضح</li>
               <li>انظر مباشرة إلى الكاميرا</li>
               <li>تجنب ارتداء النظارات الشمسية أو القبعات</li>
-              <li>يمكنك استخدام الكاميرا مباشرة أو رفع صورة من جهازك</li>
             </ul>
           </AlertDescription>
         </Alert>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>اختر طريقة التحقق</CardTitle>
-            <CardDescription>
-              التقط صورة بالكاميرا أو ارفع صورة من جهازك
-            </CardDescription>
-          </CardHeader>
+        {!emailVerified && (
+          <Card>
+            <CardHeader>
+              <CardTitle>التحقق من البريد الإلكتروني</CardTitle>
+              <CardDescription>
+                أدخل بريدك الإلكتروني المسجل أولاً
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium">
+                    البريد الإلكتروني
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="example@police.ps"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isProcessing}
+                  />
+                </div>
+                <Button
+                  onClick={handleEmailVerification}
+                  disabled={isProcessing || !email}
+                  className="w-full"
+                >
+                  {isProcessing ? 'جاري التحقق...' : 'التحقق من البريد'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {emailVerified && (
+          <Card>
+            <CardHeader>
+              <CardTitle>اختر طريقة التحقق</CardTitle>
+              <CardDescription>
+                التقط صورة بالكاميرا أو ارفع صورة من جهازك
+              </CardDescription>
+            </CardHeader>
           <CardContent>
             <Tabs defaultValue="camera" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -181,6 +258,7 @@ export default function FaceLogin() {
             </Tabs>
           </CardContent>
         </Card>
+        )}
 
         <Card>
           <CardHeader>
