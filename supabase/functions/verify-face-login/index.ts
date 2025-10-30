@@ -277,15 +277,16 @@ serve(async (req) => {
     // إنشاء session token للمستخدم
     console.log('🔑 إنشاء session token للمستخدم...');
     
+    // استخدام recovery link للحصول على tokens
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
+      type: 'recovery',
       email: userEmail,
       options: {
         redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/dashboard`
       }
     });
 
-    if (sessionError) {
+    if (sessionError || !sessionData) {
       console.error('❌ خطأ في إنشاء session:', sessionError);
       return new Response(
         JSON.stringify({
@@ -299,13 +300,23 @@ serve(async (req) => {
       );
     }
 
+    console.log('🔗 Action link created:', sessionData.properties.action_link.substring(0, 100) + '...');
+
     // استخراج الـ tokens من الرابط
     const url = new URL(sessionData.properties.action_link);
     const accessToken = url.searchParams.get('access_token');
     const refreshToken = url.searchParams.get('refresh_token');
 
+    console.log('🔍 Tokens extracted:', { 
+      hasAccessToken: !!accessToken, 
+      hasRefreshToken: !!refreshToken,
+      accessTokenLength: accessToken?.length,
+      refreshTokenLength: refreshToken?.length
+    });
+
     if (!accessToken || !refreshToken) {
-      console.error('❌ لم يتم الحصول على tokens');
+      console.error('❌ لم يتم الحصول على tokens من الرابط');
+      console.error('📋 URL params:', Array.from(url.searchParams.entries()));
       return new Response(
         JSON.stringify({
           success: false,
