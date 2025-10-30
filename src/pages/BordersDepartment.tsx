@@ -96,28 +96,18 @@ export default function BordersDepartment() {
         </div>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {bordersTools.map((tool, index) => (
             <Card
               key={index}
-              className="group relative overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border-2 hover:border-primary/50"
+              className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-              
-              <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0`}>
-                  <tool.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                </div>
-                
-                <div>
-                  <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                    {tool.title}
-                  </h3>
-                  <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed line-clamp-2">
-                    {tool.description}
-                  </p>
-                </div>
+              <div className="p-4 flex flex-col items-center text-center min-h-[100px]">
+                <tool.icon className="h-8 w-8 text-primary mb-2 flex-shrink-0" />
+                <h3 className="text-xs sm:text-sm font-bold line-clamp-2">
+                  {tool.title}
+                </h3>
               </div>
             </Card>
           ))}

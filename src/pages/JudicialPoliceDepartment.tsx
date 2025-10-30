@@ -105,16 +105,16 @@ const JudicialPoliceDepartment = () => {
         </Card>
 
         {/* Tools Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {tools.map((tool) => (
             <Card
               key={tool.path}
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50"
+              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border hover:border-primary/50"
               onClick={() => navigate(tool.path)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px]">
-                <tool.icon className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 text-primary flex-shrink-0" />
-                <p className="text-sm sm:text-base font-semibold text-center line-clamp-2">{tool.title}</p>
+              <CardContent className="flex flex-col items-center justify-center p-4 min-h-[100px]">
+                <tool.icon className="h-8 w-8 mb-2 text-primary flex-shrink-0" />
+                <p className="text-xs sm:text-sm font-semibold text-center line-clamp-2">{tool.title}</p>
                 {tool.stats && <p className="text-xs text-muted-foreground mt-1">{tool.stats}</p>}
               </CardContent>
             </Card>
