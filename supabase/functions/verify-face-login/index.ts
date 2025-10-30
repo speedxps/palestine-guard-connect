@@ -239,14 +239,21 @@ serve(async (req) => {
       );
     }
 
+    console.log(`📋 حالة face_login_enabled للمستخدم ${profile.email}: ${profile.face_login_enabled}`);
+
+    // تفعيل face_login تلقائياً إذا لم يكن مفعلاً ولكن لديه بيانات وجه
     if (!profile.face_login_enabled) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'تسجيل الدخول بالوجه غير مفعل لهذا المستخدم' 
-        }), 
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.log('⚙️ تفعيل face_login تلقائياً للمستخدم...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ face_login_enabled: true })
+        .eq('user_id', bestMatch.userId);
+      
+      if (updateError) {
+        console.error('⚠️ فشل في تفعيل face_login:', updateError);
+      } else {
+        console.log('✅ تم تفعيل face_login للمستخدم');
+      }
     }
 
     console.log(`✅ تم العثور على تطابق! المستخدم: ${profile.email}, التشابه: ${bestMatch.similarity}%`);

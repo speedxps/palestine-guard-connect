@@ -28,8 +28,14 @@ export const useFaceLogin = () => {
 
       if (error) {
         console.error('❌ Edge function error:', error);
-        toast.error('فشل الاتصال بخدمة التحقق');
+        toast.error('فشل الاتصال بخدمة التحقق: ' + (error.message || 'خطأ غير معروف'));
         return { success: false, error: 'فشل الاتصال بخدمة التحقق' };
+      }
+
+      if (!data) {
+        console.error('❌ No data returned from edge function');
+        toast.error('لم يتم استلام بيانات من الخادم');
+        return { success: false, error: 'لم يتم استلام بيانات من الخادم' };
       }
 
       if (!data.success) {
@@ -39,23 +45,32 @@ export const useFaceLogin = () => {
       }
 
       console.log('✅ Face verified! User:', data.email, 'Similarity:', data.similarity);
+      console.log('🔑 Tokens received:', { 
+        hasAccessToken: !!data.accessToken, 
+        hasRefreshToken: !!data.refreshToken 
+      });
 
       if (data.accessToken && data.refreshToken) {
-        console.log('🔑 Creating session...');
+        console.log('🔑 Creating session with tokens...');
         
-        const { error: sessionError } = await supabase.auth.setSession({
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
           access_token: data.accessToken,
           refresh_token: data.refreshToken
         });
 
         if (sessionError) {
           console.error('❌ Session error:', sessionError);
-          toast.error('فشل في إنشاء الجلسة');
+          toast.error('فشل في إنشاء الجلسة: ' + sessionError.message);
           return { success: false, error: 'فشل في إنشاء الجلسة' };
         }
 
-        console.log('✅ Session created successfully!');
+        console.log('✅ Session created successfully!', sessionData);
+        console.log('👤 Current user:', sessionData.user?.email);
         toast.success(`مرحباً ${data.email}! 🎉`);
+      } else {
+        console.error('❌ Missing tokens in response');
+        toast.error('لم يتم استلام بيانات تسجيل الدخول');
+        return { success: false, error: 'لم يتم استلام بيانات تسجيل الدخول' };
       }
 
       return {
