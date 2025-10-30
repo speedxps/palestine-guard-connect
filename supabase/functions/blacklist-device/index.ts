@@ -25,15 +25,24 @@ Deno.serve(async (req) => {
       throw new Error('لا يوجد تصريح دخول');
     }
 
-    // Create client with user's token for authentication
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-      auth: {
-        persistSession: false,
-      },
-    });
+    // Extract user ID from JWT (already verified by Supabase since verify_jwt = true)
+    const token = authHeader.replace('Bearer ', '');
+    let userId: string;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+      
+      if (!userId) {
+        throw new Error('User ID not found in token');
+      }
+    } catch (error) {
+      console.error('Error decoding JWT:', error);
+      return new Response(JSON.stringify({ error: 'غير مصرح' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Create admin client for privileged operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -43,24 +52,13 @@ Deno.serve(async (req) => {
       },
     });
 
-    // Get authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('Error getting user:', userError);
-      return new Response(JSON.stringify({ error: 'غير مصرح' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('User verified:', user.id);
+    console.log('User verified:', userId);
 
     // Check if user is admin
     const { data: userRoles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (rolesError) {
       console.error('Error fetching user roles:', rolesError);
@@ -78,7 +76,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { attemptId, userId, deviceFingerprint, deviceInfo, reason, notes } = await req.json();
+    const { attemptId, userId: targetUserId, deviceFingerprint, deviceInfo, reason, notes } = await req.json();
 
     if (!deviceFingerprint) {
       return new Response(JSON.stringify({ error: 'معلومات غير مكتملة' }), {
@@ -94,11 +92,11 @@ Deno.serve(async (req) => {
       .from('device_blacklist')
       .insert({
         device_fingerprint: deviceFingerprint,
-        user_id: userId,
+        user_id: targetUserId,
         device_info: deviceInfo,
         reason: reason || 'تم حظره من قبل الإدارة',
         notes: notes,
-        blocked_by: user.id,
+        blocked_by: userId,
       });
 
     if (blacklistError) {
@@ -107,11 +105,11 @@ Deno.serve(async (req) => {
     }
 
     // Deactivate device if it exists
-    if (userId) {
+    if (targetUserId) {
       await supabaseAdmin
         .from('user_devices')
         .update({ is_active: false })
-        .eq('user_id', userId)
+        .eq('user_id', targetUserId)
         .eq('device_fingerprint', deviceFingerprint);
     }
 
@@ -127,7 +125,7 @@ Deno.serve(async (req) => {
     await supabaseAdmin
       .from('device_access_log')
       .insert({
-        user_id: userId,
+        user_id: targetUserId,
         device_fingerprint: deviceFingerprint,
         access_type: 'admin_blacklist',
         was_allowed: false,

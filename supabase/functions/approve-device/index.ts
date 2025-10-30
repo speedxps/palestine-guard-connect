@@ -25,15 +25,24 @@ Deno.serve(async (req) => {
       throw new Error('لا يوجد تصريح دخول');
     }
 
-    // Create client with user's token for authentication
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-      auth: {
-        persistSession: false,
-      },
-    });
+    // Extract user ID from JWT (already verified by Supabase since verify_jwt = true)
+    const token = authHeader.replace('Bearer ', '');
+    let userId: string;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+      
+      if (!userId) {
+        throw new Error('User ID not found in token');
+      }
+    } catch (error) {
+      console.error('Error decoding JWT:', error);
+      return new Response(JSON.stringify({ error: 'غير مصرح' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Create admin client for privileged operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -43,24 +52,13 @@ Deno.serve(async (req) => {
       },
     });
 
-    // Get authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('Error getting user:', userError);
-      return new Response(JSON.stringify({ error: 'غير مصرح' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('User verified:', user.id);
+    console.log('User verified:', userId);
 
     // Check if user is admin
     const { data: userRoles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (rolesError) {
       console.error('Error fetching user roles:', rolesError);
