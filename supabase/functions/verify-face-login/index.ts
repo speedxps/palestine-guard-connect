@@ -373,14 +373,14 @@ serve(async (req) => {
       }
     );
 
-    // Generate recovery link (contains tokens in URL)
-    const { data: sessionData, error: sessionError } = await adminAuthClient.auth.admin.generateLink({
-      type: 'recovery',
+    // Generate magic link to get hashed token
+    const { data: linkData, error: linkError } = await adminAuthClient.auth.admin.generateLink({
+      type: 'magiclink',
       email: userEmail
     });
 
-    if (sessionError || !sessionData) {
-      console.error('❌ خطأ في إنشاء session:', sessionError);
+    if (linkError || !linkData) {
+      console.error('❌ خطأ في إنشاء magic link:', linkError);
       return new Response(
         JSON.stringify({
           success: false,
@@ -393,17 +393,21 @@ serve(async (req) => {
       );
     }
 
-    // Extract tokens from the generated link
-    const url = new URL(sessionData.properties.action_link);
-    const accessToken = url.searchParams.get('access_token');
-    const refreshToken = url.searchParams.get('refresh_token');
+    console.log('✅ Magic link created, verifying OTP...');
 
-    if (!accessToken || !refreshToken) {
-      console.error('❌ فشل في استخراج tokens من الرابط');
+    // Use the hashed_token to verify and create session
+    const { data: verifyData, error: verifyError } = await adminAuthClient.auth.verifyOtp({
+      email: userEmail,
+      token: linkData.properties.hashed_token,
+      type: 'magiclink'
+    });
+
+    if (verifyError || !verifyData.session) {
+      console.error('❌ خطأ في التحقق من OTP:', verifyError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'فشل في إنشاء الجلسة'
+          error: 'فشل في التحقق من الجلسة'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -411,6 +415,9 @@ serve(async (req) => {
         }
       );
     }
+
+    const accessToken = verifyData.session.access_token;
+    const refreshToken = verifyData.session.refresh_token;
 
     console.log('✅ Session tokens created successfully:', {
       hasAccessToken: !!accessToken,
