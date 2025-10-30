@@ -2168,6 +2168,59 @@ export type Database = {
           },
         ]
       }
+      official_notifications: {
+        Row: {
+          citizen_id: string
+          created_at: string | null
+          id: string
+          notification_text: string
+          scheduled_date: string | null
+          scheduled_day: string | null
+          scheduled_time: string | null
+          sender_id: string
+          sent_at: string | null
+          sent_via: string | null
+          status: string | null
+          template_used: string | null
+        }
+        Insert: {
+          citizen_id: string
+          created_at?: string | null
+          id?: string
+          notification_text: string
+          scheduled_date?: string | null
+          scheduled_day?: string | null
+          scheduled_time?: string | null
+          sender_id: string
+          sent_at?: string | null
+          sent_via?: string | null
+          status?: string | null
+          template_used?: string | null
+        }
+        Update: {
+          citizen_id?: string
+          created_at?: string | null
+          id?: string
+          notification_text?: string
+          scheduled_date?: string | null
+          scheduled_day?: string | null
+          scheduled_time?: string | null
+          sender_id?: string
+          sent_at?: string | null
+          sent_via?: string | null
+          status?: string | null
+          template_used?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "official_notifications_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operation_updates: {
         Row: {
           created_at: string

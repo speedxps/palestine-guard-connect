@@ -4,9 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   FileText, TestTube, Users, ScanFace, 
-  FileEdit, FolderOpen, Megaphone, XCircle, Phone
+  FileEdit, FolderOpen, Megaphone, XCircle, Phone, 
+  Calendar as CalendarIcon, Copy, Trash2, History, Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +20,74 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { BackButton } from '@/components/BackButton';
 import { useFaceRecognition } from '@/hooks/useFaceRecognition';
+import { useTickets } from '@/hooks/useTickets';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+
+// القوالب الجاهزة للتبليغات الرسمية
+const notificationTemplates = [
+  {
+    id: 'court_summons',
+    title: 'استدعاء للمحكمة',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nنحيطكم علماً بوجوب حضوركم إلى المحكمة بتاريخ {date} يوم {day} الساعة {time} للنظر في القضية رقم [رقم القضية].\n\nعدم الحضور يعرضكم للمساءلة القانونية.\n\nالشرطة الفلسطينية - الجنائية'
+  },
+  {
+    id: 'investigation_summons',
+    title: 'استدعاء للتحقيق',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nيرجى الحضور لمقر الشرطة - قسم المباحث الجنائية بتاريخ {date} يوم {day} الساعة {time} للإدلاء بأقوالكم في قضية رقم [رقم القضية].\n\nالشرطة الفلسطينية - المباحث الجنائية'
+  },
+  {
+    id: 'arrest_warrant',
+    title: 'إشعار بمذكرة توقيف',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nنعلمكم بصدور أمر توقيف بحقكم من النيابة العامة رقم [رقم الأمر] بتاريخ {date}.\n\nيتوجب عليكم التسليم طوعاً لأقرب مركز شرطة خلال 48 ساعة.\n\nالشرطة الفلسطينية'
+  },
+  {
+    id: 'witness_summons',
+    title: 'استدعاء شاهد',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nنرجو التكرم بالحضور إلى قسم المباحث الجنائية بصفتكم شاهد في القضية رقم [رقم القضية] وذلك بتاريخ {date} يوم {day} الساعة {time}.\n\nالشرطة الفلسطينية - المباحث الجنائية'
+  },
+  {
+    id: 'travel_ban',
+    title: 'إشعار بمنع السفر',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nنعلمكم بصدور قرار منع السفر بحقكم من النيابة العامة رقم [رقم القرار] بتاريخ {date} لحين انتهاء التحقيقات في القضية رقم [رقم القضية].\n\nالشرطة الفلسطينية'
+  },
+  {
+    id: 'case_closed',
+    title: 'إشعار بإغلاق القضية',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nنعلمكم بأنه تم إغلاق القضية رقم [رقم القضية] المتعلقة بكم بتاريخ {date} لعدم كفاية الأدلة / لانتهاء التحقيقات.\n\nالشرطة الفلسطينية - المباحث الجنائية'
+  },
+  {
+    id: 'bail_release',
+    title: 'إشعار بالإفراج بكفالة',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nنعلمكم بقرار الإفراج عنكم بكفالة مالية قدرها [المبلغ] شيكل بتاريخ {date} في القضية رقم [رقم القضية].\n\nيرجى مراجعة قسم المباحث كل [المدة] حسب شروط الكفالة.\n\nالشرطة الفلسطينية - المباحث الجنائية'
+  },
+  {
+    id: 'house_arrest',
+    title: 'إشعار بالإقامة الجبرية',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nنعلمكم بقرار فرض الإقامة الجبرية عليكم في عنوان إقامتكم [العنوان] اعتباراً من تاريخ {date} وحتى إشعار آخر.\n\nمنعاً باتاً من مغادرة العنوان دون إذن مسبق.\n\nالشرطة الفلسطينية'
+  },
+  {
+    id: 'interrogation_appointment',
+    title: 'موعد استجواب',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nتم تحديد موعد لاستجوابكم في القضية رقم [رقم القضية] بحضور المحامي يوم {day} بتاريخ {date} الساعة {time}.\n\nمن حقكم الاستعانة بمحامٍ.\n\nالشرطة الفلسطينية - المباحث الجنائية'
+  },
+  {
+    id: 'evidence_viewing',
+    title: 'دعوة لمشاهدة الأدلة',
+    template: 'السيد/ة {fullName}\nرقم الهوية: {nationalId}\n\nندعوكم لحضور جلسة مشاهدة الأدلة في القضية رقم [رقم القضية] بحضور محاميكم بتاريخ {date} يوم {day} الساعة {time}.\n\nالشرطة الفلسطينية - المباحث الجنائية'
+  }
+];
+
+// أيام الأسبوع بالعربية
+const arabicDays = [
+  { value: 'saturday', label: 'السبت' },
+  { value: 'sunday', label: 'الأحد' },
+  { value: 'monday', label: 'الاثنين' },
+  { value: 'tuesday', label: 'الثلاثاء' },
+  { value: 'wednesday', label: 'الأربعاء' },
+  { value: 'thursday', label: 'الخميس' },
+  { value: 'friday', label: 'الجمعة' }
+];
 
 const CIDSuspectRecord = () => {
   const { id } = useParams();
@@ -36,7 +110,18 @@ const CIDSuspectRecord = () => {
   const [regeneratingEmbedding, setRegeneratingEmbedding] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   
+  // Notification states
+  const [notificationText, setNotificationText] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [customDate, setCustomDate] = useState<Date>();
+  const [customDay, setCustomDay] = useState('');
+  const [customTime, setCustomTime] = useState('');
+  const [notificationHistory, setNotificationHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [sendingNotification, setSendingNotification] = useState(false);
+  
   const { searchFaces } = useFaceRecognition();
+  const { logTicket } = useTickets();
 
   const regenerateFaceEmbedding = async () => {
     if (!citizen?.photo_url) {
@@ -335,6 +420,160 @@ const CIDSuspectRecord = () => {
     }
   };
 
+  // دوال التعامل مع التبليغات
+  const fillTemplate = () => {
+    if (!selectedTemplate) {
+      toast.error('الرجاء اختيار قالب أولاً');
+      return;
+    }
+    
+    const template = notificationTemplates.find(t => t.id === selectedTemplate);
+    if (!template) return;
+    
+    let filledText = template.template
+      .replace(/{fullName}/g, citizen.full_name)
+      .replace(/{nationalId}/g, citizen.national_id);
+    
+    if (customDate) {
+      const formattedDate = format(customDate, 'yyyy-MM-dd', { locale: ar });
+      filledText = filledText.replace(/{date}/g, formattedDate);
+    }
+    
+    if (customDay) {
+      const dayLabel = arabicDays.find(d => d.value === customDay)?.label || customDay;
+      filledText = filledText.replace(/{day}/g, dayLabel);
+    }
+    
+    if (customTime) {
+      filledText = filledText.replace(/{time}/g, customTime);
+    }
+    
+    setNotificationText(filledText);
+    toast.success('تم ملء القالب بنجاح');
+  };
+
+  const copyToClipboard = () => {
+    if (!notificationText) {
+      toast.error('لا يوجد نص للنسخ');
+      return;
+    }
+    
+    navigator.clipboard.writeText(notificationText);
+    toast.success('تم نسخ النص للحافظة');
+  };
+
+  const clearNotification = () => {
+    setNotificationText('');
+    setSelectedTemplate('');
+    setCustomDate(undefined);
+    setCustomDay('');
+    setCustomTime('');
+    toast.info('تم مسح النص');
+  };
+
+  const fetchNotificationHistory = async () => {
+    if (!citizen) return;
+    
+    setLoadingData(true);
+    try {
+      const { data, error } = await supabase
+        .from('official_notifications')
+        .select(`
+          *,
+          sender:profiles!official_notifications_sender_id_fkey(full_name)
+        `)
+        .eq('citizen_id', citizen.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotificationHistory(data || []);
+    } catch (error) {
+      console.error('Error fetching notification history:', error);
+      toast.error('حدث خطأ أثناء جلب سجل التبليغات');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const handleSendNotification = async () => {
+    if (!notificationText.trim()) {
+      toast.error('الرجاء إدخال نص التبليغ');
+      return;
+    }
+    
+    if (!citizen.phone) {
+      toast.error('رقم الهاتف غير متوفر');
+      return;
+    }
+
+    setSendingNotification(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) throw new Error('Profile not found');
+
+      // حفظ التبليغ في قاعدة البيانات
+      const { error: saveError } = await supabase
+        .from('official_notifications')
+        .insert({
+          citizen_id: citizen.id,
+          sender_id: profile.id,
+          notification_text: notificationText,
+          template_used: selectedTemplate || null,
+          sent_via: 'phone',
+          scheduled_date: customDate ? format(customDate, 'yyyy-MM-dd') : null,
+          scheduled_day: customDay || null,
+          scheduled_time: customTime || null,
+          status: 'sent'
+        });
+
+      if (saveError) throw saveError;
+
+      // تسجيل في tickets
+      await logTicket({
+        section: 'CID - Official Notifications',
+        action_type: 'create',
+        description: `إرسال تبليغ رسمي إلى: ${citizen.full_name} (${citizen.national_id})`,
+        metadata: {
+          citizen_id: citizen.id,
+          template_used: selectedTemplate,
+          notification_preview: notificationText.substring(0, 100) + '...'
+        }
+      });
+
+      toast.success(`تم حفظ التبليغ الرسمي`);
+      
+      // مسح النص وإغلاق Dialog
+      clearNotification();
+      setActiveDialog(null);
+
+      // خيار فتح تطبيق الهاتف أو WhatsApp
+      const shouldOpen = window.confirm(
+        `هل تريد فتح تطبيق الهاتف للاتصال بـ ${citizen.phone}؟\n\nأو اضغط "إلغاء" لفتح WhatsApp`
+      );
+      
+      if (shouldOpen) {
+        window.location.href = `tel:${citizen.phone}`;
+      } else {
+        const encodedText = encodeURIComponent(notificationText);
+        window.open(`https://wa.me/${citizen.phone.replace(/\D/g, '')}?text=${encodedText}`, '_blank');
+      }
+      
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      toast.error('حدث خطأ أثناء حفظ التبليغ');
+    } finally {
+      setSendingNotification(false);
+    }
+  };
+
   const handleActionClick = async (action: string) => {
     switch (action) {
       case 'incidents':
@@ -361,6 +600,10 @@ const CIDSuspectRecord = () => {
         break;
       case 'notification':
         setActiveDialog('notification');
+        break;
+      case 'history':
+        await fetchNotificationHistory();
+        setShowHistory(true);
         break;
       case 'close':
         await fetchClosureRequests();
@@ -529,6 +772,16 @@ const CIDSuspectRecord = () => {
             <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
               <Megaphone className="h-12 w-12 mb-4 text-primary" />
               <p className="text-sm md:text-base font-semibold text-center">إرسال تبليغ</p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-red-500"
+            onClick={() => handleActionClick('history')}
+          >
+            <CardContent className="flex flex-col items-center justify-center p-6 md:p-8">
+              <History className="h-12 w-12 mb-4 text-indigo-500" />
+              <p className="text-sm md:text-base font-semibold text-center">سجل التبليغات</p>
             </CardContent>
           </Card>
 
@@ -826,40 +1079,185 @@ const CIDSuspectRecord = () => {
       </Dialog>
 
       {/* Notification Dialog */}
-      <Dialog open={activeDialog === 'notification'} onOpenChange={() => setActiveDialog(null)}>
-        <DialogContent>
+      <Dialog open={activeDialog === 'notification'} onOpenChange={() => {
+        setActiveDialog(null);
+        clearNotification();
+      }}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Megaphone className="h-6 w-6" />
               إرسال تبليغ رسمي
             </DialogTitle>
             <DialogDescription>
-              إرسال تبليغ رسمي للمشتبه
+              اختر قالباً جاهزاً أو اكتب تبليغاً مخصصاً
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm mb-2">المستلم:</p>
-              <p className="font-semibold">{citizen.full_name}</p>
-              <p className="text-sm text-muted-foreground">{citizen.phone || 'رقم الهاتف غير متوفر'}</p>
+          <div className="space-y-6">
+            {/* معلومات المستلم */}
+            <Card className="bg-muted/50">
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">المستلم:</span>
+                    <span className="font-bold text-lg">{citizen.full_name}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">رقم الهوية:</span>
+                    <span className="font-semibold">{citizen.national_id}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">رقم الهاتف:</span>
+                    <span className={`font-semibold ${citizen.phone ? 'text-green-600' : 'text-red-600'}`}>
+                      {citizen.phone || 'غير متوفر'}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* اختيار القالب */}
+            <div className="space-y-2">
+              <Label htmlFor="template-select">اختر قالب جاهز</Label>
+              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                <SelectTrigger id="template-select">
+                  <SelectValue placeholder="-- اختر قالباً --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {notificationTemplates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Textarea
-              placeholder="نص التبليغ الرسمي..."
-              rows={4}
-            />
+
+            {/* الخيارات الإضافية للتخصيص */}
+            {selectedTemplate && (
+              <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/50">
+                <CardContent className="p-4 space-y-4">
+                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                    خيارات إضافية (اختياري)
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* التاريخ */}
+                    <div className="space-y-2">
+                      <Label>التاريخ</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-right font-normal"
+                          >
+                            <CalendarIcon className="ml-2 h-4 w-4" />
+                            {customDate ? format(customDate, 'PPP', { locale: ar }) : 'اختر التاريخ'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={customDate}
+                            onSelect={setCustomDate}
+                            locale={ar}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* اليوم */}
+                    <div className="space-y-2">
+                      <Label htmlFor="day-select">اليوم</Label>
+                      <Select value={customDay} onValueChange={setCustomDay}>
+                        <SelectTrigger id="day-select">
+                          <SelectValue placeholder="اختر اليوم" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {arabicDays.map((day) => (
+                            <SelectItem key={day.value} value={day.value}>
+                              {day.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* الوقت */}
+                    <div className="space-y-2">
+                      <Label htmlFor="time-input">الوقت</Label>
+                      <Input
+                        id="time-input"
+                        type="time"
+                        value={customTime}
+                        onChange={(e) => setCustomTime(e.target.value)}
+                        placeholder="00:00"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={fillTemplate}
+                    variant="default"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Send className="h-4 w-4 ml-2" />
+                    ملء القالب بالبيانات
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* نص التبليغ */}
+            <div className="space-y-2">
+              <Label htmlFor="notification-text">نص التبليغ الرسمي</Label>
+              <Textarea
+                id="notification-text"
+                placeholder="اختر قالباً جاهزاً أو اكتب نصاً مخصصاً..."
+                rows={10}
+                value={notificationText}
+                onChange={(e) => setNotificationText(e.target.value)}
+                className="font-arabic text-base"
+              />
+              <p className="text-xs text-muted-foreground">
+                يمكنك تعديل النص بعد ملء القالب
+              </p>
+            </div>
+
+            {/* أزرار التحكم */}
+            <div className="flex gap-2">
+              <Button
+                onClick={copyToClipboard}
+                variant="outline"
+                className="flex-1"
+                disabled={!notificationText}
+              >
+                <Copy className="h-4 w-4 ml-2" />
+                نسخ النص
+              </Button>
+              
+              <Button
+                onClick={clearNotification}
+                variant="outline"
+                className="flex-1"
+                disabled={!notificationText && !selectedTemplate}
+              >
+                <Trash2 className="h-4 w-4 ml-2" />
+                مسح الكل
+              </Button>
+            </div>
+
+            {/* زر الإرسال */}
             <Button 
               className="w-full"
-              onClick={() => {
-                if (citizen.phone) {
-                  toast.success(`سيتم إرسال تبليغ رسمي إلى ${citizen.phone}`);
-                  setActiveDialog(null);
-                } else {
-                  toast.error('رقم الهاتف غير متوفر');
-                }
-              }}
+              onClick={handleSendNotification}
+              disabled={!notificationText.trim() || !citizen.phone || sendingNotification}
             >
-              إرسال التبليغ
+              <Send className="h-4 w-4 ml-2" />
+              {sendingNotification ? 'جارٍ الحفظ...' : 'حفظ وإرسال التبليغ'}
             </Button>
           </div>
         </DialogContent>
@@ -1181,6 +1579,142 @@ const CIDSuspectRecord = () => {
               )}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notification History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-6 w-6" />
+              سجل التبليغات الرسمية
+            </DialogTitle>
+            <DialogDescription>
+              جميع التبليغات المرسلة لـ {citizen.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {loadingData ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full" />
+              ))}
+            </div>
+          ) : notificationHistory.length > 0 ? (
+            <div className="space-y-4">
+              {notificationHistory.map((notification, index) => (
+                <Card key={notification.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            #{index + 1}
+                          </Badge>
+                          {notification.template_used && (
+                            <Badge variant="secondary" className="text-xs">
+                              {notificationTemplates.find(t => t.id === notification.template_used)?.title || 'قالب مخصص'}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" />
+                            {new Date(notification.created_at).toLocaleDateString('ar-SA')}
+                          </span>
+                          <span>
+                            {new Date(notification.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                      <Badge variant={
+                        notification.status === 'sent' ? 'default' :
+                        notification.status === 'delivered' ? 'secondary' :
+                        notification.status === 'read' ? 'outline' : 'destructive'
+                      }>
+                        {notification.status === 'sent' ? 'تم الإرسال' :
+                         notification.status === 'delivered' ? 'تم التسليم' :
+                         notification.status === 'read' ? 'تمت القراءة' : 'فشل'}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">المرسل</p>
+                        <p className="font-semibold">{notification.sender?.full_name || 'غير معروف'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">طريقة الإرسال</p>
+                        <p className="font-semibold">
+                          {notification.sent_via === 'phone' ? '📞 هاتف' :
+                           notification.sent_via === 'sms' ? '💬 SMS' :
+                           notification.sent_via === 'whatsapp' ? '📱 WhatsApp' :
+                           notification.sent_via === 'email' ? '📧 بريد' : notification.sent_via}
+                        </p>
+                      </div>
+                      {notification.scheduled_date && (
+                        <div>
+                          <p className="text-muted-foreground text-xs">التاريخ المحدد</p>
+                          <p className="font-semibold">{notification.scheduled_date}</p>
+                        </div>
+                      )}
+                      {notification.scheduled_time && (
+                        <div>
+                          <p className="text-muted-foreground text-xs">الوقت المحدد</p>
+                          <p className="font-semibold">{notification.scheduled_time}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t pt-3">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">نص التبليغ:</p>
+                      <div className="bg-muted/50 p-3 rounded-md">
+                        <p className="text-sm whitespace-pre-wrap font-arabic leading-relaxed">
+                          {notification.notification_text}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(notification.notification_text);
+                          toast.success('تم نسخ النص');
+                        }}
+                      >
+                        <Copy className="h-3 w-3 ml-1" />
+                        نسخ
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setNotificationText(notification.notification_text);
+                          setSelectedTemplate(notification.template_used || '');
+                          setShowHistory(false);
+                          setActiveDialog('notification');
+                          toast.info('تم استرجاع النص');
+                        }}
+                      >
+                        <Send className="h-3 w-3 ml-1" />
+                        إعادة إرسال
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <History className="h-16 w-16 mx-auto mb-4 opacity-20" />
+              <p className="text-lg font-semibold">لا توجد تبليغات سابقة</p>
+              <p className="text-sm mt-2">لم يتم إرسال أي تبليغ رسمي لهذا المشتبه حتى الآن</p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
