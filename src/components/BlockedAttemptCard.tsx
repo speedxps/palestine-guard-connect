@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Smartphone, 
   Clock, 
@@ -36,16 +38,11 @@ interface BlockedAttemptCardProps {
 }
 
 export const BlockedAttemptCard = ({ attempt, onApprove, onBlacklist }: BlockedAttemptCardProps) => {
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const deviceInfo = attempt.device_info || {};
   const deviceName = deviceInfo.deviceName || 
     `${deviceInfo.browser || 'متصفح غير معروف'} على ${deviceInfo.os || 'نظام غير معروف'}`;
-
-  const openLocationOnMap = () => {
-    if (attempt.geolocation) {
-      const { latitude, longitude } = attempt.geolocation;
-      window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, '_blank');
-    }
-  };
 
   return (
     <Card className="border-destructive/20 bg-destructive/5">
@@ -101,11 +98,17 @@ export const BlockedAttemptCard = ({ attempt, onApprove, onBlacklist }: BlockedA
             <Button
               variant="outline"
               size="sm"
-              onClick={openLocationOnMap}
+              onClick={() => {
+                setSelectedLocation({
+                  lat: attempt.geolocation!.latitude,
+                  lng: attempt.geolocation!.longitude
+                });
+                setMapDialogOpen(true);
+              }}
               className="w-full"
             >
               <MapPin className="h-4 w-4 ml-2" />
-              عرض الموقع على الخريطة
+              عرض موقعي
             </Button>
           ) : (
             <div className="p-3 bg-muted rounded-md text-center">
@@ -136,7 +139,26 @@ export const BlockedAttemptCard = ({ attempt, onApprove, onBlacklist }: BlockedA
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
-  );
-};
+        </CardContent>
+
+        {/* Map Dialog */}
+        <Dialog open={mapDialogOpen} onOpenChange={setMapDialogOpen}>
+          <DialogContent className="max-w-4xl h-[600px]">
+            <DialogHeader>
+              <DialogTitle>موقع تسجيل الدخول</DialogTitle>
+            </DialogHeader>
+            {selectedLocation && (
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=15&output=embed`}
+                allowFullScreen
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </Card>
+    );
+  };

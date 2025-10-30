@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Trash2, Smartphone, Clock, Hash, MapPin, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Eye, Trash2, Smartphone, Clock, Hash, MapPin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { DeviceToggleButton } from './DeviceToggleButton';
@@ -30,6 +32,9 @@ interface DeviceCardProps {
 }
 
 export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, isDeleting }: DeviceCardProps) => {
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
   const isMobile = device.device_info?.platform?.toLowerCase().includes('mobile') || 
                    device.device_info?.platform?.toLowerCase().includes('android') ||
                    device.device_info?.platform?.toLowerCase().includes('ios');
@@ -140,13 +145,13 @@ export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, 
               onClick={() => {
                 const lat = device.device_info.geolocation.latitude;
                 const lng = device.device_info.geolocation.longitude;
-                window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+                setSelectedLocation({ lat, lng });
+                setMapDialogOpen(true);
               }}
               className="w-full"
             >
               <MapPin className="h-4 w-4 ml-2" />
-              عرض الموقع على الخريطة
-              <ExternalLink className="h-3 w-3 mr-2" />
+              عرض موقعي
             </Button>
           ) : (
             <div className="p-2 bg-muted rounded-md text-center">
@@ -185,6 +190,25 @@ export const DeviceCard = ({ device, userId, onViewDetails, onDelete, onToggle, 
           </div>
         </div>
       </CardContent>
+
+      {/* Map Dialog */}
+      <Dialog open={mapDialogOpen} onOpenChange={setMapDialogOpen}>
+        <DialogContent className="max-w-4xl h-[600px]">
+          <DialogHeader>
+            <DialogTitle>موقع تسجيل الدخول</DialogTitle>
+          </DialogHeader>
+          {selectedLocation && (
+            <iframe
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              style={{ border: 0 }}
+              src={`https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=15&output=embed`}
+              allowFullScreen
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
