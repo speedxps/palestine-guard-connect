@@ -31,25 +31,31 @@ export const SimpleFaceLoginVerify = ({ onSuccess, onCancel }: SimpleFaceLoginVe
         videoRef.current.srcObject = stream;
         console.log('✅ تم تعيين stream للفيديو');
         
-        // Try to play immediately
-        try {
-          await videoRef.current.play();
-          console.log('✅ الفيديو يعمل الآن');
-        } catch (playError) {
-          console.log('⚠️ محاولة ثانية للتشغيل...');
-          setTimeout(async () => {
-            try {
-              await videoRef.current?.play();
-              console.log('✅ الفيديو يعمل بعد المحاولة الثانية');
-            } catch (e) {
-              console.error('❌ فشل تشغيل الفيديو:', e);
-            }
-          }, 100);
-        }
+        // Wait for video to be ready then play
+        videoRef.current.onloadedmetadata = () => {
+          console.log('📹 Video metadata loaded');
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => {
+                console.log('✅ الفيديو يعمل الآن');
+              })
+              .catch((err) => {
+                console.error('❌ خطأ في تشغيل الفيديو:', err);
+              });
+          }
+        };
+
+        // Also try to play immediately as a fallback
+        setTimeout(() => {
+          if (videoRef.current && videoRef.current.paused) {
+            console.log('⚠️ محاولة تشغيل الفيديو مباشرة...');
+            videoRef.current.play().catch(e => console.error('Failed to play:', e));
+          }
+        }, 100);
       }
       setIsCapturing(true);
     } catch (error) {
-      console.error('خطأ في فتح الكاميرا:', error);
+      console.error('❌ خطأ في فتح الكاميرا:', error);
     }
   };
 
