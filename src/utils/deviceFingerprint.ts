@@ -39,6 +39,10 @@ export interface DeviceInfo {
   fonts: string[];
   plugins: string[];
   audio: string;
+  geolocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
 }
 
 export interface DeviceFingerprint {
@@ -238,6 +242,20 @@ async function getGeolocation(): Promise<{ latitude: number; longitude: number }
 export async function generateDeviceFingerprint(): Promise<DeviceFingerprint> {
   const { name: browserName, version: browserVersion, os: osName, osVersion } = parseUserAgent();
 
+  // Get geolocation FIRST with better error handling
+  let geolocation: { latitude: number; longitude: number } | null = null;
+  try {
+    console.log('🌍 Requesting geolocation permission...');
+    geolocation = await getGeolocation();
+    if (geolocation) {
+      console.log('✅ Geolocation obtained:', geolocation);
+    } else {
+      console.log('⚠️ Geolocation not available (user may have denied permission)');
+    }
+  } catch (error) {
+    console.error('❌ Geolocation error:', error);
+  }
+
   const deviceInfo: DeviceInfo = {
     screen: {
       width: window.screen.width,
@@ -277,6 +295,7 @@ export async function generateDeviceFingerprint(): Promise<DeviceFingerprint> {
     fonts: getInstalledFonts(),
     plugins: getPlugins(),
     audio: getAudioFingerprint(),
+    geolocation: geolocation,
   };
 
   // Generate unique fingerprint hash
