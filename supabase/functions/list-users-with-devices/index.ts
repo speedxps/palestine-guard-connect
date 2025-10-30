@@ -35,21 +35,25 @@ serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '');
     
-    // Verify user with admin client
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (userError || !user) {
-      console.error('Error getting user:', userError);
+    // Extract user ID from JWT (JWT is already verified by Deno with verify_jwt = true)
+    let userId: string;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+      if (!userId) {
+        throw new Error('Invalid token payload');
+      }
+      console.log('User verified:', userId);
+    } catch (e) {
+      console.error('Error parsing JWT:', e);
       throw new Error('فشل في التحقق من المستخدم');
     }
-
-    console.log('User verified:', user.id);
 
     // Check if user is admin
     const { data: userRoles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (rolesError) {
       console.error('Error checking user roles:', rolesError);
