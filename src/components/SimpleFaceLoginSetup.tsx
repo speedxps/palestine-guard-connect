@@ -29,6 +29,17 @@ export const SimpleFaceLoginSetup = ({ onSuccess, onCancel }: SimpleFaceLoginSet
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        // Wait for video metadata to load then play
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current?.play();
+            console.log('✅ الكاميرا تعمل بنجاح');
+          } catch (playError) {
+            console.error('خطأ في تشغيل الفيديو:', playError);
+            toast.error('فشل في تشغيل الكاميرا');
+          }
+        };
       }
       setIsCapturing(true);
     } catch (error) {
