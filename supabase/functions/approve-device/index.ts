@@ -76,22 +76,22 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { attemptId, userId, deviceFingerprint, deviceInfo } = await req.json();
+    const { attemptId, userId: targetUserId, deviceFingerprint, deviceInfo } = await req.json();
 
-    if (!attemptId || !userId || !deviceFingerprint) {
+    if (!attemptId || !targetUserId || !deviceFingerprint) {
       return new Response(JSON.stringify({ error: 'معلومات غير مكتملة' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Approving device for user ${userId}`);
+    console.log(`Approving device for user ${targetUserId}`);
 
     // Check if device already exists
     const { data: existingDevice, error: checkError } = await supabaseAdmin
       .from('user_devices')
       .select('id')
-      .eq('user_id', userId)
+      .eq('user_id', targetUserId)
       .eq('device_fingerprint', deviceFingerprint)
       .single();
 
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
       const { error: insertError } = await supabaseAdmin
         .from('user_devices')
         .insert({
-          user_id: userId,
+          user_id: targetUserId,
           device_fingerprint: deviceFingerprint,
           device_info: deviceInfo,
           is_active: true,
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
     await supabaseAdmin
       .from('device_access_log')
       .insert({
-        user_id: userId,
+        user_id: targetUserId,
         device_fingerprint: deviceFingerprint,
         access_type: 'admin_approval',
         was_allowed: true,
