@@ -116,6 +116,7 @@ import InterDepartmentCommunication from "@/pages/InterDepartmentCommunication";
 import UserGuide from "@/pages/UserGuide";
 import PrintGuidePage from "@/pages/PrintGuide";
 import BatchFaceProcessing from "@/pages/BatchFaceProcessing";
+import FaceLoginSetup from "@/pages/FaceLoginSetup";
 
 const queryClient = new QueryClient();
 
@@ -203,6 +204,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <ProfileWithHistory />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/face-login-setup"
+                  element={
+                    <ProtectedRoute>
+                      <FaceLoginSetup />
                     </ProtectedRoute>
                   }
                 />

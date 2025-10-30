@@ -12,14 +12,15 @@ import { TwoFactorSetupModal } from '@/components/TwoFactorSetupModal';
 import { SimpleFaceLoginSetup } from '@/components/SimpleFaceLoginSetup';
 import { BiometricSetupButton } from '@/components/BiometricSetupButton';
 import { supabase } from '@/integrations/supabase/client';
-import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode, Camera, Trash2 } from 'lucide-react';
+import { Lock, Save, Key, Shield, Fingerprint, Smartphone, QrCode, Camera, Trash2, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const SecuritySettings = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
-  const [showFaceSetup, setShowFaceSetup] = useState(false);
   const { isEnabled: twoFactorEnabled, disable: disableTwoFactor } = useTwoFactorAuth();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [faceLoginEnabled, setFaceLoginEnabled] = useState(false);
@@ -59,27 +60,10 @@ export const SecuritySettings = () => {
     }
   };
 
-  const handleFaceLoginSuccess = async () => {
-    setFaceLoginEnabled(true);
-    localStorage.setItem('faceLoginEnabled', 'true');
-    
-    // Also update database
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
-        .from('profiles')
-        .update({ face_login_enabled: true })
-        .eq('user_id', user.id);
-    }
-    
-    setShowFaceSetup(false);
-    toast({
-      title: "✅ تم تفعيل تسجيل الدخول بالوجه",
-      description: "يمكنك الآن استخدام وجهك لتسجيل الدخول",
-    });
-  };
-
   const handleDisableFaceLogin = async () => {
+    const confirmed = window.confirm('هل أنت متأكد من تعطيل تسجيل الدخول بالوجه؟');
+    if (!confirmed) return;
+
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       // تعطيل في قاعدة البيانات
@@ -87,9 +71,8 @@ export const SecuritySettings = () => {
         .from('profiles')
         .update({ 
           face_login_enabled: false,
-          face_registered_at: null
         })
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (updateError) {
         console.error('خطأ في تحديث قاعدة البيانات:', updateError);
@@ -315,15 +298,16 @@ export const SecuritySettings = () => {
                   <Label className="font-arabic text-sm">تسجيل الدخول بالوجه</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  {faceLoginEnabled && (
+                  {faceLoginEnabled ? (
                     <>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setShowFaceSetup(true)}
-                        className="text-xs"
+                        onClick={() => navigate('/face-login-setup')}
+                        className="text-xs gap-1"
                       >
-                        إعادة التسجيل
+                        <Camera className="h-3 w-3" />
+                        إدارة
                       </Button>
                       <Button
                         size="sm"
@@ -334,14 +318,14 @@ export const SecuritySettings = () => {
                         تعطيل
                       </Button>
                     </>
-                  )}
-                  {!faceLoginEnabled && (
+                  ) : (
                     <Button
                       size="sm"
-                      onClick={() => setShowFaceSetup(true)}
-                      className="text-xs bg-purple-500 hover:bg-purple-600"
+                      onClick={() => navigate('/face-login-setup')}
+                      className="text-xs bg-purple-500 hover:bg-purple-600 gap-1"
                     >
-                      إعداد
+                      <Camera className="h-3 w-3" />
+                      إعداد الآن
                     </Button>
                   )}
                 </div>
@@ -436,21 +420,6 @@ export const SecuritySettings = () => {
           onClose={() => setShowTwoFactorSetup(false)}
           onSuccess={handleTwoFactorSuccess}
         />
-        
-        {/* Face Login Setup Dialog */}
-        {showFaceSetup && (
-          <Dialog open={showFaceSetup} onOpenChange={setShowFaceSetup}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="font-arabic">إعداد تسجيل الدخول بالوجه</DialogTitle>
-              </DialogHeader>
-              <SimpleFaceLoginSetup
-                onSuccess={handleFaceLoginSuccess}
-                onCancel={() => setShowFaceSetup(false)}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
     </Dialog>
   );
 };
