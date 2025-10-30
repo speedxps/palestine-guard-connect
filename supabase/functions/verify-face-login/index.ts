@@ -33,6 +33,11 @@ serve(async (req) => {
 
     console.log("🔍 بدء التحقق من الوجه للدخول...");
 
+    // Ensure image has proper data URL prefix
+    const imageDataUrl = imageBase64.startsWith('data:') 
+      ? imageBase64 
+      : `data:image/jpeg;base64,${imageBase64}`;
+
     // المرحلة 1: التحقق من وجود وجه في الصورة
     const verificationPrompt = `هل يوجد وجه واضح لإنسان في هذه الصورة؟
 أجب بـ "نعم" أو "لا" فقط.
@@ -51,7 +56,7 @@ serve(async (req) => {
             role: "user",
             content: [
               { type: "text", text: verificationPrompt },
-              { type: "image_url", image_url: { url: imageBase64 } }
+              { type: "image_url", image_url: { url: imageDataUrl } }
             ]
           }
         ],
@@ -102,7 +107,7 @@ serve(async (req) => {
             role: "user",
             content: [
               { type: "text", text: descriptionPrompt },
-              { type: "image_url", image_url: { url: imageBase64 } }
+              { type: "image_url", image_url: { url: imageDataUrl } }
             ]
           }
         ],
