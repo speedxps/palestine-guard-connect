@@ -13,9 +13,13 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const body = await req.json();
+    console.log('📦 Request body received:', { hasImageBase64: !!body.imageBase64, bodyKeys: Object.keys(body) });
+    
+    const { imageBase64 } = body;
     
     if (!imageBase64) {
+      console.error('❌ No imageBase64 in request body');
       return new Response(
         JSON.stringify({ success: false, error: 'لم يتم إرسال صورة' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
