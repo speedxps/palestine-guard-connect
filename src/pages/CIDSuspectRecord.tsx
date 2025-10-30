@@ -119,6 +119,7 @@ const CIDSuspectRecord = () => {
   const [notificationHistory, setNotificationHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [sendingNotification, setSendingNotification] = useState(false);
+  const [showSendOptions, setShowSendOptions] = useState(false);
   
   const { searchFaces } = useFaceRecognition();
   const { logTicket } = useTickets();
@@ -550,21 +551,9 @@ const CIDSuspectRecord = () => {
 
       toast.success(`تم حفظ التبليغ الرسمي`);
       
-      // مسح النص وإغلاق Dialog
-      clearNotification();
+      // فتح نافذة اختيار طريقة الإرسال
       setActiveDialog(null);
-
-      // خيار فتح تطبيق الهاتف أو WhatsApp
-      const shouldOpen = window.confirm(
-        `هل تريد فتح تطبيق الهاتف للاتصال بـ ${citizen.phone}؟\n\nأو اضغط "إلغاء" لفتح WhatsApp`
-      );
-      
-      if (shouldOpen) {
-        window.location.href = `tel:${citizen.phone}`;
-      } else {
-        const encodedText = encodeURIComponent(notificationText);
-        window.open(`https://wa.me/${citizen.phone.replace(/\D/g, '')}?text=${encodedText}`, '_blank');
-      }
+      setShowSendOptions(true);
       
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -1584,123 +1573,107 @@ const CIDSuspectRecord = () => {
 
       {/* Notification History Dialog */}
       <Dialog open={showHistory} onOpenChange={setShowHistory}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="h-6 w-6" />
-              سجل التبليغات الرسمية
-            </DialogTitle>
+            <DialogTitle className="text-2xl">📋 سجل التبليغات الرسمية</DialogTitle>
             <DialogDescription>
-              جميع التبليغات المرسلة لـ {citizen.full_name}
+              جميع التبليغات المرسلة إلى: {citizen.full_name}
             </DialogDescription>
           </DialogHeader>
-          
+
           {loadingData ? (
             <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full" />
+              {[1, 2, 3].map(i => (
+                <div key={i} className="border rounded-lg p-4">
+                  <Skeleton className="h-4 w-1/3 mb-2" />
+                  <Skeleton className="h-3 w-1/2 mb-2" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
               ))}
             </div>
-          ) : notificationHistory.length > 0 ? (
+          ) : notificationHistory.length === 0 ? (
+            <div className="text-center py-12">
+              <History className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <p className="text-gray-500">لا توجد تبليغات مرسلة حتى الآن</p>
+            </div>
+          ) : (
             <div className="space-y-4">
-              {notificationHistory.map((notification, index) => (
-                <Card key={notification.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            #{index + 1}
-                          </Badge>
-                          {notification.template_used && (
-                            <Badge variant="secondary" className="text-xs">
-                              {notificationTemplates.find(t => t.id === notification.template_used)?.title || 'قالب مخصص'}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <CalendarIcon className="h-3 w-3" />
-                            {new Date(notification.created_at).toLocaleDateString('ar-SA')}
-                          </span>
-                          <span>
-                            {new Date(notification.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge variant={
-                        notification.status === 'sent' ? 'default' :
-                        notification.status === 'delivered' ? 'secondary' :
-                        notification.status === 'read' ? 'outline' : 'destructive'
-                      }>
-                        {notification.status === 'sent' ? 'تم الإرسال' :
-                         notification.status === 'delivered' ? 'تم التسليم' :
-                         notification.status === 'read' ? 'تمت القراءة' : 'فشل'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              {notificationHistory.map((notification) => (
+                <Card key={notification.id} className="border-2">
+                  <CardContent className="p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
-                        <p className="text-muted-foreground text-xs">المرسل</p>
+                        <p className="text-sm text-gray-600">المرسل</p>
                         <p className="font-semibold">{notification.sender?.full_name || 'غير معروف'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground text-xs">طريقة الإرسال</p>
-                        <p className="font-semibold">
-                          {notification.sent_via === 'phone' ? '📞 هاتف' :
-                           notification.sent_via === 'sms' ? '💬 SMS' :
-                           notification.sent_via === 'whatsapp' ? '📱 WhatsApp' :
-                           notification.sent_via === 'email' ? '📧 بريد' : notification.sent_via}
-                        </p>
+                        <p className="text-sm text-gray-600">طريقة الإرسال</p>
+                        <Badge variant={notification.sent_via === 'whatsapp' ? 'default' : 'secondary'}>
+                          {notification.sent_via === 'whatsapp' ? '📱 واتساب' : 
+                           notification.sent_via === 'sms' ? '💬 رسالة نصية' : '☎️ هاتف'}
+                        </Badge>
                       </div>
                       {notification.scheduled_date && (
                         <div>
-                          <p className="text-muted-foreground text-xs">التاريخ المحدد</p>
+                          <p className="text-sm text-gray-600">التاريخ المحدد</p>
                           <p className="font-semibold">{notification.scheduled_date}</p>
+                        </div>
+                      )}
+                      {notification.scheduled_day && (
+                        <div>
+                          <p className="text-sm text-gray-600">اليوم</p>
+                          <p className="font-semibold">{notification.scheduled_day}</p>
                         </div>
                       )}
                       {notification.scheduled_time && (
                         <div>
-                          <p className="text-muted-foreground text-xs">الوقت المحدد</p>
+                          <p className="text-sm text-gray-600">الوقت</p>
                           <p className="font-semibold">{notification.scheduled_time}</p>
                         </div>
                       )}
-                    </div>
-
-                    <div className="border-t pt-3">
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">نص التبليغ:</p>
-                      <div className="bg-muted/50 p-3 rounded-md">
-                        <p className="text-sm whitespace-pre-wrap font-arabic leading-relaxed">
-                          {notification.notification_text}
+                      <div>
+                        <p className="text-sm text-gray-600">تاريخ الإرسال</p>
+                        <p className="font-semibold">
+                          {new Date(notification.created_at).toLocaleDateString('ar-EG', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </p>
                       </div>
                     </div>
+                    
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-sm text-gray-600 mb-2">نص التبليغ:</p>
+                      <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap text-sm">
+                        {notification.notification_text}
+                      </div>
+                    </div>
 
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-2 mt-4">
                       <Button
-                        size="sm"
                         variant="outline"
+                        size="sm"
                         onClick={() => {
                           navigator.clipboard.writeText(notification.notification_text);
                           toast.success('تم نسخ النص');
                         }}
                       >
-                        <Copy className="h-3 w-3 ml-1" />
-                        نسخ
+                        <Copy className="h-4 w-4 mr-2" />
+                        نسخ النص
                       </Button>
                       <Button
-                        size="sm"
                         variant="outline"
+                        size="sm"
                         onClick={() => {
                           setNotificationText(notification.notification_text);
-                          setSelectedTemplate(notification.template_used || '');
                           setShowHistory(false);
                           setActiveDialog('notification');
-                          toast.info('تم استرجاع النص');
                         }}
                       >
-                        <Send className="h-3 w-3 ml-1" />
+                        <Send className="h-4 w-4 mr-2" />
                         إعادة إرسال
                       </Button>
                     </div>
@@ -1708,16 +1681,114 @@ const CIDSuspectRecord = () => {
                 </Card>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <History className="h-16 w-16 mx-auto mb-4 opacity-20" />
-              <p className="text-lg font-semibold">لا توجد تبليغات سابقة</p>
-              <p className="text-sm mt-2">لم يتم إرسال أي تبليغ رسمي لهذا المشتبه حتى الآن</p>
-            </div>
           )}
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* Send Options Dialog */}
+      <Dialog open={showSendOptions} onOpenChange={(open) => {
+        setShowSendOptions(open);
+        if (!open) {
+          clearNotification();
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-center">📤 اختر طريقة الإرسال</DialogTitle>
+            <DialogDescription className="text-center">
+              تم حفظ التبليغ بنجاح. اختر الطريقة لإرسال الرسالة:
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-green-500"
+              onClick={() => {
+                const encodedText = encodeURIComponent(notificationText);
+                const phoneNumber = citizen.phone.replace(/\D/g, '');
+                window.open(`https://wa.me/${phoneNumber}?text=${encodedText}`, '_blank');
+                setShowSendOptions(false);
+                clearNotification();
+              }}
+            >
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="bg-green-500 text-white p-3 rounded-full">
+                  <Megaphone className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg">إرسال عبر واتساب</p>
+                  <p className="text-sm text-gray-600">فتح محادثة واتساب مع الرسالة</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-blue-500"
+              onClick={() => {
+                const encodedText = encodeURIComponent(notificationText);
+                const phoneNumber = citizen.phone.replace(/\D/g, '');
+                window.location.href = `sms:${phoneNumber}?body=${encodedText}`;
+                setShowSendOptions(false);
+                clearNotification();
+              }}
+            >
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="bg-blue-500 text-white p-3 rounded-full">
+                  <Send className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg">إرسال رسالة نصية SMS</p>
+                  <p className="text-sm text-gray-600">فتح تطبيق الرسائل مع النص</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-orange-500"
+              onClick={() => {
+                window.location.href = `tel:${citizen.phone}`;
+                setShowSendOptions(false);
+                clearNotification();
+              }}
+            >
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="bg-orange-500 text-white p-3 rounded-full">
+                  <Phone className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg">اتصال هاتفي</p>
+                  <p className="text-sm text-gray-600">الاتصال مباشرة بـ {citizen.phone}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                navigator.clipboard.writeText(notificationText);
+                toast.success('تم نسخ النص للحافظة');
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              نسخ النص فقط
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex-1"
+              onClick={() => {
+                setShowSendOptions(false);
+                clearNotification();
+              }}
+            >
+              إلغاء
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      </div>
   );
 };
 
