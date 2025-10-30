@@ -14,28 +14,37 @@ Deno.serve(async (req) => {
   try {
     console.log('Approve device request received');
 
-    // Initialize Supabase Admin Client
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    // Initialize Supabase clients
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    // Get and verify JWT token
+    // Get JWT token from header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('لا يوجد تصريح دخول');
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify user with admin client
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    // Create client with user's token for authentication
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+      auth: {
+        persistSession: false,
+      },
+    });
+
+    // Create admin client for privileged operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
       console.error('Error getting user:', userError);

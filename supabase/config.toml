@@ -1,5 +1,8 @@
 project_id = "ldhgwqeuvbvlmvyywmaf"
 
+[env]
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkaGd3cWV1dmJ2bG12eXl3bWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMzUxNjcsImV4cCI6MjA2OTgxMTE2N30.wsi9hbvktGcQSQ7FR6-IyZcXW3ZWRIW4S-EiKp_VW1I"
+
 [functions.list-users-with-devices]
 verify_jwt = true
 
