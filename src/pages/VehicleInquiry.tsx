@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { PrintService } from '@/components/PrintService';
 import { BackButton } from '@/components/BackButton';
 import { useTickets } from '@/hooks/useTickets';
+import policeLogo from '@/assets/police-logo.png';
 
 interface VehicleData {
   id: string;
@@ -456,6 +457,7 @@ export default function VehicleInquiry() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <BackButton />
+          <img src={policeLogo} alt="شعار الشرطة" className="h-16 w-16 object-contain" />
           <h1 className="text-3xl font-bold text-foreground">الإستعلام عن المركبات</h1>
         </div>
       </div>

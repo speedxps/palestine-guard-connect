@@ -12,6 +12,7 @@ import { Scale, Search, Plus, Eye, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import policeLogo from '@/assets/police-logo.png';
 
 const JudicialCaseSearch = () => {
   const navigate = useNavigate();
@@ -162,6 +163,7 @@ const JudicialCaseSearch = () => {
             <BackButton to="/department/judicial-police" />
             
             <div className="flex items-center gap-3">
+              <img src={policeLogo} alt="شعار الشرطة" className="h-12 w-12 object-contain" />
               <Scale className="h-8 w-8 text-primary" />
               <h1 className="text-xl md:text-2xl font-bold">البحث عن القضايا القضائية</h1>
             </div>

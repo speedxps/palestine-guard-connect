@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/BackButton';
+import policeLogo from '@/assets/police-logo.png';
 
 const TrafficCitizenSearch = () => {
   const navigate = useNavigate();
@@ -57,7 +58,10 @@ const TrafficCitizenSearch = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <BackButton />
-          <h1 className="text-3xl font-bold text-primary">سجل المواطنين المركزي</h1>
+          <div className="flex items-center gap-4">
+            <img src={policeLogo} alt="شعار الشرطة" className="h-16 w-16 object-contain" />
+            <h1 className="text-3xl font-bold text-primary">سجل المواطنين المركزي</h1>
+          </div>
           <div />
         </div>
 

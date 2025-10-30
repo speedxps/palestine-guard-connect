@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Download, Filter, Database } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
+import policeLogo from '@/assets/police-logo.png';
 
 interface CrossingRecord {
   id: string;
@@ -34,6 +35,7 @@ export default function BordersDatabase() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-4 mb-8">
           <BackButton />
+          <img src={policeLogo} alt="شعار الشرطة" className="h-16 w-16 object-contain" />
           <div className="flex-1">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
               قاعدة بيانات العبور
