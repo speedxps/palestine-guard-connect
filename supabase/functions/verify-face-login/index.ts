@@ -326,16 +326,64 @@ serve(async (req) => {
 
     console.log(`✅ تم العثور على تطابق! المستخدم: ${userEmail}, التشابه: ${bestMatch.similarity}%`);
 
-    // إنشاء session token للمستخدم باستخدام magiclink
-    console.log('🔑 إنشاء magic link للمستخدم...');
+    // إنشاء session باستخدام admin API مباشرة
+    console.log('🔑 إنشاء session للمستخدم...');
     
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+    // Get user details
+    const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+    
+    if (usersError) {
+      console.error('❌ خطأ في جلب بيانات المستخدم:', usersError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'فشل في التحقق من المستخدم'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      );
+    }
+
+    const user = users?.find(u => u.email === userEmail);
+    if (!user) {
+      console.error('❌ المستخدم غير موجود');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'المستخدم غير موجود'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404
+        }
+      );
+    }
+
+    // Create session using service role
+    const adminAuthClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    // Generate access token
+    const { data: sessionData, error: sessionError } = await adminAuthClient.auth.admin.generateLink({
       type: 'magiclink',
-      email: userEmail
+      email: userEmail,
+      options: {
+        redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/verify`
+      }
     });
 
-    if (linkError || !linkData) {
-      console.error('❌ خطأ في إنشاء magic link:', linkError);
+    if (sessionError || !sessionData) {
+      console.error('❌ خطأ في إنشاء session:', sessionError);
       return new Response(
         JSON.stringify({
           success: false,
@@ -348,21 +396,17 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Magic link created, hashed_token available');
+    // Extract tokens from the generated link
+    const url = new URL(sessionData.properties.action_link);
+    const accessToken = url.searchParams.get('access_token');
+    const refreshToken = url.searchParams.get('refresh_token');
 
-    // استخدام hashed_token مع verifyOtp لإنشاء session
-    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-      email: userEmail,
-      token: linkData.properties.hashed_token,
-      type: 'magiclink'
-    });
-
-    if (verifyError || !verifyData.session) {
-      console.error('❌ خطأ في التحقق من OTP:', verifyError);
+    if (!accessToken || !refreshToken) {
+      console.error('❌ فشل في استخراج tokens من الرابط');
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'فشل في التحقق من الجلسة'
+          error: 'فشل في إنشاء الجلسة'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -370,9 +414,6 @@ serve(async (req) => {
         }
       );
     }
-
-    const accessToken = verifyData.session.access_token;
-    const refreshToken = verifyData.session.refresh_token;
 
     console.log('✅ Session tokens created successfully:', {
       hasAccessToken: !!accessToken,
