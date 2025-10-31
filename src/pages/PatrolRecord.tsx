@@ -87,41 +87,49 @@ const PatrolRecord = () => {
   const fetchIncidents = async () => {
     if (!patrol) return;
     setLoadingData(true);
-    supabase
-      .from('incidents')
-      .select('*')
-      .eq('assigned_patrol_id', patrol.id)
-      .order('created_at', { ascending: false })
-      .limit(20)
-      .then((result: any) => {
-        if (result.error) {
-          console.error('Error fetching incidents:', result.error);
-          toast.error('حدث خطأ أثناء جلب البلاغات');
-        } else {
-          setIncidents(result.data || []);
-        }
-        setLoadingData(false);
-      });
+    try {
+      const result = await (supabase as any)
+        .from('incidents')
+        .select('*')
+        .eq('assigned_patrol_id', patrol.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (result.error) {
+        console.error('Error fetching incidents:', result.error);
+        toast.error('حدث خطأ أثناء جلب البلاغات');
+      } else {
+        setIncidents(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const fetchNotifications = async () => {
     if (!patrol) return;
     setLoadingData(true);
-    supabase
-      .from('official_notifications')
-      .select('*')
-      .eq('context_type', 'patrol')
-      .eq('context_id', patrol.id)
-      .order('created_at', { ascending: false })
-      .then((result: any) => {
-        if (result.error) {
-          console.error('Error:', result.error);
-          toast.error('حدث خطأ أثناء جلب التبليغات');
-        } else {
-          setNotifications(result.data || []);
-        }
-        setLoadingData(false);
-      });
+    try {
+      const result = await (supabase as any)
+        .from('official_notifications')
+        .select('*')
+        .eq('context_type', 'patrol')
+        .eq('context_id', patrol.id)
+        .order('created_at', { ascending: false });
+      
+      if (result.error) {
+        console.error('Error:', result.error);
+        toast.error('حدث خطأ أثناء جلب التبليغات');
+      } else {
+        setNotifications(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const fetchActivities = async () => {

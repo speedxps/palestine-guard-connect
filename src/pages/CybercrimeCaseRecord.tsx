@@ -102,18 +102,22 @@ const CybercrimeCaseRecord = () => {
   const fetchNotifications = async () => {
     if (!cyberCase) return;
     setLoadingData(true);
-    supabase
-      .from('official_notifications')
-      .select('*')
-      .eq('context_type', 'cybercrime_case')
-      .eq('context_id', cyberCase.id)
-      .order('created_at', { ascending: false })
-      .then((result: any) => {
-        if (!result.error) {
-          setNotifications(result.data || []);
-        }
-        setLoadingData(false);
-      });
+    try {
+      const result = await (supabase as any)
+        .from('official_notifications')
+        .select('*')
+        .eq('context_type', 'cybercrime_case')
+        .eq('context_id', cyberCase.id)
+        .order('created_at', { ascending: false });
+      
+      if (!result.error) {
+        setNotifications(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const fetchInvestigations = async () => {
