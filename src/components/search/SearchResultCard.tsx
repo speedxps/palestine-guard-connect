@@ -77,7 +77,8 @@ const getTypeColor = (type: string) => {
 const getNavigationPath = (result: SearchResult) => {
   switch (result.type) {
     case 'citizen':
-      return `/department/cid/suspect-record/${result.id}`;
+      // الانتقال للملف الشامل باستخدام رقم الهوية
+      return result.national_id ? `/citizen-profile/${result.national_id}` : `/department/cid/suspect-record/${result.id}`;
     case 'vehicle':
       return `/vehicle-record/${result.id}`;
     case 'incident':
@@ -143,6 +144,32 @@ export const SearchResultCard = ({ result }: SearchResultCardProps) => {
                 <p className="text-xs text-muted-foreground/50 mt-2">
                   التاريخ: {new Date(result.created_at).toLocaleDateString('ar-PS')}
                 </p>
+              )}
+              
+              {/* عرض ملخص المواطن */}
+              {result.type === 'citizen' && result.summary && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {result.summary.vehicles_count! > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      🚗 {result.summary.vehicles_count} مركبة
+                    </Badge>
+                  )}
+                  {result.summary.violations_count! > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      ⚠️ {result.summary.violations_count} مخالفة
+                    </Badge>
+                  )}
+                  {result.summary.cybercrime_cases! > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      💻 {result.summary.cybercrime_cases} قضية
+                    </Badge>
+                  )}
+                  {result.summary.is_wanted && (
+                    <Badge variant="destructive" className="text-xs">
+                      🚨 مطلوب
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
           </div>

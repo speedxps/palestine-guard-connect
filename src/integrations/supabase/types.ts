@@ -1411,6 +1411,7 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           reporter_id: string
+          reporter_national_id: string | null
           status: Database["public"]["Enums"]["incident_status"]
           title: string
           updated_at: string
@@ -1425,6 +1426,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           reporter_id: string
+          reporter_national_id?: string | null
           status?: Database["public"]["Enums"]["incident_status"]
           title: string
           updated_at?: string
@@ -1439,6 +1441,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           reporter_id?: string
+          reporter_national_id?: string | null
           status?: Database["public"]["Enums"]["incident_status"]
           title?: string
           updated_at?: string
@@ -1573,6 +1576,7 @@ export type Database = {
           created_by: string
           id: string
           note_text: string
+          subject_national_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1581,6 +1585,7 @@ export type Database = {
           created_by: string
           id?: string
           note_text: string
+          subject_national_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1589,6 +1594,7 @@ export type Database = {
           created_by?: string
           id?: string
           note_text?: string
+          subject_national_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2174,6 +2180,7 @@ export type Database = {
           created_at: string | null
           id: string
           notification_text: string
+          recipient_national_id: string | null
           scheduled_date: string | null
           scheduled_day: string | null
           scheduled_time: string | null
@@ -2188,6 +2195,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           notification_text: string
+          recipient_national_id?: string | null
           scheduled_date?: string | null
           scheduled_day?: string | null
           scheduled_time?: string | null
@@ -2202,6 +2210,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           notification_text?: string
+          recipient_national_id?: string | null
           scheduled_date?: string | null
           scheduled_day?: string | null
           scheduled_time?: string | null
@@ -2383,6 +2392,7 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           name: string
+          officer_national_id: string | null
           status: string
           updated_at: string
         }
@@ -2396,6 +2406,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           name: string
+          officer_national_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -2409,6 +2420,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           name?: string
+          officer_national_id?: string | null
           status?: string
           updated_at?: string
         }

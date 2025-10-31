@@ -9,6 +9,19 @@ export interface SearchResult {
   description?: string;
   metadata: Record<string, any>;
   created_at?: string;
+  // معلومات إضافية للمواطنين
+  national_id?: string;
+  summary?: {
+    vehicles_count?: number;
+    violations_count?: number;
+    cybercrime_cases?: number;
+    judicial_cases?: number;
+    incidents?: number;
+    notifications?: number;
+    properties_count?: number;
+    is_wanted?: boolean;
+    family_members?: number;
+  };
 }
 
 export interface SearchResults {
@@ -109,16 +122,45 @@ export const useUniversalSearch = () => {
           .limit(20)
       ]);
 
-      // تحويل النتائج إلى صيغة موحدة
-      const citizens: SearchResult[] = (citizensData.data || []).map(c => ({
-        id: c.id,
-        type: 'citizen' as const,
-        title: c.full_name || `${c.first_name || ''} ${c.father_name || ''}`.trim(),
-        subtitle: `رقم الهوية: ${c.national_id}`,
-        description: c.phone || c.address,
-        metadata: c,
-        created_at: c.created_at
-      }));
+      // تحويل النتائج إلى صيغة موحدة مع إضافة ملخص للمواطنين
+      const citizensWithSummary = await Promise.all(
+        (citizensData.data || []).map(async (c) => {
+          // جلب إحصائيات سريعة للمواطن
+          const [vehiclesCount, violationsCount, cyberCasesCount, judicialCasesCount, incidentsCount, notificationsCount, propertiesCount, isWanted] = await Promise.all([
+            supabase.from('vehicle_owners').select('id', { count: 'exact', head: true }).eq('national_id', c.national_id).then(r => r.count || 0),
+            supabase.from('traffic_records').select('id', { count: 'exact', head: true }).eq('national_id', c.national_id).then(r => r.count || 0),
+            supabase.from('cybercrime_cases').select('id', { count: 'exact', head: true }).eq('national_id', c.national_id).then(r => r.count || 0),
+            supabase.from('judicial_cases').select('id', { count: 'exact', head: true }).eq('national_id', c.national_id).then(r => r.count || 0),
+            supabase.from('incidents').select('id', { count: 'exact', head: true }).eq('reporter_national_id', c.national_id).then(r => r.count || 0),
+            supabase.from('official_notifications').select('id', { count: 'exact', head: true }).eq('recipient_national_id', c.national_id).then(r => r.count || 0),
+            supabase.from('citizen_properties').select('id', { count: 'exact', head: true }).eq('citizen_id', c.id).then(r => r.count || 0),
+            supabase.from('wanted_persons').select('id').eq('citizen_id', c.id).maybeSingle().then(r => !!r.data)
+          ]);
+
+          return {
+            id: c.id,
+            type: 'citizen' as const,
+            title: c.full_name || `${c.first_name || ''} ${c.father_name || ''}`.trim(),
+            subtitle: `رقم الهوية: ${c.national_id}`,
+            description: c.phone || c.address,
+            metadata: c,
+            created_at: c.created_at,
+            national_id: c.national_id,
+            summary: {
+              vehicles_count: vehiclesCount,
+              violations_count: violationsCount,
+              cybercrime_cases: cyberCasesCount,
+              judicial_cases: judicialCasesCount,
+              incidents: incidentsCount,
+              notifications: notificationsCount,
+              properties_count: propertiesCount,
+              is_wanted: isWanted
+            }
+          };
+        })
+      );
+
+      const citizens: SearchResult[] = citizensWithSummary;
 
       const vehicles: SearchResult[] = (vehiclesData.data || []).map(v => ({
         id: v.id,

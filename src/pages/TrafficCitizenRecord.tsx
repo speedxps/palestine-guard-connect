@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { BackButton } from '@/components/BackButton';
 import CitizenLocationMap from '@/components/CitizenLocationMap';
+import { CitizenQuickView } from '@/components/CitizenQuickView';
 
 const TrafficCitizenRecord = () => {
   const { id } = useParams();
@@ -610,6 +611,19 @@ const TrafficCitizenRecord = () => {
             </div>
           </CardHeader>
         </Card>
+
+        {/* زر الملف الشامل */}
+        <div className="mb-6 flex justify-center">
+          <CitizenQuickView 
+            nationalId={citizen.national_id}
+            triggerText="عرض الملف الشامل"
+          >
+            <Button variant="default" size="lg" className="w-full md:w-auto">
+              <User className="w-5 h-5 ml-2" />
+              📋 عرض الملف الشامل للمواطن
+            </Button>
+          </CitizenQuickView>
+        </div>
 
         {/* Subtitle */}
         <div className="text-center mb-6">

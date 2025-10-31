@@ -123,6 +123,7 @@ import IncidentRecord from "@/pages/IncidentRecord";
 import PatrolRecord from "@/pages/PatrolRecord";
 import CybercrimeCaseRecord from "@/pages/CybercrimeCaseRecord";
 import FaceLogin from "@/pages/FaceLogin";
+import CitizenProfile from "@/pages/CitizenProfile";
 
 const queryClient = new QueryClient();
 
@@ -164,6 +165,9 @@ const App = () => {
               <Route path="/department/traffic/citizen-record/:id" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "traffic_police"]}><TrafficCitizenRecord /></RoleBasedRoute></ProtectedRoute>} />
               <Route path="/department/cid/suspect-search" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDSuspectSearch /></RoleBasedRoute></ProtectedRoute>} />
               <Route path="/department/cid/suspect-record/:id" element={<ProtectedRoute><RoleBasedRoute allowedRoles={["admin", "cid"]}><CIDSuspectRecord /></RoleBasedRoute></ProtectedRoute>} />
+              
+              {/* Citizen Comprehensive Profile */}
+              <Route path="/citizen-profile/:nationalId" element={<ProtectedRoute><CitizenProfile /></ProtectedRoute>} />
 
                 {/* Notification & Permissions - Admin */}
                 <Route

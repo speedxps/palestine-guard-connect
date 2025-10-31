@@ -12,6 +12,7 @@ import { UnifiedNotificationSystem } from '@/components/notifications/UnifiedNot
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { CitizenQuickView } from '@/components/CitizenQuickView';
 
 const VehicleRecord = () => {
   const { id } = useParams();
@@ -202,6 +203,21 @@ const VehicleRecord = () => {
                   </div>
                 )}
               </div>
+              
+              {/* زر الملف الشامل للمالك */}
+              {currentOwner.national_id && (
+                <div className="mt-4 flex justify-center">
+                  <CitizenQuickView 
+                    nationalId={currentOwner.national_id}
+                    triggerText="📋 عرض الملف الشامل للمالك"
+                  >
+                    <Button variant="default" size="lg">
+                      <User className="w-4 h-4 ml-2" />
+                      عرض الملف الشامل للمالك
+                    </Button>
+                  </CitizenQuickView>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
