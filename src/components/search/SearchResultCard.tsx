@@ -83,11 +83,11 @@ const getNavigationPath = (result: SearchResult) => {
     case 'incident':
       return `/incident-record/${result.id}`;
     case 'patrol':
-      return `/patrols/${result.id}`;
+      return `/patrol-record/${result.id}`;
     case 'cybercrime_case':
-      return `/cybercrime/cases/${result.id}`;
+      return `/cybercrime-case-record/${result.id}`;
     case 'judicial_case':
-      return `/judicial-police/cases/${result.id}`;
+      return `/judicial-case-record/${result.id}`;
     default:
       return '#';
   }

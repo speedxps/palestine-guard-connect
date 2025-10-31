@@ -120,6 +120,8 @@ import BatchFaceProcessing from "@/pages/BatchFaceProcessing";
 import FaceLoginSetup from "@/pages/FaceLoginSetup";
 import VehicleRecord from "@/pages/VehicleRecord";
 import IncidentRecord from "@/pages/IncidentRecord";
+import PatrolRecord from "@/pages/PatrolRecord";
+import CybercrimeCaseRecord from "@/pages/CybercrimeCaseRecord";
 import FaceLogin from "@/pages/FaceLogin";
 
 const queryClient = new QueryClient();
@@ -334,6 +336,30 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <IncidentRecord />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/patrol-record/:id"
+                  element={
+                    <ProtectedRoute>
+                      <PatrolRecord />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cybercrime-case-record/:id"
+                  element={
+                    <ProtectedRoute>
+                      <CybercrimeCaseRecord />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/judicial-case-record/:id"
+                  element={
+                    <ProtectedRoute>
+                      <JudicialCaseRecord />
                     </ProtectedRoute>
                   }
                 />
