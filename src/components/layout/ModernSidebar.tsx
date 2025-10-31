@@ -144,7 +144,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-80 bg-white p-0 overflow-y-auto" style={{ direction: 'rtl' }}>
+        <SheetContent side="right" className="w-80 bg-white p-0 flex flex-col" style={{ direction: 'rtl' }}>
           {/* Header with Blue Theme */}
           <SheetHeader className="bg-gradient-to-r from-[#2B9BF4] to-blue-500 p-6 text-center border-b-4 border-[#7CB342]">
             <div className="flex justify-center mb-3">
@@ -200,8 +200,8 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="flex-1 overflow-y-auto p-4">
+          {/* Navigation - Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4 pb-0">
             <div className="space-y-2">
               {/* ===== القسم الأساسي ===== */}
               <Button
@@ -557,33 +557,33 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                     })}
                 </div>
               )}
-
-              {/* Profile & Logout */}
-              <div className="pt-4 border-t-2 border-gray-200 mt-4">
-                <Button
-                  variant="ghost"
-                  className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                    location.pathname === '/profile' 
-                      ? 'bg-gray-700 text-white font-bold shadow-lg' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  onClick={() => handleNavigation('/profile')}
-                >
-                  <Settings className="h-6 w-6 shrink-0" />
-                  <span className="font-arabic text-lg">الملف الشخصي</span>
-                </Button>
-                
-                {/* Logout Button */}
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-2 rounded-xl py-6 transition-all"
-                  onClick={() => setShowLogoutDialog(true)}
-                >
-                  <LogOut className="h-6 w-6 shrink-0" />
-                  <span className="font-arabic text-lg">تسجيل الخروج</span>
-                </Button>
-              </div>
             </div>
+          </div>
+
+          {/* Profile & Logout - Fixed at Bottom */}
+          <div className="p-4 border-t-2 border-gray-200 bg-white">
+            <Button
+              variant="ghost"
+              className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                location.pathname === '/profile' 
+                  ? 'bg-gray-700 text-white font-bold shadow-lg' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              onClick={() => handleNavigation('/profile')}
+            >
+              <Settings className="h-6 w-6 shrink-0" />
+              <span className="font-arabic text-lg">الملف الشخصي</span>
+            </Button>
+            
+            {/* Logout Button */}
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 text-red-600 hover:bg-red-50 hover:text-red-700 mt-2 rounded-xl py-6 transition-all"
+              onClick={() => setShowLogoutDialog(true)}
+            >
+              <LogOut className="h-6 w-6 shrink-0" />
+              <span className="font-arabic text-lg">تسجيل الخروج</span>
+            </Button>
           </div>
         </SheetContent>
       </Sheet>
