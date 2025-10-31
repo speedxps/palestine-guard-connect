@@ -43,17 +43,28 @@ export default function CitizenProfile() {
   const fetchViolationDetails = async (violationId: string) => {
     setLoadingDetails(true);
     try {
-      const { data, error } = await supabase
+      // جلب بيانات المخالفة
+      const { data: violation, error: violationError } = await supabase
         .from('traffic_records')
-        .select(`
-          *,
-          vehicle_registrations(*)
-        `)
+        .select('*')
         .eq('id', violationId)
         .single();
 
-      if (error) throw error;
-      setSelectedItem(data);
+      if (violationError) throw violationError;
+
+      // إذا كانت المخالفة مرتبطة بمركبة، نجلب بيانات المركبة
+      let vehicleData = null;
+      if (violation && 'vehicle_id' in violation && violation.vehicle_id) {
+        const { data: vehicle } = await supabase
+          .from('vehicle_registrations')
+          .select('*')
+          .eq('id', violation.vehicle_id as string)
+          .single();
+        
+        vehicleData = vehicle;
+      }
+
+      setSelectedItem({ ...violation, vehicle: vehicleData });
     } catch (error) {
       console.error('Error fetching violation details:', error);
       toast.error('حدث خطأ أثناء جلب تفاصيل المخالفة');
@@ -66,17 +77,28 @@ export default function CitizenProfile() {
   const fetchNotificationDetails = async (notificationId: string) => {
     setLoadingDetails(true);
     try {
-      const { data, error } = await supabase
+      // جلب بيانات الاستدعاء
+      const { data: notification, error: notificationError } = await supabase
         .from('official_notifications')
-        .select(`
-          *,
-          sender:profiles!official_notifications_sender_id_fkey(full_name, username)
-        `)
+        .select('*')
         .eq('id', notificationId)
         .single();
 
-      if (error) throw error;
-      setSelectedItem(data);
+      if (notificationError) throw notificationError;
+
+      // جلب بيانات المرسل إذا كانت موجودة
+      let senderData = null;
+      if (notification && notification.sender_id) {
+        const { data: sender } = await supabase
+          .from('profiles')
+          .select('full_name, username')
+          .eq('id', notification.sender_id)
+          .single();
+        
+        senderData = sender;
+      }
+
+      setSelectedItem({ ...notification, sender: senderData });
     } catch (error) {
       console.error('Error fetching notification details:', error);
       toast.error('حدث خطأ أثناء جلب تفاصيل الاستدعاء');
@@ -89,18 +111,44 @@ export default function CitizenProfile() {
   const fetchIncidentDetails = async (incidentId: string) => {
     setLoadingDetails(true);
     try {
-      const { data, error } = await supabase
+      // جلب بيانات البلاغ
+      const { data: incident, error: incidentError } = await supabase
         .from('incidents')
-        .select(`
-          *,
-          reporter:profiles!incidents_reporter_id_fkey(full_name, username),
-          assigned_officer:profiles!incidents_assigned_to_fkey(full_name, username)
-        `)
+        .select('*')
         .eq('id', incidentId)
         .single();
 
-      if (error) throw error;
-      setSelectedItem(data);
+      if (incidentError) throw incidentError;
+
+      // جلب بيانات المبلّغ إذا كانت موجودة
+      let reporterData = null;
+      if (incident && incident.reporter_id) {
+        const { data: reporter } = await supabase
+          .from('profiles')
+          .select('full_name, username')
+          .eq('id', incident.reporter_id)
+          .single();
+        
+        reporterData = reporter;
+      }
+
+      // جلب بيانات الضابط المسؤول إذا كان موجوداً
+      let officerData = null;
+      if (incident && incident.assigned_to) {
+        const { data: officer } = await supabase
+          .from('profiles')
+          .select('full_name, username')
+          .eq('id', incident.assigned_to)
+          .single();
+        
+        officerData = officer;
+      }
+
+      setSelectedItem({ 
+        ...incident, 
+        reporter: reporterData,
+        assigned_officer: officerData 
+      });
     } catch (error) {
       console.error('Error fetching incident details:', error);
       toast.error('حدث خطأ أثناء جلب تفاصيل البلاغ');
