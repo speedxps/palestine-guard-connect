@@ -355,7 +355,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center pb-32" style={{ direction: "ltr" }}>
+    <div className="min-h-screen bg-white flex flex-col items-center pb-20" style={{ direction: "ltr" }}>
       {/* Header */}
       <header className="bg-white w-full p-4 flex items-center justify-between border-b">
         <div className="flex items-center gap-5">
@@ -429,33 +429,53 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Placeholder for fixed quick access */}
-        <div className="h-4"></div>
+        {/* Map */}
       </div>
 
-      {/* Quick Access Bar - Fixed Above News */}
-      <div className="fixed bottom-16 left-0 right-0 z-40 bg-gradient-to-r from-[#7CB342] to-[#689F38] shadow-2xl border-t-2 border-white/20">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 px-3 py-2 min-w-max">
-            {quickAccessButtons.map((button, index) => {
-              const IconComponent = button.icon;
-              return (
-                <button
-                  key={index}
-                  onClick={() => navigate(button.path)}
-                  className="flex flex-col items-center justify-center gap-1 min-w-[70px] px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm transition-all duration-200 border border-white/20 shadow-md hover:shadow-lg hover:-translate-y-0.5"
-                >
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                    <IconComponent className="text-white w-4 h-4 drop-shadow-lg" />
-                  </div>
-                  <span className="text-[9px] font-semibold text-white text-center leading-tight drop-shadow-md line-clamp-2 max-w-[60px]">
-                    {button.title}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      {/* Floating Action Button - Quick Access */}
+      <div className="fixed bottom-24 right-6 z-40">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <button className="group relative w-16 h-16 bg-gradient-to-br from-[#7CB342] to-[#689F38] rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center border-4 border-white">
+              <Target className="w-8 h-8 text-white group-hover:rotate-90 transition-transform duration-300" />
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                <span className="text-[10px] font-bold text-white">{quickAccessButtons.length}</span>
+              </div>
+            </button>
+          </DrawerTrigger>
+          <DrawerContent className="bg-white">
+            <DrawerHeader>
+              <DrawerTitle className="text-center text-2xl font-bold text-[#7CB342] flex items-center justify-center gap-2">
+                <Target className="w-6 h-6" />
+                الوصول السريع
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 pb-8 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3">
+                {quickAccessButtons.map((button, index) => {
+                  const IconComponent = button.icon;
+                  return (
+                    <Card
+                      key={index}
+                      onClick={() => navigate(button.path)}
+                      className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-0 overflow-hidden animate-scale-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <CardContent className="p-0 h-24">
+                        <div className={`h-full w-full bg-gradient-to-br ${button.gradient} flex flex-col items-center justify-center gap-2 group-hover:scale-105 transition-transform duration-300`}>
+                          <IconComponent className="text-white w-8 h-8 drop-shadow-lg" />
+                          <h3 className="font-bold text-xs text-white text-center px-2 drop-shadow-md line-clamp-2">
+                            {button.title}
+                          </h3>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
 
       {/* News Drawer - Fixed at Bottom */}
