@@ -259,13 +259,8 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
       );
     }
 
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <pre className="text-sm overflow-auto">{JSON.stringify(report.data, null, 2)}</pre>
-        </CardContent>
-      </Card>
-    );
+    // لا نعرض البيانات الخام - فقط نعرض رسالة بسيطة
+    return null;
   };
 
   return (

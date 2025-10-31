@@ -86,10 +86,11 @@ export default function IntelligentQuery() {
         };
         setMessages(prev => [...prev, errorMessage]);
       } else {
+        // لا نعرض رسالة إضافية - فقط التقرير نفسه
         const reportMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: 'report',
-          content: 'تم إنشاء التقرير',
+          content: '', // محتوى فارغ لأننا سنعرض التقرير مباشرة
           timestamp: new Date(),
           reportData: response
         };
