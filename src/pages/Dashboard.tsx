@@ -355,7 +355,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center pb-20" style={{ direction: "ltr" }}>
+    <div className="min-h-screen bg-white flex flex-col items-center pb-32" style={{ direction: "ltr" }}>
       {/* Header */}
       <header className="bg-white w-full p-4 flex items-center justify-between border-b">
         <div className="flex items-center gap-5">
@@ -429,30 +429,29 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Quick Access Section - 4 Dynamic Buttons */}
-        <div className="mb-4">
-          <h2 className="text-xl font-bold text-[#7CB342] mb-3 flex items-center gap-2">
-            <Target className="w-5 h-5" />
-            الوصول السريع
-          </h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+        {/* Placeholder for fixed quick access */}
+        <div className="h-4"></div>
+      </div>
+
+      {/* Quick Access Bar - Fixed Above News */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 bg-gradient-to-r from-[#7CB342] to-[#689F38] shadow-2xl border-t-2 border-white/20">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 px-3 py-2 min-w-max">
             {quickAccessButtons.map((button, index) => {
               const IconComponent = button.icon;
               return (
-                <Card
+                <button
                   key={index}
                   onClick={() => navigate(button.path)}
-                  className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-0 overflow-hidden"
+                  className="flex flex-col items-center justify-center gap-1 min-w-[70px] px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm transition-all duration-200 border border-white/20 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <CardContent className="p-0 h-16 sm:h-18 md:h-20">
-                    <div className={`h-full w-full bg-gradient-to-br ${button.gradient} flex flex-col items-center justify-center gap-1 group-hover:scale-105 transition-transform duration-300`}>
-                      <IconComponent className="text-white w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6 drop-shadow-lg" />
-                      <h3 className="font-bold text-[10px] sm:text-xs text-white text-center px-2 drop-shadow-md line-clamp-2">
-                        {button.title}
-                      </h3>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                    <IconComponent className="text-white w-4 h-4 drop-shadow-lg" />
+                  </div>
+                  <span className="text-[9px] font-semibold text-white text-center leading-tight drop-shadow-md line-clamp-2 max-w-[60px]">
+                    {button.title}
+                  </span>
+                </button>
               );
             })}
           </div>
