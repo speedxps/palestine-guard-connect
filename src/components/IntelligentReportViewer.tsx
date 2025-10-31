@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Copy, Share2, Printer, FileText } from 'lucide-react';
+import { Copy, Share2, Printer, FileText } from 'lucide-react';
 import { QueryResponse, intelligentQueryService } from '@/services/intelligentQueryService';
 import { toast } from 'sonner';
 
@@ -10,22 +10,68 @@ interface IntelligentReportViewerProps {
 }
 
 export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = ({ report }) => {
-  const handleDownloadPDF = async () => {
-    try {
-      await intelligentQueryService.downloadReportAsPDF(report);
-      toast.success('تم تحميل التقرير بنجاح');
-    } catch (error) {
-      toast.error('حدث خطأ أثناء تحميل التقرير');
-    }
-  };
-
   const handleCopy = () => {
     intelligentQueryService.copyReportToClipboard(report);
     toast.success('تم نسخ التقرير');
   };
 
   const handlePrint = () => {
-    window.print();
+    // طباعة الملخص الذكي فقط
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="UTF-8">
+          <title>${report.title}</title>
+          <style>
+            body {
+              font-family: 'Arial', sans-serif;
+              direction: rtl;
+              text-align: right;
+              padding: 40px;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            h1 {
+              color: #1a1a1a;
+              border-bottom: 3px solid #3b82f6;
+              padding-bottom: 10px;
+              margin-bottom: 30px;
+            }
+            .summary {
+              background: #f8f9fa;
+              padding: 20px;
+              border-radius: 8px;
+              line-height: 1.8;
+              white-space: pre-wrap;
+              font-size: 14px;
+            }
+            .date {
+              color: #666;
+              margin-top: 30px;
+              font-size: 14px;
+            }
+            @media print {
+              body { padding: 20px; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${report.title}</h1>
+          <div class="summary">${report.summary}</div>
+          <div class="date">تاريخ التقرير: ${new Date(report.timestamp).toLocaleString('ar-PS')}</div>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    }
   };
 
   const handleShare = async () => {
@@ -217,11 +263,7 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
             <div className="flex gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="w-4 h-4 ml-2" />
-                طباعة
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
-                <Download className="w-4 h-4 ml-2" />
-                PDF
+                طباعة الملخص
               </Button>
               <Button variant="outline" size="sm" onClick={handleCopy}>
                 <Copy className="w-4 h-4 ml-2" />
