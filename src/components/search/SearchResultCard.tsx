@@ -79,9 +79,9 @@ const getNavigationPath = (result: SearchResult) => {
     case 'citizen':
       return `/department/cid/suspect-record/${result.id}`;
     case 'vehicle':
-      return `/vehicle-inquiry?id=${result.id}`;
+      return `/vehicle-record/${result.id}`;
     case 'incident':
-      return `/incidents/${result.id}`;
+      return `/incident-record/${result.id}`;
     case 'patrol':
       return `/patrols/${result.id}`;
     case 'cybercrime_case':

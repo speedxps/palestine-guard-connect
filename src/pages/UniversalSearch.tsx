@@ -118,155 +118,164 @@ const UniversalSearch = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+      {/* Back Button - Fixed Position */}
+      <div className="fixed top-4 right-4 z-10">
         <BackButton />
-        <div className="flex items-center gap-3">
-          <img src={policeLogo} alt="شعار الشرطة" className="h-12 w-12" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              البحث الشامل في النظام
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header with Logo */}
+        <div className="flex flex-col items-center mb-8 space-y-4">
+          <img 
+            src={policeLogo} 
+            alt="شعار الشرطة" 
+            className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-lg"
+          />
+          <div className="text-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+              نظام البحث الشامل
             </h1>
             <p className="text-sm text-muted-foreground">
-              ابحث في جميع البيانات من مكان واحد
+              ابحث في جميع قواعد البيانات من مكان واحد
             </p>
           </div>
         </div>
-      </div>
 
-      {/* Search Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            البحث
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Quick Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="cursor-default">
-                رقم هوية
-              </Badge>
-              <Badge variant="outline" className="cursor-default">
-                اسم
-              </Badge>
-              <Badge variant="outline" className="cursor-default">
-                رقم سيارة
-              </Badge>
-              <Badge variant="outline" className="cursor-default">
-                رقم بلاغ
-              </Badge>
-              <Badge variant="outline" className="cursor-default">
-                رقم قضية
-              </Badge>
-              <Badge variant="outline" className="cursor-default">
-                دورية
-              </Badge>
-            </div>
+        {/* Search Card */}
+        <Card className="mb-6 shadow-lg border-primary/20">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              {/* Search Input */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="ابحث عن رقم هوية، اسم، رقم مركبة، بلاغ، قضية، دورية..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="h-12 text-base md:text-lg border-2 focus:border-primary"
+                  dir="rtl"
+                />
+                <Button 
+                  onClick={handleSearchClick}
+                  disabled={loading || !searchTerm.trim()}
+                  size="lg"
+                  className="px-6"
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Search className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
 
-            {/* Search Input */}
-            <div className="flex gap-2">
-              <Input
-                placeholder="ابحث عن رقم هوية، اسم، رقم مركبة، بلاغ، قضية، دورية..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="text-lg"
-                dir="rtl"
-              />
-              <Button 
-                onClick={handleSearchClick}
-                disabled={loading || !searchTerm.trim()}
-                size="lg"
-              >
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Search className="h-5 w-5" />
-                )}
-              </Button>
-            </div>
-
-            {/* Stats */}
-            {results.total > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Badge variant="secondary" className="gap-1">
-                  <User className="h-3 w-3" />
-                  مواطنين: {results.citizens.length}
+              {/* Quick Filter Hints */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Badge variant="outline" className="text-xs">
+                  رقم هوية
                 </Badge>
-                <Badge variant="secondary" className="gap-1">
-                  <Car className="h-3 w-3" />
-                  مركبات: {results.vehicles.length}
+                <Badge variant="outline" className="text-xs">
+                  اسم
                 </Badge>
-                <Badge variant="secondary" className="gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  بلاغات: {results.incidents.length}
+                <Badge variant="outline" className="text-xs">
+                  رقم سيارة
                 </Badge>
-                <Badge variant="secondary" className="gap-1">
-                  <Radio className="h-3 w-3" />
-                  دوريات: {results.patrols.length}
+                <Badge variant="outline" className="text-xs">
+                  رقم بلاغ
                 </Badge>
-                <Badge variant="secondary" className="gap-1">
-                  <Shield className="h-3 w-3" />
-                  قضايا جنائية: {results.cybercrimeCases.length}
-                </Badge>
-                <Badge variant="secondary" className="gap-1">
-                  <Scale className="h-3 w-3" />
-                  قضايا قضائية: {results.judicialCases.length}
+                <Badge variant="outline" className="text-xs">
+                  قضية
                 </Badge>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Results Tabs */}
-      <Card>
-        <CardContent className="p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-7 mb-6">
-              <TabsTrigger value="all" className="text-xs md:text-sm">
-                الكل ({results.total})
-              </TabsTrigger>
-              <TabsTrigger value="citizens" className="text-xs md:text-sm">
-                <User className="h-4 w-4 ml-1" />
-                ({results.citizens.length})
-              </TabsTrigger>
-              <TabsTrigger value="vehicles" className="text-xs md:text-sm">
-                <Car className="h-4 w-4 ml-1" />
-                ({results.vehicles.length})
-              </TabsTrigger>
-              <TabsTrigger value="incidents" className="text-xs md:text-sm">
-                <AlertCircle className="h-4 w-4 ml-1" />
-                ({results.incidents.length})
-              </TabsTrigger>
-              <TabsTrigger value="patrols" className="text-xs md:text-sm">
-                <Radio className="h-4 w-4 ml-1" />
-                ({results.patrols.length})
-              </TabsTrigger>
-              <TabsTrigger value="cybercrime_cases" className="text-xs md:text-sm">
-                <Shield className="h-4 w-4 ml-1" />
-                ({results.cybercrimeCases.length})
-              </TabsTrigger>
-              <TabsTrigger value="judicial_cases" className="text-xs md:text-sm">
-                <Scale className="h-4 w-4 ml-1" />
-                ({results.judicialCases.length})
-              </TabsTrigger>
-            </TabsList>
+              {/* Stats */}
+              {results.total > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center pt-2">
+                  <Badge variant="secondary" className="gap-1">
+                    <User className="h-3 w-3" />
+                    {results.citizens.length}
+                  </Badge>
+                  <Badge variant="secondary" className="gap-1">
+                    <Car className="h-3 w-3" />
+                    {results.vehicles.length}
+                  </Badge>
+                  <Badge variant="secondary" className="gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {results.incidents.length}
+                  </Badge>
+                  <Badge variant="secondary" className="gap-1">
+                    <Radio className="h-3 w-3" />
+                    {results.patrols.length}
+                  </Badge>
+                  <Badge variant="secondary" className="gap-1">
+                    <Shield className="h-3 w-3" />
+                    {results.cybercrimeCases.length}
+                  </Badge>
+                  <Badge variant="secondary" className="gap-1">
+                    <Scale className="h-3 w-3" />
+                    {results.judicialCases.length}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-            <TabsContent value="all">{renderResults('all')}</TabsContent>
-            <TabsContent value="citizens">{renderResults('citizens')}</TabsContent>
-            <TabsContent value="vehicles">{renderResults('vehicles')}</TabsContent>
-            <TabsContent value="incidents">{renderResults('incidents')}</TabsContent>
-            <TabsContent value="patrols">{renderResults('patrols')}</TabsContent>
-            <TabsContent value="cybercrime_cases">{renderResults('cybercrime_cases')}</TabsContent>
-            <TabsContent value="judicial_cases">{renderResults('judicial_cases')}</TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+        {/* Results Tabs */}
+        {results.total > 0 ? (
+          <Card className="shadow-lg">
+            <CardContent className="p-4 md:p-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 mb-6 h-auto">
+                  <TabsTrigger value="all" className="text-xs py-2">
+                    الكل ({results.total})
+                  </TabsTrigger>
+                  <TabsTrigger value="citizens" className="text-xs py-2">
+                    <User className="h-3 w-3 md:ml-1" />
+                    <span className="hidden md:inline">({results.citizens.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="vehicles" className="text-xs py-2">
+                    <Car className="h-3 w-3 md:ml-1" />
+                    <span className="hidden md:inline">({results.vehicles.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="incidents" className="text-xs py-2 hidden md:flex">
+                    <AlertCircle className="h-3 w-3 ml-1" />
+                    ({results.incidents.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="patrols" className="text-xs py-2 hidden md:flex">
+                    <Radio className="h-3 w-3 ml-1" />
+                    ({results.patrols.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="cybercrime_cases" className="text-xs py-2 hidden md:flex">
+                    <Shield className="h-3 w-3 ml-1" />
+                    ({results.cybercrimeCases.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="judicial_cases" className="text-xs py-2 hidden md:flex">
+                    <Scale className="h-3 w-3 ml-1" />
+                    ({results.judicialCases.length})
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="all">{renderResults('all')}</TabsContent>
+                <TabsContent value="citizens">{renderResults('citizens')}</TabsContent>
+                <TabsContent value="vehicles">{renderResults('vehicles')}</TabsContent>
+                <TabsContent value="incidents">{renderResults('incidents')}</TabsContent>
+                <TabsContent value="patrols">{renderResults('patrols')}</TabsContent>
+                <TabsContent value="cybercrime_cases">{renderResults('cybercrime_cases')}</TabsContent>
+                <TabsContent value="judicial_cases">{renderResults('judicial_cases')}</TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        ) : searchTerm.trim() && !loading ? (
+          <Card className="shadow-lg">
+            <CardContent className="text-center py-12">
+              <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-lg text-muted-foreground">لا توجد نتائج للبحث</p>
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
     </div>
   );
 };

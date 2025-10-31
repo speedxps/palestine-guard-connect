@@ -118,6 +118,8 @@ import UserGuide from "@/pages/UserGuide";
 import PrintGuidePage from "@/pages/PrintGuide";
 import BatchFaceProcessing from "@/pages/BatchFaceProcessing";
 import FaceLoginSetup from "@/pages/FaceLoginSetup";
+import VehicleRecord from "@/pages/VehicleRecord";
+import IncidentRecord from "@/pages/IncidentRecord";
 import FaceLogin from "@/pages/FaceLogin";
 
 const queryClient = new QueryClient();
@@ -314,6 +316,24 @@ const App = () => {
                       <RoleBasedRoute allowedRoles={["admin"]}>
                         <UniversalSearch />
                       </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Vehicle and Incident Records */}
+                <Route
+                  path="/vehicle-record/:id"
+                  element={
+                    <ProtectedRoute>
+                      <VehicleRecord />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/incident-record/:id"
+                  element={
+                    <ProtectedRoute>
+                      <IncidentRecord />
                     </ProtectedRoute>
                   }
                 />
