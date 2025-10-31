@@ -203,7 +203,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
           {/* Navigation */}
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-2">
-              {/* Dashboard Link */}
+              {/* ===== القسم الأساسي ===== */}
               <Button
                 variant="ghost"
                 className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
@@ -217,7 +217,6 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                 <span className="font-arabic text-lg">الرئيسية</span>
               </Button>
 
-              {/* Police Assistant Link */}
               <Button
                 variant="ghost"
                 className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
@@ -231,183 +230,196 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                 <span className="font-arabic text-lg">المساعد الذكي</span>
               </Button>
 
-              {/* User Guide Link */}
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                  location.pathname === '/user-guide' 
-                    ? 'bg-purple-500 text-white font-bold shadow-lg' 
-                    : 'text-gray-700 hover:bg-purple-50'
-                }`}
-                onClick={() => handleNavigation('/user-guide')}
-              >
-                <BookOpen className="h-6 w-6 shrink-0" />
-                <span className="font-arabic text-lg">دليل المستخدم</span>
-              </Button>
+              {/* ===== المعلومات العامة ===== */}
+              <div className="pt-3 pb-1">
+                <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2">المعلومات</h3>
+              </div>
 
-              {/* News Link */}
               <Button
                 variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
                   location.pathname === '/news' || location.pathname.startsWith('/news/')
                     ? 'bg-[#2B9BF4] text-white font-bold shadow-lg' 
                     : 'text-gray-700 hover:bg-blue-50'
                 }`}
                 onClick={() => handleNavigation('/news')}
               >
-                <Newspaper className="h-6 w-6 shrink-0" />
-                <span className="font-arabic text-lg">الأخبار</span>
+                <Newspaper className="h-5 w-5 shrink-0" />
+                <span className="font-arabic text-base">الأخبار</span>
               </Button>
 
-              {/* Admin Only Links */}
+              <Button
+                variant="ghost"
+                className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                  location.pathname === '/user-guide' 
+                    ? 'bg-purple-500 text-white font-bold shadow-lg' 
+                    : 'text-gray-700 hover:bg-purple-50'
+                }`}
+                onClick={() => handleNavigation('/user-guide')}
+              >
+                <BookOpen className="h-5 w-5 shrink-0" />
+                <span className="font-arabic text-base">دليل المستخدم</span>
+              </Button>
+
+              {/* ===== أدوات الذكاء الاصطناعي للمسؤولين ===== */}
               {userRole === 'admin' && (
                 <>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/smart-civil-registry' 
-                        ? 'bg-purple-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-purple-50'
-                    }`}
-                    onClick={() => handleNavigation('/smart-civil-registry')}
-                  >
-                    <UserCheck className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">السجل المدني الذكي</span>
-                  </Button>
+                  <div className="pt-3 pb-1">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2">الذكاء الاصطناعي</h3>
+                  </div>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/batch-face-processing' 
-                        ? 'bg-emerald-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-emerald-50'
-                    }`}
-                    onClick={() => handleNavigation('/batch-face-processing')}
-                  >
-                    <ScanFace className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">معالجة الصور الدفعية</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/device-management' 
-                        ? 'bg-emerald-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-emerald-50'
-                    }`}
-                    onClick={() => handleNavigation('/device-management')}
-                  >
-                    <Shield className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">أمان الأجهزة</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/user-dashboard' 
-                        ? 'bg-indigo-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-indigo-50'
-                    }`}
-                    onClick={() => handleNavigation('/user-dashboard')}
-                  >
-                    <Computer className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">الأجهزة</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/admin-panel' 
-                        ? 'bg-orange-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-orange-50'
-                    }`}
-                    onClick={() => handleNavigation('/admin-panel')}
-                  >
-                    <Users className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">إدارة المستخدمين</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/notification-management' 
-                        ? 'bg-pink-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-pink-50'
-                    }`}
-                    onClick={() => handleNavigation('/notification-management')}
-                  >
-                    <Bell className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">إدارة الإشعارات</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
                       location.pathname === '/intelligent-query' 
                         ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold shadow-lg' 
                         : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50'
                     }`}
                     onClick={() => handleNavigation('/intelligent-query')}
                   >
-                    <Brain className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">الاستعلام الذكي</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/investigation-closure-management' 
-                        ? 'bg-red-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-red-50'
-                    }`}
-                    onClick={() => handleNavigation('/investigation-closure-management')}
-                  >
-                    <FileText className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">طلبات إغلاق التحقيقات</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/news-management' 
-                        ? 'bg-teal-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-teal-50'
-                    }`}
-                    onClick={() => handleNavigation('/news-management')}
-                  >
-                    <Newspaper className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">إدارة الأخبار</span>
+                    <Brain className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">الاستعلام الذكي</span>
                   </Button>
                 </>
               )}
 
-              {/* Face Recognition Link - Available for Admin, CID, Cybercrime */}
+              {/* ===== قواعد البيانات - للمسؤولين والتحقيقات ===== */}
               {(userRole === 'admin' || userRole === 'cid' || userRole === 'cybercrime') && (
                 <>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
-                      location.pathname === '/real-time-face-recognition' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50'
-                    }`}
-                    onClick={() => handleNavigation('/real-time-face-recognition')}
-                  >
-                    <ScanFace className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">البحث عن الوجوه</span>
-                  </Button>
+                  <div className="pt-3 pb-1">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2">قواعد البيانات</h3>
+                  </div>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
                       location.pathname === '/smart-civil-registry' 
                         ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold shadow-lg' 
                         : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50'
                     }`}
                     onClick={() => handleNavigation('/smart-civil-registry')}
                   >
-                    <UserCheck className="h-6 w-6 shrink-0" />
-                    <span className="font-arabic text-lg">قاعدة بيانات المواطنين</span>
+                    <UserCheck className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">السجل المدني</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                      location.pathname === '/real-time-face-recognition' 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50'
+                    }`}
+                    onClick={() => handleNavigation('/real-time-face-recognition')}
+                  >
+                    <ScanFace className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">البحث عن الوجوه</span>
+                  </Button>
+
+                  {userRole === 'admin' && (
+                    <Button
+                      variant="ghost"
+                      className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                        location.pathname === '/batch-face-processing' 
+                          ? 'bg-emerald-500 text-white font-bold shadow-lg' 
+                          : 'text-gray-700 hover:bg-emerald-50'
+                      }`}
+                      onClick={() => handleNavigation('/batch-face-processing')}
+                    >
+                      <ScanFace className="h-5 w-5 shrink-0" />
+                      <span className="font-arabic text-base">معالجة الصور الدفعية</span>
+                    </Button>
+                  )}
+                </>
+              )}
+
+              {/* ===== إدارة النظام - للمسؤولين فقط ===== */}
+              {userRole === 'admin' && (
+                <>
+                  <div className="pt-3 pb-1">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2">إدارة النظام</h3>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                      location.pathname === '/admin-panel' 
+                        ? 'bg-orange-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-orange-50'
+                    }`}
+                    onClick={() => handleNavigation('/admin-panel')}
+                  >
+                    <Users className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">إدارة المستخدمين</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                      location.pathname === '/notification-management' 
+                        ? 'bg-pink-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-pink-50'
+                    }`}
+                    onClick={() => handleNavigation('/notification-management')}
+                  >
+                    <Bell className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">إدارة الإشعارات</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                      location.pathname === '/news-management' 
+                        ? 'bg-teal-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-teal-50'
+                    }`}
+                    onClick={() => handleNavigation('/news-management')}
+                  >
+                    <Newspaper className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">إدارة الأخبار</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                      location.pathname === '/investigation-closure-management' 
+                        ? 'bg-red-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-red-50'
+                    }`}
+                    onClick={() => handleNavigation('/investigation-closure-management')}
+                  >
+                    <FileText className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">طلبات إغلاق التحقيقات</span>
+                  </Button>
+
+                  <div className="pt-2 pb-1">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2">الأمان والأجهزة</h3>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                      location.pathname === '/device-management' 
+                        ? 'bg-emerald-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-emerald-50'
+                    }`}
+                    onClick={() => handleNavigation('/device-management')}
+                  >
+                    <Shield className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">أمان الأجهزة</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
+                      location.pathname === '/user-dashboard' 
+                        ? 'bg-indigo-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-indigo-50'
+                    }`}
+                    onClick={() => handleNavigation('/user-dashboard')}
+                  >
+                    <Computer className="h-5 w-5 shrink-0" />
+                    <span className="font-arabic text-base">الأجهزة</span>
                   </Button>
                 </>
               )}
