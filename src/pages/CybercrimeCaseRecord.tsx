@@ -91,9 +91,10 @@ const CybercrimeCaseRecord = () => {
       .select('*')
       .eq('report_id', cyberCase.id)
       .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error(error);
-        else setComments(data || []);
+      .then((result: any) => {
+        if (!result.error) {
+          setComments(result.data || []);
+        }
         setLoadingData(false);
       });
   };
@@ -107,9 +108,10 @@ const CybercrimeCaseRecord = () => {
       .eq('context_type', 'cybercrime_case')
       .eq('context_id', cyberCase.id)
       .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error(error);
-        else setNotifications(data || []);
+      .then((result: any) => {
+        if (!result.error) {
+          setNotifications(result.data || []);
+        }
         setLoadingData(false);
       });
   };
