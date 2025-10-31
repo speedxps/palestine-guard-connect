@@ -127,14 +127,14 @@ const UniversalSearch = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-      {/* Back Button - Fixed Position */}
-      <div className="fixed top-4 right-4 z-10">
+      {/* Back Button - Bottom Left Position */}
+      <div className="fixed bottom-6 left-6 z-10">
         <BackButton />
       </div>
 
       <div className="container mx-auto px-4 py-6 md:py-8 max-w-4xl">
         {/* Header with Logo */}
-        <div className="flex flex-col items-center mb-6 md:mb-8 space-y-3 md:space-y-4">
+        <div className="flex flex-col items-center mb-6 md:mb-8 space-y-3 md:space-y-4 relative z-20">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full" />
             <img 
