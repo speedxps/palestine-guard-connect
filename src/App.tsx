@@ -1112,9 +1112,7 @@ const App = () => {
                   path="/intelligent-query"
                   element={
                     <ProtectedRoute>
-                      <RoleBasedRoute allowedRoles={['admin']}>
-                        <IntelligentQuery />
-                      </RoleBasedRoute>
+                      <IntelligentQuery />
                     </ProtectedRoute>
                   }
                 />
