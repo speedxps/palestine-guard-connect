@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { BackButton } from '@/components/BackButton';
 import { 
   User, Car, AlertTriangle, Home, Laptop, Scale, 
-  Bell, Users, FileText, Camera, Activity, MapPin, Eye
+  Bell, Users, FileText, Camera, Activity, MapPin, Eye, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +37,92 @@ export default function CitizenProfile() {
   const [profile, setProfile] = useState<ComprehensiveProfile | null>(null);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [dialogType, setDialogType] = useState<string>('');
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // دالة لجلب تفاصيل المخالفة الكاملة
+  const fetchViolationDetails = async (violationId: string) => {
+    setLoadingDetails(true);
+    try {
+      const { data, error } = await supabase
+        .from('traffic_records')
+        .select(`
+          *,
+          vehicle_registrations(*)
+        `)
+        .eq('id', violationId)
+        .single();
+
+      if (error) throw error;
+      setSelectedItem(data);
+    } catch (error) {
+      console.error('Error fetching violation details:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل المخالفة');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  // دالة لجلب تفاصيل الاستدعاء الكاملة
+  const fetchNotificationDetails = async (notificationId: string) => {
+    setLoadingDetails(true);
+    try {
+      const { data, error } = await supabase
+        .from('official_notifications')
+        .select(`
+          *,
+          sender:profiles!official_notifications_sender_id_fkey(full_name, username)
+        `)
+        .eq('id', notificationId)
+        .single();
+
+      if (error) throw error;
+      setSelectedItem(data);
+    } catch (error) {
+      console.error('Error fetching notification details:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل الاستدعاء');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  // دالة لجلب تفاصيل البلاغ الكاملة
+  const fetchIncidentDetails = async (incidentId: string) => {
+    setLoadingDetails(true);
+    try {
+      const { data, error } = await supabase
+        .from('incidents')
+        .select(`
+          *,
+          reporter:profiles!incidents_reporter_id_fkey(full_name, username),
+          assigned_officer:profiles!incidents_assigned_to_fkey(full_name, username)
+        `)
+        .eq('id', incidentId)
+        .single();
+
+      if (error) throw error;
+      setSelectedItem(data);
+    } catch (error) {
+      console.error('Error fetching incident details:', error);
+      toast.error('حدث خطأ أثناء جلب تفاصيل البلاغ');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const openViolationDialog = (violation: any) => {
+    setDialogType('violation');
+    fetchViolationDetails(violation.id);
+  };
+
+  const openNotificationDialog = (notification: any) => {
+    setDialogType('notification');
+    fetchNotificationDetails(notification.id);
+  };
+
+  const openIncidentDialog = (incident: any) => {
+    setDialogType('incident');
+    fetchIncidentDetails(incident.id);
+  };
 
   useEffect(() => {
     if (nationalId) {
@@ -371,7 +457,7 @@ export default function CitizenProfile() {
           ) : (
             profile.violations.map((violation: any) => (
               <Card key={violation.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => { setSelectedItem(violation); setDialogType('violation'); }}>
+                    onClick={() => openViolationDialog(violation)}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -488,20 +574,25 @@ export default function CitizenProfile() {
           ) : (
             profile.incidents.map((incident: any) => (
               <Card key={incident.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => navigate(`/incident-record/${incident.id}`)}>
+                    onClick={() => openIncidentDialog(incident)}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{incident.title}</h3>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold truncate">{incident.title}</h3>
+                      <p className="text-sm text-muted-foreground truncate">
                         التاريخ: {new Date(incident.created_at).toLocaleDateString('ar')}
                       </p>
-                      <p className="text-sm">النوع: {incident.incident_type}</p>
+                      <p className="text-sm truncate">النوع: {incident.incident_type}</p>
                       {incident.location_address && (
-                        <p className="text-sm">الموقع: {incident.location_address}</p>
+                        <p className="text-sm truncate">الموقع: {incident.location_address}</p>
                       )}
                     </div>
-                    <Badge>{incident.status}</Badge>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <Badge>{incident.status}</Badge>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -518,7 +609,7 @@ export default function CitizenProfile() {
           ) : (
             profile.notifications.map((notification: any) => (
               <Card key={notification.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => { setSelectedItem(notification); setDialogType('notification'); }}>
+                    onClick={() => openNotificationDialog(notification)}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -579,41 +670,125 @@ export default function CitizenProfile() {
       <Dialog open={dialogType === 'violation'} onOpenChange={() => setDialogType('')}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>تفاصيل المخالفة</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              تفاصيل المخالفة الكاملة
+            </DialogTitle>
           </DialogHeader>
-          {selectedItem && (
+          {loadingDetails ? (
             <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">نوع المخالفة</p>
-                <p className="font-semibold text-lg">{selectedItem.violation_type}</p>
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : selectedItem && (
+            <div className="space-y-4">
+              <Card className="bg-muted/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-muted-foreground">نوع المخالفة</p>
+                    <Badge variant="outline">{selectedItem.violation_type}</Badge>
+                  </div>
+                  <p className="font-semibold text-xl">{selectedItem.violation_type}</p>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-xs text-muted-foreground mb-1">التاريخ</p>
+                    <p className="font-semibold">{new Date(selectedItem.created_at).toLocaleDateString('ar')}</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-xs text-muted-foreground mb-1">الحالة</p>
+                    <Badge variant={selectedItem.status === 'paid' ? 'default' : 'destructive'}>
+                      {selectedItem.status === 'paid' ? 'مسددة' : 'غير مسددة'}
+                    </Badge>
+                  </CardContent>
+                </Card>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">التاريخ</p>
-                <p className="font-semibold">{new Date(selectedItem.created_at).toLocaleDateString('ar')}</p>
-              </div>
+
               {selectedItem.fine_amount && (
-                <div>
-                  <p className="text-sm text-muted-foreground">الغرامة</p>
-                  <p className="font-semibold text-xl text-red-600">{selectedItem.fine_amount} ريال</p>
-                </div>
+                <Card className="border-red-200 bg-red-50">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-1">قيمة الغرامة</p>
+                    <p className="font-bold text-3xl text-red-600">{selectedItem.fine_amount} ريال</p>
+                  </CardContent>
+                </Card>
               )}
+
+              {selectedItem.vehicle_registrations && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Car className="w-4 h-4" />
+                      معلومات المركبة
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">رقم اللوحة</span>
+                      <span className="font-semibold">{selectedItem.vehicle_registrations.plate_number}</span>
+                    </div>
+                    {selectedItem.vehicle_registrations.model && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">الطراز</span>
+                        <span className="font-semibold">{selectedItem.vehicle_registrations.model}</span>
+                      </div>
+                    )}
+                    {selectedItem.vehicle_registrations.color && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">اللون</span>
+                        <span className="font-semibold">{selectedItem.vehicle_registrations.color}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {selectedItem.location && (
-                <div>
-                  <p className="text-sm text-muted-foreground">الموقع</p>
-                  <p className="font-semibold">{selectedItem.location}</p>
-                </div>
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      الموقع
+                    </p>
+                    <p className="font-semibold">{selectedItem.location}</p>
+                  </CardContent>
+                </Card>
               )}
-              <div>
-                <p className="text-sm text-muted-foreground">الحالة</p>
-                <Badge variant={selectedItem.status === 'paid' ? 'default' : 'destructive'} className="text-lg px-3 py-1">
-                  {selectedItem.status === 'paid' ? 'مسددة' : 'غير مسددة'}
-                </Badge>
-              </div>
+
+              {selectedItem.violation_date && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-1">تاريخ المخالفة</p>
+                    <p className="font-semibold">{new Date(selectedItem.violation_date).toLocaleDateString('ar')}</p>
+                  </CardContent>
+                </Card>
+              )}
+
               {selectedItem.notes && (
-                <div>
-                  <p className="text-sm text-muted-foreground">ملاحظات</p>
-                  <p className="text-sm">{selectedItem.notes}</p>
-                </div>
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      ملاحظات
+                    </p>
+                    <p className="text-sm bg-muted p-3 rounded-lg">{selectedItem.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedItem.payment_date && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-1">تاريخ الدفع</p>
+                    <p className="font-semibold text-green-700">{new Date(selectedItem.payment_date).toLocaleDateString('ar')}</p>
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}
@@ -624,36 +799,223 @@ export default function CitizenProfile() {
       <Dialog open={dialogType === 'notification'} onOpenChange={() => setDialogType('')}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>تفاصيل الاستدعاء</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              تفاصيل الاستدعاء الكاملة
+            </DialogTitle>
           </DialogHeader>
-          {selectedItem && (
+          {loadingDetails ? (
             <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">الموضوع</p>
-                <p className="font-semibold text-lg">{selectedItem.subject || 'استدعاء رسمي'}</p>
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : selectedItem && (
+            <div className="space-y-4">
+              <Card className="bg-muted/50">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground mb-2">موضوع الاستدعاء</p>
+                  <p className="font-semibold text-xl">{selectedItem.subject || 'استدعاء رسمي'}</p>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-xs text-muted-foreground mb-1">التاريخ</p>
+                    <p className="font-semibold text-sm">{new Date(selectedItem.created_at).toLocaleDateString('ar')}</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-xs text-muted-foreground mb-1">الحالة</p>
+                    <Badge variant={selectedItem.status === 'responded' ? 'default' : 'destructive'}>
+                      {selectedItem.status === 'responded' ? 'تمت الاستجابة' : 'معلق'}
+                    </Badge>
+                  </CardContent>
+                </Card>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">التاريخ</p>
-                <p className="font-semibold">{new Date(selectedItem.created_at).toLocaleDateString('ar')}</p>
-              </div>
+
               {selectedItem.notification_type && (
-                <div>
-                  <p className="text-sm text-muted-foreground">النوع</p>
-                  <p className="font-semibold">{selectedItem.notification_type}</p>
-                </div>
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2">نوع الاستدعاء</p>
+                    <Badge variant="outline" className="text-base px-3 py-1">
+                      {selectedItem.notification_type}
+                    </Badge>
+                  </CardContent>
+                </Card>
               )}
+
+              {selectedItem.sender && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      المُرسل
+                    </p>
+                    <p className="font-semibold">{selectedItem.sender.full_name || selectedItem.sender.username}</p>
+                  </CardContent>
+                </Card>
+              )}
+
               {selectedItem.message && (
-                <div>
-                  <p className="text-sm text-muted-foreground">الرسالة</p>
-                  <p className="text-sm bg-muted p-3 rounded-lg">{selectedItem.message}</p>
-                </div>
+                <Card className="border-blue-200 bg-blue-50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      نص الاستدعاء
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedItem.message}</p>
+                  </CardContent>
+                </Card>
               )}
-              <div>
-                <p className="text-sm text-muted-foreground">الحالة</p>
-                <Badge variant={selectedItem.status === 'responded' ? 'default' : 'destructive'} className="text-lg px-3 py-1">
-                  {selectedItem.status === 'responded' ? 'تمت الاستجابة' : 'معلق'}
-                </Badge>
+
+              {selectedItem.due_date && (
+                <Card className="border-orange-200 bg-orange-50">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      تاريخ الاستحقاق
+                    </p>
+                    <p className="font-semibold text-orange-700">{new Date(selectedItem.due_date).toLocaleDateString('ar')}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedItem.response_date && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-1">تاريخ الاستجابة</p>
+                    <p className="font-semibold text-green-700">{new Date(selectedItem.response_date).toLocaleDateString('ar')}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedItem.context_type && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-1">متعلق بـ</p>
+                    <p className="font-semibold">{selectedItem.context_type}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة تفاصيل البلاغ */}
+      <Dialog open={dialogType === 'incident'} onOpenChange={() => setDialogType('')}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              تفاصيل البلاغ الكاملة
+            </DialogTitle>
+          </DialogHeader>
+          {loadingDetails ? (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : selectedItem && (
+            <div className="space-y-4">
+              <Card className="bg-muted/50">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground mb-2">عنوان البلاغ</p>
+                  <p className="font-semibold text-xl">{selectedItem.title}</p>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-xs text-muted-foreground mb-1">التاريخ</p>
+                    <p className="font-semibold text-sm">{new Date(selectedItem.created_at).toLocaleDateString('ar')}</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-xs text-muted-foreground mb-1">الحالة</p>
+                    <Badge>{selectedItem.status}</Badge>
+                  </CardContent>
+                </Card>
               </div>
+
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground mb-2">نوع البلاغ</p>
+                  <Badge variant="outline" className="text-base px-3 py-1">
+                    {selectedItem.incident_type}
+                  </Badge>
+                </CardContent>
+              </Card>
+
+              {selectedItem.description && (
+                <Card className="border-blue-200 bg-blue-50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      وصف البلاغ
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedItem.description}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedItem.location_address && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      الموقع
+                    </p>
+                    <p className="font-semibold">{selectedItem.location_address}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedItem.reporter && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      المُبلّغ
+                    </p>
+                    <p className="font-semibold">{selectedItem.reporter.full_name || selectedItem.reporter.username}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedItem.assigned_officer && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2">الضابط المسؤول</p>
+                    <p className="font-semibold text-green-700">
+                      {selectedItem.assigned_officer.full_name || selectedItem.assigned_officer.username}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {selectedItem.priority && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-2">الأولوية</p>
+                    <Badge variant={selectedItem.priority === 'high' ? 'destructive' : 'secondary'}>
+                      {selectedItem.priority === 'high' ? 'عالية' : selectedItem.priority === 'medium' ? 'متوسطة' : 'منخفضة'}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </DialogContent>
