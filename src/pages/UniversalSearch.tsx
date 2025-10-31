@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Search, 
   User, 
@@ -24,6 +31,7 @@ import policeLogo from "@/assets/police-logo.png";
 const UniversalSearch = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [searchType, setSearchType] = useState("all");
   const { search, loading, results } = useUniversalSearch();
 
   // البحث التلقائي مع debounce
@@ -124,19 +132,22 @@ const UniversalSearch = () => {
         <BackButton />
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-6 md:py-8 max-w-4xl">
         {/* Header with Logo */}
-        <div className="flex flex-col items-center mb-8 space-y-4">
-          <img 
-            src={policeLogo} 
-            alt="شعار الشرطة" 
-            className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-lg"
-          />
+        <div className="flex flex-col items-center mb-6 md:mb-8 space-y-3 md:space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full" />
+            <img 
+              src={policeLogo} 
+              alt="شعار الشرطة" 
+              className="relative w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-2xl"
+            />
+          </div>
           <div className="text-center">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-1">
               نظام البحث الشامل
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               ابحث في جميع قواعد البيانات من مكان واحد
             </p>
           </div>
@@ -144,34 +155,62 @@ const UniversalSearch = () => {
 
         {/* Search Card */}
         <Card className="mb-6 shadow-lg border-primary/20">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
+          <CardContent className="pt-4 md:pt-6">
+            <div className="space-y-3 md:space-y-4">
+              {/* Search Type Selector */}
+              <div className="w-full">
+                <Select value={searchType} onValueChange={setSearchType}>
+                  <SelectTrigger className="w-full h-10 md:h-12 text-sm md:text-base border-2">
+                    <SelectValue placeholder="اختر نوع البحث" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="all">جميع السجلات</SelectItem>
+                    <SelectItem value="name">الاسم</SelectItem>
+                    <SelectItem value="national_id">رقم الهوية</SelectItem>
+                    <SelectItem value="plate_number">رقم المركبة</SelectItem>
+                    <SelectItem value="violation_number">رقم المخالفة</SelectItem>
+                    <SelectItem value="incident_number">رقم البلاغ</SelectItem>
+                    <SelectItem value="case_number">رقم القضية</SelectItem>
+                    <SelectItem value="patrol_name">اسم الدورية</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Search Input */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="ابحث عن رقم هوية، اسم، رقم مركبة، بلاغ، قضية، دورية..."
+                  placeholder={
+                    searchType === "name" ? "ابحث عن الاسم..." :
+                    searchType === "national_id" ? "ابحث عن رقم الهوية..." :
+                    searchType === "plate_number" ? "ابحث عن رقم المركبة..." :
+                    searchType === "violation_number" ? "ابحث عن رقم المخالفة..." :
+                    searchType === "incident_number" ? "ابحث عن رقم البلاغ..." :
+                    searchType === "case_number" ? "ابحث عن رقم القضية..." :
+                    searchType === "patrol_name" ? "ابحث عن اسم الدورية..." :
+                    "ابحث عن أي شيء..."
+                  }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="h-12 text-base md:text-lg border-2 focus:border-primary"
+                  className="h-10 md:h-12 text-sm md:text-base lg:text-lg border-2 focus:border-primary"
                   dir="rtl"
                 />
                 <Button 
                   onClick={handleSearchClick}
                   disabled={loading || !searchTerm.trim()}
                   size="lg"
-                  className="px-6"
+                  className="px-4 md:px-6 h-10 md:h-12"
                 >
                   {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
                   ) : (
-                    <Search className="h-5 w-5" />
+                    <Search className="h-4 w-4 md:h-5 md:w-5" />
                   )}
                 </Button>
               </div>
 
-              {/* Quick Filter Hints */}
-              <div className="flex flex-wrap gap-2 justify-center">
+              {/* Quick Filter Hints - Hidden on mobile to save space */}
+              <div className="hidden sm:flex flex-wrap gap-2 justify-center">
                 <Badge variant="outline" className="text-xs">
                   رقم هوية
                 </Badge>
@@ -191,28 +230,28 @@ const UniversalSearch = () => {
 
               {/* Stats */}
               {results.total > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center pt-2">
-                  <Badge variant="secondary" className="gap-1">
+                <div className="flex flex-wrap gap-1.5 md:gap-2 justify-center pt-2">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     <User className="h-3 w-3" />
                     {results.citizens.length}
                   </Badge>
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     <Car className="h-3 w-3" />
                     {results.vehicles.length}
                   </Badge>
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     <AlertCircle className="h-3 w-3" />
                     {results.incidents.length}
                   </Badge>
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     <Radio className="h-3 w-3" />
                     {results.patrols.length}
                   </Badge>
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     <Shield className="h-3 w-3" />
                     {results.cybercrimeCases.length}
                   </Badge>
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     <Scale className="h-3 w-3" />
                     {results.judicialCases.length}
                   </Badge>
