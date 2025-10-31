@@ -40,6 +40,7 @@ import SmartCivilRegistry from "@/pages/SmartCivilRegistry";
 import AdvancedFaceRecognition from "@/pages/AdvancedFaceRecognition";
 import FaceRecognition from "@/pages/FaceRecognition";
 import RealTimeFaceRecognition from "@/pages/RealTimeFaceRecognition";
+import IntelligentQuery from "@/pages/IntelligentQuery";
 import Tasks from "@/pages/Tasks";
 import DepartmentTasks from "@/pages/DepartmentTasks";
 import Patrol from "@/pages/Patrol";
@@ -1103,6 +1104,17 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <PoliceAssistant />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/intelligent-query"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={['admin']}>
+                        <IntelligentQuery />
+                      </RoleBasedRoute>
                     </ProtectedRoute>
                   }
                 />

@@ -24,7 +24,8 @@ import {
   Scale,
   Bell,
   BookOpen,
-  ScanFace
+  ScanFace,
+  Brain
 } from 'lucide-react';
 import policeLogo from "@/assets/police-logo.png";
 
@@ -337,6 +338,19 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   >
                     <Bell className="h-6 w-6 shrink-0" />
                     <span className="font-arabic text-lg">إدارة الإشعارات</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 rounded-xl py-6 transition-all ${
+                      location.pathname === '/intelligent-query' 
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold shadow-lg' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50'
+                    }`}
+                    onClick={() => handleNavigation('/intelligent-query')}
+                  >
+                    <Brain className="h-6 w-6 shrink-0" />
+                    <span className="font-arabic text-lg">الاستعلام الذكي</span>
                   </Button>
 
                   <Button
