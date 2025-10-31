@@ -64,7 +64,7 @@ export const useUniversalSearch = () => {
     const trimmedTerm = searchTerm.trim();
 
     try {
-      // البحث بالتوازي في جميع الجداول
+      // البحث الدقيق أولاً، ثم البحث المتشابه
       const [
         citizensData,
         vehiclesData,
@@ -73,12 +73,23 @@ export const useUniversalSearch = () => {
         cybercrimeCasesData,
         judicialCasesData
       ] = await Promise.all([
-        // البحث في المواطنين
+        // البحث في المواطنين - بحث دقيق أولاً
         supabase
           .from('citizens')
           .select('*')
-          .or(`national_id.ilike.%${trimmedTerm}%,full_name.ilike.%${trimmedTerm}%,phone.ilike.%${trimmedTerm}%,first_name.ilike.%${trimmedTerm}%,father_name.ilike.%${trimmedTerm}%`)
-          .limit(20),
+          .or(`national_id.eq.${trimmedTerm},full_name.eq.${trimmedTerm},phone.eq.${trimmedTerm}`)
+          .limit(20)
+          .then(async (exactResult) => {
+            // إذا لم نجد نتائج دقيقة، نبحث بالتشابه
+            if (!exactResult.data || exactResult.data.length === 0) {
+              return supabase
+                .from('citizens')
+                .select('*')
+                .or(`national_id.ilike.%${trimmedTerm}%,full_name.ilike.%${trimmedTerm}%,phone.ilike.%${trimmedTerm}%`)
+                .limit(20);
+            }
+            return exactResult;
+          }),
 
         // البحث في المركبات
         supabase

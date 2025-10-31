@@ -7,10 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BackButton } from '@/components/BackButton';
 import { 
   User, Car, AlertTriangle, Home, Laptop, Scale, 
-  Bell, Users, FileText, Camera, Activity, MapPin 
+  Bell, Users, FileText, Camera, Activity, MapPin, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,6 +35,8 @@ export default function CitizenProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ComprehensiveProfile | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [dialogType, setDialogType] = useState<string>('');
 
   useEffect(() => {
     if (nationalId) {
@@ -279,48 +282,52 @@ export default function CitizenProfile() {
         </CardContent>
       </Card>
 
-      {/* التبويبات */}
+        {/* التبويبات - محسّنة للهواتف */}
       <Tabs defaultValue="vehicles" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-          <TabsTrigger value="vehicles" className="flex items-center gap-1">
-            <Car className="w-4 h-4" />
-            <span className="hidden md:inline">مركبات</span>
-            <Badge variant="secondary">{profile.vehicles.length}</Badge>
+        <TabsList className="grid w-full grid-cols-4 gap-2 h-auto p-2">
+          <TabsTrigger value="vehicles" className="flex flex-col items-center gap-1 py-3">
+            <Car className="w-5 h-5" />
+            <span className="text-xs">مركبات</span>
+            <Badge variant="secondary" className="text-xs">{profile.vehicles.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="violations" className="flex items-center gap-1">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="hidden md:inline">مخالفات</span>
-            <Badge variant="secondary">{profile.violations.length}</Badge>
+          <TabsTrigger value="violations" className="flex flex-col items-center gap-1 py-3">
+            <AlertTriangle className="w-5 h-5" />
+            <span className="text-xs">مخالفات</span>
+            <Badge variant="secondary" className="text-xs">{profile.violations.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="properties" className="flex items-center gap-1">
-            <Home className="w-4 h-4" />
-            <span className="hidden md:inline">أملاك</span>
-            <Badge variant="secondary">{profile.properties.length}</Badge>
+          <TabsTrigger value="notifications" className="flex flex-col items-center gap-1 py-3">
+            <Bell className="w-5 h-5" />
+            <span className="text-xs">استدعاءات</span>
+            <Badge variant="secondary" className="text-xs">{profile.notifications.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="cyber" className="flex items-center gap-1">
-            <Laptop className="w-4 h-4" />
-            <span className="hidden md:inline">جرائم إلكترونية</span>
-            <Badge variant="secondary">{profile.cybercrimeCases.length}</Badge>
+          <TabsTrigger value="incidents" className="flex flex-col items-center gap-1 py-3">
+            <Activity className="w-5 h-5" />
+            <span className="text-xs">بلاغات</span>
+            <Badge variant="secondary" className="text-xs">{profile.incidents.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="judicial" className="flex items-center gap-1">
-            <Scale className="w-4 h-4" />
-            <span className="hidden md:inline">قضائية</span>
-            <Badge variant="secondary">{profile.judicialCases.length}</Badge>
+        </TabsList>
+        
+        {/* تبويبات إضافية في قائمة منفصلة للهواتف */}
+        <TabsList className="grid w-full grid-cols-4 gap-2 h-auto p-2 mt-2">
+          <TabsTrigger value="properties" className="flex flex-col items-center gap-1 py-3">
+            <Home className="w-5 h-5" />
+            <span className="text-xs">أملاك</span>
+            <Badge variant="secondary" className="text-xs">{profile.properties.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="incidents" className="flex items-center gap-1">
-            <Activity className="w-4 h-4" />
-            <span className="hidden md:inline">بلاغات</span>
-            <Badge variant="secondary">{profile.incidents.length}</Badge>
+          <TabsTrigger value="cyber" className="flex flex-col items-center gap-1 py-3">
+            <Laptop className="w-5 h-5" />
+            <span className="text-xs">إلكترونية</span>
+            <Badge variant="secondary" className="text-xs">{profile.cybercrimeCases.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-1">
-            <Bell className="w-4 h-4" />
-            <span className="hidden md:inline">استدعاءات</span>
-            <Badge variant="secondary">{profile.notifications.length}</Badge>
+          <TabsTrigger value="judicial" className="flex flex-col items-center gap-1 py-3">
+            <Scale className="w-5 h-5" />
+            <span className="text-xs">قضائية</span>
+            <Badge variant="secondary" className="text-xs">{profile.judicialCases.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="family" className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span className="hidden md:inline">عائلة</span>
-            <Badge variant="secondary">{profile.family.length}</Badge>
+          <TabsTrigger value="family" className="flex flex-col items-center gap-1 py-3">
+            <Users className="w-5 h-5" />
+            <span className="text-xs">عائلة</span>
+            <Badge variant="secondary" className="text-xs">{profile.family.length}</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -363,21 +370,27 @@ export default function CitizenProfile() {
             </Alert>
           ) : (
             profile.violations.map((violation: any) => (
-              <Card key={violation.id}>
+              <Card key={violation.id} className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => { setSelectedItem(violation); setDialogType('violation'); }}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{violation.violation_type || 'مخالفة مرورية'}</h3>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold truncate">{violation.violation_type || 'مخالفة مرورية'}</h3>
+                      <p className="text-sm text-muted-foreground truncate">
                         التاريخ: {new Date(violation.created_at).toLocaleDateString('ar')}
                       </p>
                       {violation.fine_amount && (
                         <p className="text-sm">الغرامة: {violation.fine_amount} ريال</p>
                       )}
                     </div>
-                    <Badge variant={violation.status === 'paid' ? 'default' : 'destructive'}>
-                      {violation.status === 'paid' ? 'مسددة' : 'غير مسددة'}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <Badge variant={violation.status === 'paid' ? 'default' : 'destructive'}>
+                        {violation.status === 'paid' ? 'مسددة' : 'غير مسددة'}
+                      </Badge>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -504,21 +517,27 @@ export default function CitizenProfile() {
             </Alert>
           ) : (
             profile.notifications.map((notification: any) => (
-              <Card key={notification.id}>
+              <Card key={notification.id} className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => { setSelectedItem(notification); setDialogType('notification'); }}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{notification.subject || 'استدعاء رسمي'}</h3>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold truncate">{notification.subject || 'استدعاء رسمي'}</h3>
+                      <p className="text-sm text-muted-foreground truncate">
                         التاريخ: {new Date(notification.created_at).toLocaleDateString('ar')}
                       </p>
                       {notification.notification_type && (
-                        <p className="text-sm">النوع: {notification.notification_type}</p>
+                        <p className="text-sm truncate">النوع: {notification.notification_type}</p>
                       )}
                     </div>
-                    <Badge variant={notification.status === 'responded' ? 'default' : 'destructive'}>
-                      {notification.status === 'responded' ? 'تمت الاستجابة' : 'معلق'}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <Badge variant={notification.status === 'responded' ? 'default' : 'destructive'}>
+                        {notification.status === 'responded' ? 'تمت الاستجابة' : 'معلق'}
+                      </Badge>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -555,6 +574,90 @@ export default function CitizenProfile() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* نافذة تفاصيل المخالفة */}
+      <Dialog open={dialogType === 'violation'} onOpenChange={() => setDialogType('')}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>تفاصيل المخالفة</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">نوع المخالفة</p>
+                <p className="font-semibold text-lg">{selectedItem.violation_type}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">التاريخ</p>
+                <p className="font-semibold">{new Date(selectedItem.created_at).toLocaleDateString('ar')}</p>
+              </div>
+              {selectedItem.fine_amount && (
+                <div>
+                  <p className="text-sm text-muted-foreground">الغرامة</p>
+                  <p className="font-semibold text-xl text-red-600">{selectedItem.fine_amount} ريال</p>
+                </div>
+              )}
+              {selectedItem.location && (
+                <div>
+                  <p className="text-sm text-muted-foreground">الموقع</p>
+                  <p className="font-semibold">{selectedItem.location}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted-foreground">الحالة</p>
+                <Badge variant={selectedItem.status === 'paid' ? 'default' : 'destructive'} className="text-lg px-3 py-1">
+                  {selectedItem.status === 'paid' ? 'مسددة' : 'غير مسددة'}
+                </Badge>
+              </div>
+              {selectedItem.notes && (
+                <div>
+                  <p className="text-sm text-muted-foreground">ملاحظات</p>
+                  <p className="text-sm">{selectedItem.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة تفاصيل الاستدعاء */}
+      <Dialog open={dialogType === 'notification'} onOpenChange={() => setDialogType('')}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>تفاصيل الاستدعاء</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">الموضوع</p>
+                <p className="font-semibold text-lg">{selectedItem.subject || 'استدعاء رسمي'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">التاريخ</p>
+                <p className="font-semibold">{new Date(selectedItem.created_at).toLocaleDateString('ar')}</p>
+              </div>
+              {selectedItem.notification_type && (
+                <div>
+                  <p className="text-sm text-muted-foreground">النوع</p>
+                  <p className="font-semibold">{selectedItem.notification_type}</p>
+                </div>
+              )}
+              {selectedItem.message && (
+                <div>
+                  <p className="text-sm text-muted-foreground">الرسالة</p>
+                  <p className="text-sm bg-muted p-3 rounded-lg">{selectedItem.message}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted-foreground">الحالة</p>
+                <Badge variant={selectedItem.status === 'responded' ? 'default' : 'destructive'} className="text-lg px-3 py-1">
+                  {selectedItem.status === 'responded' ? 'تمت الاستجابة' : 'معلق'}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
