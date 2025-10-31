@@ -66,18 +66,7 @@ export const intelligentQueryService = {
   },
 
   copyReportToClipboard(reportData: QueryResponse): void {
-    const text = `
-${reportData.title}
-${'='.repeat(50)}
-
-${reportData.summary}
-
-البيانات:
-${JSON.stringify(reportData.data, null, 2)}
-
-تاريخ التقرير: ${new Date(reportData.timestamp).toLocaleString('ar-PS')}
-    `.trim();
-
+    const text = `${reportData.summary}`;
     navigator.clipboard.writeText(text);
   }
 };
