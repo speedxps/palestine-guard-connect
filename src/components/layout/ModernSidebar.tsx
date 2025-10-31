@@ -146,7 +146,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-80 bg-white p-0 flex flex-col" style={{ direction: 'rtl' }}>
           {/* Header with Blue Theme */}
-          <SheetHeader className="bg-gradient-to-r from-[#2B9BF4] to-blue-500 p-6 text-center border-b-4 border-[#7CB342]">
+          <SheetHeader className="bg-gradient-to-r from-[#2B9BF4] to-blue-500 p-6 text-center border-b-4 border-[#7CB342] shrink-0">
             <div className="flex justify-center mb-3">
               <div className="bg-white rounded-full p-2 shadow-2xl">
                 <img 
@@ -165,44 +165,46 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
             <p className="text-blue-100 text-sm font-arabic">نظام إدارة الشرطة الفلسطينية</p>
           </SheetHeader>
 
-          {/* User Info */}
-          <div className="p-4 bg-gradient-to-br from-blue-50 to-green-50 mx-4 mt-4 rounded-xl shadow-lg border border-blue-100">
-            <div className="flex items-center gap-3">
-              {user?.avatar_url ? (
-                <img 
-                  src={user.avatar_url} 
-                  alt={user.full_name || 'مستخدم'}
-                  className="w-14 h-14 rounded-full object-cover border-3 border-[#2B9BF4] shadow-md"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2B9BF4] to-[#7CB342] flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold font-arabic text-xl">
-                    {user?.full_name?.charAt(0) || 'م'}
-                  </span>
+          {/* Scrollable Content - User Info + Navigation */}
+          <div className="flex-1 overflow-y-auto">
+            {/* User Info */}
+            <div className="p-4 bg-gradient-to-br from-blue-50 to-green-50 mx-4 mt-4 rounded-xl shadow-lg border border-blue-100">
+              <div className="flex items-center gap-3">
+                {user?.avatar_url ? (
+                  <img 
+                    src={user.avatar_url} 
+                    alt={user.full_name || 'مستخدم'}
+                    className="w-14 h-14 rounded-full object-cover border-3 border-[#2B9BF4] shadow-md"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2B9BF4] to-[#7CB342] flex items-center justify-center shadow-md">
+                    <span className="text-white font-bold font-arabic text-xl">
+                      {user?.full_name?.charAt(0) || 'م'}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 font-arabic text-lg">
+                    {user?.full_name || 'مستخدم'}
+                  </h3>
+                  <p className="text-xs text-gray-600 font-arabic">{user?.email}</p>
+                  <Badge className="text-xs bg-[#7CB342] text-white mt-1 border-0">
+                    {userRole === 'admin' && 'مدير النظام'}
+                    {userRole === 'traffic_police' && 'شرطة المرور'}
+                    {userRole === 'cid' && 'مباحث جنائية'}
+                    {userRole === 'special_police' && 'شرطة خاصة'}
+                    {userRole === 'cybercrime' && 'جرائم إلكترونية'}
+                    {userRole === 'judicial_police' && 'شرطة قضائية'}
+                    {userRole === 'officer' && 'ضابط'}
+                    {userRole === 'user' && 'مستخدم'}
+                  </Badge>
                 </div>
-              )}
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-900 font-arabic text-lg">
-                  {user?.full_name || 'مستخدم'}
-                </h3>
-                <p className="text-xs text-gray-600 font-arabic">{user?.email}</p>
-                <Badge className="text-xs bg-[#7CB342] text-white mt-1 border-0">
-                  {userRole === 'admin' && 'مدير النظام'}
-                  {userRole === 'traffic_police' && 'شرطة المرور'}
-                  {userRole === 'cid' && 'مباحث جنائية'}
-                  {userRole === 'special_police' && 'شرطة خاصة'}
-                  {userRole === 'cybercrime' && 'جرائم إلكترونية'}
-                  {userRole === 'judicial_police' && 'شرطة قضائية'}
-                  {userRole === 'officer' && 'ضابط'}
-                  {userRole === 'user' && 'مستخدم'}
-                </Badge>
               </div>
             </div>
-          </div>
 
-          {/* Navigation - Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4 pb-0">
-            <div className="space-y-1">
+            {/* Navigation */}
+            <div className="p-4">
+              <div className="space-y-1">
               {/* ===== القسم الأساسي ===== */}
               <Button
                 variant="ghost"
@@ -557,6 +559,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                     })}
                 </div>
               )}
+              </div>
             </div>
           </div>
 
