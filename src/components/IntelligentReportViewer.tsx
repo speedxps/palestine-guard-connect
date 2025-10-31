@@ -16,10 +16,23 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
   };
 
   const handlePrint = () => {
-    // طباعة الملخص الذكي فقط
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
+    try {
+      // إنشاء iframe مخفي للطباعة
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentWindow?.document;
+      if (!iframeDoc) {
+        throw new Error('Failed to create print document');
+      }
+      
+      iframeDoc.open();
+      iframeDoc.write(`
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
         <head>
@@ -27,7 +40,7 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
           <title>${report.title}</title>
           <style>
             body {
-              font-family: 'Arial', sans-serif;
+              font-family: Arial, sans-serif;
               direction: rtl;
               text-align: right;
               padding: 40px;
@@ -65,12 +78,22 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
         </body>
         </html>
       `);
-      printWindow.document.close();
-      printWindow.focus();
+      iframeDoc.close();
+      
+      // انتظار تحميل المحتوى ثم الطباعة
+      iframe.contentWindow?.focus();
       setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 250);
+        iframe.contentWindow?.print();
+        // إزالة iframe بعد الطباعة
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+      
+      toast.success('جاري تحضير الطباعة...');
+    } catch (error) {
+      console.error('Print error:', error);
+      toast.error('حدثت مشكلة أثناء الطباعة');
     }
   };
 
