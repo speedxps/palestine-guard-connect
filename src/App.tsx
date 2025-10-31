@@ -76,7 +76,6 @@ import JointOpsMonitoring from "@/pages/JointOpsMonitoring";
 import JointOpsTraining from "@/pages/JointOpsTraining";
 import SecurityAgency from "@/pages/SecurityAgency";
 import UserDashboard from "@/pages/UserDashboard";
-import PoliceAssistant from "@/pages/PoliceAssistant";
 import ForensicLabs from "@/pages/ForensicLabs";
 import JudicialCaseManagement from "@/pages/JudicialCaseManagement";
 import JudicialCommunications from "@/pages/JudicialCommunications";
@@ -1096,14 +1095,6 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UserDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/police-assistant"
-                  element={
-                    <ProtectedRoute>
-                      <PoliceAssistant />
                     </ProtectedRoute>
                   }
                 />

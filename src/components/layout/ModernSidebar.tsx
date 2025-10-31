@@ -18,14 +18,16 @@ import {
   FileText,
   Settings,
   LogOut,
-  Bot,
   UserCheck,
   Users,
   Scale,
   Bell,
   BookOpen,
   ScanFace,
-  Brain
+  Brain,
+  LayoutDashboard,
+  Database,
+  FolderKanban
 } from 'lucide-react';
 import policeLogo from "@/assets/police-logo.png";
 
@@ -205,81 +207,96 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
             {/* Navigation */}
             <div className="p-4">
               <div className="space-y-1">
-              {/* ===== القسم الأساسي ===== */}
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
-                  location.pathname === '/dashboard' 
-                    ? 'bg-[#2B9BF4] text-white font-bold shadow-lg' 
-                    : 'text-gray-700 hover:bg-blue-50'
-                }`}
-                onClick={() => handleNavigation('/dashboard')}
-              >
-                <Crown className="h-5 w-5 shrink-0" />
-                <span className="font-arabic text-base">الرئيسية</span>
-              </Button>
+              {/* ===== القسم الرئيسي ===== */}
+              <div className="mb-3">
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start gap-3 rounded-xl py-5 transition-all group ${
+                    location.pathname === '/dashboard' 
+                      ? 'bg-gradient-to-r from-[#2B9BF4] to-blue-600 text-white font-bold shadow-lg' 
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100'
+                  }`}
+                  onClick={() => handleNavigation('/dashboard')}
+                >
+                  <div className={`p-2 rounded-lg transition-all ${
+                    location.pathname === '/dashboard' 
+                      ? 'bg-white/20' 
+                      : 'bg-blue-100 group-hover:bg-blue-200'
+                  }`}>
+                    <LayoutDashboard className={`h-5 w-5 ${
+                      location.pathname === '/dashboard' ? 'text-white' : 'text-blue-600'
+                    }`} />
+                  </div>
+                  <span className="font-arabic text-base">لوحة التحكم</span>
+                </Button>
+              </div>
 
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl py-5 transition-all ${
-                  location.pathname === '/police-assistant' 
-                    ? 'bg-[#7CB342] text-white font-bold shadow-lg' 
-                    : 'text-gray-700 hover:bg-green-50'
-                }`}
-                onClick={() => handleNavigation('/police-assistant')}
-              >
-                <Bot className="h-5 w-5 shrink-0" />
-                <span className="font-arabic text-base">المساعد الذكي</span>
-              </Button>
-
-              {/* ===== المعلومات العامة ===== */}
-              <div className="pt-2 pb-1">
-                <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-1">المعلومات</h3>
+              {/* ===== المعلومات والموارد ===== */}
+              <div className="pt-2 pb-2 border-t border-gray-100">
+                <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full"></div>
+                  المعلومات والموارد
+                </h3>
               </div>
 
               <Button
                 variant="ghost"
-                className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                   location.pathname === '/news' || location.pathname.startsWith('/news/')
-                    ? 'bg-[#2B9BF4] text-white font-bold shadow-lg' 
-                    : 'text-gray-700 hover:bg-blue-50'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold shadow-md' 
+                    : 'text-gray-700 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50'
                 }`}
                 onClick={() => handleNavigation('/news')}
               >
-                <Newspaper className="h-4 w-4 shrink-0" />
-                <span className="font-arabic text-sm">الأخبار</span>
+                <Newspaper className={`h-4 w-4 shrink-0 ${
+                  location.pathname === '/news' || location.pathname.startsWith('/news/') 
+                    ? 'text-white' 
+                    : 'text-cyan-600 group-hover:text-cyan-700'
+                }`} />
+                <span className="font-arabic text-sm">الأخبار والإعلانات</span>
               </Button>
 
               <Button
                 variant="ghost"
-                className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                   location.pathname === '/user-guide' 
-                    ? 'bg-purple-500 text-white font-bold shadow-lg' 
-                    : 'text-gray-700 hover:bg-purple-50'
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-md' 
+                    : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50'
                 }`}
                 onClick={() => handleNavigation('/user-guide')}
               >
-                <BookOpen className="h-4 w-4 shrink-0" />
-                <span className="font-arabic text-sm">دليل المستخدم</span>
+                <BookOpen className={`h-4 w-4 shrink-0 ${
+                  location.pathname === '/user-guide' 
+                    ? 'text-white' 
+                    : 'text-purple-600 group-hover:text-purple-700'
+                }`} />
+                <span className="font-arabic text-sm">دليل الاستخدام</span>
               </Button>
 
-              {/* ===== أدوات الذكاء الاصطناعي للمسؤولين ===== */}
+              {/* ===== الذكاء الاصطناعي - للمسؤولين ===== */}
               {userRole === 'admin' && (
                 <>
-                  <div className="pt-2 pb-1">
-                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-1">الذكاء الاصطناعي</h3>
+                  <div className="pt-2 pb-2 border-t border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2 flex items-center gap-2">
+                      <div className="w-1 h-4 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
+                      الذكاء الاصطناعي
+                    </h3>
                   </div>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/intelligent-query' 
-                        ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50'
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50'
                     }`}
                     onClick={() => handleNavigation('/intelligent-query')}
                   >
-                    <Brain className="h-4 w-4 shrink-0" />
+                    <Brain className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/intelligent-query' 
+                        ? 'text-white' 
+                        : 'text-purple-600 group-hover:text-purple-700'
+                    }`} />
                     <span className="font-arabic text-sm">الاستعلام الذكي</span>
                   </Button>
                 </>
@@ -288,48 +305,63 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
               {/* ===== قواعد البيانات - للمسؤولين والتحقيقات ===== */}
               {(userRole === 'admin' || userRole === 'cid' || userRole === 'cybercrime') && (
                 <>
-                  <div className="pt-2 pb-1">
-                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-1">قواعد البيانات</h3>
+                  <div className="pt-2 pb-2 border-t border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2 flex items-center gap-2">
+                      <div className="w-1 h-4 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+                      قواعد البيانات
+                    </h3>
                   </div>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/smart-civil-registry' 
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50'
                     }`}
                     onClick={() => handleNavigation('/smart-civil-registry')}
                   >
-                    <UserCheck className="h-4 w-4 shrink-0" />
+                    <Database className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/smart-civil-registry' 
+                        ? 'text-white' 
+                        : 'text-emerald-600 group-hover:text-emerald-700'
+                    }`} />
                     <span className="font-arabic text-sm">السجل المدني</span>
                   </Button>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/real-time-face-recognition' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50'
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50'
                     }`}
                     onClick={() => handleNavigation('/real-time-face-recognition')}
                   >
-                    <ScanFace className="h-4 w-4 shrink-0" />
-                    <span className="font-arabic text-sm">البحث عن الوجوه</span>
+                    <ScanFace className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/real-time-face-recognition' 
+                        ? 'text-white' 
+                        : 'text-indigo-600 group-hover:text-indigo-700'
+                    }`} />
+                    <span className="font-arabic text-sm">البحث بالوجوه</span>
                   </Button>
 
                   {userRole === 'admin' && (
                     <Button
                       variant="ghost"
-                      className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                      className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                         location.pathname === '/batch-face-processing' 
-                          ? 'bg-emerald-500 text-white font-bold shadow-lg' 
-                          : 'text-gray-700 hover:bg-emerald-50'
+                          ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-md' 
+                          : 'text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50'
                       }`}
                       onClick={() => handleNavigation('/batch-face-processing')}
                     >
-                      <ScanFace className="h-4 w-4 shrink-0" />
-                      <span className="font-arabic text-sm">معالجة الصور الدفعية</span>
+                      <FolderKanban className={`h-4 w-4 shrink-0 ${
+                        location.pathname === '/batch-face-processing' 
+                          ? 'text-white' 
+                          : 'text-pink-600 group-hover:text-pink-700'
+                      }`} />
+                      <span className="font-arabic text-sm">معالجة دفعية</span>
                     </Button>
                   )}
                 </>
@@ -338,89 +370,119 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
               {/* ===== إدارة النظام - للمسؤولين فقط ===== */}
               {userRole === 'admin' && (
                 <>
-                  <div className="pt-2 pb-1">
-                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-1">إدارة النظام</h3>
+                  <div className="pt-2 pb-2 border-t border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2 flex items-center gap-2">
+                      <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"></div>
+                      إدارة النظام
+                    </h3>
                   </div>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/admin-panel' 
-                        ? 'bg-orange-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-orange-50'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50'
                     }`}
                     onClick={() => handleNavigation('/admin-panel')}
                   >
-                    <Users className="h-4 w-4 shrink-0" />
-                    <span className="font-arabic text-sm">إدارة المستخدمين</span>
+                    <Users className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/admin-panel' 
+                        ? 'text-white' 
+                        : 'text-orange-600 group-hover:text-orange-700'
+                    }`} />
+                    <span className="font-arabic text-sm">المستخدمون</span>
                   </Button>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/notification-management' 
-                        ? 'bg-pink-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-pink-50'
+                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50'
                     }`}
                     onClick={() => handleNavigation('/notification-management')}
                   >
-                    <Bell className="h-4 w-4 shrink-0" />
-                    <span className="font-arabic text-sm">إدارة الإشعارات</span>
+                    <Bell className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/notification-management' 
+                        ? 'text-white' 
+                        : 'text-pink-600 group-hover:text-pink-700'
+                    }`} />
+                    <span className="font-arabic text-sm">الإشعارات</span>
                   </Button>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/news-management' 
-                        ? 'bg-teal-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-teal-50'
+                        ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50'
                     }`}
                     onClick={() => handleNavigation('/news-management')}
                   >
-                    <Newspaper className="h-4 w-4 shrink-0" />
+                    <Newspaper className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/news-management' 
+                        ? 'text-white' 
+                        : 'text-teal-600 group-hover:text-teal-700'
+                    }`} />
                     <span className="font-arabic text-sm">إدارة الأخبار</span>
                   </Button>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/investigation-closure-management' 
-                        ? 'bg-red-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-red-50'
+                        ? 'bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50'
                     }`}
                     onClick={() => handleNavigation('/investigation-closure-management')}
                   >
-                    <FileText className="h-4 w-4 shrink-0" />
-                    <span className="font-arabic text-sm">طلبات إغلاق التحقيقات</span>
+                    <FileText className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/investigation-closure-management' 
+                        ? 'text-white' 
+                        : 'text-red-600 group-hover:text-red-700'
+                    }`} />
+                    <span className="font-arabic text-sm">التحقيقات</span>
                   </Button>
 
-                  <div className="pt-2 pb-1">
-                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-1">الأمان والأجهزة</h3>
+                  <div className="pt-2 pb-2 border-t border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-500 font-arabic px-3 mb-2 flex items-center gap-2">
+                      <div className="w-1 h-4 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+                      الأمان والأجهزة
+                    </h3>
                   </div>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/device-management' 
-                        ? 'bg-emerald-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-emerald-50'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50'
                     }`}
                     onClick={() => handleNavigation('/device-management')}
                   >
-                    <Shield className="h-4 w-4 shrink-0" />
+                    <Shield className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/device-management' 
+                        ? 'text-white' 
+                        : 'text-blue-600 group-hover:text-blue-700'
+                    }`} />
                     <span className="font-arabic text-sm">أمان الأجهزة</span>
                   </Button>
 
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start gap-2 rounded-lg py-4 transition-all ${
+                    className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
                       location.pathname === '/user-dashboard' 
-                        ? 'bg-indigo-500 text-white font-bold shadow-lg' 
-                        : 'text-gray-700 hover:bg-indigo-50'
+                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-violet-50'
                     }`}
                     onClick={() => handleNavigation('/user-dashboard')}
                   >
-                    <Computer className="h-4 w-4 shrink-0" />
+                    <Computer className={`h-4 w-4 shrink-0 ${
+                      location.pathname === '/user-dashboard' 
+                        ? 'text-white' 
+                        : 'text-indigo-600 group-hover:text-indigo-700'
+                    }`} />
                     <span className="font-arabic text-sm">الأجهزة</span>
                   </Button>
                 </>
