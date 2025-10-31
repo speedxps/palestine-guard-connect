@@ -15,48 +15,32 @@ serve(async (req) => {
   try {
     const { query } = await req.json();
     
-    // Get authorization header
+    // Get authorization header and extract JWT token
     const authHeader = req.headers.get('Authorization');
-    console.log('Auth header present:', !!authHeader);
-    
     if (!authHeader) {
-      console.error('No authorization header');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    // Extract JWT token from "Bearer <token>"
+    const jwt = authHeader.replace('Bearer ', '');
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Check if user is authenticated
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Check if user is authenticated using the JWT token
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
     
-    if (userError) {
-      console.error('Error getting user:', userError);
-      return new Response(JSON.stringify({ error: 'Authentication error', details: userError.message }), {
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
-    if (!user) {
-      console.error('No user found');
-      return new Response(JSON.stringify({ error: 'User not authenticated' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('User authenticated:', user.id);
 
     // Check if user is admin
     const { data: userRoles, error: rolesError } = await supabaseClient
