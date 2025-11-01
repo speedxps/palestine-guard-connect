@@ -141,17 +141,57 @@ serve(async (req) => {
     if (queryInfo.query_type === 'national_id' && queryInfo.identifiers?.national_id) {
       const nationalId = queryInfo.identifiers.national_id;
       
-      // Call comprehensive profile function
-      const { data: profileData, error: profileError } = await supabaseClient.functions.invoke(
-        'get-citizen-comprehensive-profile',
-        { body: { national_id: nationalId } }
-      );
+      try {
+        // Call comprehensive profile function
+        const { data: profileData, error: profileError } = await supabaseClient.functions.invoke(
+          'get-citizen-comprehensive-profile',
+          { body: { national_id: nationalId } }
+        );
 
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          // Fallback: جلب البيانات الأساسية مباشرة
+          const { data: citizenData } = await supabaseClient
+            .from('citizens')
+            .select('*')
+            .eq('national_id', nationalId)
+            .single();
+          
+          if (citizenData) {
+            // جلب البيانات المرتبطة الأساسية
+            const [vehiclesRes, violationsRes, cyberCasesRes, judicialCasesRes] = await Promise.all([
+              supabaseClient.from('vehicle_owners').select('*, vehicle_registrations(*)').eq('national_id', nationalId),
+              supabaseClient.from('traffic_records').select('*').eq('national_id', nationalId).limit(50),
+              supabaseClient.from('cybercrime_cases').select('*').eq('national_id', nationalId),
+              supabaseClient.from('judicial_cases').select('*').eq('national_id', nationalId)
+            ]);
+
+            reportData.data = {
+              data: {
+                citizen: citizenData,
+                vehicles: vehiclesRes.data || [],
+                violations: violationsRes.data || [],
+                cybercrime_cases: cyberCasesRes.data || [],
+                judicial_cases: judicialCasesRes.data || [],
+                summary: {
+                  vehicles_count: (vehiclesRes.data || []).length,
+                  violations_count: (violationsRes.data || []).length,
+                  cybercrime_cases_open: (cyberCasesRes.data || []).filter((c: any) => c.status === 'open').length,
+                  judicial_cases_active: (judicialCasesRes.data || []).filter((c: any) => c.status !== 'closed').length
+                }
+              }
+            };
+          } else {
+            reportData.data = { error: 'لم يتم العثور على بيانات للمواطن' };
+          }
+        } else {
+          reportData.data = profileData;
+        }
+      } catch (err) {
+        console.error('Error fetching citizen data:', err);
+        reportData.data = { error: 'حدث خطأ أثناء جلب البيانات' };
       }
 
-      reportData.data = profileData || { error: 'لم يتم العثور على بيانات' };
       reportData.title = `تقرير شامل - المواطن ${nationalId}`;
 
     } else if (queryInfo.query_type === 'name' && queryInfo.identifiers?.name) {

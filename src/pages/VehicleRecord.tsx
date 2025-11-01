@@ -23,6 +23,7 @@ const VehicleRecord = () => {
   const [violations, setViolations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  const [detailsDialog, setDetailsDialog] = useState<'violations' | 'pending' | 'owners' | null>(null);
   
   const { notificationHistory, loading: historyLoading } = useNotifications({ 
     contextType: 'vehicle', 
@@ -224,27 +225,39 @@ const VehicleRecord = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="shadow-lg border-t-4 border-red-500">
+          <Card 
+            className="shadow-lg border-t-4 border-red-500 cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+            onClick={() => setDetailsDialog('violations')}
+          >
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-4xl font-bold text-red-600">{violations.length}</p>
                 <p className="text-sm text-muted-foreground mt-1">إجمالي المخالفات</p>
+                <p className="text-xs text-muted-foreground mt-2">انقر لعرض التفاصيل</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-lg border-t-4 border-yellow-500">
+          <Card 
+            className="shadow-lg border-t-4 border-yellow-500 cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+            onClick={() => setDetailsDialog('pending')}
+          >
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-4xl font-bold text-yellow-600">{pendingViolations.length}</p>
                 <p className="text-sm text-muted-foreground mt-1">مخالفات معلقة</p>
+                <p className="text-xs text-muted-foreground mt-2">انقر لعرض التفاصيل</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-lg border-t-4 border-blue-500">
+          <Card 
+            className="shadow-lg border-t-4 border-blue-500 cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+            onClick={() => setDetailsDialog('owners')}
+          >
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-4xl font-bold text-blue-600">{previousOwners.length}</p>
                 <p className="text-sm text-muted-foreground mt-1">ملاك سابقون</p>
+                <p className="text-xs text-muted-foreground mt-2">انقر لعرض التفاصيل</p>
               </div>
             </CardContent>
           </Card>
@@ -391,6 +404,168 @@ const VehicleRecord = () => {
             <p className="text-center py-8 text-muted-foreground">
               لا توجد تبليغات مرسلة سابقاً
             </p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Dialogs */}
+      {/* All Violations Dialog */}
+      <Dialog open={detailsDialog === 'violations'} onOpenChange={() => setDetailsDialog(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>إجمالي المخالفات ({violations.length})</DialogTitle>
+          </DialogHeader>
+          
+          {violations.length > 0 ? (
+            <div className="space-y-3">
+              {violations.map((violation) => (
+                <Card key={violation.id} className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-semibold text-lg">{violation.violation_type}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        <MapPin className="inline h-3 w-3 ml-1" />
+                        {violation.location}
+                      </p>
+                      {violation.notes && (
+                        <p className="text-sm text-muted-foreground mt-1">{violation.notes}</p>
+                      )}
+                    </div>
+                    <Badge variant={violation.status === 'pending' ? 'destructive' : violation.status === 'paid' ? 'default' : 'secondary'}>
+                      {violation.status === 'pending' ? 'معلق' : violation.status === 'paid' ? 'مدفوع' : violation.status}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>{new Date(violation.violation_date).toLocaleDateString('ar-PS')}</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="font-semibold text-lg">{violation.fine_amount} ₪</span>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center py-8 text-muted-foreground">لا توجد مخالفات</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Pending Violations Dialog */}
+      <Dialog open={detailsDialog === 'pending'} onOpenChange={() => setDetailsDialog(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>المخالفات المعلقة ({pendingViolations.length})</DialogTitle>
+          </DialogHeader>
+          
+          {pendingViolations.length > 0 ? (
+            <div className="space-y-3">
+              {pendingViolations.map((violation) => (
+                <Card key={violation.id} className="p-4 border-l-4 border-l-yellow-500">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-semibold text-lg">{violation.violation_type}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        <MapPin className="inline h-3 w-3 ml-1" />
+                        {violation.location}
+                      </p>
+                      {violation.notes && (
+                        <p className="text-sm text-muted-foreground mt-1">{violation.notes}</p>
+                      )}
+                    </div>
+                    <Badge variant="destructive">معلق</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>{new Date(violation.violation_date).toLocaleDateString('ar-PS')}</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="font-semibold text-lg text-red-600">{violation.fine_amount} ₪</span>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <p className="font-semibold text-yellow-800 dark:text-yellow-200">
+                  إجمالي المبلغ المستحق: {pendingViolations.reduce((sum, v) => sum + (v.fine_amount || 0), 0)} ₪
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-center py-8 text-muted-foreground">لا توجد مخالفات معلقة</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Previous Owners Dialog */}
+      <Dialog open={detailsDialog === 'owners'} onOpenChange={() => setDetailsDialog(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>الملاك السابقون ({previousOwners.length})</DialogTitle>
+          </DialogHeader>
+          
+          {previousOwners.length > 0 ? (
+            <div className="space-y-3">
+              {previousOwners.map((owner, index) => (
+                <Card key={owner.id} className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline">مالك سابق #{previousOwners.length - index}</Badge>
+                      </div>
+                      <p className="font-semibold text-lg">{owner.owner_name}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        رقم الهوية: {owner.national_id}
+                      </p>
+                      {owner.phone && (
+                        <p className="text-sm text-muted-foreground">
+                          <Phone className="inline h-3 w-3 ml-1" />
+                          {owner.phone}
+                        </p>
+                      )}
+                      {owner.address && (
+                        <p className="text-sm text-muted-foreground">
+                          <MapPin className="inline h-3 w-3 ml-1" />
+                          {owner.address}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-3 text-sm bg-muted/50 p-3 rounded">
+                    <div>
+                      <p className="text-muted-foreground">تاريخ الملكية</p>
+                      <p className="font-semibold">
+                        {owner.ownership_start_date && new Date(owner.ownership_start_date).toLocaleDateString('ar-PS')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">تاريخ نهاية الملكية</p>
+                      <p className="font-semibold">
+                        {owner.ownership_end_date ? new Date(owner.ownership_end_date).toLocaleDateString('ar-PS') : 'مستمر'}
+                      </p>
+                    </div>
+                  </div>
+                  {owner.national_id && (
+                    <div className="mt-3 flex justify-center">
+                      <CitizenQuickView 
+                        nationalId={owner.national_id}
+                        triggerText="عرض الملف الشامل"
+                      >
+                        <Button variant="outline" size="sm">
+                          <User className="w-3 h-3 ml-2" />
+                          عرض الملف الشامل
+                        </Button>
+                      </CitizenQuickView>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center py-8 text-muted-foreground">لا يوجد ملاك سابقون</p>
           )}
         </DialogContent>
       </Dialog>
