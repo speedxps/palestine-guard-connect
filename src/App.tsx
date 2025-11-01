@@ -92,6 +92,7 @@ import TrafficCitizenSearch from "@/pages/TrafficCitizenSearch";
 import CIDSuspectRecord from "@/pages/CIDSuspectRecord";
 import CIDSuspectSearch from "@/pages/CIDSuspectSearch";
 import JudicialCaseRecord from "@/pages/JudicialCaseRecord";
+import ClearanceCertificate from "@/pages/ClearanceCertificate";
 import NotificationManagement from "@/pages/NotificationManagement";
 import UserPermissions from "@/pages/UserPermissions";
 import UniversalSearch from "@/pages/UniversalSearch";
@@ -168,6 +169,8 @@ const App = () => {
               
               {/* Citizen Comprehensive Profile */}
               <Route path="/citizen-profile/:nationalId" element={<ProtectedRoute><CitizenProfile /></ProtectedRoute>} />
+              <Route path="/clearance-certificate/:nationalId" element={<ProtectedRoute><ClearanceCertificate /></ProtectedRoute>} />
+
 
                 {/* Notification & Permissions - Admin */}
                 <Route

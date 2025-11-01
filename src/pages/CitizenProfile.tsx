@@ -329,7 +329,7 @@ export default function CitizenProfile() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <BackButton />
           <div>
@@ -337,11 +337,21 @@ export default function CitizenProfile() {
             <p className="text-muted-foreground">رقم الهوية: {nationalId}</p>
           </div>
         </div>
-        {profile.wantedStatus && (
-          <Badge variant="destructive" className="text-lg px-4 py-2">
-            🚨 مطلوب
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => navigate(`/clearance-certificate/${nationalId}`)}
+            className="gap-2"
+            variant="default"
+          >
+            <FileText className="w-4 h-4" />
+            براءة ذمة للمحكمة
+          </Button>
+          {profile.wantedStatus && (
+            <Badge variant="destructive" className="text-lg px-4 py-2">
+              🚨 مطلوب
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* البيانات الأساسية */}
