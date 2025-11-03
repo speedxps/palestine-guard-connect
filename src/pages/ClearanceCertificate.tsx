@@ -222,7 +222,7 @@ export default function ClearanceCertificate() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+    <div className="min-h-screen bg-white">
       {/* أزرار الطباعة والتحميل - تختفي عند الطباعة */}
       <div className="print:hidden fixed top-6 left-6 z-50 flex gap-2">
         <BackButton />
@@ -236,184 +236,151 @@ export default function ClearanceCertificate() {
         </Button>
       </div>
 
-      {/* المستند */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card className="shadow-2xl print:shadow-none">
-          <CardContent className="p-8 md:p-12">
-            {/* الرأسية */}
-            <div className="text-center mb-8 border-b-4 border-primary pb-6">
-              <img 
-                src={policeLogo} 
-                alt="شعار الشرطة الفلسطينية" 
-                className="w-24 h-24 mx-auto mb-4 object-contain"
-              />
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">شهادة براءة ذمة</h1>
-              <h2 className="text-xl text-muted-foreground">الشرطة الفلسطينية</h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                نسخة مخصصة للمحاكم والجهات الرسمية
-              </p>
-            </div>
+      {/* المستند - A4 */}
+      <div className="container mx-auto px-4 py-8" style={{ maxWidth: '210mm' }}>
+        <div className="bg-white p-8 min-h-[297mm]" style={{ pageBreakAfter: 'always' }}>
+          {/* الرأسية */}
+          <div className="text-center mb-6 border-b-2 border-gray-300 pb-4">
+            <img 
+              src={policeLogo} 
+              alt="شعار الشرطة الفلسطينية" 
+              className="w-20 h-20 mx-auto mb-3 object-contain"
+            />
+            <h1 className="text-2xl font-bold mb-1">شهادة براءة ذمة</h1>
+            <h2 className="text-lg text-gray-600">الشرطة الفلسطينية</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              نسخة مخصصة للمحاكم والجهات الرسمية
+            </p>
+          </div>
 
-            {/* بيانات المواطن */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  بيانات المواطن
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-semibold">الاسم الكامل:</span>
-                    <span className="mr-2">{data.citizen.full_name}</span>
-                  </div>
-                  <div>
-                    <span className="font-semibold">رقم الهوية:</span>
-                    <span className="mr-2">{data.citizen.national_id}</span>
-                  </div>
-                  {data.citizen.phone && (
-                    <div>
-                      <span className="font-semibold">الهاتف:</span>
-                      <span className="mr-2">{data.citizen.phone}</span>
-                    </div>
-                  )}
-                  {data.citizen.address && (
-                    <div>
-                      <span className="font-semibold">العنوان:</span>
-                      <span className="mr-2">{data.citizen.address}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* حالة الذمة المالية */}
-            <Card className={`mb-6 ${data.hasPendingIssues ? 'border-destructive bg-destructive/5' : 'border-green-500 bg-green-50'}`}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {data.hasPendingIssues ? (
-                    <>
-                      <AlertTriangle className="w-5 h-5 text-destructive" />
-                      <span className="text-destructive">توجد مستحقات أو قضايا معلقة</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="text-green-600">براءة ذمة - لا توجد مستحقات</span>
-                    </>
-                  )}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-
-            {/* المخالفات غير المسددة */}
-            {data.unpaidViolations.length > 0 && (
-              <Card className="mb-6 border-orange-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Car className="w-5 h-5 text-orange-600" />
-                    المخالفات المرورية غير المسددة ({data.unpaidViolations.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-              {data.unpaidViolations.map((v, idx) => (
-                      <div key={v.id} className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                        <div>
-                          <p className="font-semibold">{idx + 1}. {v.record_type === 'violation' ? 'مخالفة مرورية' : 'قضية'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(v.record_date).toLocaleDateString('ar')}
-                          </p>
-                        </div>
-                        <Badge variant="destructive" className="text-lg">
-                          غير محلولة
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-4 bg-red-100 border-2 border-red-300 rounded-lg">
-                    <p className="text-center text-xl font-bold text-red-700">
-                      المبلغ الإجمالي المستحق: {data.totalDue} شيكل
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* القضايا المفتوحة */}
-            {(data.cybercrimeCase.length > 0 || data.judicialCases.length > 0) && (
-              <Card className="mb-6 border-red-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Scale className="w-5 h-5 text-red-600" />
-                    القضايا المفتوحة ({data.cybercrimeCase.length + data.judicialCases.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[...data.cybercrimeCase, ...data.judicialCases].map((c, idx) => (
-                      <div key={c.id} className="p-3 bg-red-50 rounded-lg">
-                        <p className="font-semibold">{idx + 1}. {c.title || c.case_number}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline">{c.case_type}</Badge>
-                          <Badge>{c.status}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* إحصائيات إضافية */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>الإحصائيات العامة</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <p className="text-2xl font-bold">{data.violations.length}</p>
-                    <p className="text-sm text-muted-foreground">إجمالي المخالفات</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <p className="text-2xl font-bold text-orange-600">{data.unpaidViolations.length}</p>
-                    <p className="text-sm text-muted-foreground">مخالفات معلقة</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <p className="text-2xl font-bold text-red-600">
-                      {data.cybercrimeCase.length + data.judicialCases.length}
-                    </p>
-                    <p className="text-sm text-muted-foreground">قضايا مفتوحة</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* التذييل */}
-            <div className="mt-8 pt-6 border-t-2 border-muted">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">تاريخ الإصدار:</p>
-                  <p className="text-muted-foreground">{new Date().toLocaleDateString('ar-PS', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold mb-8">التوقيع والختم</p>
-                  <div className="border-t-2 border-foreground w-40"></div>
-                </div>
+          {/* بيانات المواطن */}
+          <div className="mb-4 p-4 bg-gray-50 rounded">
+            <h3 className="font-bold text-sm mb-3 border-b pb-2">بيانات المواطن</h3>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="font-semibold">الاسم الكامل:</span>
+                <span className="mr-2">{data.citizen.full_name}</span>
               </div>
-
-              <p className="text-center text-xs text-muted-foreground mt-6">
-                هذه الوثيقة صادرة إلكترونياً من نظام الشرطة الفلسطينية الموحد
-              </p>
+              <div>
+                <span className="font-semibold">رقم الهوية:</span>
+                <span className="mr-2">{data.citizen.national_id}</span>
+              </div>
+              {data.citizen.phone && (
+                <div>
+                  <span className="font-semibold">الهاتف:</span>
+                  <span className="mr-2">{data.citizen.phone}</span>
+                </div>
+              )}
+              {data.citizen.address && (
+                <div>
+                  <span className="font-semibold">العنوان:</span>
+                  <span className="mr-2">{data.citizen.address}</span>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* حالة الذمة المالية */}
+          <div className={`mb-4 p-4 rounded text-center ${data.hasPendingIssues ? 'bg-red-100 border-2 border-red-500' : 'bg-green-100 border-2 border-green-500'}`}>
+            {data.hasPendingIssues ? (
+              <>
+                <AlertTriangle className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                <p className="font-bold text-red-700">توجد مستحقات أو قضايا معلقة</p>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                <p className="font-bold text-green-700">براءة ذمة - لا توجد مستحقات</p>
+              </>
+            )}
+          </div>
+
+          {/* المخالفات غير المسددة */}
+          {data.unpaidViolations.length > 0 && (
+            <div className="mb-4">
+              <h3 className="font-bold text-sm mb-2 flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                المخالفات المرورية غير المسددة ({data.unpaidViolations.length})
+              </h3>
+              <div className="space-y-1 text-sm">
+                {data.unpaidViolations.slice(0, 5).map((v, idx) => (
+                  <div key={v.id} className="flex justify-between p-2 bg-orange-50 rounded">
+                    <span>{idx + 1}. {v.record_type === 'violation' ? 'مخالفة' : 'قضية'} - {new Date(v.record_date).toLocaleDateString('ar')}</span>
+                    <span className="text-red-600 font-semibold">غير محلولة</span>
+                  </div>
+                ))}
+                {data.unpaidViolations.length > 5 && (
+                  <p className="text-xs text-gray-600 text-center mt-2">
+                    ... و {data.unpaidViolations.length - 5} مخالفة أخرى
+                  </p>
+                )}
+              </div>
+              <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded text-center">
+                <p className="font-bold text-red-700">
+                  المبلغ الإجمالي المستحق: {data.totalDue} شيكل
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* القضايا المفتوحة */}
+          {(data.cybercrimeCase.length > 0 || data.judicialCases.length > 0) && (
+            <div className="mb-4">
+              <h3 className="font-bold text-sm mb-2 flex items-center gap-2">
+                <Scale className="w-4 h-4" />
+                القضايا المفتوحة ({data.cybercrimeCase.length + data.judicialCases.length})
+              </h3>
+              <div className="space-y-1 text-sm">
+                {[...data.cybercrimeCase, ...data.judicialCases].slice(0, 3).map((c, idx) => (
+                  <div key={c.id} className="p-2 bg-red-50 rounded">
+                    <p className="font-semibold text-xs">{idx + 1}. {c.title || c.case_number}</p>
+                    <p className="text-xs text-gray-600">{c.case_type} - {c.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* إحصائيات مختصرة */}
+          <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="p-2 bg-gray-100 rounded">
+              <p className="text-lg font-bold">{data.violations.length}</p>
+              <p className="text-gray-600">إجمالي المخالفات</p>
+            </div>
+            <div className="p-2 bg-orange-100 rounded">
+              <p className="text-lg font-bold text-orange-600">{data.unpaidViolations.length}</p>
+              <p className="text-gray-600">معلقة</p>
+            </div>
+            <div className="p-2 bg-red-100 rounded">
+              <p className="text-lg font-bold text-red-600">
+                {data.cybercrimeCase.length + data.judicialCases.length}
+              </p>
+              <p className="text-gray-600">قضايا</p>
+            </div>
+          </div>
+
+          {/* التذييل */}
+          <div className="mt-6 pt-4 border-t border-gray-300">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="font-semibold">تاريخ الإصدار:</p>
+                <p className="text-gray-600">{new Date().toLocaleDateString('ar-PS', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+              </div>
+              <div className="text-left">
+                <p className="font-semibold mb-6">التوقيع والختم</p>
+                <div className="border-t-2 border-gray-700 w-32 inline-block"></div>
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-gray-500 mt-4">
+              هذه الوثيقة صادرة إلكترونياً من نظام الشرطة الفلسطينية الموحد - PoliceOps
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

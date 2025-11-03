@@ -17,7 +17,6 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
 
   const handlePrint = () => {
     try {
-      // إنشاء iframe مخفي للطباعة
       const iframe = document.createElement('iframe');
       iframe.style.position = 'absolute';
       iframe.style.width = '0';
@@ -39,52 +38,89 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
           <meta charset="UTF-8">
           <title>${report.title}</title>
           <style>
+            @page { size: A4; margin: 15mm; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
-              font-family: Arial, sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               direction: rtl;
               text-align: right;
-              padding: 40px;
-              max-width: 800px;
-              margin: 0 auto;
+              padding: 20px;
+              line-height: 1.6;
+              color: #333;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #2B9BF4;
+              padding-bottom: 15px;
+              margin-bottom: 25px;
+            }
+            .logo {
+              width: 80px;
+              height: 80px;
+              margin: 0 auto 10px;
             }
             h1 {
-              color: #1a1a1a;
-              border-bottom: 3px solid #3b82f6;
-              padding-bottom: 10px;
-              margin-bottom: 30px;
+              color: #2B9BF4;
+              font-size: 24px;
+              margin: 10px 0;
+            }
+            .subtitle {
+              color: #666;
+              font-size: 14px;
             }
             .summary {
               background: #f8f9fa;
-              padding: 20px;
-              border-radius: 8px;
+              padding: 15px;
+              border-right: 4px solid #7CB342;
+              border-radius: 4px;
+              margin: 20px 0;
               line-height: 1.8;
               white-space: pre-wrap;
               font-size: 14px;
             }
-            .date {
-              color: #666;
+            .footer {
               margin-top: 30px;
-              font-size: 14px;
+              padding-top: 15px;
+              border-top: 2px solid #eee;
+              text-align: center;
+              color: #666;
+              font-size: 12px;
             }
             @media print {
-              body { padding: 20px; }
+              body { padding: 10px; }
+              .no-print { display: none; }
             }
           </style>
         </head>
         <body>
+          <div class="header">
+            <div class="logo">🚔</div>
+            <h2 style="color: #2B9BF4; margin: 5px 0;">الشرطة الفلسطينية</h2>
+            <p class="subtitle">نظام المعلومات الموحد - PoliceOps</p>
+          </div>
+          
           <h1>${report.title}</h1>
+          
           <div class="summary">${report.summary}</div>
-          <div class="date">تاريخ التقرير: ${new Date(report.timestamp).toLocaleString('ar-PS')}</div>
+          
+          <div class="footer">
+            <p>تاريخ التقرير: ${new Date(report.timestamp).toLocaleString('ar-PS', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</p>
+            <p style="margin-top: 5px;">تم إنشاؤه بواسطة نظام الاستعلام الذكي</p>
+          </div>
         </body>
         </html>
       `);
       iframeDoc.close();
       
-      // انتظار تحميل المحتوى ثم الطباعة
       iframe.contentWindow?.focus();
       setTimeout(() => {
         iframe.contentWindow?.print();
-        // إزالة iframe بعد الطباعة
         setTimeout(() => {
           document.body.removeChild(iframe);
         }, 1000);
@@ -97,20 +133,6 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
     }
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: report.title,
-          text: report.summary,
-        });
-      } catch (error) {
-        console.error('Error sharing:', error);
-      }
-    } else {
-      toast.info('المشاركة غير مدعومة في هذا المتصفح');
-    }
-  };
 
   const renderDataSection = () => {
     if (!report.data) return null;
@@ -170,10 +192,14 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
                   </div>
                   <div className="text-center p-3 bg-red-50 rounded-lg">
                     <div className="text-2xl font-bold text-red-600">{summary.total_violations || 0}</div>
-                    <div className="text-xs text-gray-600">المخالفات</div>
+                    <div className="text-xs text-gray-600">إجمالي المخالفات</div>
                   </div>
                   <div className="text-center p-3 bg-orange-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">{summary.total_cases || 0}</div>
+                    <div className="text-2xl font-bold text-orange-600">{summary.pending_violations || 0}</div>
+                    <div className="text-xs text-gray-600">مخالفات معلقة</div>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{summary.total_cases || 0}</div>
                     <div className="text-xs text-gray-600">القضايا</div>
                   </div>
                   <div className="text-center p-3 bg-yellow-50 rounded-lg">
@@ -286,10 +312,6 @@ export const IntelligentReportViewer: React.FC<IntelligentReportViewerProps> = (
               <Button variant="outline" size="sm" onClick={handleCopy}>
                 <Copy className="w-4 h-4 ml-2" />
                 نسخ
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleShare}>
-                <Share2 className="w-4 h-4 ml-2" />
-                مشاركة
               </Button>
             </div>
           </div>

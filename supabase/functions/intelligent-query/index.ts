@@ -77,12 +77,15 @@ serve(async (req) => {
 1. نوع الاستعلام (national_id, name, vehicle, statistics, case_number)
 2. المعرفات (أرقام، أسماء)
 3. نطاق البحث (المحدد أم شامل)
+4. للإحصائيات: استخرج الفترة الزمنية (day, week, month, year, custom)
 
 أمثلة:
 - "معلومات عن المواطن 123456789" -> type: national_id, id: "123456789"
 - "بحث عن أحمد محمد" -> type: name, name: "أحمد محمد"
 - "سيارة رقم ABC-123" -> type: vehicle, plate: "ABC-123"
-- "إحصائيات المخالفات اليوم" -> type: statistics, scope: "violations_today"`
+- "إحصائيات المخالفات اليوم" -> type: statistics, scope: "violations", period: "day"
+- "إحصائيات الأسبوع" -> type: statistics, period: "week"
+- "إحصائيات من تاريخ 2024-01-01 إلى 2024-01-31" -> type: statistics, period: "custom", start: "2024-01-01", end: "2024-01-31"`
           },
           { role: 'user', content: query }
         ],
@@ -107,7 +110,10 @@ serve(async (req) => {
                     case_number: { type: 'string' }
                   }
                 },
-                scope: { type: 'string' }
+                scope: { type: 'string' },
+                period: { type: 'string', enum: ['day', 'week', 'month', 'year', 'custom'] },
+                start_date: { type: 'string' },
+                end_date: { type: 'string' }
               },
               required: ['query_type']
             }
@@ -142,50 +148,42 @@ serve(async (req) => {
       const nationalId = queryInfo.identifiers.national_id;
       
       try {
-        // Call comprehensive profile function
-        const { data: profileData, error: profileError } = await supabaseClient.functions.invoke(
-          'get-citizen-comprehensive-profile',
-          { body: { national_id: nationalId } }
-        );
+        // جلب البيانات الأساسية للمواطن
+        const { data: citizenData } = await supabaseClient
+          .from('citizens')
+          .select('*')
+          .eq('national_id', nationalId)
+          .single();
+        
+        if (citizenData) {
+          // جلب جميع البيانات المرتبطة
+          const [vehiclesRes, violationsRes, cyberCasesRes, judicialCasesRes, incidentsRes] = await Promise.all([
+            supabaseClient.from('vehicle_owners').select('*, vehicle_registrations(*)').eq('national_id', nationalId),
+            supabaseClient.from('traffic_records').select('*').eq('national_id', nationalId).order('created_at', { ascending: false }).limit(50),
+            supabaseClient.from('cybercrime_cases').select('*').eq('national_id', nationalId),
+            supabaseClient.from('judicial_cases').select('*').eq('national_id', nationalId),
+            supabaseClient.from('incidents').select('*').eq('reporter_national_id', nationalId).limit(20)
+          ]);
 
-        if (profileError) {
-          console.error('Profile fetch error:', profileError);
-          // Fallback: جلب البيانات الأساسية مباشرة
-          const { data: citizenData } = await supabaseClient
-            .from('citizens')
-            .select('*')
-            .eq('national_id', nationalId)
-            .single();
-          
-          if (citizenData) {
-            // جلب البيانات المرتبطة الأساسية
-            const [vehiclesRes, violationsRes, cyberCasesRes, judicialCasesRes] = await Promise.all([
-              supabaseClient.from('vehicle_owners').select('*, vehicle_registrations(*)').eq('national_id', nationalId),
-              supabaseClient.from('traffic_records').select('*').eq('national_id', nationalId).limit(50),
-              supabaseClient.from('cybercrime_cases').select('*').eq('national_id', nationalId),
-              supabaseClient.from('judicial_cases').select('*').eq('national_id', nationalId)
-            ]);
-
-            reportData.data = {
-              data: {
-                citizen: citizenData,
-                vehicles: vehiclesRes.data || [],
-                violations: violationsRes.data || [],
-                cybercrime_cases: cyberCasesRes.data || [],
-                judicial_cases: judicialCasesRes.data || [],
-                summary: {
-                  vehicles_count: (vehiclesRes.data || []).length,
-                  violations_count: (violationsRes.data || []).length,
-                  cybercrime_cases_open: (cyberCasesRes.data || []).filter((c: any) => c.status === 'open').length,
-                  judicial_cases_active: (judicialCasesRes.data || []).filter((c: any) => c.status !== 'closed').length
-                }
-              }
-            };
-          } else {
-            reportData.data = { error: 'لم يتم العثور على بيانات للمواطن' };
-          }
+          reportData.data = {
+            citizen: citizenData,
+            vehicles: vehiclesRes.data || [],
+            violations: violationsRes.data || [],
+            cybercrime_cases: cyberCasesRes.data || [],
+            judicial_cases: judicialCasesRes.data || [],
+            incidents: incidentsRes.data || [],
+            summary: {
+              total_vehicles: (vehiclesRes.data || []).length,
+              total_violations: (violationsRes.data || []).length,
+              pending_violations: (violationsRes.data || []).filter((v: any) => !v.is_resolved).length,
+              total_cases: (cyberCasesRes.data || []).length + (judicialCasesRes.data || []).length,
+              total_incidents: (incidentsRes.data || []).length,
+              cybercrime_cases_open: (cyberCasesRes.data || []).filter((c: any) => c.status === 'open').length,
+              judicial_cases_active: (judicialCasesRes.data || []).filter((c: any) => c.status !== 'closed').length
+            }
+          };
         } else {
-          reportData.data = profileData;
+          reportData.data = { error: 'لم يتم العثور على بيانات للمواطن' };
         }
       } catch (err) {
         console.error('Error fetching citizen data:', err);
@@ -195,55 +193,153 @@ serve(async (req) => {
       reportData.title = `تقرير شامل - المواطن ${nationalId}`;
 
     } else if (queryInfo.query_type === 'name' && queryInfo.identifiers?.name) {
+      const searchName = queryInfo.identifiers.name;
+      
+      // البحث عن المواطنين بالاسم
       const { data: citizens } = await supabaseClient
         .from('citizens')
         .select('*')
-        .ilike('full_name', `%${queryInfo.identifiers.name}%`)
+        .ilike('full_name', `%${searchName}%`)
         .limit(20);
 
-      reportData.data.citizens = citizens || [];
-      reportData.title = `نتائج البحث عن: ${queryInfo.identifiers.name}`;
+      if (citizens && citizens.length > 0) {
+        // جلب البيانات التفصيلية لكل مواطن (نفس البيانات كما في البحث برقم الهوية)
+        const citizensWithData = await Promise.all(
+          citizens.map(async (citizen) => {
+            const [vehiclesRes, violationsRes, cyberCasesRes, judicialCasesRes] = await Promise.all([
+              supabaseClient.from('vehicle_owners').select('*, vehicle_registrations(*)').eq('national_id', citizen.national_id),
+              supabaseClient.from('traffic_records').select('*').eq('national_id', citizen.national_id).limit(20),
+              supabaseClient.from('cybercrime_cases').select('*').eq('national_id', citizen.national_id),
+              supabaseClient.from('judicial_cases').select('*').eq('national_id', citizen.national_id)
+            ]);
+
+            return {
+              ...citizen,
+              vehicles: vehiclesRes.data || [],
+              violations: violationsRes.data || [],
+              cybercrime_cases: cyberCasesRes.data || [],
+              judicial_cases: judicialCasesRes.data || [],
+              summary: {
+                total_vehicles: (vehiclesRes.data || []).length,
+                total_violations: (violationsRes.data || []).length,
+                pending_violations: (violationsRes.data || []).filter((v: any) => !v.is_resolved).length,
+                total_cases: (cyberCasesRes.data || []).length + (judicialCasesRes.data || []).length
+              }
+            };
+          })
+        );
+
+        reportData.data.citizens = citizensWithData;
+      } else {
+        reportData.data.citizens = [];
+      }
+
+      reportData.title = `نتائج البحث عن: ${searchName}`;
 
     } else if (queryInfo.query_type === 'vehicle' && queryInfo.identifiers?.vehicle_plate) {
+      const plate = queryInfo.identifiers.vehicle_plate;
+      
+      // البحث عن المركبة
       const { data: vehicles } = await supabaseClient
         .from('vehicle_registrations')
         .select('*, citizens(*)')
-        .eq('license_plate', queryInfo.identifiers.vehicle_plate);
+        .eq('license_plate', plate);
 
+      // جلب المخالفات
       const { data: violations } = await supabaseClient
         .from('traffic_records')
         .select('*')
-        .eq('license_plate', queryInfo.identifiers.vehicle_plate);
+        .eq('license_plate', plate)
+        .order('created_at', { ascending: false });
 
-      reportData.data.vehicles = vehicles || [];
-      reportData.data.violations = violations || [];
-      reportData.title = `تقرير المركبة: ${queryInfo.identifiers.vehicle_plate}`;
+      // جلب المالكين السابقين والحاليين
+      const { data: owners } = await supabaseClient
+        .from('vehicle_owners')
+        .select('*, citizens(*)')
+        .eq('license_plate', plate)
+        .order('ownership_start_date', { ascending: false });
+
+      reportData.data = {
+        vehicles: vehicles || [],
+        violations: violations || [],
+        owners: owners || [],
+        summary: {
+          total_violations: (violations || []).length,
+          pending_violations: (violations || []).filter((v: any) => !v.is_resolved).length,
+          total_owners: (owners || []).length
+        }
+      };
+      reportData.title = `تقرير المركبة: ${plate}`;
 
     } else if (queryInfo.query_type === 'statistics') {
-      const today = new Date().toISOString().split('T')[0];
+      // تحديد الفترة الزمنية
+      let startDate: string;
+      let endDate = new Date().toISOString();
+      const period = queryInfo.period || 'day';
+
+      if (period === 'custom' && queryInfo.start_date && queryInfo.end_date) {
+        startDate = new Date(queryInfo.start_date).toISOString();
+        endDate = new Date(queryInfo.end_date).toISOString();
+      } else {
+        const now = new Date();
+        switch (period) {
+          case 'week':
+            startDate = new Date(now.setDate(now.getDate() - 7)).toISOString();
+            break;
+          case 'month':
+            startDate = new Date(now.setMonth(now.getMonth() - 1)).toISOString();
+            break;
+          case 'year':
+            startDate = new Date(now.setFullYear(now.getFullYear() - 1)).toISOString();
+            break;
+          case 'day':
+          default:
+            startDate = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+        }
+      }
       
-      const { count: violationsCount } = await supabaseClient
-        .from('traffic_records')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today);
-
-      const { count: incidentsCount } = await supabaseClient
-        .from('incidents')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today);
-
-      const { count: cybercrimeCount } = await supabaseClient
-        .from('cybercrime_cases')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today);
+      const [violationsRes, incidentsRes, cybercrimeRes, judicialRes] = await Promise.all([
+        supabaseClient
+          .from('traffic_records')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startDate)
+          .lte('created_at', endDate),
+        supabaseClient
+          .from('incidents')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startDate)
+          .lte('created_at', endDate),
+        supabaseClient
+          .from('cybercrime_cases')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startDate)
+          .lte('created_at', endDate),
+        supabaseClient
+          .from('judicial_cases')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startDate)
+          .lte('created_at', endDate)
+      ]);
 
       reportData.data.statistics = {
-        violations: violationsCount || 0,
-        incidents: incidentsCount || 0,
-        cybercrime: cybercrimeCount || 0,
-        date: today
+        violations: violationsRes.count || 0,
+        incidents: incidentsRes.count || 0,
+        cybercrime: cybercrimeRes.count || 0,
+        judicial: judicialRes.count || 0,
+        period: period,
+        start_date: startDate,
+        end_date: endDate
       };
-      reportData.title = 'إحصائيات اليوم';
+      
+      const periodLabel = {
+        day: 'اليوم',
+        week: 'الأسبوع',
+        month: 'الشهر',
+        year: 'السنة',
+        custom: `من ${new Date(startDate).toLocaleDateString('ar')} إلى ${new Date(endDate).toLocaleDateString('ar')}`
+      };
+      
+      reportData.title = `إحصائيات ${periodLabel[period] || 'اليوم'}`;
 
     } else {
       reportData.data = { message: 'نوع استعلام غير مدعوم حالياً' };

@@ -8,7 +8,7 @@ import { useGPSTracking } from "@/hooks/useGPSTracking";
 import { useUserRoles, UserRole } from "@/hooks/useUserRoles";
 import { Switch } from "@/components/ui/switch";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Bot, Newspaper, Lock, Users, AlertCircle, Radio, MapPin, Palmtree, GitBranch, FileText, UserSearch, ClipboardList, Eye, Siren, MessageSquare, Target, Globe, FileCheck, Camera, Brain } from "lucide-react";
+import { Menu, RotateCw, Phone, Badge as BadgeIcon, Car, Shield, Scale, Settings, Search, Wifi, Newspaper, Lock, Users, AlertCircle, Radio, MapPin, Palmtree, GitBranch, FileText, UserSearch, ClipboardList, Eye, Siren, MessageSquare, Target, Globe, FileCheck, Camera, Brain, Edit } from "lucide-react";
 import policeLogo from "@/assets/police-logo.png";
 import ModernSidebar from "@/components/layout/ModernSidebar";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -44,8 +44,8 @@ const Dashboard = () => {
     // Admin - Operations System
     if (isAdmin || hasRole('operations_system')) {
       return [
-        { title: "الاستعلام الذكي", icon: Brain, path: "/intelligent-query", gradient: "from-emerald-500 to-emerald-600" },
         { title: "البحث الشامل", icon: Search, path: "/universal-search", gradient: "from-cyan-500 to-cyan-600" },
+        { title: "الاستعلام الذكي", icon: Brain, path: "/intelligent-query", gradient: "from-emerald-500 to-emerald-600" },
         { title: "إدارة البلاغات", icon: AlertCircle, path: "/incidents-management", gradient: "from-blue-500 to-blue-600" },
         { title: "إدارة المستخدمين", icon: Users, path: "/admin-panel", gradient: "from-indigo-500 to-indigo-600" },
       ];
@@ -54,10 +54,10 @@ const Dashboard = () => {
     // Traffic Police
     if (hasRole('traffic_police')) {
       return [
-        { title: "الاستعلام الذكي", icon: Brain, path: "/intelligent-query", gradient: "from-emerald-500 to-emerald-600" },
         { title: "المخالفات", icon: Car, path: "/violations", gradient: "from-orange-500 to-orange-600" },
+        { title: "البحث الشامل", icon: Search, path: "/universal-search", gradient: "from-cyan-500 to-cyan-600" },
+        { title: "الاستعلام الذكي", icon: Brain, path: "/intelligent-query", gradient: "from-emerald-500 to-emerald-600" },
         { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-amber-500 to-amber-600" },
-        { title: "الاستعلام عن مركبة", icon: Search, path: "/vehicle-inquiry", gradient: "from-yellow-500 to-yellow-600" },
       ];
     }
 
@@ -133,10 +133,10 @@ const Dashboard = () => {
 
     // Default for regular users
     return [
+      { title: "البحث الشامل", icon: Search, path: "/universal-search", gradient: "from-cyan-500 to-cyan-600" },
       { title: "الاستعلام الذكي", icon: Brain, path: "/intelligent-query", gradient: "from-emerald-500 to-emerald-600" },
       { title: "المهام", icon: ClipboardList, path: "/tasks", gradient: "from-blue-500 to-blue-600" },
       { title: "البلاغات", icon: AlertCircle, path: "/incidents", gradient: "from-red-500 to-red-600" },
-      { title: "التقارير", icon: FileText, path: "/reports", gradient: "from-purple-500 to-purple-600" },
     ];
   };
 
@@ -280,19 +280,19 @@ const Dashboard = () => {
       roles: ["admin", "cybercrime"],
     },
     { 
+      title: "البحث الشامل", 
+      subtitle: "Universal Search",
+      color: "bg-gradient-to-br from-cyan-500 to-cyan-600", 
+      icon: Search,
+      path: "/universal-search", 
+      roles: [] 
+    },
+    { 
       title: "الاستعلام الذكي", 
       subtitle: "Intelligent Query",
       color: "bg-gradient-to-br from-emerald-500 to-emerald-600", 
       icon: Brain,
       path: "/intelligent-query", 
-      roles: [] 
-    },
-    { 
-      title: "المساعد الذكي", 
-      subtitle: "AI Assistant",
-      color: "bg-gradient-to-br from-purple-500 to-purple-600", 
-      icon: Bot,
-      path: "/police-assistant", 
       roles: [] 
     },
     { 
@@ -453,10 +453,24 @@ const Dashboard = () => {
           </DrawerTrigger>
           <DrawerContent className="bg-white">
             <DrawerHeader>
-              <DrawerTitle className="text-center text-2xl font-bold text-[#7CB342] flex items-center justify-center gap-2">
-                <Target className="w-6 h-6" />
-                الوصول السريع
-              </DrawerTitle>
+              <div className="flex items-center justify-between">
+                <DrawerTitle className="text-center text-2xl font-bold text-[#7CB342] flex items-center gap-2">
+                  <Target className="w-6 h-6" />
+                  الوصول السريع
+                </DrawerTitle>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    // TODO: فتح نافذة تعديل الأزرار
+                    alert('سيتم إضافة خاصية تعديل الأزرار قريباً');
+                  }}
+                  className="gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  تعديل
+                </Button>
+              </div>
             </DrawerHeader>
             <div className="p-4 pb-8 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
