@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { PoliceCarAnimation } from "@/components/dashboard/PoliceCarAnimation";
 
 // Quick Access Button Type
 interface QuickAccessButton {
@@ -388,6 +389,9 @@ const Dashboard = () => {
           <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
         </div>
       </div>
+
+      {/* Police Car Animation */}
+      <PoliceCarAnimation />
 
       {/* Tickets */}
       <div className="px-4 sm:px-6 pb-3 w-full">
