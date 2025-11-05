@@ -3,6 +3,7 @@ import ModernSidebar from './ModernSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
+import { PoliceCarAnimation } from '@/components/dashboard/PoliceCarAnimation';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -38,6 +39,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       <main className={`flex-1 overflow-auto bg-gray-50 h-screen ${
         isMobile ? 'w-full' : ''
       }`}>
+        {/* سيارة الشرطة في الهيدر */}
+        <PoliceCarAnimation />
+        
         {children}
       </main>
     </div>

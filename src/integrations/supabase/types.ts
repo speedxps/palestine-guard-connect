@@ -3098,6 +3098,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_face_data: {
+        Row: {
+          created_at: string
+          face_image_url: string | null
+          face_vector: string | null
+          id: string
+          is_active: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          face_image_url?: string | null
+          face_vector?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          face_image_url?: string | null
+          face_vector?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_page_permissions: {
         Row: {
           created_at: string
@@ -3431,6 +3461,20 @@ export type Database = {
           national_id: string
           photo_url: string
           similarity: number
+        }[]
+      }
+      search_user_faces_by_vector: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          similarity: number
+          user_id: string
         }[]
       }
     }

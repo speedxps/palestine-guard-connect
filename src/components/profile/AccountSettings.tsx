@@ -5,10 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Save, Edit, Camera, Upload } from 'lucide-react';
+import { Settings, Save, Edit, Camera, Upload, Scan } from 'lucide-react';
+import { FaceAuthSetup } from './FaceAuthSetup';
 
 export const AccountSettings = () => {
   const { user, refreshUser } = useAuth();
@@ -195,116 +197,133 @@ export const AccountSettings = () => {
         </Card>
       </DialogTrigger>
       
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-arabic">إعدادات الحساب</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Profile Picture Section */}
-          <div className="space-y-4 text-center">
-            <div className="flex justify-center">
-              <div className="relative">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage 
-                    src={formData.avatar_url} 
-                    alt="صورة شخصية"
-                  />
-                  <AvatarFallback className="text-2xl">
-                    {formData.full_name.charAt(0) || user?.email?.charAt(0) || '👤'}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="secondary"
-                  className="absolute -bottom-2 -right-2 rounded-full w-8 h-8"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingImage}
-                >
-                  {uploadingImage ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            <p className="text-xs text-muted-foreground font-arabic">
-              انقر على أيقونة الكاميرا لتغيير صورتك الشخصية
-            </p>
-          </div>
+        <Tabs defaultValue="profile" className="w-full" dir="rtl">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile">
+              <Settings className="w-4 h-4 ml-2" />
+              البيانات الشخصية
+            </TabsTrigger>
+            <TabsTrigger value="face">
+              <Scan className="w-4 h-4 ml-2" />
+              التعرف على الوجه
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="space-y-2">
-            <Label htmlFor="full_name" className="font-arabic">الاسم الكامل</Label>
-            <Input
-              id="full_name"
-              value={formData.full_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-              placeholder="أدخل اسمك الكامل"
-              className="font-arabic"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="font-arabic">رقم الهاتف</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="05xxxxxxxx"
-              className="font-arabic"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="badge_number" className="font-arabic">رقم الشارة</Label>
-            <Input
-              id="badge_number"
-              value={formData.badge_number}
-              onChange={(e) => setFormData(prev => ({ ...prev, badge_number: e.target.value }))}
-              placeholder="رقم الشارة"
-              className="font-arabic"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="font-arabic">البريد الإلكتروني</Label>
-            <Input
-              value={user?.email}
-              disabled
-              className="bg-muted font-arabic"
-            />
-            <p className="text-xs text-muted-foreground font-arabic">
-              لا يمكن تغيير البريد الإلكتروني
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex gap-2 pt-4">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsOpen(false)}
-            className="flex-1 font-arabic"
-          >
-            إلغاء
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={isLoading}
-            className="flex-1 font-arabic"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-          </Button>
-        </div>
+          <TabsContent value="profile" className="space-y-4 mt-4">
+            {/* Profile Picture Section */}
+            <div className="space-y-4 text-center">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage 
+                      src={formData.avatar_url} 
+                      alt="صورة شخصية"
+                    />
+                    <AvatarFallback className="text-2xl">
+                      {formData.full_name.charAt(0) || user?.email?.charAt(0) || '👤'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -bottom-2 -right-2 rounded-full w-8 h-8"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <p className="text-xs text-muted-foreground font-arabic">
+                انقر على أيقونة الكاميرا لتغيير صورتك الشخصية
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="full_name" className="font-arabic">الاسم الكامل</Label>
+              <Input
+                id="full_name"
+                value={formData.full_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                placeholder="أدخل اسمك الكامل"
+                className="font-arabic"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="font-arabic">رقم الهاتف</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="05xxxxxxxx"
+                className="font-arabic"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="badge_number" className="font-arabic">رقم الشارة</Label>
+              <Input
+                id="badge_number"
+                value={formData.badge_number}
+                onChange={(e) => setFormData(prev => ({ ...prev, badge_number: e.target.value }))}
+                placeholder="رقم الشارة"
+                className="font-arabic"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="font-arabic">البريد الإلكتروني</Label>
+              <Input
+                value={user?.email}
+                disabled
+                className="bg-muted font-arabic"
+              />
+              <p className="text-xs text-muted-foreground font-arabic">
+                لا يمكن تغيير البريد الإلكتروني
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsOpen(false)}
+                className="flex-1 font-arabic"
+              >
+                إلغاء
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={isLoading}
+                className="flex-1 font-arabic"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isLoading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="face" className="mt-4">
+            <FaceAuthSetup />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
