@@ -97,19 +97,16 @@ export const FaceLoginWithApi: React.FC<FaceLoginWithApiProps> = ({ onSuccess, o
   };
 
   useEffect(() => {
+    // تحميل النماذج في الخلفية عند تحميل المكون
+    const loadModels = async () => {
+      const { loginWithFace } = useFaceApiLogin();
+    };
+    loadModels();
+    
     return () => {
       stopCamera();
     };
   }, []);
-
-  if (!isModelsLoaded) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">جاري تحميل نماذج التعرف على الوجوه...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -138,16 +135,25 @@ export const FaceLoginWithApi: React.FC<FaceLoginWithApiProps> = ({ onSuccess, o
 
       {isCapturing && (
         <div className="space-y-3">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="w-full rounded-lg border aspect-video bg-black"
-          />
+          <div className="relative rounded-lg overflow-hidden aspect-video bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover transform scale-x-[-1]"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+            {!isModelsLoaded && (
+              <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
+                جاري تحميل نماذج التعرف...
+              </div>
+            )}
+          </div>
           <div className="flex gap-2">
-            <Button onClick={captureImage} className="flex-1">
+            <Button onClick={captureImage} className="flex-1" disabled={!isModelsLoaded}>
               <Camera className="w-4 h-4 mr-2" />
-              التقاط
+              {!isModelsLoaded ? 'جاري التحميل...' : 'التقاط'}
             </Button>
             <Button onClick={stopCamera} variant="outline" className="flex-1">
               إلغاء
