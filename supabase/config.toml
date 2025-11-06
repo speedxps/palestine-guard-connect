@@ -27,6 +27,9 @@ verify_jwt = true
 [functions.search-face-vector]
 verify_jwt = true
 
+[functions.search-user-face-vector]
+verify_jwt = false
+
 [functions.batch-generate-face-vectors]
 verify_jwt = true
 

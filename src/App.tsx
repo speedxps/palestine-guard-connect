@@ -125,6 +125,7 @@ import PatrolRecord from "@/pages/PatrolRecord";
 import CybercrimeCaseRecord from "@/pages/CybercrimeCaseRecord";
 import FaceLogin from "@/pages/FaceLogin";
 import CitizenProfile from "@/pages/CitizenProfile";
+import UserFaceManagement from "@/pages/UserFaceManagement";
 
 const queryClient = new QueryClient();
 
@@ -563,6 +564,16 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
                         <RealTimeFaceRecognition />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/user-face-management"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin"]}>
+                        <UserFaceManagement />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

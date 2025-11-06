@@ -347,22 +347,41 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ open, onOpenChange }) => 
                   </Button>
 
                   {userRole === 'admin' && (
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
-                        location.pathname === '/batch-face-processing' 
-                          ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-md' 
-                          : 'text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50'
-                      }`}
-                      onClick={() => handleNavigation('/batch-face-processing')}
-                    >
-                      <FolderKanban className={`h-4 w-4 shrink-0 ${
-                        location.pathname === '/batch-face-processing' 
-                          ? 'text-white' 
-                          : 'text-pink-600 group-hover:text-pink-700'
-                      }`} />
-                      <span className="font-arabic text-sm">معالجة دفعية</span>
-                    </Button>
+                    <>
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
+                          location.pathname === '/batch-face-processing' 
+                            ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-md' 
+                            : 'text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50'
+                        }`}
+                        onClick={() => handleNavigation('/batch-face-processing')}
+                      >
+                        <FolderKanban className={`h-4 w-4 shrink-0 ${
+                          location.pathname === '/batch-face-processing' 
+                            ? 'text-white' 
+                            : 'text-pink-600 group-hover:text-pink-700'
+                        }`} />
+                        <span className="font-arabic text-sm">معالجة دفعية</span>
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start gap-3 rounded-lg py-4 transition-all group ${
+                          location.pathname === '/user-face-management' 
+                            ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white font-semibold shadow-md' 
+                            : 'text-gray-700 hover:bg-gradient-to-r hover:from-violet-50 hover:to-purple-50'
+                        }`}
+                        onClick={() => handleNavigation('/user-face-management')}
+                      >
+                        <UserCheck className={`h-4 w-4 shrink-0 ${
+                          location.pathname === '/user-face-management' 
+                            ? 'text-white' 
+                            : 'text-violet-600 group-hover:text-violet-700'
+                        }`} />
+                        <span className="font-arabic text-sm">إدارة وجوه المستخدمين</span>
+                      </Button>
+                    </>
                   )}
                 </>
               )}
