@@ -1,10 +1,62 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PoliceCarAnimationProps {
   notificationText?: string;
 }
 
-export const PoliceCarAnimation = ({ notificationText = "إشعار: تحديثات النظام" }: PoliceCarAnimationProps) => {
+export const PoliceCarAnimation = ({ notificationText }: PoliceCarAnimationProps) => {
+  const [latestNotification, setLatestNotification] = useState<string>("إشعار: تحديثات النظام");
+
+  useEffect(() => {
+    const fetchLatestNotification = async () => {
+      try {
+        // جلب آخر إشعار مهم (تسجيل دخول، محاولات مشبوهة، إلخ)
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('title, message')
+          .or('title.ilike.%تسجيل دخول%,title.ilike.%محاولة%,title.ilike.%مشبوه%,title.ilike.%عاجل%,priority.eq.high')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setLatestNotification(data.title || data.message || "إشعار: تحديثات النظام");
+        }
+      } catch (error) {
+        console.error('Error fetching notification:', error);
+      }
+    };
+    
+    fetchLatestNotification();
+    
+    // الاشتراك في التحديثات الفورية
+    const channel = supabase
+      .channel('police-car-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: 'priority=eq.high'
+        },
+        (payload: any) => {
+          const newNotification = payload.new;
+          if (newNotification?.title) {
+            setLatestNotification(newNotification.title);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const displayText = notificationText || latestNotification;
   return (
     <div className="relative w-full h-12 overflow-hidden mb-2 px-4">
       {/* Police Car */}
@@ -114,7 +166,7 @@ export const PoliceCarAnimation = ({ notificationText = "إشعار: تحديث�
             repeat: Infinity
           }}
         >
-          <p className="text-[10px] text-gray-700 truncate leading-tight">{notificationText}</p>
+          <p className="text-[10px] text-gray-700 truncate leading-tight">{displayText}</p>
         </motion.div>
       </motion.div>
     </div>

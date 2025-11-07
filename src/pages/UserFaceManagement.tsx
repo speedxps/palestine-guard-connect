@@ -90,37 +90,45 @@ export default function UserFaceManagement() {
 
   const toggleActiveStatus = async (recordId: string, currentStatus: boolean) => {
     try {
+      console.log('Toggling status for record:', recordId);
       const { error } = await supabase
         .from('user_face_data')
         .update({ is_active: !currentStatus })
         .eq('id', recordId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Toggle error:', error);
+        throw error;
+      }
 
       toast.success(currentStatus ? 'تم تعطيل السجل' : 'تم تفعيل السجل');
-      loadFaceRecords();
+      await loadFaceRecords();
     } catch (error: any) {
       console.error('Error toggling status:', error);
-      toast.error('فشل تحديث الحالة');
+      toast.error('فشل تحديث الحالة: ' + (error.message || 'خطأ غير معروف'));
     }
   };
 
   const deleteRecord = async (recordId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
+    if (!window.confirm('هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.')) return;
 
     try {
+      console.log('Deleting record:', recordId);
       const { error } = await supabase
         .from('user_face_data')
         .delete()
         .eq('id', recordId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
 
       toast.success('تم حذف السجل بنجاح');
-      loadFaceRecords();
+      await loadFaceRecords();
     } catch (error: any) {
       console.error('Error deleting record:', error);
-      toast.error('فشل حذف السجل');
+      toast.error('فشل حذف السجل: ' + (error.message || 'خطأ غير معروف'));
     }
   };
 
