@@ -119,60 +119,54 @@ const Login = () => {
       const userAgent = navigator.userAgent;
       
       console.log('🔍 Checking login location...');
-      const { data: locationCheck, error: locationError } = await supabase.functions.invoke('verify-login-location', {
-        body: { email: username, userAgent }
-      });
-
-      console.log('📍 Location check result:', locationCheck);
-      console.log('❌ Location check error:', locationError);
-
-      // إذا كان هناك خطأ، تحقق من البيانات أولاً
-      // لأن edge function يرجع status 403 عندما يكون محظور وهذا يعتبر error في invoke
-      if (locationError && !locationCheck) {
-        console.error('Location verification failed with no data:', locationError);
-        toast({
-          title: "⛔ فشل التحقق من الموقع",
-          description: "حدث خطأ في التحقق من موقعك. يرجى المحاولة مرة أخرى.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // التحقق من الحظر - سواء كان في data أو error
-      const checkData = locationCheck || (locationError as any)?.context;
       
-      // إذا كان الموقع محظور أو غير مسموح - عرض صفحة الحظر
-      if (checkData?.blocked === true || checkData?.allowed === false) {
-        console.warn('🚫 Login BLOCKED - outside Palestine', checkData);
-        
-        // حفظ معلومات الحظر لعرضها في صفحة الحظر
-        setBlockInfo({
-          location: checkData.location,
-          ip: checkData.ip,
-          timestamp: new Date().toISOString()
+      try {
+        const { data: locationCheck, error: locationError } = await supabase.functions.invoke('verify-login-location', {
+          body: { email: username, userAgent }
         });
+
+        console.log('📍 Location check result:', locationCheck);
         
-        setIsBlocked(true);
-        setIsLoading(false);
-        return;
-      }
+        if (locationError) {
+          console.error('❌ Location check error:', locationError);
+        }
 
-      // تأكيد أن الموقع مسموح صراحةً
-      if (checkData?.allowed !== true) {
-        console.warn('⚠️ Location check returned unexpected result:', checkData);
-        // إذا لم يكن هناك بيانات واضحة، نرفض الدخول للأمان
-        setBlockInfo({
-          location: checkData?.location,
-          ip: checkData?.ip,
-          timestamp: new Date().toISOString()
-        });
-        setIsBlocked(true);
-        setIsLoading(false);
-        return;
-      }
+        // التحقق من الحظر
+        if (locationCheck?.blocked === true) {
+          console.warn('🚫 Login BLOCKED - outside Palestine', locationCheck);
+          
+          setBlockInfo({
+            location: locationCheck.location,
+            ip: locationCheck.ip,
+            timestamp: new Date().toISOString()
+          });
+          
+          setIsBlocked(true);
+          setIsLoading(false);
+          return;
+        }
 
-      console.log('✅ Location verified - proceeding with login');
+        // إذا كان allowed = false صراحةً
+        if (locationCheck?.allowed === false) {
+          console.warn('🚫 Login NOT ALLOWED', locationCheck);
+          
+          setBlockInfo({
+            location: locationCheck.location,
+            ip: locationCheck.ip,
+            timestamp: new Date().toISOString()
+          });
+          
+          setIsBlocked(true);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('✅ Location verified - proceeding with login');
+      } catch (locationErr) {
+        console.error('❌ Location verification exception:', locationErr);
+        // في حالة الخطأ، نستمر بتسجيل الدخول (fail open للتجربة)
+        console.log('⚠️ Continuing with login despite location check error');
+      }
 
       // محاولة تسجيل الدخول فقط بعد التحقق من الموقع
       const { data, error } = await supabase.auth.signInWithPassword({
