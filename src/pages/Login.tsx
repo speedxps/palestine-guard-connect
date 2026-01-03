@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LoginBlocked from "./LoginBlocked";
 import { IntegratedLoginButton } from "@/components/IntegratedLoginButton";
 import { generateDeviceFingerprint } from "@/utils/deviceFingerprint";
+import { DeviceSecretCodeDialog } from "@/components/DeviceSecretCodeDialog";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -26,6 +27,11 @@ const Login = () => {
     ip?: string;
     timestamp?: string;
   }>({});
+  const [showDeviceCodeDialog, setShowDeviceCodeDialog] = useState(false);
+  const [pendingDeviceData, setPendingDeviceData] = useState<{
+    userId: string;
+    deviceInfo: any;
+  } | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -187,8 +193,10 @@ const Login = () => {
 
       // التحقق من الجهاز بعد نجاح تسجيل الدخول
       console.log('🔍 Checking device fingerprint...');
+      let deviceData: { fingerprint: string; deviceInfo: any } | null = null;
+      
       try {
-        const deviceData = await generateDeviceFingerprint();
+        deviceData = await generateDeviceFingerprint();
         
         // Get geolocation
         const geolocation = await new Promise<{ latitude: number; longitude: number } | null>((resolve) => {
@@ -219,6 +227,22 @@ const Login = () => {
         console.log('📱 Device check result:', deviceCheck);
 
         if (deviceError || !deviceCheck?.allowed) {
+          // إذا كان السبب هو جهاز غير مسجل، نعرض حوار الرمز السري
+          if (!deviceCheck?.reason?.includes('الحد الأقصى')) {
+            console.log('📱 Device not registered - showing secret code dialog');
+            
+            setPendingDeviceData({
+              userId: data.user.id,
+              deviceInfo: deviceData,
+            });
+            setShowDeviceCodeDialog(true);
+            
+            // تسجيل خروج مؤقت
+            await supabase.auth.signOut();
+            setIsLoading(false);
+            return;
+          }
+          
           // تسجيل خروج المستخدم
           await supabase.auth.signOut();
           
@@ -235,13 +259,26 @@ const Login = () => {
         console.log('✅ Device verified successfully');
       } catch (deviceCheckError) {
         console.error('❌ Device check error:', deviceCheckError);
-        // في حالة فشل التحقق من الجهاز، نسجل خروج المستخدم
-        await supabase.auth.signOut();
-        toast({
-          title: "خطأ في التحقق من الجهاز",
-          description: "حدث خطأ أثناء التحقق من جهازك. يرجى المحاولة مرة أخرى.",
-          variant: "destructive",
+        // في حالة فشل التحقق من الجهاز، نعرض حوار الرمز السري
+        console.log('📱 Device check failed - showing secret code dialog');
+        
+        // إنشاء deviceData إذا لم يكن موجوداً
+        if (!deviceData) {
+          try {
+            deviceData = await generateDeviceFingerprint();
+          } catch {
+            deviceData = { fingerprint: 'unknown', deviceInfo: {} };
+          }
+        }
+        
+        setPendingDeviceData({
+          userId: data.user.id,
+          deviceInfo: deviceData,
         });
+        setShowDeviceCodeDialog(true);
+        
+        // تسجيل خروج مؤقت
+        await supabase.auth.signOut();
         setIsLoading(false);
         return;
       }
@@ -281,6 +318,27 @@ const Login = () => {
       });
       setIsBlocked(true);
       setIsLoading(false);
+    }
+  };
+
+  // Handler لنجاح إدخال الرمز السري
+  const handleDeviceCodeSuccess = async () => {
+    setShowDeviceCodeDialog(false);
+    setPendingDeviceData(null);
+    
+    toast({
+      title: "✅ تم تسجيل الجهاز",
+      description: "يرجى تسجيل الدخول مرة أخرى",
+    });
+    
+    // إعادة محاولة تسجيل الدخول تلقائياً
+    if (username && password) {
+      setTimeout(() => {
+        const form = document.querySelector('form');
+        if (form) {
+          form.requestSubmit();
+        }
+      }, 500);
     }
   };
 
@@ -441,6 +499,15 @@ const Login = () => {
           </Button>
         </form>
       </div>
+
+      {/* حوار الرمز السري لتسجيل جهاز جديد */}
+      <DeviceSecretCodeDialog
+        open={showDeviceCodeDialog}
+        onOpenChange={setShowDeviceCodeDialog}
+        onSuccess={handleDeviceCodeSuccess}
+        deviceInfo={pendingDeviceData?.deviceInfo}
+        userId={pendingDeviceData?.userId || ''}
+      />
     </div>
   );
 };
