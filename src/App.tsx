@@ -126,6 +126,7 @@ import CybercrimeCaseRecord from "@/pages/CybercrimeCaseRecord";
 import FaceLogin from "@/pages/FaceLogin";
 import CitizenProfile from "@/pages/CitizenProfile";
 import UserFaceManagement from "@/pages/UserFaceManagement";
+import InternetFaceSearch from "@/pages/InternetFaceSearch";
 
 const queryClient = new QueryClient();
 
@@ -504,6 +505,18 @@ const App = () => {
                     <ProtectedRoute>
                       <RoleBasedRoute allowedRoles={["admin", "cid", "cybercrime"]}>
                         <WantedPersonsTree />
+                      </RoleBasedRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Internet Face Search */}
+                <Route
+                  path="/internet-face-search"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedRoute allowedRoles={["admin", "cid"]}>
+                        <InternetFaceSearch />
                       </RoleBasedRoute>
                     </ProtectedRoute>
                   }

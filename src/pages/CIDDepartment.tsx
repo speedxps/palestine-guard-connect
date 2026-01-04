@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, AlertTriangle, Plus, Users, Eye, Settings, Microscope, Newspaper, MessageCircle, Ticket, FolderOpen } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Plus, Users, Eye, Settings, Microscope, Newspaper, MessageCircle, Ticket, FolderOpen, Globe } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const CIDDepartment = () => {
@@ -36,6 +36,13 @@ const CIDDepartment = () => {
       description: 'نظام التعرف الذكي على الوجوه',
       icon: Eye,
       path: '/face-recognition',
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      title: 'البحث في الإنترنت',
+      description: 'البحث عن الوجوه في مواقع التواصل',
+      icon: Globe,
+      path: '/internet-face-search',
       color: 'from-purple-500 to-purple-600'
     },
     {

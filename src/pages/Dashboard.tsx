@@ -66,7 +66,7 @@ const Dashboard = () => {
     if (hasRole('cid')) {
       return [
         { title: "الاستعلام الذكي", icon: Brain, path: "/intelligent-query", gradient: "from-emerald-500 to-emerald-600" },
-        { title: "المهام المطلوبة", icon: ClipboardList, path: "/department-tasks", gradient: "from-blue-500 to-blue-600" },
+        { title: "البحث في الإنترنت", icon: Globe, path: "/internet-face-search", gradient: "from-indigo-500 to-purple-600" },
         { title: "التعرف على الوجوه", icon: Camera, path: "/face-recognition", gradient: "from-cyan-500 to-cyan-600" },
         { title: "المطلوبون", icon: UserSearch, path: "/wanted-persons-tree", gradient: "from-sky-500 to-sky-600" },
       ];
