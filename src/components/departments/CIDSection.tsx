@@ -14,7 +14,8 @@ import {
   Clock,
   Ticket,
   MessageCircle,
-  Newspaper
+  Newspaper,
+  Globe
 } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
@@ -62,6 +63,14 @@ const CIDSection = () => {
       path: '/face-recognition',
       color: 'from-blue-500 to-blue-600',
       stats: 'متاح'
+    },
+    {
+      title: 'البحث في الإنترنت',
+      description: 'البحث في مواقع التواصل الاجتماعي',
+      icon: Globe,
+      path: '/internet-face-search',
+      color: 'from-indigo-500 to-purple-600',
+      stats: 'جديد'
     },
     {
       title: 'الأخبار الداخلية',
