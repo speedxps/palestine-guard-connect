@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Computer, Shield, FileText, BarChart3, Activity, Users, Newspaper, MessageCircle, Ticket, Plus } from 'lucide-react';
+import { Computer, Shield, FileText, BarChart3, Activity, Users, Newspaper, MessageCircle, Ticket, Plus, Globe } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 const CybercrimeDepartment = () => {
@@ -58,6 +58,13 @@ const CybercrimeDepartment = () => {
       icon: Activity,
       path: '/cybercrime-advanced',
       color: 'from-indigo-500 to-indigo-600'
+    },
+    {
+      title: 'البحث في الإنترنت',
+      description: 'البحث عن الأشخاص في مواقع التواصل',
+      icon: Globe,
+      path: '/internet-face-search',
+      color: 'from-violet-500 to-purple-600'
     },
     {
       title: 'إدارة الوصول الخارجي',
