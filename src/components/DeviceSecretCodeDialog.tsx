@@ -40,8 +40,13 @@ export const DeviceSecretCodeDialog: React.FC<DeviceSecretCodeDialogProps> = ({
     setError('');
     
     if (code !== SECRET_CODE) {
-      setError('الرمز السري غير صحيح');
+      toast({
+        title: '❌ الرمز السري غير صحيح',
+        description: 'يرجى التواصل مع الإدارة لإضافة جهازك',
+        variant: 'destructive',
+      });
       setCode('');
+      onOpenChange(false);
       return;
     }
 
