@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackButton } from '@/components/BackButton';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -14,7 +16,7 @@ import {
   Loader2,
   Image as ImageIcon,
   AlertCircle,
-  CheckCircle2,
+  User,
   X
 } from 'lucide-react';
 
@@ -26,13 +28,17 @@ interface SearchResult {
   title?: string;
 }
 
+type SearchType = 'image' | 'text';
+
 const InternetFaceSearch = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
+  const [searchType, setSearchType] = useState<SearchType>('image');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [textQuery, setTextQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchProgress, setSearchProgress] = useState(0);
   const [searchStatus, setSearchStatus] = useState('');
@@ -114,10 +120,19 @@ const InternetFaceSearch = () => {
 
   // Simulate search (placeholder for actual API integration)
   const performSearch = async () => {
-    if (!selectedImage) {
+    if (searchType === 'image' && !selectedImage) {
       toast({
         title: '❌ خطأ',
         description: 'يرجى رفع صورة أولاً',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (searchType === 'text' && !textQuery.trim()) {
+      toast({
+        title: '❌ خطأ',
+        description: 'يرجى إدخال اسم أو يوزر للبحث',
         variant: 'destructive',
       });
       return;
@@ -129,43 +144,79 @@ const InternetFaceSearch = () => {
     setHasSearched(true);
 
     // Simulate search progress
-    const stages = [
-      { progress: 10, status: 'جاري تحليل ملامح الوجه...' },
-      { progress: 25, status: 'جاري البحث في Facebook...' },
-      { progress: 40, status: 'جاري البحث في Instagram...' },
-      { progress: 55, status: 'جاري البحث في LinkedIn...' },
-      { progress: 70, status: 'جاري البحث في Twitter/X...' },
-      { progress: 85, status: 'جاري تجميع النتائج...' },
-      { progress: 100, status: 'اكتمل البحث!' },
-    ];
+    const stages = searchType === 'image' 
+      ? [
+          { progress: 10, status: 'جاري تحليل ملامح الوجه...' },
+          { progress: 25, status: 'جاري البحث في Facebook...' },
+          { progress: 40, status: 'جاري البحث في Instagram...' },
+          { progress: 55, status: 'جاري البحث في LinkedIn...' },
+          { progress: 70, status: 'جاري البحث في Twitter/X...' },
+          { progress: 85, status: 'جاري تجميع النتائج...' },
+          { progress: 100, status: 'اكتمل البحث!' },
+        ]
+      : [
+          { progress: 15, status: `جاري البحث عن "${textQuery}"...` },
+          { progress: 35, status: 'جاري البحث في Facebook...' },
+          { progress: 55, status: 'جاري البحث في Instagram...' },
+          { progress: 75, status: 'جاري البحث في LinkedIn...' },
+          { progress: 90, status: 'جاري تجميع النتائج...' },
+          { progress: 100, status: 'اكتمل البحث!' },
+        ];
 
     for (const stage of stages) {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 600));
       setSearchProgress(stage.progress);
       setSearchStatus(stage.status);
     }
 
-    // Simulate results (placeholder - will be replaced with actual API)
-    const mockResults: SearchResult[] = [
-      {
-        url: 'https://facebook.com/profile/example1',
-        score: 94,
-        platform: 'Facebook',
-        title: 'حساب محتمل على فيسبوك',
-      },
-      {
-        url: 'https://instagram.com/user123',
-        score: 87,
-        platform: 'Instagram',
-        title: 'حساب محتمل على إنستغرام',
-      },
-      {
-        url: 'https://linkedin.com/in/professional',
-        score: 76,
-        platform: 'LinkedIn',
-        title: 'حساب مهني على لينكدإن',
-      },
-    ];
+    // Simulate results based on search type
+    const mockResults: SearchResult[] = searchType === 'image' 
+      ? [
+          {
+            url: 'https://facebook.com/profile/example1',
+            score: 94,
+            platform: 'Facebook',
+            title: 'حساب محتمل على فيسبوك',
+          },
+          {
+            url: 'https://instagram.com/user123',
+            score: 87,
+            platform: 'Instagram',
+            title: 'حساب محتمل على إنستغرام',
+          },
+          {
+            url: 'https://linkedin.com/in/professional',
+            score: 76,
+            platform: 'LinkedIn',
+            title: 'حساب مهني على لينكدإن',
+          },
+        ]
+      : [
+          {
+            url: `https://facebook.com/search?q=${encodeURIComponent(textQuery)}`,
+            score: 100,
+            platform: 'Facebook',
+            title: `نتائج البحث عن "${textQuery}" على فيسبوك`,
+          },
+          {
+            url: `https://instagram.com/${textQuery.replace(/\s/g, '')}`,
+            score: 85,
+            platform: 'Instagram',
+            title: `حساب محتمل @${textQuery.replace(/\s/g, '')}`,
+          },
+          {
+            url: `https://twitter.com/${textQuery.replace(/\s/g, '')}`,
+            score: 80,
+            platform: 'Twitter',
+            title: `حساب محتمل @${textQuery.replace(/\s/g, '')}`,
+          },
+          {
+            url: `https://linkedin.com/search/results/people/?keywords=${encodeURIComponent(textQuery)}`,
+            score: 75,
+            platform: 'LinkedIn',
+            title: `البحث عن "${textQuery}" على لينكدإن`,
+          },
+        ];
 
     setResults(mockResults);
     setIsSearching(false);
@@ -221,101 +272,130 @@ const InternetFaceSearch = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upload Section */}
+        {/* Search Section */}
         <Card className="h-fit">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5 text-primary" />
-              رفع الصورة
+              <Search className="h-5 w-5 text-primary" />
+              طريقة البحث
             </CardTitle>
             <CardDescription>
-              قم برفع صورة أو التقاطها بالكاميرا للبحث عنها
+              اختر طريقة البحث: بالصورة أو بالاسم/اليوزر
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Image Preview */}
-            {selectedImage ? (
-              <div className="relative">
-                <img 
-                  src={selectedImage} 
-                  alt="Selected" 
-                  className="w-full max-h-64 object-contain rounded-lg border"
+            <Tabs value={searchType} onValueChange={(v) => setSearchType(v as SearchType)} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="image" className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  بالصورة
+                </TabsTrigger>
+                <TabsTrigger value="text" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  بالاسم/اليوزر
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="image" className="space-y-4 mt-4">
+                {/* Image Preview */}
+                {selectedImage ? (
+                  <div className="relative">
+                    <img 
+                      src={selectedImage} 
+                      alt="Selected" 
+                      className="w-full max-h-64 object-contain rounded-lg border"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={clearSelection}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : showCamera ? (
+                  <div className="relative">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full rounded-lg border"
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <Button onClick={capturePhoto} className="flex-1">
+                        <Camera className="h-4 w-4 ml-2" />
+                        التقاط
+                      </Button>
+                      <Button variant="outline" onClick={stopCamera}>
+                        إلغاء
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">اضغط لرفع صورة</p>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG حتى 10MB</p>
+                  </div>
+                )}
+
+                <canvas ref={canvasRef} className="hidden" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileUpload}
                 />
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={clearSelection}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : showCamera ? (
-              <div className="relative">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-lg border"
-                />
-                <div className="flex gap-2 mt-2">
-                  <Button onClick={capturePhoto} className="flex-1">
-                    <Camera className="h-4 w-4 ml-2" />
-                    التقاط
-                  </Button>
-                  <Button variant="outline" onClick={stopCamera}>
-                    إلغاء
-                  </Button>
+
+                {/* Action Buttons */}
+                {!showCamera && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 ml-2" />
+                      رفع صورة
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={startCamera}
+                    >
+                      <Camera className="h-4 w-4 ml-2" />
+                      الكاميرا
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="text" className="space-y-4 mt-4">
+                <div className="space-y-3">
+                  <Input
+                    placeholder="أدخل الاسم الكامل أو اسم العائلة"
+                    value={textQuery}
+                    onChange={(e) => setTextQuery(e.target.value)}
+                    className="text-right"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    يمكنك البحث بـ: الاسم الكامل، اسم العائلة، اليوزرنيم، أو أي معرف آخر
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <div 
-                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">اضغط لرفع صورة</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG, JPG حتى 10MB</p>
-              </div>
-            )}
-
-            <canvas ref={canvasRef} className="hidden" />
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-
-            {/* Action Buttons */}
-            {!showCamera && (
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4 ml-2" />
-                  رفع صورة
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={startCamera}
-                >
-                  <Camera className="h-4 w-4 ml-2" />
-                  الكاميرا
-                </Button>
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
 
             {/* Search Button */}
             <Button 
               className="w-full" 
               size="lg"
               onClick={performSearch}
-              disabled={!selectedImage || isSearching}
+              disabled={(searchType === 'image' && !selectedImage) || (searchType === 'text' && !textQuery.trim()) || isSearching}
             >
               {isSearching ? (
                 <>
@@ -324,7 +404,7 @@ const InternetFaceSearch = () => {
                 </>
               ) : (
                 <>
-                  <Search className="h-5 w-5 ml-2" />
+                  <Globe className="h-5 w-5 ml-2" />
                   ابدأ البحث على الإنترنت
                 </>
               )}
