@@ -38,6 +38,7 @@ const Login = () => {
   const [animateHeader, setAnimateHeader] = useState(false);
 
   const testUsers = [
+    { email: "0101", password: "0101", role: "🎓 عرض المشروع" },
     { email: "admin@test.com", password: "admin123", role: "مدير النظام" },
     { email: "admin_ops@test.com", password: "123123", role: "العمليات وإدارة الجهاز" },
     { email: "traffic@test.com", password: "traffic123", role: "شرطة المرور" },
@@ -49,6 +50,15 @@ const Login = () => {
     { email: "tourism_admin@test.com", password: "123123", role: "الشرطة السياحية" },
     { email: "joint_admin@test.com", password: "123123", role: "العمليات المشتركة" },
   ];
+
+  // Handle special presentation login (0101/0101)
+  const handlePresentationLogin = () => {
+    if (username === "0101" && password === "0101") {
+      navigate("/project-presentation");
+      return true;
+    }
+    return false;
+  };
 
   const handleTestUserLogin = async (email: string, password: string) => {
     setUsername(email);
@@ -83,6 +93,13 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for presentation mode login (0101/0101)
+    if (username === "0101" && password === "0101") {
+      navigate("/project-presentation");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
