@@ -127,6 +127,7 @@ import FaceLogin from "@/pages/FaceLogin";
 import CitizenProfile from "@/pages/CitizenProfile";
 import UserFaceManagement from "@/pages/UserFaceManagement";
 import InternetFaceSearch from "@/pages/InternetFaceSearch";
+import ProjectPresentation from "@/pages/ProjectPresentation";
 
 const queryClient = new QueryClient();
 
@@ -147,6 +148,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/project-presentation" element={<ProjectPresentation />} />
                 <Route path="/face-login" element={<FaceLogin />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/setup-test-users" element={<SetupTestUsers />} />
