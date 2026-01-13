@@ -25,10 +25,17 @@ const VehicleRecord = () => {
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
   const [detailsDialog, setDetailsDialog] = useState<'violations' | 'pending' | 'owners' | null>(null);
   
-  const { notificationHistory, loading: historyLoading } = useNotifications({ 
+  const { notificationHistory, loading: historyLoading, fetchNotificationHistory } = useNotifications({ 
     contextType: 'vehicle', 
     contextId: id! 
   });
+  
+  // جلب سجل التبليغات بناءً على national_id للمالك الحالي
+  useEffect(() => {
+    if (currentOwner?.national_id) {
+      fetchNotificationHistory(currentOwner.national_id);
+    }
+  }, [currentOwner?.national_id]);
 
   useEffect(() => {
     fetchVehicleData();
