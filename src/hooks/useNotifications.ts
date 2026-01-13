@@ -29,14 +29,24 @@ export const useNotifications = ({ contextType, contextId }: UseNotificationsPro
   const [notificationHistory, setNotificationHistory] = useState<NotificationRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchNotificationHistory = async () => {
+  const fetchNotificationHistory = async (nationalId?: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // بناء الاستعلام - البحث بـ citizen_id أو recipient_national_id
+      let query = supabase
         .from('official_notifications')
         .select('*')
-        .eq('citizen_id', contextId)
         .order('created_at', { ascending: false });
+      
+      // البحث بالـ contextId أو nationalId
+      if (nationalId) {
+        query = query.or(`recipient_national_id.eq.${nationalId},citizen_id.eq.${contextId}`);
+      } else {
+        query = query.eq('citizen_id', contextId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setNotificationHistory((data || []) as unknown as NotificationRecord[]);
@@ -54,16 +64,47 @@ export const useNotifications = ({ contextType, contextId }: UseNotificationsPro
     template: string,
     customDate?: Date,
     customDay?: string,
-    customTime?: string
+    customTime?: string,
+    recipientNationalId?: string
   ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // محاولة البحث عن citizen_id الحقيقي بناءً على national_id أو استخدام recipientId
+      let actualCitizenId: string | null = null;
+      
+      // إذا كان لدينا national_id، نبحث عن المواطن
+      if (recipientNationalId) {
+        const { data: citizen } = await supabase
+          .from('citizens')
+          .select('id')
+          .eq('national_id', recipientNationalId)
+          .single();
+        
+        if (citizen) {
+          actualCitizenId = citizen.id;
+        }
+      }
+      
+      // إذا لم نجد المواطن بـ national_id، نحاول استخدام recipientId مباشرة
+      if (!actualCitizenId) {
+        // نتحقق إذا كان recipientId موجود في جدول citizens
+        const { data: citizenCheck } = await supabase
+          .from('citizens')
+          .select('id')
+          .eq('id', recipientId)
+          .single();
+        
+        if (citizenCheck) {
+          actualCitizenId = citizenCheck.id;
+        }
+      }
+
       const { error } = await supabase
         .from('official_notifications')
         .insert([{
-          citizen_id: recipientId,
+          citizen_id: actualCitizenId, // قد يكون null إذا لم نجد المواطن
           sender_id: user.id,
           notification_text: notificationText,
           template_used: template,
@@ -72,6 +113,7 @@ export const useNotifications = ({ contextType, contextId }: UseNotificationsPro
           scheduled_time: customTime || null,
           status: 'sent',
           sent_at: new Date().toISOString(),
+          recipient_national_id: recipientNationalId || null, // حفظ national_id للرجوع إليه
         }]);
 
       if (error) throw error;

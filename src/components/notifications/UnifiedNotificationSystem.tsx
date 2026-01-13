@@ -112,7 +112,8 @@ export const UnifiedNotificationSystem: React.FC<UnifiedNotificationSystemProps>
       selectedTemplate,
       customDate,
       customDay,
-      customTime
+      customTime,
+      recipientNationalId // إضافة national_id
     );
 
     if (success) {
