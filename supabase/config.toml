@@ -53,3 +53,6 @@ verify_jwt = true
 
 [functions.intelligent-query]
 verify_jwt = true
+
+[functions.register-device-with-code]
+verify_jwt = false
