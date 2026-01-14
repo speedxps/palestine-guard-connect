@@ -85,18 +85,57 @@ const DepartmentTasks = () => {
   const loadTasks = async () => {
     setLoading(true);
     try {
-      // تحميل المهام التي تخص أقسام المستخدم
-      const { data, error } = await supabase
-        .from('tasks')
-        .select(`
-          *,
-          assigner_profile:profiles!tasks_assigned_by_fkey(full_name, badge_number)
-        `)
-        .in('department', userRoles as any)
-        .order('created_at', { ascending: false });
+      // الحصول على profile_id للمستخدم الحالي
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
 
-      if (error) throw error;
-      setTasks(data || []);
+      // تحميل المهام المسندة للقسم أو للفرد مباشرة
+      let allTasks: Task[] = [];
+
+      // المهام المسندة للأقسام
+      if (userRoles.length > 0) {
+        const { data: departmentTasks, error: deptError } = await supabase
+          .from('tasks')
+          .select(`
+            *,
+            assigner_profile:profiles!tasks_assigned_by_fkey(full_name, badge_number)
+          `)
+          .in('department', userRoles as any)
+          .order('created_at', { ascending: false });
+
+        if (deptError) throw deptError;
+        allTasks = [...(departmentTasks || [])];
+      }
+
+      // المهام المسندة للفرد مباشرة
+      if (profile?.id) {
+        const { data: individualTasks, error: indError } = await supabase
+          .from('tasks')
+          .select(`
+            *,
+            assigner_profile:profiles!tasks_assigned_by_fkey(full_name, badge_number)
+          `)
+          .eq('assigned_to', profile.id)
+          .order('created_at', { ascending: false });
+
+        if (indError) throw indError;
+        
+        // دمج المهام مع تجنب التكرار
+        const existingIds = new Set(allTasks.map(t => t.id));
+        (individualTasks || []).forEach(task => {
+          if (!existingIds.has(task.id)) {
+            allTasks.push(task);
+          }
+        });
+      }
+
+      // ترتيب حسب تاريخ الإنشاء
+      allTasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      setTasks(allTasks);
     } catch (error: any) {
       toast({
         title: 'خطأ',
