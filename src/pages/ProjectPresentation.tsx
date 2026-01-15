@@ -22,32 +22,42 @@ const ProjectPresentation = () => {
     {
       q: 'لماذا اخترت React بدلاً من Angular أو Vue؟',
       a: (
-        <div className="space-y-2">
-          <p className="font-bold text-blue-400">الاختيار اعتمد على ٤ ركائز:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li><strong className="text-yellow-400">الأداء:</strong> بفضل الـ Virtual DOM.</li>
-            <li><strong className="text-yellow-400">التوسعية:</strong> نظام الـ Components يسهل بناء الأنظمة الضخمة.</li>
-            <li><strong className="text-yellow-400">الدعم:</strong> مكتبات Shadcn و Tailwind تتكامل معها بسلاسة.</li>
-            <li><strong className="text-yellow-400">الاستدامة:</strong> دعم Meta يضمن بقاء التقنية لسنوات طويلة.</li>
-          </ul>
+        <div className="space-y-2 leading-relaxed">
+          <p>تم اختيار <span dir="ltr" className="text-blue-400 font-bold">React</span> بناءً على ميزة <span dir="ltr" className="text-blue-400 font-bold">Virtual DOM</span> التي تضمن سرعة الأداء، وسهولة بناء الواجهات باستخدام الـ <span dir="ltr" className="text-blue-400 font-bold">Components</span>، بالإضافة إلى الدعم الكبير من شركة <span dir="ltr" className="text-blue-400 font-bold">Meta</span>.</p>
         </div>
       )
     },
     {
       q: 'كيف تضمن أمان البيانات الحساسة في النظام؟',
-      a: "نستخدم نظام RLS (Row Level Security) لعزل البيانات، مع تشفير بصمات الوجه وتأمين الاتصال عبر HTTPS وSSL، بالإضافة إلى التحقق بخمس طبقات أمان (الموقع، الجهاز، الوجه، الهوية، الدور)."
+      a: (
+        <div className="space-y-2 leading-relaxed">
+          <p>نستخدم تقنية <span dir="ltr" className="text-blue-400 font-bold">Row Level Security (RLS)</span> لعزل البيانات، مع تشفير بصمات الوجه وتأمين الاتصال عبر بروتوكولات <span dir="ltr" className="text-blue-400 font-bold">HTTPS</span> و <span dir="ltr" className="text-blue-400 font-bold">SSL</span>.</p>
+        </div>
+      )
     },
     {
       q: 'اشرح آلية عمل التعرف على الوجه (Face Recognition)؟',
-      a: "يتم تحويل ملامح الوجه إلى متجهات رقمية (128-dimensional embedding) باستخدام face-api.js، ثم تُقارن هذه المتجهات ببيانات قاعدة البيانات عبر إضافة pgvector لحساب نسبة التشابه."
+      a: (
+        <div className="space-y-2 leading-relaxed">
+          <p>يتم تحويل ملامح الوجه إلى متجهات رقمية <span dir="ltr" className="text-blue-400 font-bold">(128-bit Embeddings)</span> باستخدام <span dir="ltr" className="text-blue-400 font-bold">face-api.js</span>، ثم مقارنتها عبر إضافة <span dir="ltr" className="text-blue-400 font-bold">pgvector</span> في قاعدة البيانات.</p>
+        </div>
+      )
     },
     {
       q: 'ما الفرق بين Edge Functions والـ Backend التقليدي؟',
-      a: "الـ Edge Functions هي Serverless Functions تعمل في أقرب نقطة جغرافية للمستخدم (Edge of the network)، مما يقلل الـ Latency ويغنينا عن إدارة خوادم كاملة."
+      a: (
+        <div className="space-y-2 leading-relaxed">
+          <p>الـ <span dir="ltr" className="text-blue-400 font-bold">Edge Functions</span> هي دوال تعمل بنظام <span dir="ltr" className="text-blue-400 font-bold">Serverless</span> في أقرب نقطة جغرافية للمستخدم، مما يقلل الـ <span dir="ltr" className="text-blue-400 font-bold">Latency</span> ويوفر سرعة استجابة فائقة.</p>
+        </div>
+      )
     },
     {
-        q: 'ما هي الـ Row Level Security وكيف تعمل؟',
-        a: "هي ميزة في Postgres تسمح بتعريف سياسات أمان (Policies) تحدد من يستطيع الوصول لكل صف بناءً على هويته (User ID)، مما يمنع تسريب البيانات حتى لو تم اختراق الواجهة."
+      q: 'ما هي الـ Row Level Security وكيف تعمل؟',
+      a: (
+        <div className="space-y-2 leading-relaxed">
+          <p>هي ميزة في <span dir="ltr" className="text-blue-400 font-bold">PostgreSQL</span> تسمح بتعريف سياسات أمان <span dir="ltr" className="text-blue-400 font-bold">(Policies)</span> تمنع أي مستخدم من الوصول لبيانات غيره حتى لو امتلك صلاحية الدخول للجدول.</p>
+        </div>
+      )
     }
   ];
 
@@ -59,8 +69,8 @@ const ProjectPresentation = () => {
           <div className="flex items-center gap-4">
             <img src={policeLogo} alt="Police Logo" className="w-16 h-16 object-contain" />
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white">Police Ops</h1>
-              <p className="text-blue-300 font-medium">نظام إدارة عمليات الشرطة الفلسطينية الرقمي</p>
+              <h1 className="text-3xl md:text-4xl font-bold">Police Ops</h1>
+              <p className="text-blue-300">نظام إدارة عمليات الشرطة الفلسطينية</p>
             </div>
           </div>
           <Button onClick={handlePrint} variant="outline" className="print:hidden gap-2 border-white/30 text-white hover:bg-white/10">
@@ -68,16 +78,9 @@ const ProjectPresentation = () => {
           </Button>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-right">
-            <div>
-              <h2 className="text-xl font-bold text-yellow-400 mb-1">🎓 مشروع تخرج - نظم معلومات حاسوبية</h2>
-              <p className="text-white/80">إعداد الطلاب: فريق التميز التقني | تحت إشراف قسم أمن المعلومات</p>
-            </div>
-            <Badge variant="secondary" className="bg-green-600 text-white px-4 py-1 text-lg animate-pulse">
-              جاهز للمناقشة
-            </Badge>
-          </div>
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <h2 className="text-xl font-semibold text-yellow-400 mb-2">🎓 مشروع التخرج - نظم معلومات حاسوبية</h2>
+          <p className="text-white/80">تصميم وتطوير نظام أمني متكامل يخدم 10 أقسام شرطية</p>
         </div>
       </div>
 
@@ -98,70 +101,49 @@ const ProjectPresentation = () => {
           <TabsContent value="intro">
             <Card className="bg-white/10 border-white/20 text-white">
               <CardHeader><CardTitle className="flex items-center gap-2"><BookOpen className="text-blue-400"/> رؤية المشروع</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-6 items-center">
-                  <div className="space-y-4">
-                    <p className="text-xl leading-relaxed text-blue-100">تحويل العمل الشرطي من الأسلوب الورقي التقليدي إلى <span className="text-yellow-400 font-bold">نظام رقمي فائق الأمان</span> يعتمد على الذكاء الاصطناعي في اتخاذ القرار.</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-white/5 p-3 rounded-lg border border-white/10"><h4 className="font-bold text-blue-400">الهدف الأول</h4><p className="text-sm">أرشفة رقمية شاملة</p></div>
-                      <div className="bg-white/5 p-3 rounded-lg border border-white/10"><h4 className="font-bold text-blue-400">الهدف الثاني</h4><p className="text-sm">سرعة الاستجابة</p></div>
-                    </div>
-                  </div>
-                  <div className="bg-blue-600/20 p-6 rounded-2xl border border-blue-500/30 flex flex-col items-center justify-center text-center">
-                    <Shield className="w-20 h-20 text-blue-400 mb-4" />
-                    <h3 className="text-2xl font-bold">Police Ops v1.0</h3>
-                    <p className="text-sm text-blue-200 mt-2">نظام متكامل يربط ١٠ أقسام شرطية في منصة واحدة</p>
-                  </div>
+              <CardContent className="space-y-4 text-lg leading-relaxed">
+                <p>يهدف نظام <span className="text-yellow-400 font-bold">Police Ops</span> إلى رقمنة العمل الشرطي بالكامل، وتوفير بيئة آمنة لإدارة البيانات باستخدام أحدث تقنيات الويب والذكاء الاصطناعي.</p>
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/10">✅ سرعة في معالجة البيانات</div>
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/10">✅ أمان عالي المستوى</div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* 2. الهيكل التنظيمي */}
+          {/* 2. الهيكل */}
           <TabsContent value="architecture">
             <Card className="bg-white/10 border-white/20 text-white">
-              <CardHeader><CardTitle className="flex items-center gap-2"><Layers className="text-purple-400"/> بنية النظام (Architecture)</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Layers className="text-purple-400"/> بنية النظام</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
-                   {[
-                     { title: "الواجهة (Frontend)", desc: "React + Vite + Tailwind", icon: <Globe className="w-8 h-8 text-blue-400"/> },
-                     { title: "الخدمات (Backend)", desc: "Supabase + Edge Functions", icon: <Server className="w-8 h-8 text-green-400"/> },
-                     { title: "البيانات (Database)", desc: "PostgreSQL (Relational)", icon: <Database className="w-8 h-8 text-purple-400"/> }
-                   ].map((item, i) => (
-                     <div key={i} className="bg-white/5 p-6 rounded-xl border border-white/10 text-center hover:bg-white/10 transition-all">
-                       <div className="flex justify-center mb-4">{item.icon}</div>
-                       <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                       <p className="text-sm text-white/60">{item.desc}</p>
-                     </div>
-                   ))}
+                <div className="grid md:grid-cols-3 gap-4 text-center">
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <h3 className="font-bold text-blue-400 mb-2">Frontend</h3>
+                    <p dir="ltr">React + Tailwind</p>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <h3 className="font-bold text-green-400 mb-2">Backend</h3>
+                    <p dir="ltr">Supabase / Edge Functions</p>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <h3 className="font-bold text-purple-400 mb-2">Database</h3>
+                    <p dir="ltr">PostgreSQL</p>
+                  </div>
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* 3. تدفق البيانات */}
-          <TabsContent value="dataflow">
-            <Card className="bg-white/10 border-white/20 text-white text-center p-8">
-              <div className="max-w-2xl mx-auto space-y-6">
-                 <div className="p-4 bg-blue-600 rounded-lg">إدخال البيانات (الضابط/المواطن)</div>
-                 <ArrowRight className="mx-auto rotate-90 md:rotate-0" />
-                 <div className="p-4 bg-purple-600 rounded-lg">المعالجة والتحقق (Edge Functions + AI)</div>
-                 <ArrowRight className="mx-auto rotate-90 md:rotate-0" />
-                 <div className="p-4 bg-green-600 rounded-lg">التخزين الآمن والتحليلات (Postgres)</div>
-              </div>
             </Card>
           </TabsContent>
 
           {/* 4. الأمان */}
           <TabsContent value="security">
             <Card className="bg-white/10 border-white/20 text-white">
-              <CardHeader><CardTitle className="flex items-center gap-2 text-red-400"><Lock className="w-6 h-6"/> طبقات الأمان الخمس</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-red-400"><Lock className="w-5 h-5"/> طبقات الأمان</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  {['تشخيص الوجه', 'بصمة الجهاز', 'الموقع الجغرافي', 'تشفير RLS', 'صلاحيات الأدوار'].map((step, i) => (
-                    <div key={i} className="flex flex-col items-center p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-center">
-                      <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center mb-3 font-bold">{i+1}</div>
-                      <span className="text-sm">{step}</span>
+                <div className="space-y-3">
+                  {['نظام التعرف بالوجه', 'تحديد الموقع الجغرافي', 'بصمة الجهاز الرقمية', 'عزل البيانات RLS', 'تشفير الملفات'].map((s, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
+                      <Badge className="bg-red-600">{i+1}</Badge>
+                      <span>{s}</span>
                     </div>
                   ))}
                 </div>
@@ -169,62 +151,25 @@ const ProjectPresentation = () => {
             </Card>
           </TabsContent>
 
-          {/* 5. التقنيات */}
-          <TabsContent value="tech">
-             <div className="grid md:grid-cols-2 gap-4">
-                <Card className="bg-white/10 border-white/20 text-white">
-                   <CardHeader><CardTitle className="text-blue-400">Frontend Stack</CardTitle></CardHeader>
-                   <CardContent className="flex flex-wrap gap-2">
-                     {['React 18', 'TypeScript', 'Tailwind CSS', 'Shadcn/UI', 'Lucide Icons', 'React Query'].map(t => <Badge key={t} variant="secondary">{t}</Badge>)}
-                   </CardContent>
-                </Card>
-                <Card className="bg-white/10 border-white/20 text-white">
-                   <CardHeader><CardTitle className="text-green-400">Backend & AI</CardTitle></CardHeader>
-                   <CardContent className="flex flex-wrap gap-2">
-                     {['Supabase', 'PostgreSQL', 'Edge Functions', 'Face-api.js', 'PgVector', 'Webhooks'].map(t => <Badge key={t} variant="secondary" className="bg-green-700">{t}</Badge>)}
-                   </CardContent>
-                </Card>
-             </div>
-          </TabsContent>
-
-          {/* 6. المميزات */}
-          <TabsContent value="features">
-             <Card className="bg-white/10 border-white/20 text-white">
-                <CardContent className="pt-6">
-                   <div className="grid md:grid-cols-2 gap-4">
-                      <div className="flex gap-4 p-4 bg-white/5 rounded-xl">
-                        <Camera className="text-yellow-400 w-12 h-12" />
-                        <div><h3 className="font-bold">نظام البصمة الوجهية</h3><p className="text-sm text-white/60">التحقق من الهوية بدقة تصل لـ ٩٩٪</p></div>
-                      </div>
-                      <div className="flex gap-4 p-4 bg-white/5 rounded-xl">
-                        <MapPin className="text-red-400 w-12 h-12" />
-                        <div><h3 className="font-bold">التتبع الجغرافي</h3><p className="text-sm text-white/60">تحديد موقع البلاغات وتسجيل الدخول</p></div>
-                      </div>
-                      <div className="flex gap-4 p-4 bg-white/5 rounded-xl">
-                        <Zap className="text-blue-400 w-12 h-12" />
-                        <div><h3 className="font-bold">تحديثات فورية</h3><p className="text-sm text-white/60">مزامنة البيانات بين الأقسام في أجزاء من الثانية</p></div>
-                      </div>
-                      <div className="flex gap-4 p-4 bg-white/5 rounded-xl">
-                        <BarChart3 className="text-green-400 w-12 h-12" />
-                        <div><h3 className="font-bold">لوحة إحصائيات</h3><p className="text-sm text-white/60">رسوم بيانية لدعم اتخاذ القرار الأمني</p></div>
-                      </div>
-                   </div>
-                </CardContent>
-             </Card>
-          </TabsContent>
-
-          {/* 7. الأسئلة والأجوبة - المحدثة لمنع التداخل */}
+          {/* 7. الأسئلة والأجوبة - تم حل مشكلة اللغة هنا */}
           <TabsContent value="questions">
             <Card className="bg-white/10 border-white/20 text-white">
-              <CardHeader><CardTitle className="flex items-center gap-2"><HelpCircle className="text-yellow-400"/> أسئلة المناقشة المتوقعة</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-2xl text-yellow-400">
+                  <HelpCircle className="w-6 h-6" /> أسئلة المناقشة المتوقعة
+                </CardTitle>
+              </CardHeader>
               <CardContent>
                 <Accordion type="single" collapsible className="space-y-4">
                   {questionsData.map((item, i) => (
                     <AccordionItem key={i} value={`q-${i}`} className="bg-white/5 rounded-lg border border-white/10 px-4 overflow-hidden">
                       <AccordionTrigger className="text-right hover:no-underline py-4">
-                        <span className="font-medium text-sm md:text-base">{i + 1}. {item.q}</span>
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-blue-600 rounded-full w-6 h-6 flex items-center justify-center p-0">{i + 1}</Badge>
+                          <span className="font-medium">{item.q}</span>
+                        </div>
                       </AccordionTrigger>
-                      <AccordionContent className="text-white/80 leading-relaxed pt-2 border-t border-white/5 mt-1">
+                      <AccordionContent className="text-white/80 border-t border-white/5 pt-4 pb-4">
                         {item.a}
                       </AccordionContent>
                     </AccordionItem>
@@ -234,39 +179,35 @@ const ProjectPresentation = () => {
             </Card>
           </TabsContent>
 
-          {/* 8. الإحصائيات الختامية */}
+          {/* 8. الإحصائيات */}
           <TabsContent value="stats">
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "الأقسام", val: "١٠+", icon: <Users className="text-blue-400"/> },
-                  { label: "الصفحات", val: "١٠٠+", icon: <FileText className="text-green-400"/> },
-                  { label: "الأمان", val: "٩٩.٩٪", icon: <Shield className="text-red-400"/> },
-                  { label: "السرعة", val: "<٥٠٠ms", icon: <Zap className="text-yellow-400"/> }
-                ].map((s, i) => (
-                  <Card key={i} className="bg-white/10 border-white/20 text-white text-center p-6">
-                    <div className="flex justify-center mb-2">{s.icon}</div>
-                    <div className="text-3xl font-bold mb-1">{s.val}</div>
-                    <div className="text-xs text-white/60">{s.label}</div>
-                  </Card>
-                ))}
-             </div>
-             <div className="mt-8 bg-blue-600/20 rounded-xl p-8 border border-blue-500/30 text-center">
-                <h3 className="text-2xl font-bold text-yellow-400 mb-4">🎯 ملخص المشروع</h3>
-                <p className="max-w-3xl mx-auto leading-relaxed text-lg">
-                  نظام <strong className="text-blue-400 font-black">Police Ops</strong> يمثل نقلة نوعية في رقمنة الخدمات الأمنية الفلسطينية، مدمجاً بين تقنيات الويب الحديثة والذكاء الاصطناعي لضمان بيئة عمل ذكية، آمنة، وسريعة.
-                </p>
-             </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "الأقسام", val: "10", icon: <Users className="text-blue-400"/> },
+                { label: "طبقات الأمان", val: "5", icon: <Shield className="text-red-400"/> },
+                { label: "الدقة", val: "99%", icon: <CheckCircle className="text-green-400"/> },
+                { label: "التكامل", val: "100%", icon: <Zap className="text-yellow-400"/> }
+              ].map((s, i) => (
+                <Card key={i} className="bg-white/10 border-white/20 text-white text-center p-6">
+                  <div className="flex justify-center mb-2">{s.icon}</div>
+                  <div className="text-3xl font-bold mb-1">{s.val}</div>
+                  <div className="text-xs text-white/60">{s.label}</div>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
+
         </Tabs>
       </div>
 
+      {/* تنسيقات الطباعة */}
       <style>{`
         @media print {
           body { background: white !important; color: black !important; }
           .print:hidden { display: none !important; }
-          .bg-white\\/10 { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; color: black !important; }
+          .bg-white\\/10 { background: #f8fafc !important; border: 1px solid #ddd !important; color: black !important; }
           .text-white { color: black !important; }
-          .text-blue-400, .text-yellow-400 { color: #1e40af !important; font-weight: bold !important; }
+          .text-blue-400, .text-yellow-400 { color: #1e40af !important; }
         }
       `}</style>
     </div>
