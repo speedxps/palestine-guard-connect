@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { 
-  Printer, Code, HelpCircle, BarChart3, BookOpen, CheckCircle, AlertTriangle
+  Shield, Database, Globe, Lock, Cpu, Users, MapPin, Camera, 
+  FileText, Code, Server, Layers, CheckCircle, AlertTriangle,
+  Printer, ArrowRight, BookOpen, HelpCircle, BarChart3, Zap
 } from 'lucide-react';
 import policeLogo from '@/assets/police-logo.png';
 
@@ -52,7 +54,7 @@ const ProjectPresentation = () => {
             <TabsTrigger value="stats" className="data-[state=active]:bg-blue-600 text-xs md:text-sm">الإحصائيات</TabsTrigger>
           </TabsList>
 
-          {/* Introduction Tab */}
+          {/* Intro Tab */}
           <TabsContent value="intro" className="space-y-6">
             <Card className="bg-white/10 border-white/20 text-white">
               <CardHeader>
@@ -63,7 +65,7 @@ const ProjectPresentation = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <p>
-                  يهدف هذا المشروع إلى تقديم نظام رقمي متكامل لإدارة عمليات الشرطة الفلسطينية، يغطي جميع الجوانب الإدارية، العملياتية، والأمنية بشكل رقمي متقدم.
+                  نظام إدارة عمليات الشرطة الفلسطينية هو أول نظام رقمي شامل ومتكامل مصمم لتحويل العمليات الأمنية من الورقي إلى الرقمي بشكل آمن وفعال.
                 </p>
               </CardContent>
             </Card>
@@ -71,29 +73,29 @@ const ProjectPresentation = () => {
 
           {/* Architecture Tab */}
           <TabsContent value="architecture" className="space-y-6">
-            <Card className="bg-white/10 border-white/20">
+            <Card className="bg-white/10 border-white/20 text-white">
               <CardHeader>
                 <CardTitle>هيكل النظام</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="list-disc pr-6 mt-2 space-y-1">
-                  <li>الواجهة الأمامية لعرض البيانات والتفاعل مع المستخدم</li>
-                  <li>الوظائف الخلفية لإدارة البيانات وتطبيق منطق الأعمال</li>
-                  <li>قاعدة البيانات لتخزين المعلومات الحساسة بشكل آمن</li>
+                  <li>واجهة أمامية ديناميكية للتفاعل مع المستخدم</li>
+                  <li>خدمات خلفية لإدارة البيانات وتطبيق منطق الأعمال</li>
+                  <li>قاعدة بيانات لتخزين المعلومات الحساسة بشكل آمن</li>
                 </ul>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Dataflow Tab */}
+          {/* Data Flow Tab */}
           <TabsContent value="dataflow" className="space-y-6">
-            <Card className="bg-white/10 border-white/20">
+            <Card className="bg-white/10 border-white/20 text-white">
               <CardHeader>
                 <CardTitle>تدفق البيانات</CardTitle>
               </CardHeader>
               <CardContent>
                 <p>
-                  كل طلب من المستخدم يتم معالجته وفقًا لتسلسل محدد لضمان الأداء والأمان، مع تسجيل جميع العمليات في قاعدة البيانات.
+                  يتم معالجة كل طلب من المستخدم وفقًا لتسلسل محدد لضمان الأداء والأمان، مع تسجيل جميع العمليات في قاعدة البيانات.
                 </p>
               </CardContent>
             </Card>
@@ -101,7 +103,7 @@ const ProjectPresentation = () => {
 
           {/* Security Tab */}
           <TabsContent value="security" className="space-y-6">
-            <Card className="bg-white/10 border-white/20">
+            <Card className="bg-white/10 border-white/20 text-white">
               <CardHeader>
                 <CardTitle>الأمان والحماية</CardTitle>
               </CardHeader>
@@ -124,21 +126,36 @@ const ProjectPresentation = () => {
                   التقنيات والأدوات المستخدمة
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                  <h3 className="text-xl font-bold text-blue-400 mb-4">🛠️ بيئة التطوير</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-semibold text-yellow-400 mb-2">IDE:</h4>
-                      <p>Visual Studio Code</p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-yellow-400 mb-2">Version Control:</h4>
-                      <p>Git + GitHub + GitHub Actions</p>
-                    </div>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-blue-500/20 p-5 rounded-xl border border-blue-500/30">
+                    <h4 className="font-bold text-blue-400 mb-3">📝 لغات البرمجة</h4>
+                    <ul className="space-y-2">
+                      <li><Badge dir="ltr">TypeScript</Badge></li>
+                      <li><Badge dir="ltr">JavaScript</Badge></li>
+                      <li><Badge dir="ltr">PostgreSQL</Badge></li>
+                      <li><Badge dir="ltr">Tailwind CSS</Badge></li>
+                    </ul>
+                  </div>
+                  <div className="bg-green-500/20 p-5 rounded-xl border border-green-500/30">
+                    <h4 className="font-bold text-green-400 mb-3">⚛️ الأطر</h4>
+                    <ul className="space-y-2">
+                      <li><Badge dir="ltr">React 18</Badge></li>
+                      <li><Badge dir="ltr">Vite</Badge></li>
+                      <li><Badge dir="ltr">Shadcn/UI</Badge></li>
+                      <li><Badge dir="ltr">TanStack Query</Badge></li>
+                    </ul>
+                  </div>
+                  <div className="bg-purple-500/20 p-5 rounded-xl border border-purple-500/30">
+                    <h4 className="font-bold text-purple-400 mb-3">🔧 الخدمات</h4>
+                    <ul className="space-y-2">
+                      <li><Badge dir="ltr">Supabase</Badge></li>
+                      <li><Badge dir="ltr">PostgreSQL</Badge></li>
+                      <li><Badge dir="ltr">Deno Runtime</Badge></li>
+                      <li><Badge dir="ltr">Mapbox</Badge></li>
+                    </ul>
                   </div>
                 </div>
-                {/* باقي التقنيات والBadges تبقى كما هي */}
               </CardContent>
             </Card>
           </TabsContent>
@@ -150,12 +167,32 @@ const ProjectPresentation = () => {
                 <CardTitle>المميزات</CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="list-disc pr-6 mt-2 space-y-1">
-                  <li>واجهة مستخدم حديثة وسهلة الاستخدام</li>
-                  <li>إدارة دورية للمستخدمين والأقسام الشرطية</li>
-                  <li>تدفق بيانات آمن وسريع مع سجل كامل للعمليات</li>
-                  <li>دعم العمليات الطارئة والتنبيهات الفورية</li>
-                </ul>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-blue-600/20 p-5 rounded-xl border border-blue-600/30 flex flex-col items-start gap-2">
+                    <h4 className="font-bold text-blue-400">واجهة مستخدم حديثة</h4>
+                    <p className="text-white/90">تصميم سلس وسهل الاستخدام لجميع الموظفين.</p>
+                  </div>
+                  <div className="bg-green-600/20 p-5 rounded-xl border border-green-600/30 flex flex-col items-start gap-2">
+                    <h4 className="font-bold text-green-400">إدارة دورية للمستخدمين</h4>
+                    <p className="text-white/90">التحكم الكامل في صلاحيات المستخدمين والأقسام.</p>
+                  </div>
+                  <div className="bg-purple-600/20 p-5 rounded-xl border border-purple-600/30 flex flex-col items-start gap-2">
+                    <h4 className="font-bold text-purple-400">تدفق بيانات آمن وسريع</h4>
+                    <p className="text-white/90">سجل كامل لكل العمليات مع حماية عالية.</p>
+                  </div>
+                  <div className="bg-red-600/20 p-5 rounded-xl border border-red-600/30 flex flex-col items-start gap-2">
+                    <h4 className="font-bold text-red-400">دعم الطوارئ والتنبيهات</h4>
+                    <p className="text-white/90">إشعارات فورية للتعامل مع أي حالة طارئة.</p>
+                  </div>
+                  <div className="bg-yellow-600/20 p-5 rounded-xl border border-yellow-600/30 flex flex-col items-start gap-2">
+                    <h4 className="font-bold text-yellow-400">تكامل مع نظم GPS</h4>
+                    <p className="text-white/90">تتبع دوريات الشرطة في الوقت الفعلي بشكل دقيق.</p>
+                  </div>
+                  <div className="bg-pink-600/20 p-5 rounded-xl border border-pink-600/30 flex flex-col items-start gap-2">
+                    <h4 className="font-bold text-pink-400">تحليلات وتقارير متقدمة</h4>
+                    <p className="text-white/90">توليد إحصائيات وتقارير جاهزة للعرض أو الطباعة.</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -174,11 +211,11 @@ const ProjectPresentation = () => {
                   <AccordionItem value="deploy">
                     <AccordionTrigger>كيف تم نشر المشروع؟</AccordionTrigger>
                     <AccordionContent>
-                      تم نشر النظام باستخدام بنية حديثة تعتمد على:
+                      تم نشر النظام باستخدام:
                       <ul className="list-disc pr-6 mt-2 space-y-1">
-                        <li>نشر الواجهة الأمامية على <span dir="ltr">CDN</span></li>
-                        <li>تشغيل الخدمات الخلفية عبر <span dir="ltr">Supabase Edge Functions</span></li>
-                        <li>قاعدة بيانات مُدارة باستخدام <span dir="ltr">PostgreSQL</span></li>
+                        <li>واجهة أمامية على <span dir="ltr">CDN</span></li>
+                        <li>الخدمات الخلفية على <span dir="ltr">Supabase Edge Functions</span></li>
+                        <li>قاعدة بيانات <span dir="ltr">PostgreSQL</span></li>
                         <li>دعم <span dir="ltr">CI/CD</span> و <span dir="ltr">HTTPS</span></li>
                       </ul>
                     </AccordionContent>
