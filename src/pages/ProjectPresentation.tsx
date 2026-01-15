@@ -62,6 +62,71 @@ const ProjectPresentation = () => {
             <TabsTrigger value="stats">الإحصائيات</TabsTrigger>
           </TabsList>
 
+          {/* INTRO TAB */}
+          <TabsContent value="intro">
+            <Card className="bg-white/10 border-white/20">
+              <CardHeader>
+                <CardTitle>مقدمة المشروع</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  يهدف هذا المشروع إلى تقديم نظام رقمي متكامل لإدارة عمليات الشرطة الفلسطينية، 
+                  يغطي جميع الجوانب الإدارية، العملياتية، والأمنية بشكل رقمي متقدم.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ARCHITECTURE TAB */}
+          <TabsContent value="architecture">
+            <Card className="bg-white/10 border-white/20">
+              <CardHeader>
+                <CardTitle>هيكل النظام</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  يعتمد النظام على ثلاثة مستويات رئيسية:
+                </p>
+                <ul className="list-disc pr-6 mt-2 space-y-1">
+                  <li>الواجهة الأمامية لعرض البيانات والتفاعل مع المستخدم.</li>
+                  <li>الوظائف الخلفية لإدارة البيانات وتطبيق منطق الأعمال.</li>
+                  <li>قاعدة البيانات لتخزين المعلومات الحساسة بشكل آمن.</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* DATAFLOW TAB */}
+          <TabsContent value="dataflow">
+            <Card className="bg-white/10 border-white/20">
+              <CardHeader>
+                <CardTitle>تدفق البيانات</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  كل طلب من المستخدم يتم معالجته وفقًا لتسلسل محدد لضمان الأداء والأمان، 
+                  مع تسجيل جميع العمليات في قاعدة البيانات.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* SECURITY TAB */}
+          <TabsContent value="security">
+            <Card className="bg-white/10 border-white/20">
+              <CardHeader>
+                <CardTitle>الأمان والحماية</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc pr-6 mt-2 space-y-1">
+                  <li>مصادقة المستخدمين وإدارة الأدوار بشكل دقيق.</li>
+                  <li>تشفير البيانات الحساسة عند التخزين والنقل.</li>
+                  <li>مراقبة النشاطات والتحقق من الهويات عبر التعرف على الوجه.</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* TECH TAB */}
           <TabsContent value="tech">
             <Card className="bg-white/10 border-white/20">
@@ -118,6 +183,23 @@ const ProjectPresentation = () => {
                     </ul>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* FEATURES TAB */}
+          <TabsContent value="features">
+            <Card className="bg-white/10 border-white/20">
+              <CardHeader>
+                <CardTitle>المميزات</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc pr-6 mt-2 space-y-1">
+                  <li>واجهة مستخدم حديثة وسهلة الاستخدام.</li>
+                  <li>إدارة دورية للمستخدمين والأقسام الشرطية.</li>
+                  <li>تدفق بيانات آمن وسريع مع سجل كامل للعمليات.</li>
+                  <li>دعم العمليات الطارئة والتنبيهات الفورية.</li>
+                </ul>
               </CardContent>
             </Card>
           </TabsContent>
@@ -183,6 +265,7 @@ const ProjectPresentation = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
         </Tabs>
       </div>
 
