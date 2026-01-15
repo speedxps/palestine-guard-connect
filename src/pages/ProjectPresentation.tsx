@@ -5,15 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
-  Shield, Database, Globe, Lock, Cpu, Users, MapPin, Camera,
-  FileText, Code, Server, Layers, CheckCircle, AlertTriangle,
-  Printer, ArrowRight, BookOpen, HelpCircle, BarChart3, Zap
+  Printer, Code, HelpCircle, BarChart3
 } from 'lucide-react';
 import policeLogo from '@/assets/police-logo.png';
 
 const ProjectPresentation = () => {
   const [activeTab, setActiveTab] = useState('intro');
-
   const handlePrint = () => window.print();
 
   return (
@@ -154,7 +151,7 @@ const ProjectPresentation = () => {
             </Card>
           </TabsContent>
 
-          {/* STATS */}
+          {/* STATS TAB */}
           <TabsContent value="stats">
             <Card className="bg-white/10 border-white/20">
               <CardHeader>
