@@ -458,7 +458,7 @@ const ProjectPresentation = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <h4 className="font-semibold text-yellow-400 mb-2">IDE:</h4>
-                      <p>Visual Studio Code + Lovable Platform</p>
+                      <p>Visual Studio Code</p>
                     </div>
                     <div>
                       <h4 className="font-semibold text-yellow-400 mb-2">Version Control:</h4>
